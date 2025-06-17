@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <menuitem
+        id="roomdoo_exporter"
+        name="Invoices Exporter"
+        parent="account.menu_finance_reports"
+        groups="account.group_account_manager,account.group_account_user"
+        action="action_open_roomdoo_exporter_invoices"
+        sequence="10"
+    />
+
+</odoo>
