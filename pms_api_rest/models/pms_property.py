@@ -736,3 +736,36 @@ class PmsProperty(models.Model):
                             "room_type_ids": room_type_ids,
                         }
                     )
+
+    def get_roomdoo_app_menu(self):
+        """Get Roomdoo App Menu for the property."""
+        self.ensure_one()
+        return (
+            self.env["roomdoo.app.menu"]
+            .search(
+                [
+                    "|",
+                    ("property_ids", "=", False),
+                    ("property_ids", "in", self._ids),
+                    ("support_url", "=", False),
+                ]
+            )
+            .get_dict_data(self)
+        )
+
+    def get_roomdoo_support_url(self):
+        """Get Roomdoo Support URL for the property."""
+        self.ensure_one()
+        return (
+            self.env["roomdoo.app.menu"]
+            .search(
+                [
+                    "|",
+                    ("property_ids", "=", False),
+                    ("property_ids", "in", self._ids),
+                    ("support_url", "=", True),
+                ],
+                limit=1,
+            )
+            .get_dict_data(self)[0]
+        )

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_roomdoo_app_menu_tree" model="ir.ui.view">
+        <field name="name">roomdoo.app.menu.tree</field>
+        <field name="model">roomdoo.app.menu</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="base_url"/>
+                <field name="property_ids" widget="many2many_tags"/>
+                <field name="support_url"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_roomdoo_app_menu_form" model="ir.ui.view">
+        <field name="name">roomdoo.app.menu.form</field>
+        <field name="model">roomdoo.app.menu</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Menu Item Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="support_url"/>
+                            <field name="base_url"/>
+                            <field name="property_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="URL Parameters" name="parameters">
+                            <field name="param_ids">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="value"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Help" name="help_info">
+                                <div style="margin-top: 4px;">
+                                    <h3>Help with url and parameters</h3>
+                                    <p>
+                                        The base URL is the main link for the menu item. You can add parameters to this URL
+                                        using the parameters defined below.
+                                    </p>
+                                    <p>
+                                        The parameters will be appended to the base URL in the format <code>?param1=value1&amp;param2=value2</code>.
+                                        You can use the predefined parameters to dynamically insert values into the URL.
+                                        <ul>
+                                            <li><code>property</code>: property object, can access all of the fields of the obj for example <code>property.id</code>.</li>
+                                            <li><code>user</code>: Object of the current user.</li>
+                                            <li><code>web_base_url</code>: Value of web.base.url parameter.</li>
+                                            <li><code>frontend_domain</code>: Frontend domain based on web.base.url, we assume that the frontend_domain is the odoo base url without <code>.host.</code> subdomain.</li>
+                                        </ul>
+                                    </p>
+                                    <p>
+                                        For example, if your base URL is <code>https://example.com</code>, the logged user is called John Doe
+                                        and you have a parameter <code>user_name</code> with the value <code>user.name</code>,
+                                        the final URL will be <code>https://example.com?user_name=John+Doe</code>.
+                                    </p>
+
+                                </div>
+                            </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_roomdoo_app_menu_search" model="ir.ui.view">
+        <field name="name">roomdoo.app.menu.search</field>
+        <field name="model">roomdoo.app.menu</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="base_url"/>
+                <field name="property_ids"/>
+                <filter string="Support URL" name="support_url" domain="[('support_url', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Support URL" name="group_by_support_url" context="{'group_by': 'support_url'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_roomdoo_app_menu" model="ir.actions.act_window">
+        <field name="name">App Menu Items</field>
+        <field name="res_model">roomdoo.app.menu</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_roomdoo_app_menu_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first app menu item
+            </p>
+            <p>
+                Define menu items that will be available in your application.
+            </p>
+        </field>
+    </record>
+
+
+    <menuitem id="menu_roomdoo_section"
+        name="Roomdoo"
+        parent="pms.pms_configuration_menu"
+        sequence="40"/>
+
+    <menuitem id="menu_roomdoo_app_menu"
+        name="App Menu Items"
+        parent="menu_roomdoo_section"
+        action="action_roomdoo_app_menu"
+        sequence="50"/>
+</odoo>
