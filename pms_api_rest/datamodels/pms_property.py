@@ -1,11 +1,17 @@
 from marshmallow import fields
 
 from odoo.addons.datamodel.core import Datamodel
+from odoo.addons.datamodel.fields import NestedModel
 
 
 class PmsPropertySearchParam(Datamodel):
     _name = "pms.property.search.param"
     name = fields.String(required=False, allow_none=False)
+
+class RoomdooAppMenu(Datamodel):
+    _name = "roomdoo.app.menu"
+    label = fields.String(required=True)
+    url = fields.String(required=True)
 
 
 class PmsPropertyInfo(Datamodel):
@@ -42,3 +48,5 @@ class PmsPropertyInfo(Datamodel):
     canDownloadIneReport = fields.Boolean(required=True, allow_none=False)
     companyName = fields.String(required=False, allow_none=True)
     maxAmountSimplifiedInvoice = fields.Float(required=False, allow_none=True)
+    supportUrl =  NestedModel("roomdoo.app.menu")
+    linksRoomdoo = fields.List(NestedModel("roomdoo.app.menu"))

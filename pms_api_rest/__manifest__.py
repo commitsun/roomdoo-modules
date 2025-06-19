@@ -27,11 +27,13 @@
         "data/pms_app_reset_password_template.xml",
         "data/cron_jobs.xml",
         "data/roomdoo_data.xml",
+        'data/roomdoo_app_menu.xml',
         "views/pms_property_views.xml",
         "views/res_users_views.xml",
         "views/pms_room_type_class_views.xml",
         "views/product_template_views.xml",
         "views/pms_api_log_views.xml",
+        "views/roomdoo_app_menu_views.xml"
     ],
     "demo": [
         "demo/pms_api_rest_master_data.xml",

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="default_support_url" model="roomdoo.app.menu">
+        <field name="name">Support</field>
+        <field name="base_url">https://dummy.local</field>
+        <field name="support_url" eval="True"/>
+        <field name="sequence">100</field>
+    </record>
+</odoo>
