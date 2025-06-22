@@ -19,6 +19,7 @@
         "pms_partner_type_residence",
         "pms_autoinvoice",
         "pms_reservation_invoice_lock",
+        "sale_loyalty",
     ],
     "external_dependencies": {
         "python": ["simplejson", "marshmallow", "jose"],
