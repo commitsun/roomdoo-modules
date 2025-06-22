@@ -1,3 +1,4 @@
+from jwt.exceptions import ExpiredSignatureError
 from werkzeug.exceptions import (
     BadRequest,
     Forbidden,
@@ -14,7 +15,6 @@ from odoo.exceptions import (
     UserError,
     ValidationError,
 )
-from odoo.http import SessionExpiredException
 from odoo.loglevels import ustr
 
 from odoo.addons.base_rest.http import RestApiDispatcher, wrapJsonException
@@ -28,7 +28,7 @@ class RestApiDispatcherPms(RestApiDispatcher):
         """Called within an except block to allow converting exceptions
         to abitrary responses. Anything returned (except None) will
         be used as response."""
-        if isinstance(exception, SessionExpiredException):
+        if isinstance(exception, ExpiredSignatureError):
             # we don't want to return the login form as plain html page
             # we want to raise a proper exception
             return wrapJsonException(Unauthorized(ustr(exception)))
