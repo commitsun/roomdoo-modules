@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from pytz import UTC, timezone
+
 from odoo import _, fields
 from odoo.exceptions import MissingError
 
@@ -777,8 +779,15 @@ class PmsDashboardServices(Component):
                 order="create_date desc",
             )
         )
+        pms_property = (
+            self.env["pms.property"].sudo().browse(pms_folio_search_param.pmsPropertyId)
+        )
+        tz_name = pms_property.tz or "UTC"
+        local_tz = timezone(tz_name)
+
         pms_api_check_access(user=self.env.user, records=folios)
         for folio in folios:
+            utc_dt = folio.create_date.replace(tzinfo=UTC)
             result_folios.append(
                 PmsFolioShortInfo(
                     id=folio.id,
@@ -803,9 +812,9 @@ class PmsDashboardServices(Component):
                     saleChannelId=folio.sale_channel_origin_id.id
                     if folio.sale_channel_origin_id
                     else None,
-                    firstCheckin=str(folio.first_checkin),
-                    lastCheckout=str(folio.last_checkout),
-                    createDate=folio.create_date.isoformat(),
+                    firstCheckin=folio.first_checkin.isoformat(),
+                    lastCheckout=folio.last_checkout.isoformat(),
+                    createDate=utc_dt.astimezone(local_tz).isoformat(),
                 )
             )
         return result_folios
