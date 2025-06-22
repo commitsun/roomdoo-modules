@@ -756,7 +756,7 @@ class PmsTransactionService(Component):
         self, amount, statement_id, journal_id, is_opening=False
     ):
         if amount:
-            statement = self.env["account.bank.statement"].browse(statement_id)
+            statement = self.env["account.bank.statement"].sudo().browse(statement_id)
             st_line_vals = {
                 "statement_id": statement_id,
                 "journal_id": journal_id,
