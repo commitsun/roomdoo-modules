@@ -20,7 +20,7 @@ def get_room_type(mapper, room_id):
     return room_type
 
 
-def get_board_service_room_type(mapper, room_type, board):
+def get_board_service_room_type(mapper, room_type, board, pricelist_id=False):
     bd_binder = mapper.binder_for("channel.wubook.pms.board.service")
     board_service = bd_binder.to_internal(board, unwrap=True)
     assert board_service, (
@@ -28,21 +28,39 @@ def get_board_service_room_type(mapper, room_type, board):
         "PmsRoomTypeImporter._import_dependencies or "
         "PmsFolioImporter._import_dependencies.\n" % (board,)
     )
-    board_service_room_type_id = room_type.board_service_room_type_ids.filtered(
+
+    candidates = room_type.board_service_room_type_ids.filtered(
         lambda x: x.pms_board_service_id == board_service
         and x.pms_property_id == mapper.backend_record.pms_property_id
     )
-    if not board_service_room_type_id:
-        raise ValidationError(
-            _("The Board Service '%(code)s' is not available in Room Type '%(room)s'")
-            % {"code": board_service.default_code, "room": room_type.default_code}
+    if pricelist_id:
+        # First, search for an exact match with the pricelist
+        # associated with the board service
+        exact_match = candidates.filtered(
+            lambda x: pricelist_id in x.pms_pricelist_ids.ids
         )
-    elif len(board_service_room_type_id) > 1:
-        raise ValidationError(
-            _("The Board Service '%(code)s' is duplicated in Room Type '%(room)s'")
-            % {"code": board_service.default_code, "room": room_type.default_code}
-        )
-    return board_service_room_type_id
+        if exact_match:
+            return exact_match[0]
+
+        # If no exact match, look for one without associated prices
+        fallback = candidates.filtered(lambda x: not x.pms_pricelist_ids)
+        if fallback:
+            return fallback[0]
+
+    else:
+        # If no pricelist was passed, look for one without prices
+        fallback = candidates.filtered(lambda x: not x.pms_pricelist_ids)
+        if len(fallback) == 1:
+            return fallback[0]
+        elif len(fallback) > 1:
+            raise ValidationError(
+                _("The Board Service '%(code)s' is duplicated in Room Type '%(room)s'")
+                % {"code": board_service.default_code, "room": room_type.default_code}
+            )
+    raise ValidationError(
+        _("The Board Service '%(code)s' is not available in Room Type '%(room)s'")
+        % {"code": board_service.default_code, "room": room_type.default_code}
+    )
 
 
 class ChannelWubookPmsReservationMapperImport(Component):
@@ -84,9 +102,19 @@ class ChannelWubookPmsReservationMapperImport(Component):
     def room_type_board_service(self, record):
         if record["board"]:
             room_type = get_room_type(self, record["room_id"])
+            pricelist_id = False
+            if record["rate_id"]:
+                binder = self.binder_for("channel.wubook.product.pricelist")
+                pricelist = binder.to_internal(record["rate_id"], unwrap=True)
+                assert pricelist, (
+                    "rate_id %s should have been imported in "
+                    "ProductPricelistImporter._import_dependencies"
+                    % (record["rate_id"],)
+                )
+                pricelist_id = pricelist.id
             return {
                 "board_service_room_id": get_board_service_room_type(
-                    self, room_type, record["board"]
+                    self, room_type, record["board"], pricelist_id
                 ).id
             }
 

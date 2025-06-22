@@ -43,9 +43,17 @@ class ChannelWubookPmsReservationLineMapperImport(Component):
             price = taxes_vals["total_included"]
         if commision_percent_to_deduct:
             price -= price * commision_percent_to_deduct / 100
+        if record.get("rate_id"):
+            binder = self.binder_for("channel.wubook.product.pricelist")
+            pricelist = binder.to_internal(record["rate_id"], unwrap=True)
+            assert pricelist, (
+                "rate_id %s should have been imported in "
+                "ProductPricelistImporter._import_dependencies" % (record["rate_id"],)
+            )
+            pricelist_id = pricelist.id
         if record["board"] and record["board_included"]:
             board_service_room = get_board_service_room_type(
-                self, room_type, record["board"]
+                self, room_type, record["board"], pricelist_id
             )
             # occupancy is the adults in the reservation
             board_day_price_adults = (
