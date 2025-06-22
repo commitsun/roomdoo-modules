@@ -128,8 +128,8 @@ class PmsFolio(models.Model):
         existing_reservation_ids = []
 
         for reservation in pms_folio_info.reservations:
-            reservation_record = (
-                self.env["pms.reservation"].sudo().search([("id", "=", reservation.id)])
+            reservation_record = folio_record.reservation_ids.filtered(
+                lambda x: x.id == reservation.id
             )
             if reservation_record:
                 existing_reservation_ids.append(reservation_record.id)
