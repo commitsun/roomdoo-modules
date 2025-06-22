@@ -18,6 +18,7 @@
         "feed_rss",
         "pms_partner_type_residence",
         "pms_autoinvoice",
+        "sale_loyalty",
     ],
     "external_dependencies": {
         "python": ["simplejson", "marshmallow", "jose"],
