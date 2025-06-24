@@ -714,7 +714,7 @@ class PmsFolioService(Component):
             raise MissingError(_("Folio not found"))
         pms_api_check_access(user=self.env.user, records=folio_record)
         for reservation in folio_info.reservations:
-            new_reservation_record = self.env["pms.reservation"].create(
+            new_reservation_record = self.env["pms.reservation"].sudo().create(
                 {
                     "folio_id": folio_record.id,
                     "pricelist_id": folio_info.pricelistId,
