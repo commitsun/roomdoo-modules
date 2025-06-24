@@ -52,7 +52,7 @@ class PmsDashboardServices(Component):
             SUM(CASE WHEN r.checkin = d.date AND r.state = 'onboard' THEN 1 ELSE 0
             END) AS
             reservations_on_board,
-            SUM(CASE WHEN r.checkout = d.date AND r.state IN ('onboard', 'departure_delayed')
+            SUM(CASE WHEN r.checkout = d.date AND r.state NOT IN ('cancel', 'done')
             THEN 1 ELSE 0
             END) AS reservations_pending_departure,
             SUM(CASE WHEN r.checkout = d.date AND r.state = 'done' THEN 1 ELSE 0 END)

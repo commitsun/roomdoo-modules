@@ -266,7 +266,7 @@ class PmsFolioService(Component):
                 domain_filter.append(expression.AND(subdomains))
             elif folio_search_param.filterByState == "pendingCheckoutsToday":
                 subdomains = [
-                    [("state", "in", ("onboard", "departure_delayed"))],
+                    [("state", "not in", ("cancel", "done"))],
                     [("checkout", "=", fields.Date.today())],
                     [("reservation_type", "!=", "out")],
                 ]
