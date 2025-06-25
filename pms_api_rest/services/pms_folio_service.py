@@ -1665,12 +1665,12 @@ class PmsFolioService(Component):
                         documentNumber=checkin_partner.document_number
                         if checkin_partner.document_number
                         else None,
-                        documentExpeditionDate=datetime.combine(
-                            checkin_partner.document_expedition_date,
-                            datetime.min.time(),
-                        ).isoformat()
-                        if checkin_partner.document_expedition_date
-                        else None,
+                        # documentExpeditionDate=datetime.combine(
+                        #     checkin_partner.document_expedition_date,
+                        #     datetime.min.time(),
+                        # ).isoformat()
+                        # if checkin_partner.document_expedition_date
+                        # else None,
                         documentSupportNumber=checkin_partner.support_number
                         if checkin_partner.support_number
                         else None,

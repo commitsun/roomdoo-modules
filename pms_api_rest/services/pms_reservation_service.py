@@ -728,12 +728,12 @@ class PmsReservationService(Component):
                         documentNumber=checkin_partner.document_number
                         if checkin_partner.document_number
                         else None,
-                        documentExpeditionDate=datetime.combine(
-                            checkin_partner.document_expedition_date,
-                            datetime.min.time(),
-                        ).isoformat()
-                        if checkin_partner.document_expedition_date
-                        else None,
+                        # documentExpeditionDate=datetime.combine(
+                        #     checkin_partner.document_expedition_date,
+                        #     datetime.min.time(),
+                        # ).isoformat()
+                        # if checkin_partner.document_expedition_date
+                        # else None,
                         documentSupportNumber=checkin_partner.support_number
                         if checkin_partner.support_number
                         else None,
@@ -1843,9 +1843,9 @@ class PmsReservationService(Component):
                     else None,
                     documentType=doc_type.id if doc_type.id else None,
                     documentNumber="#" if doc_record.name else None,
-                    documentExpeditionDate=datetime.utcfromtimestamp(0).isoformat()
-                    if doc_record.valid_from
-                    else None,
+                    # documentExpeditionDate=datetime.utcfromtimestamp(0).isoformat()
+                    # if doc_record.valid_from
+                    # else None,
                     documentSupportNumber="#" if doc_record.support_number else None,
                     # personal info
                     gender="#" if partner.gender else None,

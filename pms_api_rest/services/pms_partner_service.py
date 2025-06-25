@@ -304,9 +304,9 @@ class PmsPartnerService(Component):
                     else partner.aeat_identification_type
                     if partner.aeat_identification_type
                     else None,
-                    documentExpeditionDate=document_expedition_date
-                    if document_expedition_date
-                    else None,
+                    # documentExpeditionDate=document_expedition_date
+                    # if document_expedition_date
+                    # else None,
                     comment=partner.comment if partner.comment else None,
                     language=partner.lang if partner.lang else None,
                     userId=partner.user_id if partner.user_id else None,
@@ -570,11 +570,11 @@ class PmsPartnerService(Component):
             if partner.id_numbers
             else None,
             documentNumber=partner.id_numbers[0].name if partner.id_numbers else None,
-            documentExpeditionDate=datetime.combine(
-                partner.id_numbers[0].valid_from, datetime.min.time()
-            ).isoformat()
-            if partner.id_numbers
-            else None,
+            # documentExpeditionDate=datetime.combine(
+            #     partner.id_numbers[0].valid_from, datetime.min.time()
+            # ).isoformat()
+            # if partner.id_numbers
+            # else None,
             documentSupportNumber=partner.id_numbers[0].support_number
             if partner.id_numbers
             else None,
@@ -693,11 +693,11 @@ class PmsPartnerService(Component):
                     mobile=partner.mobile or None,
                     documentType=doc_type.id or None,
                     documentNumber=doc_record.name or None,
-                    documentExpeditionDate=datetime.combine(
-                        doc_record.valid_from, datetime.min.time()
-                    ).isoformat()
-                    if doc_record.valid_from
-                    else None,
+                    # documentExpeditionDate=datetime.combine(
+                    #     doc_record.valid_from, datetime.min.time()
+                    # ).isoformat()
+                    # if doc_record.valid_from
+                    # else None,
                     documentSupportNumber=doc_record.support_number or None,
                     documentCountryId=doc_record.country_id.id or None,
                     gender=partner.gender or None,
