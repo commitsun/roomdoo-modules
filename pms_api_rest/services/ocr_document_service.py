@@ -58,9 +58,9 @@ class PmsOcr(Component):
             if checkin_data_dict.get("birthdate")
             else None,
             documentType=checkin_data_dict.get("document_type") or None,
-            documentExpeditionDate=datetime.strftime(
-                checkin_data_dict.get("document_expedition_date"), "%Y-%m-%dT%H:%M:%S"
-            )
+            # documentExpeditionDate=datetime.strftime(
+            #     checkin_data_dict.get("document_expedition_date"), "%Y-%m-%dT%H:%M:%S"
+            # )
             if checkin_data_dict.get("document_expedition_date")
             else None,
             documentSupportNumber=checkin_data_dict.get("document_support_number")
@@ -126,9 +126,9 @@ class PmsOcr(Component):
             if checkin_data_dict.get("birthdate")
             else None,
             documentType=checkin_data_dict.get("document_type") or None,
-            documentExpeditionDate=datetime.strftime(
-                checkin_data_dict.get("document_expedition_date"), "%Y-%m-%dT%H:%M:%S"
-            )
+            # documentExpeditionDate=datetime.strftime(
+            #     checkin_data_dict.get("document_expedition_date"), "%Y-%m-%dT%H:%M:%S"
+            # )
             if checkin_data_dict.get("document_expedition_date")
             else None,
             documentSupportNumber=checkin_data_dict.get("document_support_number")
