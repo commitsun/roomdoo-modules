@@ -115,32 +115,15 @@ class ChannelWubookPmsFolioMapperImport(Component):
             "partner_name": f"{record['customer_surname']}, {record['customer_name']}"
         }
 
-    # @only_create
-    # @mapping
-    # def partner_id(self, record):
-    #     values = {
-    #         "name": "{}, {}".format(
-    #             record["customer_surname"], record["customer_name"]
-    #         ),
-    #         "city": record["customer_city"],
-    #         "mobile": record["customer_phone"],
-    #         "zip": record["customer_zip"],
-    #         "street": record["customer_address"],
-    #         "email": record["customer_mail"],
-    #     }
-    #     country = self.env["res.country"].search(
-    #         [("code", "=", record["customer_country"])], limit=1
-    #     )
-    #     if country:
-    #         values["country_id"] = (country.id,)
-    #     lang = self.env["res.lang"].search(
-    #         [("code", "=", record["customer_language_iso"])], limit=1
-    #     )
-    #     if lang:
-    #         values["lang"] = lang.id
-    #     partner = self.env["res.partner"].create(values)
-    #     return {"partner_id": partner.id}
-
+    @mapping
+    def lang(self, record):
+        lang = self.env["res.lang"].search(
+            [("iso_code", "=", record["customer_language_iso"])], limit=1
+        )
+        if lang:
+            return {"lang": lang.code}
+        return {}
+    
 
 class ChannelWubookPmsFolioChildMapperImport(Component):
     _name = "channel.wubook.pms.folio.child.mapper.import"
