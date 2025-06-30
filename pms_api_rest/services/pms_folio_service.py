@@ -1000,6 +1000,13 @@ class PmsFolioService(Component):
                     )._compute_board_service_room_id()
                 if reservation.stateCode == "cancel":
                     reservation_record.action_cancel()
+            # Apply loyalty discount
+            for reservation in folio.reservation_ids:
+                service_discount_cmds = self.get_autoinclude_loyalty_by_code(
+                    reservation, pms_folio_info.internalComment or ""
+                )
+                if len(service_discount_cmds) > 0:
+                    reservation.write({"service_ids": service_discount_cmds})
             pms_folio_info.transactions = self.normalize_payments_structure(
                 pms_folio_info, folio
             )
@@ -2892,3 +2899,103 @@ class PmsFolioService(Component):
                             )
                         )
         return pms_folio_info
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:folio_id>/bookia",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.folio.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_folio_bookia(self, folio_id):
+        folio = (
+            self.env["pms.folio"]
+            .sudo()
+            .search(
+                [
+                    ("id", "=", folio_id),
+                ]
+            )
+        )
+        if folio:
+            portal_url = (
+                self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                + folio.get_portal_url()
+            )
+            PmsFolioInfo = self.env.datamodels["pms.folio.info"]
+            return PmsFolioInfo(
+                id=folio.id,
+                name=folio.name,
+                partnerId=folio.partner_id if folio.partner_id else None,
+                partnerName=folio.partner_name if folio.partner_name else None,
+                partnerPhone=folio.mobile if folio.mobile else None,
+                partnerEmail=folio.email if folio.email else None,
+                state=folio.state,
+                amountTotal=round(folio.amount_total, 2),
+                pendingAmount=folio.pending_amount,
+                firstCheckin=str(folio.first_checkin),
+                lastCheckout=str(folio.last_checkout),
+                language=folio.lang if folio.lang else None,
+                access_token=folio.access_token,
+            )
+        else:
+            raise MissingError(_("Folio not found"))
+
+    def get_autoinclude_loyalty_by_code(self, reservation, internal_comment=False):
+        """
+        This method is used to get the autoinclude loyalty by code
+        """
+        promos = (
+            self.env["loyalty.program"]
+            .sudo()
+            .search(
+                [
+                    ("company_id", "=", reservation.company_id.id),
+                ]
+            )
+        )
+        cmds = []
+        if not internal_comment:
+            return cmds
+        for promo in promos.filtered(
+            lambda p: p.rule_ids.filtered(
+                lambda r: r.code and r.code in internal_comment
+            )
+        ):
+            reward = promo.reward_ids[0] if promo.reward_ids else False
+            if not reward:
+                continue
+            product = reward.discount_line_product_id
+            if reward.discount_mode == "percent":
+                price = -reward.discount * reservation.price_room_services_set / 100
+            else:
+                price = -reward.discount
+            if not product or price == 0:
+                continue
+            cmds.append(
+                (
+                    0,
+                    False,
+                    {
+                        "product_id": product.id,
+                        "reservation_id": reservation.id,
+                        "service_line_ids": [
+                            (
+                                0,
+                                False,
+                                {
+                                    "date": reservation.checkin,
+                                    "price_unit": price,
+                                    "day_qty": 1,
+                                },
+                            )
+                        ],
+                    },
+                )
+            )
+        return cmds
