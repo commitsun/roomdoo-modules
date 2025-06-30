@@ -32,6 +32,7 @@ class ChannelBinding(models.AbstractModel):
     synced_export = fields.Boolean(
         string="Synced (export)", compute="_compute_synced_export", readonly=True
     )
+    no_export = fields.Boolean(default=False)
 
     def _is_synced_export(self):
         self.ensure_one()
@@ -52,7 +53,7 @@ class ChannelBinding(models.AbstractModel):
         ),
         (
             "channel_internal_uniq",
-            "unique(backend_id, odoo_id)",
+            "EXCLUDE (backend_id WITH =, odoo_id WITH =) WHERE (no_export = False or no_export IS NULL)",
             "A binding already exists with the same Internal (Odoo) ID.",
         ),
     ]
