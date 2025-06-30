@@ -83,9 +83,9 @@ class BinderCustom(AbstractComponent):
             [
                 (self._odoo_field, "=", relation.id),
                 (self._backend_field, "=", self.backend_record.id),
+                ('no_export', '=', False),
             ]
         )
-
         if not binding:
             if force:
                 binding = self.model.with_context(connector_no_export=True).create(
@@ -260,6 +260,32 @@ class BinderCustom(AbstractComponent):
 
         return self.model
 
+    def to_external(self, binding, wrap=False):
+        """Give the external ID for an Odoo binding ID
+
+        :param binding: Odoo binding for which we want the external id
+        :param wrap: if True, binding is a normal record, the
+                     method will search the corresponding binding and return
+                     the external id of the binding
+        :return: external ID of the record
+        """
+        if isinstance(binding, models.BaseModel):
+            binding.ensure_one()
+        else:
+            binding = self.model.browse(binding)
+        if wrap:
+            binding = self.model.with_context(active_test=False).search(
+                [
+                    (self._odoo_field, "=", binding.id),
+                    (self._backend_field, "=", self.backend_record.id),
+                    ('no_export', '=', False),
+                ]
+            )
+            if not binding:
+                return None
+            binding.ensure_one()
+            return binding[self._external_field]
+        return binding[self._external_field]
 
 # TODO: naming the methods more intuitively
 # TODO: unify both methods, they have a lot of common code
