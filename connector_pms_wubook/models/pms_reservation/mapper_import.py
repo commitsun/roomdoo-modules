@@ -37,19 +37,19 @@ def get_board_service_room_type(mapper, room_type, board, pricelist_id=False):
         # First, search for an exact match with the pricelist
         # associated with the board service
         exact_match = candidates.filtered(
-            lambda x: pricelist_id in x.pms_pricelist_ids.ids
+            lambda x: pricelist_id in x.pricelist_ids.ids
         )
         if exact_match:
             return exact_match[0]
 
         # If no exact match, look for one without associated prices
-        fallback = candidates.filtered(lambda x: not x.pms_pricelist_ids)
+        fallback = candidates.filtered(lambda x: not x.pricelist_ids)
         if fallback:
             return fallback[0]
 
     else:
         # If no pricelist was passed, look for one without prices
-        fallback = candidates.filtered(lambda x: not x.pms_pricelist_ids)
+        fallback = candidates.filtered(lambda x: not x.pricelist_ids)
         if len(fallback) == 1:
             return fallback[0]
         elif len(fallback) > 1:
