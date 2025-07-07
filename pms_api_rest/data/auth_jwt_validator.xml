@@ -10,5 +10,7 @@
         <field name="static_user_id">1</field>
         <field name="partner_id_strategy">email</field>
         <field name="partner_id_required" eval="False" />
+        <field name="cookie_enabled" eval="True" />
+        <field name="cookie_name">authorization</field>
     </record>
 </odoo>
