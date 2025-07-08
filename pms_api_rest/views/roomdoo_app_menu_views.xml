@@ -59,7 +59,7 @@
                                             <li><code>property</code>: property object, can access all of the fields of the obj for example <code>property.id</code>.</li>
                                             <li><code>user</code>: Object of the current user.</li>
                                             <li><code>web_base_url</code>: Value of web.base.url parameter.</li>
-                                            <li><code>frontend_domain</code>: Frontend domain based on web.base.url, we assume that the frontend_domain is the odoo base url without <code>.host.</code> subdomain.</li>
+                                            <li><code>frontend_domain</code>: Value of roomdoo_app_url parameter</li>
                                         </ul>
                                     </p>
                                     <p>
