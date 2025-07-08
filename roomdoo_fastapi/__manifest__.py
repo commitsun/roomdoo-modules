@@ -10,6 +10,6 @@
         'pms_fastapi',
     ],
     'data': [
-        'data/ir_config_parameter.xml',
+        'views/res_config_settings.xml'
     ],
 }
