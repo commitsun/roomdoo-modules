@@ -18,15 +18,22 @@ def url_image_pms_api_rest(model, record_id, field):
             ]
         )
     )
-    if rt_image_attach and not rt_image_attach.access_token:
-        rt_image_attach.generate_access_token()
-    result = (
-        request.env["ir.config_parameter"].sudo().get_param("web.base.url")
-        + f"/web/image/{rt_image_attach.id}?access_token={rt_image_attach.access_token}"
-        if rt_image_attach
-        else False
-    )
+    if rt_image_attach:
+        result = get_attachment_url(rt_image_attach)
+    else:
+        result = False
     return result if result else ""
+
+def get_attachment_url(attachment):
+    """
+    Returns the URL of an attachment, generating an access token if necessary.
+    """
+    if not attachment.access_token:
+        attachment.generate_access_token()
+    return (
+        request.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        + f"/web/image/{attachment.id}?access_token={attachment.access_token}"
+    )
 
 
 def pms_api_check_access(user, records=False):

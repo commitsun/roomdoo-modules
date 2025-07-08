@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="res_config_settings_view_form" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.roomdoo</field>
+            <field name="model">res.config.settings</field>
+            <field name="priority" eval="40"/>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('settings')]" position="inside">
+                    <div class="app_settings_block" data-string="Roomdoo" string="Roomdoo" data-key="roomdoo">
+                        <h2>Roomdoo</h2>
+                        <div class="row mt16 o_settings_container" id="roomdoo_settings">
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane"/>
+                                <div class="o_setting_right_pane">
+                                    <div class="content-group">
+                                        <label for="roomdoo_fastapi_instance_name" class="o_form_label">Roomdoo FastAPI Instance Name</label>
+                                        <field name="roomdoo_fastapi_instance_name"/>
+                                        <label for="roomdoo_fastapi_image" class="o_form_label mt16">Roomdoo FastAPI Image</label>
+                                        <field name="roomdoo_fastapi_image" widget="image"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+</odoo>
