@@ -1,6 +1,6 @@
 from pydantic import AnyHttpUrl, BaseModel
 
-from .property import PropertyId
+from .pms_property import PropertyId
 
 
 class User(BaseModel):
