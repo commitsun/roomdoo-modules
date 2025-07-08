@@ -1,5 +1,5 @@
 import time
-
+from datetime import datetime
 import werkzeug.exceptions
 from jose import jwt
 
@@ -63,6 +63,9 @@ class PmsLoginService(Component):
             },
             key=validator.secret_key,
             algorithm=validator.secret_algorithm,
+        )
+        user_record._generate_portal_login_token(
+            expiration=datetime.fromtimestamp(timestamp_expire_in_a_sec)
         )
         avail_rule_names = []
         for avail_field in user_record.availability_rule_field_ids:
