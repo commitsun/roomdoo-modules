@@ -3,7 +3,7 @@
     <record model="fastapi.endpoint" id="pms_fastapi_endpoint">
         <field name="name">PMS API</field>
         <field name="app">pms_api</field>
-        <field name="root_path">/apiV2</field>
+        <field name="root_path">/pmsApi</field>
         <field name="user_id" ref="pms_fastapi_user" />
     </record>
 </odoo>

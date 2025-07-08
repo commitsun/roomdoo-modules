@@ -6,7 +6,7 @@ from odoo.api import Environment
 
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
-from odoo.addons.pms_fastapi.schemas.property import PropertyId
+from odoo.addons.pms_fastapi.schemas.pms_property import PropertyId
 from odoo.addons.pms_fastapi.schemas.user import User
 
 from ..pms_api_rest_utils import url_image_pms_api_rest
