@@ -6,9 +6,9 @@ from .pms_property import PropertyId
 class User(BaseModel):
     id: int
     name: str
-    firstname: str = ""
-    lastname: str = ""
-    lastname2: str = ""
+    firstName: str = ""
+    lastName: str = ""
+    lastName2: str = ""
     email: str = ""
     phone: str = ""
     image: AnyHttpUrl = ""

@@ -23,13 +23,12 @@ async def get_user_info(
     return User(
         id=user.id,
         name=user.name,
-        firstname=user.firstname or "",
-        lastname=user.lastname or "",
-        lastname2=user.lastname2 or "",
+        firstName=user.firstname or "",
+        lastName=user.lastname or "",
+        lastName2=user.lastname2 or "",
         email=user.email,
         phone=user.phone or "",
         image=url_image_pms_api_rest("res.partner", user.partner_id.id, "image_1024"),
-        role=user.pms_api_user_role,
         defaultProperty=PropertyId(
             id=user.pms_property_id.id, name=user.pms_property_id.name
         ),
