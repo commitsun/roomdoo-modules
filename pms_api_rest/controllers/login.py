@@ -13,13 +13,12 @@ class LoginPortalToken(http.Controller):
         auth="public",
         methods=["GET"],
     )
-    def login_portal_token(self, login, token, redirect_url=None):
+    def login_portal_token(self, login, token, redirect_url=None, **kwargs):
         """
         Login a user to the portal using a token.
         :param user_id: ID of the user to log in.
         :param token: Token for authentication.
         :param redirect_url: Optional URL to redirect after login.
-        :return: JSON response with success or error message.
         """
         request.params['login'] = login
         request.params['password'] = token
@@ -37,7 +36,7 @@ class LoginPortalToken(http.Controller):
         try:
             request.session.authenticate(request.session.db, request.params['login'], request.params['password'])
             request.params['login_success'] = True
-            return request.redirect(redirect_url or '/web')
+            return request.redirect_query(redirect_url or '/web', query=kwargs)
         except AccessDenied:
             request.uid = old_uid
-        return http.local_redirect('/')
+        return request.redirect('/')
