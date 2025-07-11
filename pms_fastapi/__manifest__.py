@@ -9,6 +9,8 @@
     "depends": [
         "fastapi",
         "auth_jwt_login",
+        'partner_firstname',
+        "pms_api_rest", # temporal
     ],
     "data": [
         "security/pms_fastapi_groups.xml",
