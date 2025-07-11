@@ -16,8 +16,8 @@ from odoo.addons.pms_fastapi.schemas.pms_login import PmsLoginInput
         401: {
             "description": "Unauthorized",
             "content": {"application/json": {"example": {"detail": "wrong user/pass"}}},
-            204: {"model": None},
-        }
+        },
+        204: {"model": None},
     },
     tags=["login"],
 )
@@ -30,7 +30,7 @@ async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_en
             detail="wrong user/pass",
         )
     try:
-        user_record.with_user(user_record)._check_credentials(user.password, None)
+        user_record.with_user(user_record)._check_credentials(user.password.get_secret_value(), None)
     except AccessDenied as e:
         raise HTTPException(
             status_code=401,

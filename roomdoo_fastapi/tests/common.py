@@ -1,0 +1,43 @@
+import json
+from functools import partial
+from requests import Response
+from odoo.tools import mute_logger
+from odoo.addons.fastapi.tests.common import FastAPITransactionCase
+from odoo.addons.fastapi.dependencies import fastapi_endpoint
+from fastapi import status
+
+class CommonTestRoomdooApi(FastAPITransactionCase):
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        jwt_validator = cls.env['auth.jwt.validator'].search([('name', '=', 'api_pms')])
+        jwt_validator.cookie_secure = False
+        cls.pms_fastapi_app = cls.env.ref("pms_fastapi.pms_fastapi_endpoint")
+        cls.env = cls.env(context=dict(cls.env.context, queue_job__no_delay=True))
+        cls.default_fastapi_app = cls.pms_fastapi_app._get_app()
+        cls.default_fastapi_dependency_overrides = {
+            fastapi_endpoint: partial(lambda a: a, cls.pms_fastapi_app)
+        }
+        cls.default_fastapi_odoo_env = cls.env
+        cls.default_fastapi_running_user = cls.pms_fastapi_app.user_id
+        cls.test_user = cls.env['res.users'].create({
+            'name': 'PMS api test',
+            'login': 'test_pms_api',
+            'password': 'supersecret',
+            'email': 'test@example.org',
+        })
+
+    def _login(self, test_client, password="supersecret"):
+        response: Response = test_client.post(
+            "/login",
+            content=json.dumps(
+                {
+                    "username": "test_pms_api",
+                    "password": password,
+                }
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.text)
+        return response
+
