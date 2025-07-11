@@ -2,16 +2,18 @@ from pydantic import BaseModel, SecretStr
 
 
 class AvailabilityRuleField(BaseModel):
-  name: str
+    name: str
 
 
 class ChangePasswordInput(BaseModel):
-  oldPassword: SecretStr
-  newPassword: SecretStr
+    oldPassword: SecretStr
+    newPassword: SecretStr
+
 
 class UserEmailInput(BaseModel):
-  email: str
+    email: str
+
 
 class ResetPasswordInput(BaseModel):
-  newPassword: SecretStr
-  resetToken: SecretStr
+    newPassword: SecretStr
+    resetToken: SecretStr
