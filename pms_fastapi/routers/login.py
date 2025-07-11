@@ -30,7 +30,9 @@ async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_en
             detail="wrong user/pass",
         )
     try:
-        user_record.with_user(user_record)._check_credentials(user.password.get_secret_value(), None)
+        user_record.with_user(user_record)._check_credentials(
+            user.password.get_secret_value(), None
+        )
     except AccessDenied as e:
         raise HTTPException(
             status_code=401,
@@ -55,6 +57,6 @@ async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_en
         path=validator.cookie_path or "/",
         secure=validator.cookie_secure,
         httponly=True,
-        samesite='Strict'
+        samesite="Strict",
     )
     return response

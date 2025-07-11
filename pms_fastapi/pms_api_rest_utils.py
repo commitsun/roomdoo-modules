@@ -24,6 +24,7 @@ def url_image_pms_api_rest(model, record_id, field):
         result = False
     return result if result else ""
 
+
 def get_attachment_url(attachment):
     """
     Returns the URL of an attachment, generating an access token if necessary.
