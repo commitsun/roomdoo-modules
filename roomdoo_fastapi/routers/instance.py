@@ -10,7 +10,7 @@ from odoo.addons.pms_fastapi.pms_api_rest_utils import get_attachment_url
 from odoo.addons.roomdoo_fastapi.schemas.instance import Instance
 
 
-@pms_api_router.get("/instance/", response_model=Instance, tags=["db_info"])
+@pms_api_router.get("/instance", response_model=Instance, tags=["db_info"])
 async def get_instance_info(env: Annotated[Environment, Depends(odoo_env)]) -> Instance:
     """
     Get instance name and image URL.

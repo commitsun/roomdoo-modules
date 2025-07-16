@@ -9,7 +9,7 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.language import Language
 
 
-@pms_api_router.get("/languages/", response_model=list[Language], tags=["db_info"])
+@pms_api_router.get("/languages", response_model=list[Language], tags=["db_info"])
 async def get_server_languages(
     env: Annotated[Environment, Depends(odoo_env)]
 ) -> list[Language]:

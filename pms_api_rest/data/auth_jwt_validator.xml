@@ -12,5 +12,6 @@
         <field name="partner_id_required" eval="False" />
         <field name="cookie_enabled" eval="True" />
         <field name="cookie_name">authorization</field>
+        <field name="cookie_max_age">900</field>
     </record>
 </odoo>

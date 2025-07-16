@@ -9,5 +9,5 @@
     "depends": [
         "pms_fastapi",
     ],
-    "data": ["views/res_config_settings.xml"],
+    "data": ["views/res_config_settings.xml", "views/auth_jwt_validator.xml"],
 }

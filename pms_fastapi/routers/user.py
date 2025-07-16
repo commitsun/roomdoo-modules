@@ -12,7 +12,7 @@ from odoo.addons.pms_fastapi.schemas.user import User
 from ..pms_api_rest_utils import url_image_pms_api_rest
 
 
-@pms_api_router.get("/user/", response_model=User, tags=["user"])
+@pms_api_router.get("/user", response_model=User, tags=["user"])
 async def get_user_info(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))]
 ) -> User:
