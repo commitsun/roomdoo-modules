@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_auth_jwt_validator_form" model="ir.ui.view">
+        <field name="name">auth.jwt.validator.inherit.view.form</field>
+        <field name="model">auth.jwt.validator</field>
+        <field name="inherit_id" ref="auth_jwt.view_auth_jwt_validator_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='cookie_enabled']/.." position="after">
+                <group colspan="2" string="Cookie">
+                    <field name="refresh_cookie_name" />
+                    <field name="refresh_cookie_max_age" />
+                    <field name="refresh_token_secret" />
+                    <field name="refresh_token_path" />
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

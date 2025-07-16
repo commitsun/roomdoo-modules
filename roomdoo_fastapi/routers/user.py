@@ -18,7 +18,7 @@ from odoo.addons.roomdoo_fastapi.schemas.user import (
 
 
 @pms_api_router.get(
-    "/user/availability-rule-fields/",
+    "/user/availability-rule-fields",
     response_model=list[AvailabilityRuleField],
     tags=["user"],
 )
@@ -36,7 +36,7 @@ async def get_availability_rule_fields(
 
 
 @pms_api_router.patch(
-    "/user/change-password/",
+    "/user/change-password",
     responses={
         401: {
             "description": "Unauthorized",
@@ -63,7 +63,8 @@ async def change_password(
 
 
 @pms_api_router.post(
-    "/send-mail-reset-password/",
+    "/send-mail-reset-password",
+    status_code=204,
     responses={
         204: {"model": None},
     },
@@ -84,7 +85,8 @@ async def send_mail_reset_password(
 
 
 @pms_api_router.patch(
-    "/reset-password/",
+    "/reset-password",
+    status_code=204,
     responses={
         204: {"model": None},
     },
