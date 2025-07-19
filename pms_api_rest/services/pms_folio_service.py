@@ -1269,10 +1269,8 @@ class PmsFolioService(Component):
             # the template is not ready for multiple reservations
             compose_vals = {
                 "template_id": folio.pms_property_id.property_canceled_template.id,
-                "model": "pms.reservation",
-                "res_ids": folio.reservation_ids.filtered(
-                    lambda r: r.state == "cancel"
-                )[0].id,
+                "model": "pms.folio",
+                "res_ids": folio.id,
             }
         values = (
             self.env["mail.compose.message"]
