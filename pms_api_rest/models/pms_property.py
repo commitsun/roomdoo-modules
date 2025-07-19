@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+from datetime import timedelta
 
 import requests
 
@@ -832,3 +833,45 @@ class PmsProperty(models.Model):
                 limit=1,
             )
         return support_url
+
+    @api.model
+    def pms_cron_rule_push(self):
+        neobookings_user = self.env["res.users"].search(
+            [("login", "=", "neobookings@roomdoo.com")]
+        )
+        neobookings_property_ids = neobookings_user.pms_property_ids.ids
+        rules_to_export = self.env["pms.availability.plan.rule"].search([
+            ("date", ">=", fields.Date.today()),
+            ("pms_property_id", "in", neobookings_property_ids),
+            ("write_date", ">", fields.Datetime.now() - timedelta(minutes=10))
+        ])
+        pms_properties = rules_to_export.mapped("pms_property_id")
+        for pms_property in pms_properties:
+            neobookings_property = pms_property
+            ota_neo_settings = neobookings_property.ota_property_settings_ids.filtered(
+                lambda r: "eobookings" in r.agency_id.name
+            )
+            neobookings_availability_plan_id = ota_neo_settings.main_avail_plan_id.id
+            items_to_upload = rules_to_export.filtered(
+                lambda r: r.pms_property_id.id == pms_property.id and
+                r.availability_plan_id.id == neobookings_availability_plan_id
+            )
+            payload, endpoint = neobookings_property.get_payload_rules(
+                rules=items_to_upload, client=neobookings_user
+            )
+            if payload:
+                response = neobookings_property.pms_api_push_payload(
+                    payload=payload, endpoint=endpoint, client=neobookings_user
+                )
+                self.env["pms.api.log"].sudo().create(
+                    {
+                        "pms_property_id": neobookings_property.id,
+                        "client_id": neobookings_user.id,
+                        "request": payload,
+                        "response": str(response),
+                        "status": "success" if response.ok else "error",
+                        "request_date": fields.Datetime.now(),
+                        "method": "PUSH",
+                        "endpoint": endpoint,
+                    }
+                )
