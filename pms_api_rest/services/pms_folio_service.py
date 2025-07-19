@@ -1173,8 +1173,11 @@ class PmsFolioService(Component):
         folio_vals = self.env["pms.folio"].create_folio_vals(
             folio_record=folio_record, pms_folio_info=pms_folio_info
         )
+        avails = folio_record.reservation_ids.mapped("reservation_line_ids.avail_id")
         if folio_vals:
             folio_record.with_context(skip_compute_service_ids=True).write(folio_vals)
+            if avails:
+                avails._compute_real_avail()
 
     # ------------------------------------------------------------------------------------
     # FOLIO SERVICES----------------------------------------------------------------
@@ -1522,15 +1525,10 @@ class PmsFolioService(Component):
             if line.section_id and line.section_id.id not in sale_lines_to_invoice.ids:
                 sale_lines_to_invoice |= line.section_id
                 lines_to_invoice_dict[line.section_id.id] = 0
-        line_notes = (
-            self.env["folio.sale.line"]
-            .sudo()
-            .search(
-                [
-                    ("display_type", "=", "line_note"),
-                ]
-            )
-            .filtered(lambda l: l.section_id in sale_lines_to_invoice)
+        folio = self.env["pms.folio"].sudo().browse(folio_id)
+        line_notes = folio.sale_line_ids.filtered(
+            lambda l: l.display_type == "line_note"
+            and l.section_id in sale_lines_to_invoice
         )
         for line_note in line_notes:
             if line_note.id not in lines_to_invoice_dict:
