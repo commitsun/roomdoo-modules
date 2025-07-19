@@ -128,12 +128,14 @@ class ChannelChildMapperImport(AbstractComponent):
         )
         neobookings_pricelist_id = ota_neo_settings.main_pricelist_id.id
         neobookings_availability_plan_id = ota_neo_settings.main_avail_plan_id.id
+        room_types_excluded_ids = ota_neo_settings.excluded_room_type_ids.ids
         payload = False
         items_to_upload = False
         call_type = False
         min_date = False
         max_date = False
         room_type_ids = False
+        endpoint = False
         if (
             hasattr(items, "_name")
             and items._name == "channel.wubook.product.pricelist.item"
@@ -152,9 +154,10 @@ class ChannelChildMapperImport(AbstractComponent):
                 max_date = max(items_to_upload.mapped("date_end_consumption"))
                 room_type_ids = (
                     self.env["pms.room.type"]
-                    .search(
-                        [("product_id", "in", items_to_upload.mapped("product_id").ids)]
-                    )
+                    .search([
+                        ("product_id", "in", items_to_upload.mapped("product_id").ids),
+                        ("id", "not in", room_types_excluded_ids),
+                    ])
                     .ids
                 )
                 payload, endpoint = neobookings_property.get_payload_prices(
@@ -165,7 +168,10 @@ class ChannelChildMapperImport(AbstractComponent):
             items_to_upload = (
                 self.env["channel.wubook.pms.availability"]
                 .browse(neobooking_item_ids)
-                .filtered(lambda r: r.pms_property_id.id == neobookings_property_id)
+                .filtered(
+                    lambda r: r.pms_property_id.id == neobookings_property_id
+                    and r.room_type_id.id not in room_types_excluded_ids
+                )
             )
             if items_to_upload:
                 min_date = min(items_to_upload.mapped("date"))
@@ -186,6 +192,7 @@ class ChannelChildMapperImport(AbstractComponent):
                     lambda r: r.availability_plan_id.id
                     == neobookings_availability_plan_id
                     and r.pms_property_id.id == neobookings_property_id
+                    and r.room_type_id.id not in room_types_excluded_ids
                 )
             )
             if items_to_upload:
