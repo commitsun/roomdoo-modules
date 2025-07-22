@@ -62,6 +62,7 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
         }
         token = validator._encode(
             payload,
+            secret=validator.secret_key,
             expire=validator.cookie_max_age,
         )
         response = Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -71,7 +72,7 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
             max_age=validator.cookie_max_age,
             path=validator.cookie_path or "/",
             secure=validator.cookie_secure,
-            httponly=True,
+            httponly=False,
             samesite="Strict",
         )
         return response
