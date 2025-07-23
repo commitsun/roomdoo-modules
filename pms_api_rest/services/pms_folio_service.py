@@ -1331,8 +1331,7 @@ class PmsFolioService(Component):
             template.send_mail(res_id, force_send=True, email_values=email_values)
         if pms_mail_info.mailType == "cancel":
             template = folio.pms_property_id.property_canceled_template
-            res = folio.reservation_ids.filtered(lambda r: r.state == "cancel")
-            res_id = res[0].id
+            res_id = folio.id
             template.send_mail(res_id, force_send=True, email_values=email_values)
         return True
 
