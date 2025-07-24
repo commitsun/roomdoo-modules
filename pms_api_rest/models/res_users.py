@@ -1,4 +1,5 @@
 from odoo import fields, models
+from odoo.addons.base.models.res_users import KEY_CRYPT_CONTEXT, INDEX_SIZE
 from datetime import timedelta
 from odoo.exceptions import AccessDenied
 import secrets
@@ -74,6 +75,23 @@ class ResUsers(models.Model):
             res = super()._check_credentials(password, env)
             return res
         except AccessDenied as e:
-            user = self.env.user
-            if user.portal_login_token != password or user.portal_login_token_expiration < fields.Datetime.now():
+            if not self.env['one.time.res.users.apikeys']._check_credentials(scope='ots', key=password) == self.env.uid:
                 raise AccessDenied() from e
+
+class OneTimeAPIKeys(models.Model):
+    _name = 'one.time.res.users.apikeys'
+    _inherit = "res.users.apikeys"
+
+    def _check_credentials(self, *, scope, key):
+        assert scope, "scope is required"
+        index = key[:INDEX_SIZE]
+        self.env.cr.execute('''
+            SELECT k.id as id, user_id, key
+            FROM {} k INNER JOIN res_users u ON (u.id = user_id)
+            WHERE u.active and index = %s AND (scope IS NULL OR scope = %s)
+        '''.format(self._table),
+        [index, scope])
+        for id, user_id, current_key in self.env.cr.fetchall():
+            if KEY_CRYPT_CONTEXT.verify(key, current_key):
+                self.sudo().browse(id).unlink()
+                return user_id

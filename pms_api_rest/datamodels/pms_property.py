@@ -11,7 +11,7 @@ class PmsPropertySearchParam(Datamodel):
 class RoomdooAppMenu(Datamodel):
     _name = "roomdoo.app.menu"
     label = fields.String(required=True)
-    url = fields.String(required=True)
+    id = fields.Integer(required=False, allow_none=True)
 
 
 class PmsPropertyInfo(Datamodel):

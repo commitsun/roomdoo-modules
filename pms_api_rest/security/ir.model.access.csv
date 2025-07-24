@@ -6,3 +6,4 @@ access_roomdoo_app_menu_user,roomdoo.app.menu user,model_roomdoo_app_menu,pms.gr
 access_roomdoo_app_menu_manager,roomdoo.app.menu manager,model_roomdoo_app_menu,pms.group_pms_manager,1,1,1,1
 access_roomdoo_app_menu_url_param_user,roomdoo.app.menu.url.param user,model_roomdoo_app_menu_url_param,pms.group_pms_user,1,0,0,0
 access_roomdoo_app_menu_url_param_manager,roomdoo.app.menu.urlp.param manager,model_roomdoo_app_menu_url_param,pms.group_pms_manager,1,1,1,1
+pms_api_rest.access_one_time_res_users_apikeys,access_one_time_res_users_apikeys,pms_api_rest.model_one_time_res_users_apikeys,base.group_user,1,1,1,1

@@ -60,6 +60,7 @@
                                             <li><code>user</code>: Object of the current user.</li>
                                             <li><code>web_base_url</code>: Value of web.base.url parameter.</li>
                                             <li><code>frontend_domain</code>: Value of roomdoo_app_url parameter</li>
+                                            <li><code>ots_token</code>: one time use token to login the user</li>
                                         </ul>
                                     </p>
                                     <p>
