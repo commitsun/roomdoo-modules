@@ -750,7 +750,6 @@ class PmsProperty(models.Model):
                     ("support_url", "=", False),
                 ]
             )
-            .get_dict_data(self)
         )
 
     def get_roomdoo_support_url(self):
@@ -767,5 +766,4 @@ class PmsProperty(models.Model):
                 ],
                 limit=1,
             )
-            .get_dict_data(self)[0]
         )

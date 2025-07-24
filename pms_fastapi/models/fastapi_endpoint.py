@@ -35,6 +35,12 @@ class FastapiEndpoint(models.Model):
                     "description": "Database information operations",
                 }
             )
+            tags_metadata.append(
+                {
+                    "name": "property",
+                    "description": "Properties related operations",
+                }
+            )
 
             params["openapi_tags"] = tags_metadata
         return params

@@ -102,13 +102,13 @@ class PmsPropertyService(Component):
                     if prop.max_amount_simplified_invoice
                     else None,
                     supportUrl=RoomdooAppMenu(
-                        label=property_support_menu['label'],
-                        url=property_support_menu['url'],
+                        label=property_support_menu.name,
+                        id=property_support_menu.id,
                     ),
                     linksRoomdoo=[
                         RoomdooAppMenu(
-                            label=menu['label'],
-                            url=menu['url'],
+                            label=menu.name,
+                            id=menu.id,
                         )
                         for menu in property_menus
                     ],
@@ -197,13 +197,13 @@ class PmsPropertyService(Component):
                 if pms_property.max_amount_simplified_invoice
                 else None,
                     supportUrl=RoomdooAppMenu(
-                        label=property_support_menu['label'],
-                        url=property_support_menu['url'],
+                        label=property_support_menu.name,
+                        id=property_support_menu.id,
                     ),
                     linksRoomdoo=[
                         RoomdooAppMenu(
-                            label=menu['label'],
-                            url=menu['url'],
+                            label=menu.name,
+                            id=menu.id,
                         )
                         for menu in property_menus
                     ],

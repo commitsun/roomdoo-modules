@@ -78,10 +78,6 @@ class RoomdooAppMenu(models.Model):
         )
         return final_url
 
-    def get_dict_data(self, property_obj):
-        """Return a list of dictionaries representing the menu items."""
-        return [{"label": x.name, "url": x.generate_url(property_obj)} for x in self]
-
     @api.constrains("support_url")
     def _check_support_url(self):
         """Ensure only one record can be marked as support URL."""
@@ -170,6 +166,11 @@ class RoomdooUrlParam(models.Model):
                 "web_base_url": host_url,
                 "frontend_domain": roomdoo_app_url,
             }
+            if self.value == 'ots_token':
+                if self._context.get('test_evaluate'):
+                    ctx['ots_token'] = 'dummy'
+                else:
+                    ctx['ots_token'] = self.env['one.time.res.users.apikeys']._generate('ots', 'roomdoo_menus')
             return safe_eval(self.value, ctx)
         except Exception as e:
             raise UserError(
@@ -188,7 +189,7 @@ class RoomdooUrlParam(models.Model):
 
         if not dummy_property:
             raise UserError(_("No properties found for testing."))
-        self.evaluate_value(dummy_property)
+        self.with_context(test_evaluate=True).evaluate_value(dummy_property)
 
     @api.model_create_multi
     def create(self, vals_list):
