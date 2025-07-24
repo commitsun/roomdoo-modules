@@ -1,5 +1,7 @@
 from odoo import fields, models
-
+from datetime import timedelta
+from odoo.exceptions import AccessDenied
+import secrets
 
 class ResUsers(models.Model):
     _inherit = "res.users"
@@ -38,6 +40,22 @@ class ResUsers(models.Model):
     external_public_token = fields.Char(
         help="External Public Token",
     )
+    portal_login_token = fields.Char(
+        help="Portal Login Token",
+    )
+    portal_login_token_expiration = fields.Datetime(
+        help="Portal Login Token Expiration",
+    )
+
+    def _generate_portal_login_token(self, expiration=None):
+        """Generate a new portal login token."""
+        self.portal_login_token = secrets.token_hex()
+        if expiration:
+            self.portal_login_token_expiration = expiration
+        else:
+            self.portal_login_token_expiration = fields.Datetime.now() + timedelta(
+                days=1
+            )
 
     def _get_default_avail_rule_fields(self):
         default_avail_rule_fields = self.env["ir.model.fields"].search(
@@ -50,3 +68,12 @@ class ResUsers(models.Model):
             return default_avail_rule_fields.ids
         else:
             return []
+
+    def _check_credentials(self, password, env):
+        try:
+            res = super()._check_credentials(password, env)
+            return res
+        except AccessDenied as e:
+            user = self.env.user
+            if user.portal_login_token != password or user.portal_login_token_expiration < fields.Datetime.now():
+                raise AccessDenied() from e

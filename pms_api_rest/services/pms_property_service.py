@@ -32,9 +32,12 @@ class PmsPropertyService(Component):
         domain = [("user_ids", "in", [self.env.user.id])]
         result_properties = []
         PmsPropertyInfo = self.env.datamodels["pms.property.info"]
+        RoomdooAppMenu = self.env.datamodels["roomdoo.app.menu"]
         properties = self.env["pms.property"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=properties)
         for prop in properties:
+            property_support_menu = prop.get_roomdoo_support_url()
+            property_menus = prop.get_roomdoo_app_menu()
             state_name = False
             ine_category = False
             privacy_policy = False
@@ -98,6 +101,17 @@ class PmsPropertyService(Component):
                     maxAmountSimplifiedInvoice=prop.max_amount_simplified_invoice
                     if prop.max_amount_simplified_invoice
                     else None,
+                    supportUrl=RoomdooAppMenu(
+                        label=property_support_menu['label'],
+                        url=property_support_menu['url'],
+                    ),
+                    linksRoomdoo=[
+                        RoomdooAppMenu(
+                            label=menu['label'],
+                            url=menu['url'],
+                        )
+                        for menu in property_menus
+                    ],
                 )
             )
         return result_properties
@@ -121,9 +135,12 @@ class PmsPropertyService(Component):
         pms_api_check_access(user=self.env.user, records=pms_property)
         res = []
         PmsPropertyInfo = self.env.datamodels["pms.property.info"]
+        RoomdooAppMenu = self.env.datamodels["roomdoo.app.menu"]
         if not pms_property:
             pass
         else:
+            property_support_menu = pms_property.get_roomdoo_support_url()
+            property_menus = pms_property.get_roomdoo_app_menu()
             state_name = False
             ine_category = False
             if pms_property.state_id:
@@ -179,6 +196,17 @@ class PmsPropertyService(Component):
                 maxAmountSimplifiedInvoice=pms_property.max_amount_simplified_invoice
                 if pms_property.max_amount_simplified_invoice
                 else None,
+                    supportUrl=RoomdooAppMenu(
+                        label=property_support_menu['label'],
+                        url=property_support_menu['url'],
+                    ),
+                    linksRoomdoo=[
+                        RoomdooAppMenu(
+                            label=menu['label'],
+                            url=menu['url'],
+                        )
+                        for menu in property_menus
+                    ],
             )
 
         return res

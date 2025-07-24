@@ -11,3 +11,4 @@ from . import pms_folio
 from . import pms_checkin_partner
 from . import pms_reservation
 from . import pms_availability
+from . import roomdoo_app_menu
