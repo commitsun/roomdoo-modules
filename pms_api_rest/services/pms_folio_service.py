@@ -1252,16 +1252,17 @@ class PmsFolioService(Component):
     def get_folio_mail(self, folio_id, pms_mail_info):
         folio = self.env["pms.folio"].sudo().browse(folio_id)
         pms_api_check_access(user=self.env.user, records=folio)
+        compose_vals = {}
         if pms_mail_info.mailType == "confirm":
             compose_vals = {
                 "template_id": folio.pms_property_id.property_confirmed_template.id,
-                "model": "pms.folio",
+                "model": folio.pms_property_id.property_confirmed_template.model,
                 "res_ids": folio.id,
             }
         elif pms_mail_info.mailType == "done":
             compose_vals = {
                 "template_id": folio.pms_property_id.property_exit_template.id,
-                "model": "pms.folio",
+                "model": folio.pms_property_id.property_exit_template.model,
                 "res_ids": folio.id,
             }
         elif pms_mail_info.mailType == "cancel":
@@ -1269,9 +1270,11 @@ class PmsFolioService(Component):
             # the template is not ready for multiple reservations
             compose_vals = {
                 "template_id": folio.pms_property_id.property_canceled_template.id,
-                "model": "pms.folio",
+                "model": folio.pms_property_id.property_canceled_template.model,
                 "res_ids": folio.id,
             }
+        if not compose_vals:
+            raise ValidationError(_("No mail template found for this mail type"))
         values = (
             self.env["mail.compose.message"]
             .sudo()
