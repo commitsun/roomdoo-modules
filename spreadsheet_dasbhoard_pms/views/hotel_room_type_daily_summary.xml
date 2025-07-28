@@ -1,0 +1,62 @@
+<odoo>
+  <!-- Tree view -->
+  <record id="view_hotel_room_type_daily_summary_tree" model="ir.ui.view">
+    <field name="name">hotel.room.type.daily.summary.tree</field>
+    <field name="model">hotel.room.type.daily.summary</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="day"/>
+        <field name="pms_property_id"/>
+        <field name="type_id"/>
+        <field name="number_of_rooms"/>
+            <field name="total_revenue"/>
+                <field name="rooms_sold" />
+      </tree>
+    </field>
+  </record>
+
+    <record id="view_hotel_room_type_daily_summary_pivot" model="ir.ui.view">
+        <field name="name">hotel.room.type.daily.summary.pivot</field>
+        <field name="model">hotel.room.type.daily.summary</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="day" type="row"/>
+                <field name="type_id" type="row"/>
+                <field name="pms_property_id" type="col"/>
+                <field name="total_revenue" type="measure"/>
+                <field name="number_of_rooms" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_hotel_room_type_daily_summary_graph" model="ir.ui.view">
+        <field name="name">hotel.room.type.daily.summary.graph</field>
+        <field name="model">hotel.room.type.daily.summary</field>
+        <field name="arch" type="xml">
+            <graph string="Daily Occupancy and Revenue" type="line">
+                <field name="day" type="row"/>
+                <field name="occupancy" type="measure"/>
+                <field name="adr" type="measure"/>
+                <field name="revpar" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+  <!-- Action -->
+  <record id="action_hotel_room_type_daily_summary" model="ir.actions.act_window">
+    <field name="name">Room Availability by Type</field>
+    <field name="res_model">hotel.room.type.daily.summary</field>
+    <field name="view_mode">tree,pivot,graph</field>
+    <field name="view_id" ref="view_hotel_room_type_daily_summary_tree"/>
+    <field name="context">{}</field>
+  </record>
+
+  <!-- Menu (optional, for dev access) -->
+  <menuitem id="menu_hotel_room_type_daily_summary_root"
+            name="Reports"
+            parent="spreadsheet_dashboard.spreadsheet_dashboard_menu_configuration" />
+
+  <menuitem id="menu_hotel_room_type_daily_summary"
+            name="Room Type Daily Summary"
+            parent="menu_hotel_room_type_daily_summary_root"
+            action="action_hotel_room_type_daily_summary"/>
+</odoo>

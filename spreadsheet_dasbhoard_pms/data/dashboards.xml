@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="spreadsheet_dashboard_group_sales" model="spreadsheet.dashboard.group">
+        <field name="name">PMS</field>
+        <field name="sequence">10</field>
+    </record>
+
+
+    <record id="spreadsheet_dashboard_production" model="spreadsheet.dashboard">
+        <field name="name">Production</field>
+        <field name="data" type="base64" file="spreadsheet_dasbhoard_pms/data/files/production.json"/>
+        <field name="dashboard_group_id" ref="spreadsheet_dashboard_group_sales"/>
+        <field name="group_ids" eval="[Command.link(ref('pms.group_pms_manager'))]"/>
+        <field name="sequence">100</field>
+    </record>
+    <record id="spreadsheet_dashboard_services" model="spreadsheet.dashboard">
+        <field name="name">Services</field>
+        <field name="data" type="base64" file="spreadsheet_dasbhoard_pms/data/files/services.json"/>
+        <field name="dashboard_group_id" ref="spreadsheet_dashboard_group_sales"/>
+        <field name="group_ids" eval="[Command.link(ref('pms.group_pms_manager'))]"/>
+        <field name="sequence">100</field>
+    </record>
+    <record id="spreadsheet_dashboard_guests" model="spreadsheet.dashboard">
+        <field name="name">Guests</field>
+        <field name="data" type="base64" file="spreadsheet_dasbhoard_pms/data/files/guests.json"/>
+        <field name="dashboard_group_id" ref="spreadsheet_dashboard_group_sales"/>
+        <field name="group_ids" eval="[Command.link(ref('pms.group_pms_manager'))]"/>
+        <field name="sequence">100</field>
+    </record>
+
+</odoo>
