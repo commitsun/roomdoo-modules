@@ -1,0 +1,4156 @@
+{
+  "version": 12.5,
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Hoja1",
+      "colNumber": 26,
+      "rowNumber": 136,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 124
+        },
+        "1": {
+          "size": 73
+        },
+        "2": {
+          "size": 198
+        },
+        "3": {
+          "size": 78
+        },
+        "6": {
+          "size": 126
+        },
+        "8": {
+          "size": 175
+        }
+      },
+      "merges": [
+        "C56:G56",
+        "I56:M56",
+        "C71:G71"
+      ],
+      "cells": {
+        "C56": {
+          "style": 1,
+          "content": "Producci\u00f3n por hotel"
+        },
+        "C57": {
+          "style": 2,
+          "content": "Hotel"
+        },
+        "C58": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",1)"
+        },
+        "C59": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",2)"
+        },
+        "C60": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",3)"
+        },
+        "C61": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",4)"
+        },
+        "C62": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",5)"
+        },
+        "C63": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",6)"
+        },
+        "C64": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",7)"
+        },
+        "C65": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",8)"
+        },
+        "C66": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",9)"
+        },
+        "C67": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",10)"
+        },
+        "C71": {
+          "style": 1,
+          "content": "Producci\u00f3n por canal"
+        },
+        "C72": {
+          "style": 2,
+          "content": "Canal"
+        },
+        "C73": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",1)"
+        },
+        "C74": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",2)"
+        },
+        "C75": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",3)"
+        },
+        "C76": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",4)"
+        },
+        "C77": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",5)"
+        },
+        "C78": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",6)"
+        },
+        "C79": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",7)"
+        },
+        "C80": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",8)"
+        },
+        "C81": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",9)"
+        },
+        "C82": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",10)"
+        },
+        "D56": {
+          "style": 1
+        },
+        "D57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"occupancy\")"
+        },
+        "D58": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",1)/100"
+        },
+        "D59": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",2)/100"
+        },
+        "D60": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",3)/100"
+        },
+        "D61": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",4)/100"
+        },
+        "D62": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",5)/100"
+        },
+        "D63": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",6)/100"
+        },
+        "D64": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",7)/100"
+        },
+        "D65": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",8)/100"
+        },
+        "D66": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",9)/100"
+        },
+        "D67": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",10)/100"
+        },
+        "D71": {
+          "style": 1
+        },
+        "D72": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"occupancy\")"
+        },
+        "D73": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",1)/100"
+        },
+        "D74": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",2)/100"
+        },
+        "D75": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",3)/100"
+        },
+        "D76": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",4)/100"
+        },
+        "D77": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",5)/100"
+        },
+        "D78": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",6)/100"
+        },
+        "D79": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",7)/100"
+        },
+        "D80": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",8)/100"
+        },
+        "D81": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",9)/100"
+        },
+        "D82": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",10)/100"
+        },
+        "E56": {
+          "style": 1
+        },
+        "E57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"adr\")"
+        },
+        "E58": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",1)"
+        },
+        "E59": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",2)"
+        },
+        "E60": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",3)"
+        },
+        "E61": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",4)"
+        },
+        "E62": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",5)"
+        },
+        "E63": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",6)"
+        },
+        "E64": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",7)"
+        },
+        "E65": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",8)"
+        },
+        "E66": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",9)"
+        },
+        "E67": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",10)"
+        },
+        "E71": {
+          "style": 1
+        },
+        "E72": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"adr\")"
+        },
+        "E73": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",1)"
+        },
+        "E74": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",2)"
+        },
+        "E75": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",3)"
+        },
+        "E76": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",4)"
+        },
+        "E77": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",5)"
+        },
+        "E78": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",6)"
+        },
+        "E79": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",7)"
+        },
+        "E80": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",8)"
+        },
+        "E81": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",9)"
+        },
+        "E82": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",10)"
+        },
+        "F56": {
+          "style": 1
+        },
+        "F57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"revpar\")"
+        },
+        "F58": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",1)"
+        },
+        "F59": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",2)"
+        },
+        "F60": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",3)"
+        },
+        "F61": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",4)"
+        },
+        "F62": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",5)"
+        },
+        "F63": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",6)"
+        },
+        "F64": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",7)"
+        },
+        "F65": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",8)"
+        },
+        "F66": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",9)"
+        },
+        "F67": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",10)"
+        },
+        "F71": {
+          "style": 1
+        },
+        "F72": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"revpar\")"
+        },
+        "F73": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",1)"
+        },
+        "F74": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",2)"
+        },
+        "F75": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",3)"
+        },
+        "F76": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",4)"
+        },
+        "F77": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",5)"
+        },
+        "F78": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",6)"
+        },
+        "F79": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",7)"
+        },
+        "F80": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",8)"
+        },
+        "F81": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",9)"
+        },
+        "F82": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",10)"
+        },
+        "G56": {
+          "style": 1
+        },
+        "G57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"total_revenue\")"
+        },
+        "G58": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",1)"
+        },
+        "G59": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",2)"
+        },
+        "G60": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",3)"
+        },
+        "G61": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",4)"
+        },
+        "G62": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",5)"
+        },
+        "G63": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",6)"
+        },
+        "G64": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",7)"
+        },
+        "G65": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",8)"
+        },
+        "G66": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",9)"
+        },
+        "G67": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",10)"
+        },
+        "G71": {
+          "style": 1
+        },
+        "G72": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"total_revenue\")"
+        },
+        "G73": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",1)"
+        },
+        "G74": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",2)"
+        },
+        "G75": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",3)"
+        },
+        "G76": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",4)"
+        },
+        "G77": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",5)"
+        },
+        "G78": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",6)"
+        },
+        "G79": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",7)"
+        },
+        "G80": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",8)"
+        },
+        "G81": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",9)"
+        },
+        "G82": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",10)"
+        },
+        "I56": {
+          "style": 1,
+          "content": "Producci\u00f3n por tipo de habitaci\u00f3n"
+        },
+        "I57": {
+          "style": 2,
+          "content": "Tipo"
+        },
+        "I58": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",1)"
+        },
+        "I59": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",2)"
+        },
+        "I60": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",3)"
+        },
+        "I61": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",4)"
+        },
+        "I62": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",5)"
+        },
+        "I63": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",6)"
+        },
+        "I64": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",7)"
+        },
+        "I65": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",8)"
+        },
+        "I66": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",9)"
+        },
+        "I67": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",10)"
+        },
+        "J56": {
+          "style": 1
+        },
+        "J57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"occupancy\")"
+        },
+        "J58": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",1)/100"
+        },
+        "J59": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",2)/100"
+        },
+        "J60": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",3)/100"
+        },
+        "J61": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",4)/100"
+        },
+        "J62": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",5)/100"
+        },
+        "J63": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",6)/100"
+        },
+        "J64": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",7)/100"
+        },
+        "J65": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",8)/100"
+        },
+        "J66": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",9)/100"
+        },
+        "J67": {
+          "format": 1,
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",10)/100"
+        },
+        "K56": {
+          "style": 1
+        },
+        "K57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"adr\")"
+        },
+        "K58": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",1)"
+        },
+        "K59": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",2)"
+        },
+        "K60": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",3)"
+        },
+        "K61": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",4)"
+        },
+        "K62": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",5)"
+        },
+        "K63": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",6)"
+        },
+        "K64": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",7)"
+        },
+        "K65": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",8)"
+        },
+        "K66": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",9)"
+        },
+        "K67": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",10)"
+        },
+        "L56": {
+          "style": 1
+        },
+        "L57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"revpar\")"
+        },
+        "L58": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",1)"
+        },
+        "L59": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",2)"
+        },
+        "L60": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",3)"
+        },
+        "L61": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",4)"
+        },
+        "L62": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",5)"
+        },
+        "L63": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",6)"
+        },
+        "L64": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",7)"
+        },
+        "L65": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",8)"
+        },
+        "L66": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",9)"
+        },
+        "L67": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",10)"
+        },
+        "M56": {
+          "style": 1
+        },
+        "M57": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"total_revenue\")"
+        },
+        "M58": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",1)"
+        },
+        "M59": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",2)"
+        },
+        "M60": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",3)"
+        },
+        "M61": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",4)"
+        },
+        "M62": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",5)"
+        },
+        "M63": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",6)"
+        },
+        "M64": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",7)"
+        },
+        "M65": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",8)"
+        },
+        "M66": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",9)"
+        },
+        "M67": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",10)"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [
+        {
+          "id": "a2417b4a-2e26",
+          "x": 520.5,
+          "y": 0,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udcb0 ADR (\u20ac)",
+            "type": "scorecard",
+            "keyValue": "'Daily summary'!D3"
+          }
+        },
+        {
+          "id": "b9a9eecb-e40e",
+          "x": 198,
+          "y": 0,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udcc8 Ocupaci\u00f3n (%)",
+            "type": "scorecard",
+            "keyValue": "'Daily summary'!E3"
+          }
+        },
+        {
+          "id": "cd938791-861a",
+          "x": 855,
+          "y": 0,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udcca RevPAR (\u20ac)",
+            "type": "scorecard",
+            "keyValue": "'Daily summary'!F3"
+          }
+        },
+        {
+          "id": "90ab1285-9155",
+          "x": 1180,
+          "y": 0,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udecf\ufe0f Estancias",
+            "type": "scorecard",
+            "keyValue": "'Daily summary'!G3"
+          }
+        },
+        {
+          "id": "98970037-2bd8",
+          "x": 686,
+          "y": 132,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83e\uddc3 Ingreso extras",
+            "type": "scorecard",
+            "keyValue": "'Ingresos extra'!B3"
+          }
+        },
+        {
+          "id": "8c6e4b95-6ab7",
+          "x": 356,
+          "y": 130,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83e\uddfe Ingreso aloj.",
+            "type": "scorecard",
+            "keyValue": "'Daily summary'!B3"
+          }
+        },
+        {
+          "id": "cc8782af-b3c5",
+          "x": 1484,
+          "y": 4,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udce6 Entradas",
+            "type": "scorecard",
+            "keyValue": "Reservas!B3"
+          }
+        },
+        {
+          "id": "7fd21eec-0fe0",
+          "x": 1043,
+          "y": 130,
+          "width": 203,
+          "height": 105,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udeab Cancelaciones",
+            "type": "scorecard",
+            "keyValue": "Cancelaciones!B3"
+          }
+        },
+        {
+          "id": "db9e0961-f7aa",
+          "x": 91,
+          "y": 264,
+          "width": 773,
+          "height": 408,
+          "tag": "chart",
+          "data": {
+            "title": "Ocupaci\u00f3n diaria",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "day": {
+                  "change_default": false,
+                  "name": "day",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Day",
+                  "type": "date"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "type_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "type_id",
+                  "readonly": true,
+                  "relation": "pms.room.type",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Room Type",
+                  "type": "many2one"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Currency",
+                  "type": "many2one"
+                },
+                "sale_channel_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "sale_channel_id",
+                  "readonly": true,
+                  "relation": "pms.sale.channel",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Sale Channel",
+                  "type": "many2one"
+                },
+                "row_type": {
+                  "change_default": false,
+                  "name": "row_type",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "selection": [
+                    [
+                      "inventory",
+                      "Inventory"
+                    ],
+                    [
+                      "sales",
+                      "Sales"
+                    ]
+                  ],
+                  "sortable": true,
+                  "store": true,
+                  "string": "Row Type",
+                  "type": "selection"
+                },
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ID",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Last Modified on",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Display Name",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                }
+              },
+              "groupBy": [
+                "day:day"
+              ],
+              "measure": "occupancy",
+              "viewMeasures": [
+                "occupancy",
+                "adr",
+                "revpar"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "hotel.room.type.daily.summary",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Daily Occupancy and Revenue",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "type_id.overnight_room",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "type_id.overnight_room",
+                  "=",
+                  true
+                ]
+              ],
+              "groupBy": [
+                "day:day"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "549a2007-bd74-4236-944d-60b4accd27f5": {
+                "chain": "day"
+              },
+              "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+                "chain": "pms_property_id"
+              },
+              "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+                "chain": "sale_channel_id"
+              },
+              "cc769648-9419-4b7f-8caf-242363110266": {
+                "chain": "type_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "4694a9e5-788b-4fbb-8b0c-dbbfe43119bb",
+          "x": 948,
+          "y": 268,
+          "width": 768,
+          "height": 406,
+          "tag": "chart",
+          "data": {
+            "title": "Revpar diario",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "day": {
+                  "change_default": false,
+                  "name": "day",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Day",
+                  "type": "date"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "type_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "type_id",
+                  "readonly": true,
+                  "relation": "pms.room.type",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Room Type",
+                  "type": "many2one"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Currency",
+                  "type": "many2one"
+                },
+                "sale_channel_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "sale_channel_id",
+                  "readonly": true,
+                  "relation": "pms.sale.channel",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Sale Channel",
+                  "type": "many2one"
+                },
+                "row_type": {
+                  "change_default": false,
+                  "name": "row_type",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "selection": [
+                    [
+                      "inventory",
+                      "Inventory"
+                    ],
+                    [
+                      "sales",
+                      "Sales"
+                    ]
+                  ],
+                  "sortable": true,
+                  "store": true,
+                  "string": "Row Type",
+                  "type": "selection"
+                },
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ID",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Last Modified on",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Display Name",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                }
+              },
+              "groupBy": [
+                "day:day"
+              ],
+              "measure": "revpar",
+              "viewMeasures": [
+                "occupancy",
+                "adr",
+                "revpar"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "hotel.room.type.daily.summary",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Daily Occupancy and Revenue",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "type_id.overnight_room",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "type_id.overnight_room",
+                  "=",
+                  true
+                ]
+              ],
+              "groupBy": [
+                "day:day"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "549a2007-bd74-4236-944d-60b4accd27f5": {
+                "chain": "day"
+              },
+              "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+                "chain": "pms_property_id"
+              },
+              "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+                "chain": "sale_channel_id"
+              },
+              "cc769648-9419-4b7f-8caf-242363110266": {
+                "chain": "type_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "e5186671-6ee2-4f89-9f1c-a090cc84584d",
+          "x": 952,
+          "y": 738,
+          "width": 781,
+          "height": 415,
+          "tag": "chart",
+          "data": {
+            "title": "ADR por canal",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "day": {
+                  "change_default": false,
+                  "name": "day",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Day",
+                  "type": "date"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "type_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "type_id",
+                  "readonly": true,
+                  "relation": "pms.room.type",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Room Type",
+                  "type": "many2one"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Currency",
+                  "type": "many2one"
+                },
+                "sale_channel_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "sale_channel_id",
+                  "readonly": true,
+                  "relation": "pms.sale.channel",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Sale Channel",
+                  "type": "many2one"
+                },
+                "row_type": {
+                  "change_default": false,
+                  "name": "row_type",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "selection": [
+                    [
+                      "inventory",
+                      "Inventory"
+                    ],
+                    [
+                      "sales",
+                      "Sales"
+                    ]
+                  ],
+                  "sortable": true,
+                  "store": true,
+                  "string": "Row Type",
+                  "type": "selection"
+                },
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ID",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Last Modified on",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Display Name",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                }
+              },
+              "groupBy": [
+                "sale_channel_id"
+              ],
+              "measure": "adr",
+              "viewMeasures": [
+                "occupancy",
+                "adr",
+                "revpar"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "hotel.room.type.daily.summary",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Daily Occupancy and Revenue",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "type_id.overnight_room",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "type_id.overnight_room",
+                  "=",
+                  true
+                ]
+              ],
+              "groupBy": [
+                "sale_channel_id"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "549a2007-bd74-4236-944d-60b4accd27f5": {
+                "chain": "day"
+              },
+              "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+                "chain": "pms_property_id"
+              },
+              "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+                "chain": "sale_channel_id"
+              },
+              "cc769648-9419-4b7f-8caf-242363110266": {
+                "chain": "type_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "6df91efd-8053-4d77-b2ea-abf2c6f5ef47",
+          "x": 81,
+          "y": 727,
+          "width": 774,
+          "height": 413,
+          "tag": "chart",
+          "data": {
+            "title": "Composici\u00f3n por canal",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "day": {
+                  "change_default": false,
+                  "name": "day",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Day",
+                  "type": "date"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "type_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "type_id",
+                  "readonly": true,
+                  "relation": "pms.room.type",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Room Type",
+                  "type": "many2one"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Currency",
+                  "type": "many2one"
+                },
+                "sale_channel_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "sale_channel_id",
+                  "readonly": true,
+                  "relation": "pms.sale.channel",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Sale Channel",
+                  "type": "many2one"
+                },
+                "row_type": {
+                  "change_default": false,
+                  "name": "row_type",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "selection": [
+                    [
+                      "inventory",
+                      "Inventory"
+                    ],
+                    [
+                      "sales",
+                      "Sales"
+                    ]
+                  ],
+                  "sortable": true,
+                  "store": true,
+                  "string": "Row Type",
+                  "type": "selection"
+                },
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ID",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Last Modified on",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Display Name",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                }
+              },
+              "groupBy": [
+                "sale_channel_id"
+              ],
+              "measure": "total_revenue",
+              "viewMeasures": [
+                "occupancy",
+                "adr",
+                "revpar"
+              ],
+              "mode": "pie",
+              "order": null,
+              "resModel": "hotel.room.type.daily.summary",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Daily Occupancy and Revenue",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "type_id.overnight_room",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "adr": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "adr",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "ADR",
+                  "type": "monetary"
+                },
+                "occupancy": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "occupancy",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Occupancy",
+                  "type": "float"
+                },
+                "revpar": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "revpar",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "RevPAR",
+                  "type": "monetary"
+                },
+                "number_of_rooms": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "number_of_rooms",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Available",
+                  "type": "integer"
+                },
+                "rooms_sold": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "name": "rooms_sold",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Rooms Sold",
+                  "type": "integer"
+                },
+                "total_revenue": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "name": "total_revenue",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total Revenue",
+                  "type": "monetary"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "type_id.overnight_room",
+                  "=",
+                  true
+                ]
+              ],
+              "groupBy": [
+                "sale_channel_id"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_pie",
+            "fieldMatching": {
+              "549a2007-bd74-4236-944d-60b4accd27f5": {
+                "chain": "day"
+              },
+              "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+                "chain": "pms_property_id"
+              },
+              "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+                "chain": "sale_channel_id"
+              },
+              "cc769648-9419-4b7f-8caf-242363110266": {
+                "chain": "type_id"
+              }
+            }
+          }
+        }
+      ],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "d123c522-7f71-4383-b73d-5aa95c728081",
+      "name": "Daily summary",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        },
+        "1": {
+          "size": 91
+        },
+        "2": {
+          "size": 105
+        },
+        "3": {
+          "size": 78
+        },
+        "4": {
+          "size": 73
+        },
+        "5": {
+          "size": 78
+        }
+      },
+      "merges": [
+        "B1:G1"
+      ],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(1)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(1)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"total_revenue\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(1,\"total_revenue\")"
+        },
+        "C1": {
+          "style": 3
+        },
+        "C2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"number_of_rooms\")"
+        },
+        "C3": {
+          "content": "=ODOO.PIVOT(1,\"number_of_rooms\")"
+        },
+        "D1": {
+          "style": 3
+        },
+        "D2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"adr\")"
+        },
+        "D3": {
+          "content": "=ODOO.PIVOT(1,\"adr\")"
+        },
+        "E1": {
+          "style": 3
+        },
+        "E2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"occupancy\")"
+        },
+        "E3": {
+          "style": 5,
+          "format": 1,
+          "content": "=ODOO.PIVOT(1,\"occupancy\")/100"
+        },
+        "F1": {
+          "style": 3
+        },
+        "F2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"revpar\")"
+        },
+        "F3": {
+          "content": "=ODOO.PIVOT(1,\"revpar\")"
+        },
+        "G1": {
+          "style": 3
+        },
+        "G2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"rooms_sold\")"
+        },
+        "G3": {
+          "content": "=ODOO.PIVOT(1,\"rooms_sold\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "f3f8965b-a61a-4b96-ae4d-775af1cc5531",
+      "name": "Reservas",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        }
+      },
+      "merges": [],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(2)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(2)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(2,\"measure\",\"__count\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(2,\"__count\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "43871d56-b6ca-47dd-9f4f-90c0d0fcef6d",
+      "name": "Cancelaciones",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        }
+      },
+      "merges": [],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(3)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(3)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(3,\"measure\",\"__count\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(3,\"__count\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "49ac9eb8-f442-4549-8fac-64d30788fd3c",
+      "name": "Ingresos extra",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        }
+      },
+      "merges": [],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(4)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(4)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(4,\"measure\",\"price_day_total\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(4,\"price_day_total\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "c324c62d-8aef-4e61-95c4-3815fc89af40",
+      "name": "Producci\u00f3n por hotel",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 154
+        },
+        "1": {
+          "size": 73
+        },
+        "2": {
+          "size": 78
+        },
+        "3": {
+          "size": 78
+        }
+      },
+      "merges": [
+        "B1:E1"
+      ],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",1)"
+        },
+        "A4": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",2)"
+        },
+        "A5": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",3)"
+        },
+        "A6": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",4)"
+        },
+        "A7": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",5)"
+        },
+        "A8": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",6)"
+        },
+        "A9": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",7)"
+        },
+        "A10": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",8)"
+        },
+        "A11": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",9)"
+        },
+        "A12": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",10)"
+        },
+        "A13": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",11)"
+        },
+        "A14": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",12)"
+        },
+        "A15": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",13)"
+        },
+        "A16": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",14)"
+        },
+        "A17": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",15)"
+        },
+        "A18": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",16)"
+        },
+        "A19": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",17)"
+        },
+        "A20": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",18)"
+        },
+        "A21": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",19)"
+        },
+        "A22": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5,\"#pms_property_id\",20)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(5)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"occupancy\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",1)"
+        },
+        "B4": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",2)"
+        },
+        "B5": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",3)"
+        },
+        "B6": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",4)"
+        },
+        "B7": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",5)"
+        },
+        "B8": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",6)"
+        },
+        "B9": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",7)"
+        },
+        "B10": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",8)"
+        },
+        "B11": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",9)"
+        },
+        "B12": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",10)"
+        },
+        "B13": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",11)"
+        },
+        "B14": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",12)"
+        },
+        "B15": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",13)"
+        },
+        "B16": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",14)"
+        },
+        "B17": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",15)"
+        },
+        "B18": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",16)"
+        },
+        "B19": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",17)"
+        },
+        "B20": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",18)"
+        },
+        "B21": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",19)"
+        },
+        "B22": {
+          "content": "=ODOO.PIVOT(5,\"occupancy\",\"#pms_property_id\",20)"
+        },
+        "C1": {
+          "style": 3
+        },
+        "C2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"adr\")"
+        },
+        "C3": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",1)"
+        },
+        "C4": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",2)"
+        },
+        "C5": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",3)"
+        },
+        "C6": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",4)"
+        },
+        "C7": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",5)"
+        },
+        "C8": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",6)"
+        },
+        "C9": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",7)"
+        },
+        "C10": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",8)"
+        },
+        "C11": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",9)"
+        },
+        "C12": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",10)"
+        },
+        "C13": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",11)"
+        },
+        "C14": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",12)"
+        },
+        "C15": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",13)"
+        },
+        "C16": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",14)"
+        },
+        "C17": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",15)"
+        },
+        "C18": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",16)"
+        },
+        "C19": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",17)"
+        },
+        "C20": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",18)"
+        },
+        "C21": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",19)"
+        },
+        "C22": {
+          "content": "=ODOO.PIVOT(5,\"adr\",\"#pms_property_id\",20)"
+        },
+        "D1": {
+          "style": 3
+        },
+        "D2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"revpar\")"
+        },
+        "D3": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",1)"
+        },
+        "D4": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",2)"
+        },
+        "D5": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",3)"
+        },
+        "D6": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",4)"
+        },
+        "D7": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",5)"
+        },
+        "D8": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",6)"
+        },
+        "D9": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",7)"
+        },
+        "D10": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",8)"
+        },
+        "D11": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",9)"
+        },
+        "D12": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",10)"
+        },
+        "D13": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",11)"
+        },
+        "D14": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",12)"
+        },
+        "D15": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",13)"
+        },
+        "D16": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",14)"
+        },
+        "D17": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",15)"
+        },
+        "D18": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",16)"
+        },
+        "D19": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",17)"
+        },
+        "D20": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",18)"
+        },
+        "D21": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",19)"
+        },
+        "D22": {
+          "content": "=ODOO.PIVOT(5,\"revpar\",\"#pms_property_id\",20)"
+        },
+        "E1": {
+          "style": 3
+        },
+        "E2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(5,\"measure\",\"total_revenue\")"
+        },
+        "E3": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",1)"
+        },
+        "E4": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",2)"
+        },
+        "E5": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",3)"
+        },
+        "E6": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",4)"
+        },
+        "E7": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",5)"
+        },
+        "E8": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",6)"
+        },
+        "E9": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",7)"
+        },
+        "E10": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",8)"
+        },
+        "E11": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",9)"
+        },
+        "E12": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",10)"
+        },
+        "E13": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",11)"
+        },
+        "E14": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",12)"
+        },
+        "E15": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",13)"
+        },
+        "E16": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",14)"
+        },
+        "E17": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",15)"
+        },
+        "E18": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",16)"
+        },
+        "E19": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",17)"
+        },
+        "E20": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",18)"
+        },
+        "E21": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",19)"
+        },
+        "E22": {
+          "content": "=ODOO.PIVOT(5,\"total_revenue\",\"#pms_property_id\",20)"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "6ac6546e-fad3-4b07-ac9c-a2aa08ff8245",
+      "name": "Producci\u00f3n por habitaci\u00f3n",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 85
+        },
+        "1": {
+          "size": 73
+        },
+        "2": {
+          "size": 78
+        },
+        "3": {
+          "size": 78
+        }
+      },
+      "merges": [
+        "B1:E1"
+      ],
+      "cells": {
+        "A1": {
+          "style": 3
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",1)"
+        },
+        "A4": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",2)"
+        },
+        "A5": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",3)"
+        },
+        "A6": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",4)"
+        },
+        "A7": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",5)"
+        },
+        "A8": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",6)"
+        },
+        "A9": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",7)"
+        },
+        "A10": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",8)"
+        },
+        "A11": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",9)"
+        },
+        "A12": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",10)"
+        },
+        "A13": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",11)"
+        },
+        "A14": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",12)"
+        },
+        "A15": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",13)"
+        },
+        "A16": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",14)"
+        },
+        "A17": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",15)"
+        },
+        "A18": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",16)"
+        },
+        "A19": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",17)"
+        },
+        "A20": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",18)"
+        },
+        "A21": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",19)"
+        },
+        "A22": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6,\"#type_id\",20)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(6)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"occupancy\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",1)"
+        },
+        "B4": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",2)"
+        },
+        "B5": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",3)"
+        },
+        "B6": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",4)"
+        },
+        "B7": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",5)"
+        },
+        "B8": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",6)"
+        },
+        "B9": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",7)"
+        },
+        "B10": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",8)"
+        },
+        "B11": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",9)"
+        },
+        "B12": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",10)"
+        },
+        "B13": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",11)"
+        },
+        "B14": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",12)"
+        },
+        "B15": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",13)"
+        },
+        "B16": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",14)"
+        },
+        "B17": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",15)"
+        },
+        "B18": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",16)"
+        },
+        "B19": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",17)"
+        },
+        "B20": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",18)"
+        },
+        "B21": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",19)"
+        },
+        "B22": {
+          "content": "=ODOO.PIVOT(6,\"occupancy\",\"#type_id\",20)"
+        },
+        "C1": {
+          "style": 3
+        },
+        "C2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"adr\")"
+        },
+        "C3": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",1)"
+        },
+        "C4": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",2)"
+        },
+        "C5": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",3)"
+        },
+        "C6": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",4)"
+        },
+        "C7": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",5)"
+        },
+        "C8": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",6)"
+        },
+        "C9": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",7)"
+        },
+        "C10": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",8)"
+        },
+        "C11": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",9)"
+        },
+        "C12": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",10)"
+        },
+        "C13": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",11)"
+        },
+        "C14": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",12)"
+        },
+        "C15": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",13)"
+        },
+        "C16": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",14)"
+        },
+        "C17": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",15)"
+        },
+        "C18": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",16)"
+        },
+        "C19": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",17)"
+        },
+        "C20": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",18)"
+        },
+        "C21": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",19)"
+        },
+        "C22": {
+          "content": "=ODOO.PIVOT(6,\"adr\",\"#type_id\",20)"
+        },
+        "D1": {
+          "style": 3
+        },
+        "D2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"revpar\")"
+        },
+        "D3": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",1)"
+        },
+        "D4": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",2)"
+        },
+        "D5": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",3)"
+        },
+        "D6": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",4)"
+        },
+        "D7": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",5)"
+        },
+        "D8": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",6)"
+        },
+        "D9": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",7)"
+        },
+        "D10": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",8)"
+        },
+        "D11": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",9)"
+        },
+        "D12": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",10)"
+        },
+        "D13": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",11)"
+        },
+        "D14": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",12)"
+        },
+        "D15": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",13)"
+        },
+        "D16": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",14)"
+        },
+        "D17": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",15)"
+        },
+        "D18": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",16)"
+        },
+        "D19": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",17)"
+        },
+        "D20": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",18)"
+        },
+        "D21": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",19)"
+        },
+        "D22": {
+          "content": "=ODOO.PIVOT(6,\"revpar\",\"#type_id\",20)"
+        },
+        "E1": {
+          "style": 3
+        },
+        "E2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(6,\"measure\",\"total_revenue\")"
+        },
+        "E3": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",1)"
+        },
+        "E4": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",2)"
+        },
+        "E5": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",3)"
+        },
+        "E6": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",4)"
+        },
+        "E7": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",5)"
+        },
+        "E8": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",6)"
+        },
+        "E9": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",7)"
+        },
+        "E10": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",8)"
+        },
+        "E11": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",9)"
+        },
+        "E12": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",10)"
+        },
+        "E13": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",11)"
+        },
+        "E14": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",12)"
+        },
+        "E15": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",13)"
+        },
+        "E16": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",14)"
+        },
+        "E17": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",15)"
+        },
+        "E18": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",16)"
+        },
+        "E19": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",17)"
+        },
+        "E20": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",18)"
+        },
+        "E21": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",19)"
+        },
+        "E22": {
+          "content": "=ODOO.PIVOT(6,\"total_revenue\",\"#type_id\",20)"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "c4d2263d-2fb9",
+      "name": "Producci\u00f3n por canal",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {},
+      "merges": [
+        "B1:E1"
+      ],
+      "cells": {
+        "A1": {
+          "style": 6
+        },
+        "A2": {
+          "style": 4
+        },
+        "A3": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",1)"
+        },
+        "A4": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",2)"
+        },
+        "A5": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",3)"
+        },
+        "A6": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",4)"
+        },
+        "A7": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",5)"
+        },
+        "A8": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",6)"
+        },
+        "A9": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",7)"
+        },
+        "A10": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",8)"
+        },
+        "A11": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",9)"
+        },
+        "A12": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",10)"
+        },
+        "A13": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",11)"
+        },
+        "A14": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",12)"
+        },
+        "A15": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",13)"
+        },
+        "A16": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",14)"
+        },
+        "A17": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",15)"
+        },
+        "A18": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",16)"
+        },
+        "A19": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",17)"
+        },
+        "A20": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",18)"
+        },
+        "A21": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",19)"
+        },
+        "A22": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7,\"#sale_channel_id\",20)"
+        },
+        "B1": {
+          "style": 3,
+          "content": "=ODOO.PIVOT.HEADER(7)"
+        },
+        "B2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"occupancy\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",1)"
+        },
+        "B4": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",2)"
+        },
+        "B5": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",3)"
+        },
+        "B6": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",4)"
+        },
+        "B7": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",5)"
+        },
+        "B8": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",6)"
+        },
+        "B9": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",7)"
+        },
+        "B10": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",8)"
+        },
+        "B11": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",9)"
+        },
+        "B12": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",10)"
+        },
+        "B13": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",11)"
+        },
+        "B14": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",12)"
+        },
+        "B15": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",13)"
+        },
+        "B16": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",14)"
+        },
+        "B17": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",15)"
+        },
+        "B18": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",16)"
+        },
+        "B19": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",17)"
+        },
+        "B20": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",18)"
+        },
+        "B21": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",19)"
+        },
+        "B22": {
+          "content": "=ODOO.PIVOT(7,\"occupancy\",\"#sale_channel_id\",20)"
+        },
+        "C1": {
+          "style": 3
+        },
+        "C2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"adr\")"
+        },
+        "C3": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",1)"
+        },
+        "C4": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",2)"
+        },
+        "C5": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",3)"
+        },
+        "C6": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",4)"
+        },
+        "C7": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",5)"
+        },
+        "C8": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",6)"
+        },
+        "C9": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",7)"
+        },
+        "C10": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",8)"
+        },
+        "C11": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",9)"
+        },
+        "C12": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",10)"
+        },
+        "C13": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",11)"
+        },
+        "C14": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",12)"
+        },
+        "C15": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",13)"
+        },
+        "C16": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",14)"
+        },
+        "C17": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",15)"
+        },
+        "C18": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",16)"
+        },
+        "C19": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",17)"
+        },
+        "C20": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",18)"
+        },
+        "C21": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",19)"
+        },
+        "C22": {
+          "content": "=ODOO.PIVOT(7,\"adr\",\"#sale_channel_id\",20)"
+        },
+        "D1": {
+          "style": 3
+        },
+        "D2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"revpar\")"
+        },
+        "D3": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",1)"
+        },
+        "D4": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",2)"
+        },
+        "D5": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",3)"
+        },
+        "D6": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",4)"
+        },
+        "D7": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",5)"
+        },
+        "D8": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",6)"
+        },
+        "D9": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",7)"
+        },
+        "D10": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",8)"
+        },
+        "D11": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",9)"
+        },
+        "D12": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",10)"
+        },
+        "D13": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",11)"
+        },
+        "D14": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",12)"
+        },
+        "D15": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",13)"
+        },
+        "D16": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",14)"
+        },
+        "D17": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",15)"
+        },
+        "D18": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",16)"
+        },
+        "D19": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",17)"
+        },
+        "D20": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",18)"
+        },
+        "D21": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",19)"
+        },
+        "D22": {
+          "content": "=ODOO.PIVOT(7,\"revpar\",\"#sale_channel_id\",20)"
+        },
+        "E1": {
+          "style": 3
+        },
+        "E2": {
+          "style": 4,
+          "content": "=ODOO.PIVOT.HEADER(7,\"measure\",\"total_revenue\")"
+        },
+        "E3": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",1)"
+        },
+        "E4": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",2)"
+        },
+        "E5": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",3)"
+        },
+        "E6": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",4)"
+        },
+        "E7": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",5)"
+        },
+        "E8": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",6)"
+        },
+        "E9": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",7)"
+        },
+        "E10": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",8)"
+        },
+        "E11": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",9)"
+        },
+        "E12": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",10)"
+        },
+        "E13": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",11)"
+        },
+        "E14": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",12)"
+        },
+        "E15": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",13)"
+        },
+        "E16": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",14)"
+        },
+        "E17": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",15)"
+        },
+        "E18": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",16)"
+        },
+        "E19": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",17)"
+        },
+        "E20": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",18)"
+        },
+        "E21": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",19)"
+        },
+        "E22": {
+          "content": "=ODOO.PIVOT(7,\"total_revenue\",\"#sale_channel_id\",20)"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    }
+  ],
+  "entities": {},
+  "styles": {
+    "1": {
+      "align": "center",
+      "fontSize": 22
+    },
+    "2": {
+      "fillColor": "#f2f2f2",
+      "textColor": "#756f6f",
+      "align": "left"
+    },
+    "3": {
+      "bold": true,
+      "fillColor": "#f2f2f2"
+    },
+    "4": {
+      "fillColor": "#f2f2f2",
+      "textColor": "#756f6f"
+    },
+    "5": {
+      "bold": false
+    },
+    "6": {
+      "bold": true,
+      "fontSize": 10,
+      "fillColor": "#f2f2f2"
+    }
+  },
+  "formats": {
+    "1": "0.00%"
+  },
+  "borders": {},
+  "revisionId": "7d7e2aa6-0fa3-4712-bc92-47c62c0206a4",
+  "uniqueFigureIds": true,
+  "odooVersion": 5,
+  "globalFilters": [
+    {
+      "id": "549a2007-bd74-4236-944d-60b4accd27f5",
+      "type": "date",
+      "label": "Fecha",
+      "rangeType": "month"
+    },
+    {
+      "id": "942c3859-f759-4b6a-a737-e7c45cec5f9b",
+      "type": "relation",
+      "label": "Hotel",
+      "rangeType": "year",
+      "modelName": "pms.property"
+    },
+    {
+      "id": "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907",
+      "type": "relation",
+      "label": "canal",
+      "rangeType": "year",
+      "modelName": "pms.sale.channel"
+    },
+    {
+      "id": "cc769648-9419-4b7f-8caf-242363110266",
+      "type": "relation",
+      "label": "segmento",
+      "rangeType": "year",
+      "modelName": "pms.room.type"
+    }
+  ],
+  "pivots": {
+    "1": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "type_id.overnight_room",
+          "=",
+          true
+        ]
+      ],
+      "id": "1",
+      "measures": [
+        {
+          "field": "total_revenue"
+        },
+        {
+          "field": "number_of_rooms"
+        },
+        {
+          "field": "adr"
+        },
+        {
+          "field": "occupancy"
+        },
+        {
+          "field": "revpar"
+        },
+        {
+          "field": "rooms_sold"
+        }
+      ],
+      "model": "hotel.room.type.daily.summary",
+      "rowGroupBys": [],
+      "name": "Daily summary",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "day"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "type_id"
+        }
+      }
+    },
+    "2": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        "&",
+        [
+          "is_reselling",
+          "!=",
+          true
+        ],
+        "&",
+        [
+          "overbooking",
+          "!=",
+          true
+        ],
+        "&",
+        [
+          "room_type_id.overnight_room",
+          "=",
+          true
+        ],
+        [
+          "state",
+          "!=",
+          "cancel"
+        ]
+      ],
+      "id": "2",
+      "measures": [
+        {
+          "field": "__count"
+        }
+      ],
+      "model": "pms.reservation",
+      "rowGroupBys": [],
+      "name": "Estancias",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "checkin"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_origin_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "room_type_id"
+        }
+      }
+    },
+    "3": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        "&",
+        [
+          "is_reselling",
+          "!=",
+          true
+        ],
+        "&",
+        [
+          "overbooking",
+          "!=",
+          true
+        ],
+        "&",
+        [
+          "room_type_id.overnight_room",
+          "=",
+          true
+        ],
+        [
+          "state",
+          "=",
+          "cancel"
+        ]
+      ],
+      "id": "3",
+      "measures": [
+        {
+          "field": "__count"
+        }
+      ],
+      "model": "pms.reservation",
+      "rowGroupBys": [],
+      "name": "Cancelaciones",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "checkin"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_origin_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "room_type_id"
+        }
+      }
+    },
+    "4": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "reservation_id.state",
+          "!=",
+          "cancel"
+        ]
+      ],
+      "id": "4",
+      "measures": [
+        {
+          "field": "price_day_total"
+        }
+      ],
+      "model": "pms.service.line",
+      "rowGroupBys": [],
+      "name": "Ingresos extra",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "date"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "reservation_sale_channel_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "reservation_id.room_type_id"
+        }
+      }
+    },
+    "5": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "type_id.overnight_room",
+          "=",
+          true
+        ]
+      ],
+      "id": "5",
+      "measures": [
+        {
+          "field": "occupancy"
+        },
+        {
+          "field": "adr"
+        },
+        {
+          "field": "revpar"
+        },
+        {
+          "field": "total_revenue"
+        }
+      ],
+      "model": "hotel.room.type.daily.summary",
+      "rowGroupBys": [
+        "pms_property_id"
+      ],
+      "name": "Ocupaci\u00f3n por hotel",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "day"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "type_id"
+        }
+      }
+    },
+    "6": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "type_id.overnight_room",
+          "=",
+          true
+        ]
+      ],
+      "id": "6",
+      "measures": [
+        {
+          "field": "occupancy"
+        },
+        {
+          "field": "adr"
+        },
+        {
+          "field": "revpar"
+        },
+        {
+          "field": "total_revenue"
+        }
+      ],
+      "model": "hotel.room.type.daily.summary",
+      "rowGroupBys": [
+        "type_id"
+      ],
+      "name": "Ocupaci\u00f3n por habitaci\u00f3n",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "day"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "type_id"
+        }
+      }
+    },
+    "7": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "type_id.overnight_room",
+          "=",
+          true
+        ]
+      ],
+      "id": "7",
+      "measures": [
+        {
+          "field": "occupancy"
+        },
+        {
+          "field": "adr"
+        },
+        {
+          "field": "revpar"
+        },
+        {
+          "field": "total_revenue"
+        }
+      ],
+      "model": "hotel.room.type.daily.summary",
+      "rowGroupBys": [
+        "sale_channel_id"
+      ],
+      "name": "Producci\u00f3n por canal",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "549a2007-bd74-4236-944d-60b4accd27f5": {
+          "chain": "day"
+        },
+        "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
+          "chain": "pms_property_id"
+        },
+        "fd0b6ec4-3e62-4db4-87c0-3e0b74aa6907": {
+          "chain": "sale_channel_id"
+        },
+        "cc769648-9419-4b7f-8caf-242363110266": {
+          "chain": "type_id"
+        }
+      }
+    }
+  },
+  "pivotNextId": 8,
+  "lists": {},
+  "listNextId": 1,
+  "chartOdooMenusReferences": {}
+}

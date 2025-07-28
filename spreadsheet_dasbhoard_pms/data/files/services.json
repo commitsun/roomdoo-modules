@@ -1,0 +1,2778 @@
+{
+  "version": 12.5,
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Hoja1",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {},
+      "merges": [],
+      "cells": {},
+      "conditionalFormats": [],
+      "figures": [
+        {
+          "id": "89920feb-676f",
+          "x": 0,
+          "y": 0,
+          "width": 203,
+          "height": 125,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83d\udcb0 Ingresos totales",
+            "type": "scorecard",
+            "baselineDescr": "",
+            "keyValue": "KPI!B1"
+          }
+        },
+        {
+          "id": "285e4382-a2a2",
+          "x": 549,
+          "y": 0,
+          "width": 249,
+          "height": 125,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83c\udfaf Ticket medio por reserva",
+            "type": "scorecard",
+            "baselineDescr": "",
+            "keyValue": "KPI!B3"
+          }
+        },
+        {
+          "id": "7d1706c2-924c",
+          "x": 267,
+          "y": 0,
+          "width": 238,
+          "height": 125,
+          "tag": "chart",
+          "data": {
+            "baselineColorDown": "#DC6965",
+            "baselineColorUp": "#00A04A",
+            "baselineMode": "difference",
+            "title": "\ud83e\uddfe N\u00ba de l\u00edneas de servicio",
+            "type": "scorecard",
+            "baselineDescr": "",
+            "keyValue": "KPI!B2"
+          }
+        },
+        {
+          "id": "571621e1-6ed0-419f-8517-a3075d47dfe8",
+          "x": 0,
+          "y": 171,
+          "width": 536,
+          "height": 335,
+          "tag": "chart",
+          "data": {
+            "title": "\ud83d\udcca Ingresos por tipo de servicio",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "service_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "L\u00ednea de servicio",
+                  "name": "service_id",
+                  "readonly": false,
+                  "relation": "pms.service",
+                  "required": true,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Habitaci\u00f3n del Servicio",
+                  "type": "many2one"
+                },
+                "is_board_service": {
+                  "change_default": false,
+                  "help": "Indica si la l\u00ednea de servicio es parte de un board service",
+                  "name": "is_board_service",
+                  "readonly": true,
+                  "related": "service_id.is_board_service",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Es Regimen",
+                  "type": "boolean"
+                },
+                "product_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "[(is_pms_available, '=', True)]",
+                  "help": "Producto asociado a esta l\u00ednea de servicio",
+                  "name": "product_id",
+                  "readonly": true,
+                  "related": "service_id.product_id",
+                  "relation": "product.product",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Producto",
+                  "type": "many2one"
+                },
+                "tax_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [
+                    "|",
+                    [
+                      "active",
+                      "=",
+                      false
+                    ],
+                    [
+                      "active",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "help": "Impuestos aplicados en la l\u00ednea de servicio",
+                  "name": "tax_ids",
+                  "readonly": "True",
+                  "related": "service_id.tax_ids",
+                  "relation": "account.tax",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Impuestos",
+                  "type": "many2many"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_ids', 'in', [pms_property_id]),                 ('pms_property_ids', '=', False)]",
+                  "help": "Propiedad a la que pertenece el servicio",
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "related": "service_id.pms_property_id",
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "sale_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "name": "sale_line_ids",
+                  "readonly": true,
+                  "relation": "folio.sale.line",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "L\u00edneas de Ventas",
+                  "type": "many2many"
+                },
+                "date": {
+                  "change_default": false,
+                  "help": "Fecha de consumici\u00f3n del servicio",
+                  "name": "date",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Fecha",
+                  "type": "date"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "pricelist_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Pricelist used in the service",
+                  "name": "pricelist_id",
+                  "readonly": true,
+                  "related": "service_id.pricelist_id",
+                  "relation": "product.pricelist",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Tarifa",
+                  "type": "many2one"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "related": "pricelist_id.currency_id",
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Moneda",
+                  "type": "many2one"
+                },
+                "reservation_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "help": "Habitaci\u00f3n a la que se aplicar\u00e1n los servicios",
+                  "name": "reservation_id",
+                  "readonly": true,
+                  "related": "service_id.reservation_id",
+                  "relation": "pms.reservation",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Reserva",
+                  "type": "many2one"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "auto_qty": {
+                  "change_default": false,
+                  "help": "Mostrar si la cantidad diaria se ha calculado autom\u00e1ticamente",
+                  "name": "auto_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cantidad configurada autom\u00e1ticamente",
+                  "type": "boolean"
+                },
+                "default_invoice_to": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Indica el contacto al que se facturar\u00e1 por defecto esta l\u00ednea\n facturada por defecto, si no est\u00e1 establecida,\n se utilizar\u00e1 en su lugar un invitado o el contacto gen\u00e9rico",
+                  "name": "default_invoice_to",
+                  "readonly": true,
+                  "related": "service_id.default_invoice_to",
+                  "relation": "res.partner",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Factura para",
+                  "type": "many2one"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Identificaci\u00f3n",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "\u00daltima modificaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Nombre",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                },
+                "create_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "create_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado por",
+                  "type": "many2one"
+                },
+                "create_date": {
+                  "change_default": false,
+                  "name": "create_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado en",
+                  "type": "datetime"
+                },
+                "write_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "write_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n por",
+                  "type": "many2one"
+                },
+                "write_date": {
+                  "change_default": false,
+                  "name": "write_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "pos_order_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pos_order_line_ids",
+                  "readonly": false,
+                  "relation": "pos.order.line",
+                  "relation_field": "pms_service_line_id",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "POS lines",
+                  "type": "one2many"
+                }
+              },
+              "groupBy": [
+                "product_id"
+              ],
+              "measure": "day_qty",
+              "viewMeasures": [
+                "day_qty"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "pms.service.line",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Servicios",
+              "context": {
+                "params": {
+                  "action": 823,
+                  "model": "pms.service.line",
+                  "view_type": "list",
+                  "cids": 1,
+                  "menu_id": 258
+                },
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "reservation_id.state",
+                      "!=",
+                      "cancel"
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "params": {
+                  "action": 823,
+                  "model": "pms.service.line",
+                  "view_type": "list",
+                  "cids": 1,
+                  "menu_id": 258
+                },
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "reservation_id.state",
+                  "!=",
+                  "cancel"
+                ]
+              ],
+              "groupBy": [
+                "product_id"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+                "chain": "date"
+              },
+              "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+                "chain": "pms_property_id"
+              },
+              "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+                "chain": "product_id"
+              },
+              "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+                "chain": "reservation_sale_channel_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "c5d09a76-92f8-4ec5-bdc4-10b31a08aef0",
+          "x": 631,
+          "y": 593,
+          "width": 536,
+          "height": 335,
+          "tag": "chart",
+          "data": {
+            "title": "\ud83d\udccd Servicios por propiedad",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "service_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "L\u00ednea de servicio",
+                  "name": "service_id",
+                  "readonly": false,
+                  "relation": "pms.service",
+                  "required": true,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Habitaci\u00f3n del Servicio",
+                  "type": "many2one"
+                },
+                "is_board_service": {
+                  "change_default": false,
+                  "help": "Indica si la l\u00ednea de servicio es parte de un board service",
+                  "name": "is_board_service",
+                  "readonly": true,
+                  "related": "service_id.is_board_service",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Es Regimen",
+                  "type": "boolean"
+                },
+                "product_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "[(is_pms_available, '=', True)]",
+                  "help": "Producto asociado a esta l\u00ednea de servicio",
+                  "name": "product_id",
+                  "readonly": true,
+                  "related": "service_id.product_id",
+                  "relation": "product.product",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Producto",
+                  "type": "many2one"
+                },
+                "tax_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [
+                    "|",
+                    [
+                      "active",
+                      "=",
+                      false
+                    ],
+                    [
+                      "active",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "help": "Impuestos aplicados en la l\u00ednea de servicio",
+                  "name": "tax_ids",
+                  "readonly": "True",
+                  "related": "service_id.tax_ids",
+                  "relation": "account.tax",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Impuestos",
+                  "type": "many2many"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_ids', 'in', [pms_property_id]),                 ('pms_property_ids', '=', False)]",
+                  "help": "Propiedad a la que pertenece el servicio",
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "related": "service_id.pms_property_id",
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "sale_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "name": "sale_line_ids",
+                  "readonly": true,
+                  "relation": "folio.sale.line",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "L\u00edneas de Ventas",
+                  "type": "many2many"
+                },
+                "date": {
+                  "change_default": false,
+                  "help": "Fecha de consumici\u00f3n del servicio",
+                  "name": "date",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Fecha",
+                  "type": "date"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "pricelist_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Pricelist used in the service",
+                  "name": "pricelist_id",
+                  "readonly": true,
+                  "related": "service_id.pricelist_id",
+                  "relation": "product.pricelist",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Tarifa",
+                  "type": "many2one"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "related": "pricelist_id.currency_id",
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Moneda",
+                  "type": "many2one"
+                },
+                "reservation_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "help": "Habitaci\u00f3n a la que se aplicar\u00e1n los servicios",
+                  "name": "reservation_id",
+                  "readonly": true,
+                  "related": "service_id.reservation_id",
+                  "relation": "pms.reservation",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Reserva",
+                  "type": "many2one"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "auto_qty": {
+                  "change_default": false,
+                  "help": "Mostrar si la cantidad diaria se ha calculado autom\u00e1ticamente",
+                  "name": "auto_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cantidad configurada autom\u00e1ticamente",
+                  "type": "boolean"
+                },
+                "default_invoice_to": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Indica el contacto al que se facturar\u00e1 por defecto esta l\u00ednea\n facturada por defecto, si no est\u00e1 establecida,\n se utilizar\u00e1 en su lugar un invitado o el contacto gen\u00e9rico",
+                  "name": "default_invoice_to",
+                  "readonly": true,
+                  "related": "service_id.default_invoice_to",
+                  "relation": "res.partner",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Factura para",
+                  "type": "many2one"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Identificaci\u00f3n",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "\u00daltima modificaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Nombre",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                },
+                "create_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "create_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado por",
+                  "type": "many2one"
+                },
+                "create_date": {
+                  "change_default": false,
+                  "name": "create_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado en",
+                  "type": "datetime"
+                },
+                "write_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "write_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n por",
+                  "type": "many2one"
+                },
+                "write_date": {
+                  "change_default": false,
+                  "name": "write_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "pos_order_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pos_order_line_ids",
+                  "readonly": false,
+                  "relation": "pos.order.line",
+                  "relation_field": "pms_service_line_id",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "POS lines",
+                  "type": "one2many"
+                }
+              },
+              "groupBy": [
+                "pms_property_id"
+              ],
+              "measure": "day_qty",
+              "viewMeasures": [
+                "day_qty"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "pms.service.line",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Servicios",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "reservation_id.state",
+                      "!=",
+                      "cancel"
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              }
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "reservation_id.state",
+                  "!=",
+                  "cancel"
+                ]
+              ],
+              "groupBy": [
+                "pms_property_id"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+                "chain": "date"
+              },
+              "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+                "chain": "pms_property_id"
+              },
+              "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+                "chain": "product_id"
+              },
+              "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+                "chain": "reservation_sale_channel_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "3c8c3210-ed69-459a-a8b8-18144c5998da",
+          "x": 0,
+          "y": 585,
+          "width": 536,
+          "height": 335,
+          "tag": "chart",
+          "data": {
+            "title": "Servicios x dia",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "service_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "L\u00ednea de servicio",
+                  "name": "service_id",
+                  "readonly": false,
+                  "relation": "pms.service",
+                  "required": true,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Habitaci\u00f3n del Servicio",
+                  "type": "many2one"
+                },
+                "is_board_service": {
+                  "change_default": false,
+                  "help": "Indica si la l\u00ednea de servicio es parte de un board service",
+                  "name": "is_board_service",
+                  "readonly": true,
+                  "related": "service_id.is_board_service",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Es Regimen",
+                  "type": "boolean"
+                },
+                "product_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "[(is_pms_available, '=', True)]",
+                  "help": "Producto asociado a esta l\u00ednea de servicio",
+                  "name": "product_id",
+                  "readonly": true,
+                  "related": "service_id.product_id",
+                  "relation": "product.product",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Producto",
+                  "type": "many2one"
+                },
+                "tax_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [
+                    "|",
+                    [
+                      "active",
+                      "=",
+                      false
+                    ],
+                    [
+                      "active",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "help": "Impuestos aplicados en la l\u00ednea de servicio",
+                  "name": "tax_ids",
+                  "readonly": "True",
+                  "related": "service_id.tax_ids",
+                  "relation": "account.tax",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Impuestos",
+                  "type": "many2many"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_ids', 'in', [pms_property_id]),                 ('pms_property_ids', '=', False)]",
+                  "help": "Propiedad a la que pertenece el servicio",
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "related": "service_id.pms_property_id",
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "sale_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "name": "sale_line_ids",
+                  "readonly": true,
+                  "relation": "folio.sale.line",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "L\u00edneas de Ventas",
+                  "type": "many2many"
+                },
+                "date": {
+                  "change_default": false,
+                  "help": "Fecha de consumici\u00f3n del servicio",
+                  "name": "date",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Fecha",
+                  "type": "date"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "pricelist_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Pricelist used in the service",
+                  "name": "pricelist_id",
+                  "readonly": true,
+                  "related": "service_id.pricelist_id",
+                  "relation": "product.pricelist",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Tarifa",
+                  "type": "many2one"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "related": "pricelist_id.currency_id",
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Moneda",
+                  "type": "many2one"
+                },
+                "reservation_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "help": "Habitaci\u00f3n a la que se aplicar\u00e1n los servicios",
+                  "name": "reservation_id",
+                  "readonly": true,
+                  "related": "service_id.reservation_id",
+                  "relation": "pms.reservation",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Reserva",
+                  "type": "many2one"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "auto_qty": {
+                  "change_default": false,
+                  "help": "Mostrar si la cantidad diaria se ha calculado autom\u00e1ticamente",
+                  "name": "auto_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cantidad configurada autom\u00e1ticamente",
+                  "type": "boolean"
+                },
+                "default_invoice_to": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Indica el contacto al que se facturar\u00e1 por defecto esta l\u00ednea\n facturada por defecto, si no est\u00e1 establecida,\n se utilizar\u00e1 en su lugar un invitado o el contacto gen\u00e9rico",
+                  "name": "default_invoice_to",
+                  "readonly": true,
+                  "related": "service_id.default_invoice_to",
+                  "relation": "res.partner",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Factura para",
+                  "type": "many2one"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Identificaci\u00f3n",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "\u00daltima modificaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Nombre",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                },
+                "create_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "create_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado por",
+                  "type": "many2one"
+                },
+                "create_date": {
+                  "change_default": false,
+                  "name": "create_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado en",
+                  "type": "datetime"
+                },
+                "write_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "write_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n por",
+                  "type": "many2one"
+                },
+                "write_date": {
+                  "change_default": false,
+                  "name": "write_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "pos_order_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pos_order_line_ids",
+                  "readonly": false,
+                  "relation": "pos.order.line",
+                  "relation_field": "pms_service_line_id",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "POS lines",
+                  "type": "one2many"
+                }
+              },
+              "groupBy": [
+                "date:day"
+              ],
+              "measure": "day_qty",
+              "viewMeasures": [
+                "day_qty"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "pms.service.line",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Servicios",
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "reservation_id.state",
+                      "!=",
+                      "cancel"
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "reservation_id.state",
+                  "!=",
+                  "cancel"
+                ]
+              ],
+              "groupBy": [
+                "date:day"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+                "chain": "date"
+              },
+              "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+                "chain": "pms_property_id"
+              },
+              "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+                "chain": "product_id"
+              },
+              "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+                "chain": "reservation_sale_channel_id"
+              }
+            }
+          }
+        },
+        {
+          "id": "ee97e108-48af-428f-b559-29fa4b6da735",
+          "x": 584,
+          "y": 174,
+          "width": 536,
+          "height": 335,
+          "tag": "chart",
+          "data": {
+            "title": "Servicios x canal",
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+            "metaData": {
+              "disableLinking": false,
+              "fieldAttrs": {},
+              "fields": {
+                "service_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "L\u00ednea de servicio",
+                  "name": "service_id",
+                  "readonly": false,
+                  "relation": "pms.service",
+                  "required": true,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Habitaci\u00f3n del Servicio",
+                  "type": "many2one"
+                },
+                "is_board_service": {
+                  "change_default": false,
+                  "help": "Indica si la l\u00ednea de servicio es parte de un board service",
+                  "name": "is_board_service",
+                  "readonly": true,
+                  "related": "service_id.is_board_service",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Es Regimen",
+                  "type": "boolean"
+                },
+                "product_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "[(is_pms_available, '=', True)]",
+                  "help": "Producto asociado a esta l\u00ednea de servicio",
+                  "name": "product_id",
+                  "readonly": true,
+                  "related": "service_id.product_id",
+                  "relation": "product.product",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Producto",
+                  "type": "many2one"
+                },
+                "tax_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [
+                    "|",
+                    [
+                      "active",
+                      "=",
+                      false
+                    ],
+                    [
+                      "active",
+                      "=",
+                      true
+                    ]
+                  ],
+                  "help": "Impuestos aplicados en la l\u00ednea de servicio",
+                  "name": "tax_ids",
+                  "readonly": "True",
+                  "related": "service_id.tax_ids",
+                  "relation": "account.tax",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Impuestos",
+                  "type": "many2many"
+                },
+                "pms_property_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_ids', 'in', [pms_property_id]),                 ('pms_property_ids', '=', False)]",
+                  "help": "Propiedad a la que pertenece el servicio",
+                  "name": "pms_property_id",
+                  "readonly": true,
+                  "related": "service_id.pms_property_id",
+                  "relation": "pms.property",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Hotel",
+                  "type": "many2one"
+                },
+                "sale_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "name": "sale_line_ids",
+                  "readonly": true,
+                  "relation": "folio.sale.line",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "L\u00edneas de Ventas",
+                  "type": "many2many"
+                },
+                "date": {
+                  "change_default": false,
+                  "help": "Fecha de consumici\u00f3n del servicio",
+                  "name": "date",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Fecha",
+                  "type": "date"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "pricelist_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Pricelist used in the service",
+                  "name": "pricelist_id",
+                  "readonly": true,
+                  "related": "service_id.pricelist_id",
+                  "relation": "product.pricelist",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Tarifa",
+                  "type": "many2one"
+                },
+                "currency_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "currency_id",
+                  "readonly": true,
+                  "related": "pricelist_id.currency_id",
+                  "relation": "res.currency",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Moneda",
+                  "type": "many2one"
+                },
+                "reservation_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": "['|', '|',                 (not pms_property_id, '=', True),                 ('pms_property_id', 'in', [pms_property_id]),                 ('pms_property_id', '=', False)]",
+                  "help": "Habitaci\u00f3n a la que se aplicar\u00e1n los servicios",
+                  "name": "reservation_id",
+                  "readonly": true,
+                  "related": "service_id.reservation_id",
+                  "relation": "pms.reservation",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Reserva",
+                  "type": "many2one"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "auto_qty": {
+                  "change_default": false,
+                  "help": "Mostrar si la cantidad diaria se ha calculado autom\u00e1ticamente",
+                  "name": "auto_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cantidad configurada autom\u00e1ticamente",
+                  "type": "boolean"
+                },
+                "default_invoice_to": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Indica el contacto al que se facturar\u00e1 por defecto esta l\u00ednea\n facturada por defecto, si no est\u00e1 establecida,\n se utilizar\u00e1 en su lugar un invitado o el contacto gen\u00e9rico",
+                  "name": "default_invoice_to",
+                  "readonly": true,
+                  "related": "service_id.default_invoice_to",
+                  "relation": "res.partner",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Factura para",
+                  "type": "many2one"
+                },
+                "id": {
+                  "change_default": false,
+                  "name": "id",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Identificaci\u00f3n",
+                  "type": "integer"
+                },
+                "__last_update": {
+                  "change_default": false,
+                  "name": "__last_update",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "\u00daltima modificaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "display_name": {
+                  "change_default": false,
+                  "name": "display_name",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": false,
+                  "sortable": false,
+                  "store": false,
+                  "string": "Nombre",
+                  "translate": false,
+                  "trim": true,
+                  "type": "char"
+                },
+                "create_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "create_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado por",
+                  "type": "many2one"
+                },
+                "create_date": {
+                  "change_default": false,
+                  "name": "create_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Creado en",
+                  "type": "datetime"
+                },
+                "write_uid": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "write_uid",
+                  "readonly": true,
+                  "relation": "res.users",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n por",
+                  "type": "many2one"
+                },
+                "write_date": {
+                  "change_default": false,
+                  "name": "write_date",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "\u00daltima Actualizaci\u00f3n en",
+                  "type": "datetime"
+                },
+                "pos_order_line_ids": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "name": "pos_order_line_ids",
+                  "readonly": false,
+                  "relation": "pos.order.line",
+                  "relation_field": "pms_service_line_id",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": false,
+                  "store": true,
+                  "string": "POS lines",
+                  "type": "one2many"
+                },
+                "reservation_sale_channel_id": {
+                  "change_default": false,
+                  "context": {},
+                  "domain": [],
+                  "help": "Sale Channel through which reservation was created, the original",
+                  "name": "reservation_sale_channel_id",
+                  "readonly": true,
+                  "related": "reservation_id.sale_channel_origin_id",
+                  "relation": "pms.sale.channel",
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Sale Channel Origin",
+                  "type": "many2one"
+                }
+              },
+              "groupBy": [
+                "reservation_sale_channel_id"
+              ],
+              "measure": "day_qty",
+              "viewMeasures": [
+                "day_qty"
+              ],
+              "mode": "bar",
+              "order": null,
+              "resModel": "pms.service.line",
+              "stacked": true,
+              "cumulated": false,
+              "title": "Servicios",
+              "context": {
+                "params": {
+                  "action": 823,
+                  "model": "pms.service.line",
+                  "view_type": "list",
+                  "cids": 1,
+                  "menu_id": 258
+                },
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domains": [
+                {
+                  "arrayRepr": [
+                    [
+                      "reservation_id.state",
+                      "!=",
+                      "cancel"
+                    ]
+                  ],
+                  "description": null
+                }
+              ],
+              "measures": {
+                "price_day_tax": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "price_day_tax",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Cuenta de impuestos",
+                  "type": "float"
+                },
+                "discount": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Descuento en el precio del servicio.",
+                  "name": "discount",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento",
+                  "type": "float"
+                },
+                "cancel_discount": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "",
+                  "name": "cancel_discount",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Descuento por Cancelaci\u00f3n (%)",
+                  "type": "float"
+                },
+                "price_unit": {
+                  "change_default": false,
+                  "digits": [
+                    16,
+                    2
+                  ],
+                  "group_operator": "sum",
+                  "help": "Precio ud de servicio",
+                  "name": "price_unit",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Precio unidad",
+                  "type": "float"
+                },
+                "price_day_subtotal": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Subtotal sin impuestos",
+                  "name": "price_day_subtotal",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Subtotal",
+                  "type": "monetary"
+                },
+                "price_day_total": {
+                  "change_default": false,
+                  "currency_field": "currency_id",
+                  "group_operator": "sum",
+                  "help": "Precio Total",
+                  "name": "price_day_total",
+                  "readonly": true,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Total",
+                  "type": "monetary"
+                },
+                "day_qty": {
+                  "change_default": false,
+                  "group_operator": "sum",
+                  "help": "Cantidad por d\u00eda",
+                  "name": "day_qty",
+                  "readonly": false,
+                  "required": false,
+                  "searchable": true,
+                  "sortable": true,
+                  "store": true,
+                  "string": "Unidades",
+                  "type": "integer"
+                },
+                "__count": {
+                  "name": "__count",
+                  "string": "N\u00famero",
+                  "type": "integer"
+                }
+              },
+              "allIntegers": false
+            },
+            "searchParams": {
+              "comparison": null,
+              "context": {
+                "params": {
+                  "action": 823,
+                  "model": "pms.service.line",
+                  "view_type": "list",
+                  "cids": 1,
+                  "menu_id": 258
+                },
+                "lang": "es_ES",
+                "tz": "Europe/Madrid",
+                "uid": 2,
+                "allowed_pms_property_ids": [
+                  1
+                ],
+                "allowed_company_ids": [
+                  1
+                ]
+              },
+              "domain": [
+                [
+                  "reservation_id.state",
+                  "!=",
+                  "cancel"
+                ]
+              ],
+              "groupBy": [
+                "reservation_sale_channel_id"
+              ],
+              "orderBy": []
+            },
+            "type": "odoo_bar",
+            "verticalAxisPosition": "left",
+            "stacked": true,
+            "fieldMatching": {
+              "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+                "chain": "date"
+              },
+              "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+                "chain": "pms_property_id"
+              },
+              "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+                "chain": "product_id"
+              },
+              "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+                "chain": "reservation_sale_channel_id"
+              }
+            }
+          }
+        }
+      ],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "cb11f253-9c1b",
+      "name": "KPI",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 190
+        }
+      },
+      "merges": [],
+      "cells": {
+        "A1": {
+          "content": "Ingresos totales"
+        },
+        "A2": {
+          "content": "Lineas de servicio"
+        },
+        "A3": {
+          "content": "\u20ac/reserva"
+        },
+        "B1": {
+          "content": "=Sheet1!C3"
+        },
+        "B2": {
+          "content": "=Sheet1!B3"
+        },
+        "B3": {
+          "content": "=Sheet1!C3/Sheet2!B3"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "712d7a29-16f5-4a29-b89c-a71fb907abe7",
+      "name": "Sheet1",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        },
+        "1": {
+          "size": 63
+        }
+      },
+      "merges": [
+        "B1:C1"
+      ],
+      "cells": {
+        "A1": {
+          "style": 1
+        },
+        "A2": {
+          "style": 2
+        },
+        "A3": {
+          "style": 1,
+          "content": "=ODOO.PIVOT.HEADER(1)"
+        },
+        "B1": {
+          "style": 1,
+          "content": "=ODOO.PIVOT.HEADER(1)"
+        },
+        "B2": {
+          "style": 2,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"day_qty\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(1,\"day_qty\")"
+        },
+        "C1": {
+          "style": 1
+        },
+        "C2": {
+          "style": 2,
+          "content": "=ODOO.PIVOT.HEADER(1,\"measure\",\"price_day_total\")"
+        },
+        "C3": {
+          "content": "=ODOO.PIVOT(1,\"price_day_total\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    },
+    {
+      "id": "45732909-ca62-44eb-bf0b-a1439d78c8a3",
+      "name": "Sheet2",
+      "colNumber": 26,
+      "rowNumber": 100,
+      "rows": {},
+      "cols": {
+        "0": {
+          "size": 38
+        }
+      },
+      "merges": [],
+      "cells": {
+        "A1": {
+          "style": 1
+        },
+        "A2": {
+          "style": 2
+        },
+        "A3": {
+          "style": 1,
+          "content": "=ODOO.PIVOT.HEADER(2)"
+        },
+        "B1": {
+          "style": 1,
+          "content": "=ODOO.PIVOT.HEADER(2)"
+        },
+        "B2": {
+          "style": 2,
+          "content": "=ODOO.PIVOT.HEADER(2,\"measure\",\"__count\")"
+        },
+        "B3": {
+          "content": "=ODOO.PIVOT(2,\"__count\")"
+        }
+      },
+      "conditionalFormats": [],
+      "figures": [],
+      "filterTables": [],
+      "areGridLinesVisible": true,
+      "isVisible": true
+    }
+  ],
+  "entities": {},
+  "styles": {
+    "1": {
+      "bold": true,
+      "fillColor": "#f2f2f2"
+    },
+    "2": {
+      "fillColor": "#f2f2f2",
+      "textColor": "#756f6f"
+    }
+  },
+  "formats": {},
+  "borders": {},
+  "revisionId": "7765205c-12f5-446d-b83c-c124a52fce32",
+  "uniqueFigureIds": true,
+  "odooVersion": 5,
+  "globalFilters": [
+    {
+      "id": "671592ff-79c6-4578-94bf-0a8dbfbf6bec",
+      "type": "date",
+      "label": "fecha",
+      "rangeType": "month"
+    },
+    {
+      "id": "d4358eaa-cf12-47ae-9157-161b2bfb7329",
+      "type": "relation",
+      "label": "Hotel",
+      "rangeType": "year",
+      "modelName": "pms.property"
+    },
+    {
+      "id": "625edad5-df53-4a8c-b7bd-8b77cdb91969",
+      "type": "relation",
+      "label": "Tipo de servicio",
+      "rangeType": "year",
+      "modelName": "product.product"
+    },
+    {
+      "id": "204bc61a-aae5-46ed-a982-0b8b618ec039",
+      "type": "relation",
+      "label": "Canal",
+      "rangeType": "year",
+      "modelName": "pms.sale.channel"
+    }
+  ],
+  "pivots": {
+    "1": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "reservation_id.state",
+          "!=",
+          "cancel"
+        ]
+      ],
+      "id": "1",
+      "measures": [
+        {
+          "field": "day_qty"
+        },
+        {
+          "field": "price_day_total"
+        }
+      ],
+      "model": "pms.service.line",
+      "rowGroupBys": [],
+      "name": "Servicios",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+          "chain": "date"
+        },
+        "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+          "chain": "pms_property_id"
+        },
+        "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+          "chain": "product_id"
+        },
+        "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+          "chain": "reservation_sale_channel_id"
+        }
+      }
+    },
+    "2": {
+      "colGroupBys": [],
+      "context": {
+        "lang": "es_ES",
+        "tz": "Europe/Madrid",
+        "uid": 2,
+        "allowed_pms_property_ids": [
+          1
+        ],
+        "allowed_company_ids": [
+          1
+        ]
+      },
+      "domain": [
+        [
+          "state",
+          "!=",
+          "cancel"
+        ]
+      ],
+      "id": "2",
+      "measures": [
+        {
+          "field": "__count"
+        }
+      ],
+      "model": "pms.reservation",
+      "rowGroupBys": [],
+      "name": "Cantidad de reservas",
+      "sortedColumn": null,
+      "fieldMatching": {
+        "671592ff-79c6-4578-94bf-0a8dbfbf6bec": {
+          "chain": "checkin"
+        },
+        "d4358eaa-cf12-47ae-9157-161b2bfb7329": {
+          "chain": "pms_property_id"
+        },
+        "625edad5-df53-4a8c-b7bd-8b77cdb91969": {
+          "chain": "service_ids.service_line_ids.product_id"
+        },
+        "204bc61a-aae5-46ed-a982-0b8b618ec039": {
+          "chain": "sale_channel_origin_id"
+        }
+      }
+    }
+  },
+  "pivotNextId": 3,
+  "lists": {},
+  "listNextId": 1,
+  "chartOdooMenusReferences": {}
+}
