@@ -72,7 +72,7 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
             max_age=validator.cookie_max_age,
             path=validator.cookie_path or "/",
             secure=validator.cookie_secure,
-            httponly=False,
+            httponly=True,
             samesite="Strict",
         )
         return response

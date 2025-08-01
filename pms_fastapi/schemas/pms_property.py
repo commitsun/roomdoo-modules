@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from .base import PmsBaseModel
 
 
-class PropertyId(BaseModel):
+class PropertyId(PmsBaseModel):
     id: int
     name: str

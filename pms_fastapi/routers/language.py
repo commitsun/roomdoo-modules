@@ -17,4 +17,4 @@ async def get_server_languages(
     Get server information including languages.
     """
     languages = env["res.lang"].sudo().search([])
-    return [Language(id=lang.id, name=lang.name, code=lang.code) for lang in languages]
+    return [Language.from_res_lang(lang) for lang in languages]

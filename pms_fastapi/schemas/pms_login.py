@@ -1,6 +1,8 @@
-from pydantic import BaseModel, SecretStr
+from pydantic import SecretStr
+
+from .base import PmsBaseModel
 
 
-class PmsLoginInput(BaseModel):
+class PmsLoginInput(PmsBaseModel):
     username: str
     password: SecretStr
