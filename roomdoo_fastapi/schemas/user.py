@@ -1,19 +1,21 @@
-from pydantic import BaseModel, SecretStr
+from pydantic import SecretStr
+
+from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
 
 
-class AvailabilityRuleField(BaseModel):
+class AvailabilityRuleField(PmsBaseModel):
     name: str
 
 
-class ChangePasswordInput(BaseModel):
+class ChangePasswordInput(PmsBaseModel):
     oldPassword: SecretStr
     newPassword: SecretStr
 
 
-class UserEmailInput(BaseModel):
+class UserEmailInput(PmsBaseModel):
     email: str
 
 
-class ResetPasswordInput(BaseModel):
+class ResetPasswordInput(PmsBaseModel):
     newPassword: SecretStr
     resetToken: SecretStr
