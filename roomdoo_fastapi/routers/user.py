@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Response, status
 
 from odoo.api import Environment
-from odoo.exceptions import AccessDenied
+from odoo.exceptions import AccessDenied, UserError
 
 from odoo.addons.fastapi.dependencies import odoo_env
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
@@ -88,6 +88,10 @@ async def send_mail_reset_password(
     "/reset-password",
     status_code=204,
     responses={
+        401: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid token"}}},
+        },
         204: {"model": None},
     },
     tags=["user"],
@@ -100,5 +104,11 @@ async def reset_password(
     values = {
         "password": password,
     }
-    env["res.users"].sudo().signup(values, reset_token)
+    try:
+        env["res.users"].sudo().signup(values, reset_token)
+    except UserError as e:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+        ) from e
     return Response(status_code=status.HTTP_204_NO_CONTENT)
