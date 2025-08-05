@@ -30,7 +30,7 @@ ContactOrderDependency = create_order_dependency(
 @pms_api_router.get(
     "/contacts", response_model=PagedCollection[ContactSummary], tags=["contact"]
 )
-async def get_contacts(
+async def list_contacts(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
     filters: Annotated[ContactSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
