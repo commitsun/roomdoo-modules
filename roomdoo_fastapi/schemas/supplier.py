@@ -9,18 +9,18 @@ from odoo.tools.float_utils import float_round
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 
 
-class CustomerOrderField(str, Enum):
+class SupplierOrderField(str, Enum):
     name = "name"
     country = "country"
 
 
-CUSTOMER_ORDER_MAPPING = {
+SUPPLIER_ORDER_MAPPING = {
     "name": "name",
     "country": "country_id",
 }
 
 
-class CustomerSummary(ContactBase):
+class SupplierSummary(ContactBase):
     vat: str
     totalInvoiced: float = Field(description="Total invoiced in the last 12 months")
 
@@ -29,11 +29,14 @@ class CustomerSummary(ContactBase):
         precision = partner.currency_id.decimal_places
         data = cls.parse_common_fields(partner)
         data["vat"] = partner.vat or ""
-        data["totalInvoiced"] = float_round(partner.total_invoiced_last_year, precision)
+        data["totalInvoiced"] = float_round(
+            partner.with_context(invoice_type="in_invoice").total_invoiced_last_year,
+            precision,
+        )
         return cls(**data)
 
 
-class CustomerSearch:
+class SupplierSearch:
     def __init__(
         self,
         globalSearch: str | None = Query(

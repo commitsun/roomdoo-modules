@@ -9,15 +9,20 @@ class ResPartner(models.Model):
     total_invoiced_last_year = fields.Monetary(
         compute="_compute_total_invoiced_last_year"
     )
+    last_reservation_id = fields.Many2one(
+        "pms.reservation", compute="_compute_reservation_data"
+    )
+    current_guest = fields.Boolean(compute="_compute_reservation_data")
 
     def _compute_total_invoiced_last_year(self):
+        invoice_type = self._context.get("invoice_type", "out_invoice")
         for partner in self:
             today = fields.Date.context_today(self)
             a_year_ago = today - relativedelta(years=1)
             result = self.env["account.move"].read_group(
                 domain=[
                     ("partner_id", "child_of", partner.id),
-                    ("move_type", "=", "out_invoice"),
+                    ("move_type", "=", invoice_type),
                     ("state", "=", "posted"),
                     ("invoice_date", ">", a_year_ago),
                 ],
@@ -27,3 +32,28 @@ class ResPartner(models.Model):
             partner.total_invoiced_last_year = (
                 result[0]["amount_total_signed"] if result else 0.0
             )
+
+    def _compute_reservation_data(self):
+        for partner in self:
+            checkin_partner = self.env["pms.checkin.partner"].search(
+                [("partner_id", "=", partner.id)]
+            )
+            current_guest = any(
+                checkin_partner.filtered(lambda r: r.state == "onboard")
+            )
+            checkin_reservation_ids = checkin_partner.mapped("reservation_id.id")
+            reservation = self.env["pms.reservation"].search(
+                [
+                    "|",
+                    (
+                        "partner_id.id",
+                        "child_of",
+                        partner.id if isinstance(partner.id, int) else False,
+                    ),
+                    ("id", "in", checkin_reservation_ids),
+                ],
+                order="checkout desc",
+                limit=1,
+            )
+            partner.last_reservation_id = reservation
+            partner.current_guest = current_guest
