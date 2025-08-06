@@ -61,7 +61,7 @@ class ContactSummary(ContactBase):
 class ContactSearch:
     def __init__(
         self,
-        global_search: str | None = Query(
+        globalSearch: str | None = Query(
             default=None,
             description="Search across name, email, phone and VAT fields"
             "this value (case-insensitive).",
@@ -85,7 +85,7 @@ class ContactSearch:
             "value (case-insensitive).",
         ),
     ):
-        self.global_search = global_search
+        self.globalSearch = globalSearch
         self.name = name
         self.email = email
         self.contact_type = type
@@ -93,15 +93,15 @@ class ContactSearch:
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
-        if self.global_search:
+        if self.globalSearch:
             domain += [
                 "|",
                 "|",
                 "|",
-                ("name", "ilike", self.global_search),
-                ("email", "ilike", self.global_search),
-                ("phone_mobile_search", "ilike", self.global_search),
-                ("vat", "ilike", self.global_search),
+                ("name", "ilike", self.globalSearch),
+                ("email", "ilike", self.globalSearch),
+                ("phone_mobile_search", "ilike", self.globalSearch),
+                ("vat", "ilike", self.globalSearch),
             ]
         if self.name:
             domain.append(("name", "ilike", self.name))
