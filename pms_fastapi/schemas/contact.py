@@ -28,24 +28,44 @@ class ContactType(str, Enum):
     agency = "agency"
 
 
+class PhoneType(str, Enum):
+    phone = "phone"
+    mobile = "mobile"
+
+
+class Phone(PmsBaseModel):
+    type: PhoneType
+    number: str
+
+
 class ContactBase(PmsBaseModel):
     id: int
     name: str
     email: str = ""
-    phone: str = ""
+    phones: list[Phone] | None = None
     country: CountryId | None = None
 
     @classmethod
     def parse_common_fields(cls, partner) -> dict:
-        return {
+        record_dict = {
             "id": partner.id,
             "name": partner.name,
             "email": partner.email or "",
-            "phone": partner.phone or "",
             "country": CountryId.from_res_country(partner.country_id)
             if partner.country_id
             else None,
         }
+        if partner.phone or partner.mobile:
+            record_dict["phones"] = []
+            if partner.phone:
+                record_dict["phones"].append(
+                    {"type": PhoneType.phone, "number": partner.phone}
+                )
+            if partner.mobile:
+                record_dict["phones"].append(
+                    {"type": PhoneType.mobile, "number": partner.mobile}
+                )
+        return record_dict
 
 
 class ContactSummary(ContactBase):
