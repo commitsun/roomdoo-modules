@@ -17,7 +17,6 @@ class ContactOrderField(str, Enum):
 CONTACT_ORDER_MAPPING = {
     "name": "name",
     "country": "country_id",
-    "type": "pms_partner_type",
 }
 
 
@@ -69,12 +68,21 @@ class ContactBase(PmsBaseModel):
 
 
 class ContactSummary(ContactBase):
-    type: ContactType
+    type: list[ContactType]
 
     @classmethod
     def from_res_partner(cls, partner):
         data = cls.parse_common_fields(partner)
-        data["type"] = partner.pms_partner_type
+        partner_type = []
+        if partner.is_agency:
+            partner_type.append(ContactType.agency)
+        if partner.pms_checkin_partner_ids:
+            partner_type.append(ContactType.guest)
+        if partner.customer_rank > 0:
+            partner_type.append(ContactType.customer)
+        if partner.supplier_rank > 0:
+            partner_type.append(ContactType.supplier)
+        data["type"] = partner_type
         return cls(**data)
 
 
@@ -128,7 +136,14 @@ class ContactSearch:
         if self.email:
             domain.append(("email", "ilike", self.email))
         if self.contact_type:
-            domain.append(("pms_partner_type", "=", self.contact_type.value))
+            if self.contact_type == ContactType.agency:
+                domain.append(("is_agency", "=", True))
+            elif self.contact_type == ContactType.customer:
+                domain.append(("customer_rank", ">", 0))
+            elif self.contact_type == ContactType.supplier:
+                domain.append(("supplier_rank", ">", 0))
+            elif self.contact_type == ContactType.guest:
+                domain.append(("pms_checkin_partner_ids", "!=", False))
         if self.country:
             domain.append(("country_id.name", "ilike", self.country))
 

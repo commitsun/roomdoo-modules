@@ -51,4 +51,4 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     _description = "Pms api guest Service Helper"
 
     def _get_domain_adapter(self):
-        return [("pms_partner_type", "=", "guest")]
+        return [("pms_checkin_partner_ids", "!=", False)]

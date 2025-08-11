@@ -53,4 +53,4 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     _description = "Pms api supplier Service Helper"
 
     def _get_domain_adapter(self):
-        return [("pms_partner_type", "=", "supplier")]
+        return [("supplier_rank", ">", 0)]
