@@ -30,6 +30,27 @@ class CommonTestRoomdooApi(FastAPITransactionCase):
                 "email": "test@example.org",
             }
         )
+        cls.test_availability_plan = cls.env["pms.availability.plan"].create(
+            {"name": "Availability Plan 1"}
+        )
+        cls.test_pricelist = cls.env["product.pricelist"].create(
+            {
+                "name": "Pricelist 1",
+                "availability_plan_id": cls.test_availability_plan.id,
+            }
+        )
+        cls.test_company = cls.env["res.company"].create(
+            {
+                "name": "Company 1",
+            }
+        )
+        cls.test_property = cls.env["pms.property"].create(
+            {
+                "name": "Property 1",
+                "company_id": cls.test_company.id,
+                "default_pricelist_id": cls.test_pricelist.id,
+            }
+        )
 
     def _login(self, test_client, password="supersecret"):
         response: Response = test_client.post(

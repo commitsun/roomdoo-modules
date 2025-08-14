@@ -36,7 +36,7 @@ async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_en
         )
     try:
         user_record.with_user(user_record)._check_credentials(
-            user.password.get_secret_value(), None
+            user.password.get_secret_value(), {"interactive": False}
         )
     except AccessDenied as e:
         raise HTTPException(
@@ -50,7 +50,7 @@ async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_en
 
 class PmsFastapiLoginEndpoint(models.AbstractModel):
     _name = "pms.fastapi.login.endpoint"
-    _description = "Demo Endpoint"
+    _description = "login endpoint helper"
 
     def _get_login_response_with_cookies(self, user_record):
         validator = (

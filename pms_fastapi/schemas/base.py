@@ -2,17 +2,16 @@ from pydantic import BaseModel
 
 from odoo import _
 from odoo.exceptions import AccessDenied
-from odoo.http import request
 
 
 class PmsBaseModel(BaseModel):
     @staticmethod
-    def url_image_pms_api_rest(model, record_id, field):
+    def url_image_pms_api_rest(env, model, record_id, field):
         PmsBaseModel.pms_api_check_access(
-            user=request.env.user, records=request.env[model].sudo().browse(record_id)
+            user=env.user, records=env[model].sudo().browse(record_id)
         )
         rt_image_attach = (
-            request.env["ir.attachment"]
+            env["ir.attachment"]
             .sudo()
             .search(
                 [
@@ -23,20 +22,20 @@ class PmsBaseModel(BaseModel):
             )
         )
         if rt_image_attach:
-            result = PmsBaseModel.get_attachment_url(rt_image_attach)
+            result = PmsBaseModel.get_attachment_url(env, rt_image_attach)
         else:
             result = False
         return result if result else ""
 
     @staticmethod
-    def get_attachment_url(attachment):
+    def get_attachment_url(env, attachment):
         """
         Returns the URL of an attachment, generating an access token if necessary.
         """
         if not attachment.access_token:
             attachment.generate_access_token()
         return (
-            request.env["ir.config_parameter"].sudo().get_param("web.base.url")
+            env["ir.config_parameter"].sudo().get_param("web.base.url")
             + f"/web/image/{attachment.id}?access_token={attachment.access_token}"
         )
 
