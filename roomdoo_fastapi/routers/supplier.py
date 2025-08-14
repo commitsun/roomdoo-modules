@@ -5,11 +5,10 @@ from fastapi import Depends
 from odoo import models
 from odoo.api import Environment
 
-from odoo.addons.extendable_fastapi.schemas import PagedCollection
 from odoo.addons.fastapi.dependencies import (
     paging,
 )
-from odoo.addons.fastapi.schemas import Paging
+from odoo.addons.fastapi.schemas import PagedCollection, Paging
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.dependencies import create_order_dependency
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
