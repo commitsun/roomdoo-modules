@@ -12,26 +12,27 @@ class User(PmsBaseModel):
     lastName2: str = ""
     email: str = ""
     phone: str = ""
-    image: AnyHttpUrl = ""
-    defaultProperty: PropertyId
+    image: AnyHttpUrl | None = None
+    defaultProperty: PropertyId | None = None
 
     @classmethod
-    def from_res_users(cls, odoo_record):
-        user = cls(
-            id=odoo_record.id,
-            name=odoo_record.name,
-            firstName=odoo_record.firstname or "",
-            lastName=odoo_record.lastname or "",
-            lastName2=odoo_record.lastname2 or "",
-            email=odoo_record.email or "",
-            phone=odoo_record.phone or "",
-            defaultProperty=PropertyId(
-                id=odoo_record.pms_property_id.id, name=odoo_record.pms_property_id.name
-            ),
-        )
+    def from_res_users(cls, user_record):
+        data = {
+            "id": user_record.id,
+            "name": user_record.name,
+            "firstName": user_record.firstname or "",
+            "lastName": user_record.lastname or "",
+            "lastName2": user_record.lastname2 or "",
+            "email": user_record.email or "",
+            "phone": user_record.phone or "",
+        }
+        if user_record.pms_property_id:
+            data["defaultProperty"] = PropertyId(
+                id=user_record.pms_property_id.id, name=user_record.pms_property_id.name
+            )
         image_url = cls.url_image_pms_api_rest(
-            "res.partner", odoo_record.partner_id.id, "image_1024"
+            user_record.env, "res.partner", user_record.partner_id.id, "image_1024"
         )
         if image_url:
-            user.image = image_url
-        return user
+            data["image"] = image_url
+        return cls(**data)

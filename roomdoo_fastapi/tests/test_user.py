@@ -1,6 +1,6 @@
 from fastapi import status
 
-from .common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
 
 
 class CommonTestAuth(CommonTestRoomdooApi):
@@ -40,3 +40,9 @@ class CommonTestAuth(CommonTestRoomdooApi):
             self.assertEqual(
                 response.status_code, status.HTTP_204_NO_CONTENT, response.text
             )
+
+    def test_get_availability_rule_fields(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/user/availability-rule-fields")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
