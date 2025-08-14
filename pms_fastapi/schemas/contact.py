@@ -5,13 +5,12 @@ from fastapi import Query
 from odoo import api
 
 from .base import PmsBaseModel
-from .country import CountryId
+from .country import CountrySummary
 
 
 class ContactOrderField(str, Enum):
     name = "name"
     country = "country"
-    type = "type"
 
 
 CONTACT_ORDER_MAPPING = {
@@ -42,7 +41,7 @@ class ContactBase(PmsBaseModel):
     name: str
     email: str = ""
     phones: list[Phone] | None = None
-    country: CountryId | None = None
+    country: CountrySummary | None = None
 
     @classmethod
     def parse_common_fields(cls, partner) -> dict:
@@ -50,7 +49,7 @@ class ContactBase(PmsBaseModel):
             "id": partner.id,
             "name": partner.name,
             "email": partner.email or "",
-            "country": CountryId.from_res_country(partner.country_id)
+            "country": CountrySummary.from_res_country(partner.country_id)
             if partner.country_id
             else None,
         }
@@ -68,7 +67,7 @@ class ContactBase(PmsBaseModel):
 
 
 class ContactSummary(ContactBase):
-    type: list[ContactType]
+    types: list[ContactType]
 
     @classmethod
     def from_res_partner(cls, partner):
@@ -82,7 +81,7 @@ class ContactSummary(ContactBase):
             partner_type.append(ContactType.customer)
         if partner.supplier_rank > 0:
             partner_type.append(ContactType.supplier)
-        data["type"] = partner_type
+        data["types"] = partner_type
         return cls(**data)
 
 
