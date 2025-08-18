@@ -27,8 +27,8 @@ class User(PmsBaseModel):
             "phone": user_record.phone or "",
         }
         if user_record.pms_property_id:
-            data["defaultProperty"] = PropertyId(
-                id=user_record.pms_property_id.id, name=user_record.pms_property_id.name
+            data["defaultProperty"] = PropertyId.from_pms_property(
+                user_record.pms_property_id
             )
         image_url = cls.url_image_pms_api_rest(
             user_record.env, "res.partner", user_record.partner_id.id, "image_1024"

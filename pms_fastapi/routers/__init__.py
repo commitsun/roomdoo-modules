@@ -3,3 +3,4 @@ from . import language
 from . import user
 from . import contact
 from . import country
+from . import pms_property
