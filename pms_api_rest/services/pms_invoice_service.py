@@ -407,7 +407,7 @@ class PmsInvoiceService(Component):
             for line in new_vals["invoice_line_ids"]:
                 if line[0] == 2:
                     move_line = self.env["account.move.line"].sudo().browse(line[1])
-                    if not move_line.display_type:
+                    if move_line.display_type == "product":
                         return True
                 if line[0] == 1:
                     move_line = self.env["account.move.line"].sudo().browse(line[1])
@@ -415,7 +415,7 @@ class PmsInvoiceService(Component):
                         "quantity"
                     ):
                         return True
-                if line[0] == 0 and not line[2].get("display_type"):
+                if line[0] == 0 and not line[2].get("display_type") or line[2].get("display_type") == "product":
                     return True
         return False
 
