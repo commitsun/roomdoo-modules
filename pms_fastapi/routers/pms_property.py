@@ -10,7 +10,7 @@ from odoo.addons.pms_fastapi.schemas.pms_property import PropertySummary
 
 
 @pms_api_router.get(
-    "/properties",
+    "/pmsProperties",
     status_code=200,
     responses={
         200: {"model": None},
@@ -24,7 +24,8 @@ async def get_property_links(
     """
     Returns a list of available properties
     """
-    properties = env["pms.property"].sudo().search([])
+    domain = [("user_ids", "in", [env.user.id])]
+    properties = env["pms.property"].sudo().search(domain)
     return [
         PropertySummary.from_pms_property(pms_property) for pms_property in properties
     ]

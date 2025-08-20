@@ -13,7 +13,7 @@ class User(PmsBaseModel):
     email: str = ""
     phone: str = ""
     image: AnyHttpUrl | None = None
-    defaultProperty: PropertyId | None = None
+    defaultPmsProperty: PropertyId | None = None
 
     @classmethod
     def from_res_users(cls, user_record):
@@ -27,7 +27,7 @@ class User(PmsBaseModel):
             "phone": user_record.phone or "",
         }
         if user_record.pms_property_id:
-            data["defaultProperty"] = PropertyId.from_pms_property(
+            data["defaultPmsProperty"] = PropertyId.from_pms_property(
                 user_record.pms_property_id
             )
         image_url = cls.url_image_pms_api_rest(

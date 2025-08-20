@@ -49,6 +49,7 @@ class CommonTestRoomdooApi(FastAPITransactionCase):
                 "name": "Property 1",
                 "company_id": cls.test_company.id,
                 "default_pricelist_id": cls.test_pricelist.id,
+                "user_ids": [(6, 0, [cls.test_user.id])],
             }
         )
 
