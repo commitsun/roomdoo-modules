@@ -1268,10 +1268,14 @@ class PmsFolioService(Component):
         elif pms_mail_info.mailType == "cancel":
             # TODO: only send first cancel reservation, not all
             # the template is not ready for multiple reservations
+            model = folio.pms_property_id.property_canceled_template.model
+            res_ids = folio.id if model == "pms.folio" else folio.reservation_ids.filtered(
+                lambda r: r.state == "cancel"
+            ).ids
             compose_vals = {
                 "template_id": folio.pms_property_id.property_canceled_template.id,
-                "model": folio.pms_property_id.property_canceled_template.model,
-                "res_ids": folio.id,
+                "model": model,
+                "res_ids": res_ids,
             }
         if not compose_vals:
             raise ValidationError(_("No mail template found for this mail type"))
@@ -1285,9 +1289,10 @@ class PmsFolioService(Component):
             )
         )
         PmsMailInfo = self.env.datamodels["pms.mail.info"]
+
         return PmsMailInfo(
-            bodyMail=values["body"],
-            subject=values["subject"],
+            bodyMail=values.get("body") or next(iter(values.values()))['body'],
+            subject=values.get("subject") or next(iter(values.values()))['subject'],
         )
 
     @restapi.method(
