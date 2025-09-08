@@ -1,8 +1,8 @@
 from odoo import fields, models
-from odoo.addons.base.models.res_users import KEY_CRYPT_CONTEXT, INDEX_SIZE
-from datetime import timedelta
 from odoo.exceptions import AccessDenied
-import secrets
+
+from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT
+
 
 class ResUsers(models.Model):
     _inherit = "res.users"
@@ -41,22 +41,6 @@ class ResUsers(models.Model):
     external_public_token = fields.Char(
         help="External Public Token",
     )
-    portal_login_token = fields.Char(
-        help="Portal Login Token",
-    )
-    portal_login_token_expiration = fields.Datetime(
-        help="Portal Login Token Expiration",
-    )
-
-    def _generate_portal_login_token(self, expiration=None):
-        """Generate a new portal login token."""
-        self.portal_login_token = secrets.token_hex()
-        if expiration:
-            self.portal_login_token_expiration = expiration
-        else:
-            self.portal_login_token_expiration = fields.Datetime.now() + timedelta(
-                days=1
-            )
 
     def _get_default_avail_rule_fields(self):
         default_avail_rule_fields = self.env["ir.model.fields"].search(
@@ -75,22 +59,30 @@ class ResUsers(models.Model):
             res = super()._check_credentials(password, env)
             return res
         except AccessDenied as e:
-            if not self.env['one.time.res.users.apikeys']._check_credentials(scope='ots', key=password) == self.env.uid:
+            if (
+                not self.env["one.time.res.users.apikeys"]._check_credentials(
+                    scope="ots", key=password
+                )
+                == self.env.uid
+            ):
                 raise AccessDenied() from e
 
+
 class OneTimeAPIKeys(models.Model):
-    _name = 'one.time.res.users.apikeys'
+    _name = "one.time.res.users.apikeys"
     _inherit = "res.users.apikeys"
 
     def _check_credentials(self, *, scope, key):
         assert scope, "scope is required"
         index = key[:INDEX_SIZE]
-        self.env.cr.execute('''
+        self.env.cr.execute(
+            f"""
             SELECT k.id as id, user_id, key
-            FROM {} k INNER JOIN res_users u ON (u.id = user_id)
+            FROM {self._table} k INNER JOIN res_users u ON (u.id = user_id)
             WHERE u.active and index = %s AND (scope IS NULL OR scope = %s)
-        '''.format(self._table),
-        [index, scope])
+        """,
+            [index, scope],
+        )
         for id, user_id, current_key in self.env.cr.fetchall():
             if KEY_CRYPT_CONTEXT.verify(key, current_key):
                 self.sudo().browse(id).unlink()

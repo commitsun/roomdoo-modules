@@ -1,7 +1,8 @@
-from odoo import fields, models, api, _
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.safe_eval import safe_eval
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 
 class RoomdooAppMenu(models.Model):
@@ -27,7 +28,8 @@ class RoomdooAppMenu(models.Model):
     base_url = fields.Char(
         string="Base URL",
         required=True,
-        help="Base URL for the menu item. Can include placeholders like {{property_id}}",
+        help="Base URL for the menu item. Can include placeholders"
+        " like {{property_id}}",
     )
     active = fields.Boolean(
         default=True,
@@ -156,8 +158,8 @@ class RoomdooUrlParam(models.Model):
         self.ensure_one()
         try:
             host_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
-            roomdoo_app_url = self.env["ir.config_parameter"].sudo().get_param(
-                "roomdoo_app_url"
+            roomdoo_app_url = (
+                self.env["ir.config_parameter"].sudo().get_param("roomdoo_app_url")
             )
             ctx = {
                 "property": property_obj,
@@ -166,18 +168,20 @@ class RoomdooUrlParam(models.Model):
                 "web_base_url": host_url,
                 "frontend_domain": roomdoo_app_url,
             }
-            if self.value == 'ots_token':
-                if self._context.get('test_evaluate'):
-                    ctx['ots_token'] = 'dummy'
+            if self.value == "ots_token":
+                if self._context.get("test_evaluate"):
+                    ctx["ots_token"] = "dummy"
                 else:
-                    ctx['ots_token'] = self.env['one.time.res.users.apikeys']._generate('ots', 'roomdoo_menus')
+                    ctx["ots_token"] = self.env["one.time.res.users.apikeys"]._generate(
+                        "ots", "roomdoo_links"
+                    )
             return safe_eval(self.value, ctx)
         except Exception as e:
             raise UserError(
                 _(
                     "Error evaluating expression for parameter '{param}': {error}"
                 ).format(param=self.name, error=str(e))
-            )
+            ) from e
 
     def test_evaluate_value(self):
         """Test the evaluation of the parameter value."""
