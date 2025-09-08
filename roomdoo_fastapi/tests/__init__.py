@@ -1,5 +1,5 @@
-from . import test_agency
-from . import test_customer
+from . import test_agencies
+from . import test_customers
 from . import test_guests
 from . import test_instance
 from . import test_pms_property_urls
