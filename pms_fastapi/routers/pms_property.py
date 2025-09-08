@@ -10,7 +10,7 @@ from odoo.addons.pms_fastapi.schemas.pms_property import PropertySummary
 
 
 @pms_api_router.get(
-    "/pmsProperties",
+    "/pms-properties",
     status_code=200,
     responses={
         200: {"model": None},
