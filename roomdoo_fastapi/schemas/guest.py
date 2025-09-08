@@ -1,8 +1,10 @@
 from enum import Enum
+from typing import Annotated
 
 from fastapi import Query
 
 from odoo import api
+from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 from odoo.addons.pms_fastapi.schemas.pms_reservation import ReservationId
@@ -59,16 +61,19 @@ class GuestSearch:
             description="Search for contacts whose email contains this "
             "value (case-insensitive).",
         ),
-        country: str | None = Query(
-            default=None,
-            description="Search for contacts whose country contains this "
-            "value (case-insensitive).",
-        ),
+        countries: Annotated[
+            list[str] | None,
+            Query(
+                description="Search for contacts whose countries is in the given "
+                "list (case-insensitive). Use repeated query parameters, "
+                "e.g., ?countries=Spain&countries=France",
+            ),
+        ] = None,
     ):
         self.globalSearch = globalSearch
         self.name = name
         self.email = email
-        self.country = country
+        self.countries = countries
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -86,6 +91,7 @@ class GuestSearch:
             domain.append(("name", "ilike", self.name))
         if self.email:
             domain.append(("email", "ilike", self.email))
-        if self.country:
-            domain.append(("country_id.name", "ilike", self.country))
+        if self.countries:
+            subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
+            domain = expression.AND([domain, expression.OR(subdomains)])
         return domain

@@ -1,8 +1,10 @@
 from enum import Enum
+from typing import Annotated
 
 from fastapi import Query
 
 from odoo import api
+from odoo.osv import expression
 
 from .base import PmsBaseModel
 from .country import CountrySummary
@@ -106,17 +108,20 @@ class ContactSearch:
         type: ContactType | None = Query(  # noqa: B008
             default=None, description="Filter contacts by type."
         ),
-        country: str | None = Query(
-            default=None,
-            description="Search for contacts whose country contains this "
-            "value (case-insensitive).",
-        ),
+        countries: Annotated[
+            list[str] | None,
+            Query(
+                description="Search for contacts whose countries is in the given "
+                "list (case-insensitive). Use repeated query parameters, "
+                "e.g., ?countries=Spain&countries=France",
+            ),
+        ] = None,
     ):
         self.globalSearch = globalSearch
         self.name = name
         self.email = email
         self.contact_type = type
-        self.country = country
+        self.countries = countries
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -143,7 +148,7 @@ class ContactSearch:
                 domain.append(("supplier_rank", ">", 0))
             elif self.contact_type == ContactType.guest:
                 domain.append(("pms_checkin_partner_ids", "!=", False))
-        if self.country:
-            domain.append(("country_id.name", "ilike", self.country))
-
+        if self.countries:
+            subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
+            domain = expression.AND([domain, expression.OR(subdomains)])
         return domain
