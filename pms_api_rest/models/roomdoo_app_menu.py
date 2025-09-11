@@ -80,12 +80,16 @@ class RoomdooAppMenu(models.Model):
         )
         return final_url
 
-    @api.constrains("support_url")
+    @api.constrains("support_url", "property_ids")
     def _check_support_url(self):
         """Ensure only one record can be marked as support URL."""
         for record in self:
             if record.support_url:
                 domain = [("support_url", "=", True), ("id", "!=", record.id)]
+                if not record.property_ids:
+                    domain.append(("property_ids", "=", False))
+                else:
+                    domain.append(("property_ids", "in", record.property_ids._ids))
                 if self.search_count(domain):
                     raise ValidationError(
                         _("Only one menu item can be marked as Support URL")
