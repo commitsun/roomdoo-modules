@@ -12,7 +12,9 @@ class ResPartner(models.Model):
     last_reservation_id = fields.Many2one(
         "pms.reservation", compute="_compute_reservation_data"
     )
-    current_guest = fields.Boolean(compute="_compute_reservation_data")
+    in_house = fields.Boolean(
+        compute="_compute_reservation_data", search="_search_in_house"
+    )
 
     def _compute_total_invoiced_last_year(self):
         invoice_type = self._context.get("invoice_type", "out_invoice")
@@ -56,4 +58,14 @@ class ResPartner(models.Model):
                 limit=1,
             )
             partner.last_reservation_id = reservation
-            partner.current_guest = current_guest
+            partner.in_house = current_guest
+
+    def _search_in_house(self, operator, value):
+        checkins = self.env["pms.checkin.partner"].search([("state", "=", "onboard")])
+        partner_ids = checkins.mapped("partner_id.id")
+        if (operator, value) in [("=", True), ("!=", False)]:
+            return [("id", "in", partner_ids)]
+        elif (operator, value) in [("=", False), ("!=", True)]:
+            return [("id", "not in", partner_ids)]
+        else:
+            return [("id", "in", [])]

@@ -26,7 +26,7 @@ class GuestSummary(ContactBase):
     identificationDocuments: list[IdDocument]
     internalNotes: str = ""
     lastReservation: ReservationId
-    currentGuest: bool
+    inHouse: bool
 
     @classmethod
     def from_res_partner(cls, partner):
@@ -35,7 +35,7 @@ class GuestSummary(ContactBase):
         data["identificationDocuments"] = [
             IdDocument.from_id_number(x) for x in partner.id_numbers
         ]
-        data["currentGuest"] = partner.current_guest
+        data["inHouse"] = partner.in_house
         if partner.last_reservation_id:
             data["lastReservation"] = ReservationId.from_pms_reservation(
                 partner.last_reservation_id
@@ -51,10 +51,23 @@ class GuestSearch:
             description="Search across name, email, phone and VAT fields"
             "this value (case-insensitive).",
         ),
+        vat: str | None = Query(
+            default=None,
+            description="Search for contacts whose VAT contains this "
+            "value (case-insensitive).",
+        ),
+        inHouse: bool | None = Query(
+            default=False,
+            description="Search for contacts in house. Boolean value ",
+        ),
         name: str | None = Query(
             default=None,
             description="Search for contacts whose name contains "
             "this value (case-insensitive).",
+        ),
+        phone: str | None = Query(
+            default=None,
+            description="Search for contacts whose phones contains " "this value.",
         ),
         email: str | None = Query(
             default=None,
@@ -74,6 +87,9 @@ class GuestSearch:
         self.name = name
         self.email = email
         self.countries = countries
+        self.inHouse = inHouse
+        self.vat = vat
+        self.phone = phone
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -87,8 +103,19 @@ class GuestSearch:
                 ("phone_mobile_search", "ilike", self.globalSearch),
                 ("vat", "ilike", self.globalSearch),
             ]
+        if self.vat:
+            id_numbers = (
+                env["res.partner.id_number"]
+                .sudo()
+                .search([("name", "ilike", self.vat)])
+            )
+            domain.append(("id", "in", id_numbers.mapped("partner_id.id")))
+        if self.inHouse:
+            domain.append(("in_house", "=", True))
         if self.name:
             domain.append(("name", "ilike", self.name))
+        if self.phone:
+            domain.append(("phone_mobile_search", "ilike", self.phone))
         if self.email:
             domain.append(("email", "ilike", self.email))
         if self.countries:

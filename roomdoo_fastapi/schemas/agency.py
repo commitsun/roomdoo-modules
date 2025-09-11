@@ -12,18 +12,23 @@ from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 class AgencyOrderField(str, Enum):
     name = "name"
     country = "country"
+    email = "email"
 
 
 AGENCY_ORDER_MAPPING = {
     "name": "name",
     "country": "country_id",
+    "email": "email",
 }
 
 
 class AgencySummary(ContactBase):
+    email: str = ""
+
     @classmethod
     def from_res_partner(cls, partner):
         data = cls.parse_common_fields(partner)
+        data["email"] = partner.email or ""
         return cls(**data)
 
 
@@ -39,6 +44,10 @@ class AgencySearch:
             default=None,
             description="Search for contacts whose name contains "
             "this value (case-insensitive).",
+        ),
+        phone: str | None = Query(
+            default=None,
+            description="Search for contacts whose phones contains " "this value.",
         ),
         email: str | None = Query(
             default=None,
@@ -58,6 +67,7 @@ class AgencySearch:
         self.name = name
         self.email = email
         self.countries = countries
+        self.phone = phone
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -73,6 +83,8 @@ class AgencySearch:
             ]
         if self.name:
             domain.append(("name", "ilike", self.name))
+        if self.phone:
+            domain.append(("phone_mobile_search", "ilike", self.phone))
         if self.email:
             domain.append(("email", "ilike", self.email))
         if self.countries:
