@@ -14,15 +14,18 @@ from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 class CustomerOrderField(str, Enum):
     name = "name"
     country = "country"
+    email = "email"
 
 
 CUSTOMER_ORDER_MAPPING = {
     "name": "name",
     "country": "country_id",
+    "email": "email",
 }
 
 
 class CustomerSummary(ContactBase):
+    email: str = ""
     vat: str
     totalInvoiced: float = Field(description="Total invoiced in the last 12 months")
 
@@ -30,6 +33,7 @@ class CustomerSummary(ContactBase):
     def from_res_partner(cls, partner):
         precision = partner.currency_id.decimal_places
         data = cls.parse_common_fields(partner)
+        data["email"] = partner.email or ""
         data["vat"] = partner.vat or ""
         data["totalInvoiced"] = float_round(partner.total_invoiced_last_year, precision)
         return cls(**data)
@@ -53,6 +57,10 @@ class CustomerSearch:
             description="Search for contacts whose name contains "
             "this value (case-insensitive).",
         ),
+        phone: str | None = Query(
+            default=None,
+            description="Search for contacts whose phones contains " "this value.",
+        ),
         email: str | None = Query(
             default=None,
             description="Search for contacts whose email contains this "
@@ -72,6 +80,7 @@ class CustomerSearch:
         self.name = name
         self.email = email
         self.countries = countries
+        self.phone = phone
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -89,6 +98,8 @@ class CustomerSearch:
             domain.append(("vat", "ilike", self.vat))
         if self.name:
             domain.append(("name", "ilike", self.name))
+        if self.phone:
+            domain.append(("phone_mobile_search", "ilike", self.phone))
         if self.email:
             domain.append(("email", "ilike", self.email))
         if self.countries:

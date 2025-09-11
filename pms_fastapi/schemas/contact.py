@@ -13,11 +13,13 @@ from .country import CountrySummary
 class ContactOrderField(str, Enum):
     name = "name"
     country = "country"
+    email = "email"
 
 
 CONTACT_ORDER_MAPPING = {
     "name": "name",
     "country": "country_id",
+    "email": "email",
 }
 
 
@@ -41,7 +43,6 @@ class Phone(PmsBaseModel):
 class ContactBase(PmsBaseModel):
     id: int
     name: str
-    email: str = ""
     phones: list[Phone] | None = None
     country: CountrySummary | None = None
 
@@ -50,7 +51,6 @@ class ContactBase(PmsBaseModel):
         record_dict = {
             "id": partner.id,
             "name": partner.name,
-            "email": partner.email or "",
             "country": CountrySummary.from_res_country(partner.country_id)
             if partner.country_id
             else None,
@@ -70,10 +70,12 @@ class ContactBase(PmsBaseModel):
 
 class ContactSummary(ContactBase):
     types: list[ContactType]
+    email: str = ""
 
     @classmethod
     def from_res_partner(cls, partner):
         data = cls.parse_common_fields(partner)
+        data["email"] = partner.email or ""
         partner_type = []
         if partner.is_agency:
             partner_type.append(ContactType.agency)
@@ -100,14 +102,22 @@ class ContactSearch:
             description="Search for contacts whose name contains "
             "this value (case-insensitive).",
         ),
+        phone: str | None = Query(
+            default=None,
+            description="Search for contacts whose phones contains " "this value.",
+        ),
         email: str | None = Query(
             default=None,
             description="Search for contacts whose email contains this "
             "value (case-insensitive).",
         ),
-        type: ContactType | None = Query(  # noqa: B008
-            default=None, description="Filter contacts by type."
-        ),
+        types: Annotated[
+            list[ContactType] | None,
+            Query(
+                description="Filter contacts by type. Use repeated"
+                " query parameters, e.g., ?types=customer&types=supplier"
+            ),
+        ] = None,
         countries: Annotated[
             list[str] | None,
             Query(
@@ -120,8 +130,9 @@ class ContactSearch:
         self.globalSearch = globalSearch
         self.name = name
         self.email = email
-        self.contact_type = type
+        self.contact_types = types
         self.countries = countries
+        self.phone = phone
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -137,17 +148,23 @@ class ContactSearch:
             ]
         if self.name:
             domain.append(("name", "ilike", self.name))
+        if self.phone:
+            domain.append(("phone_mobile_search", "ilike", self.phone))
         if self.email:
             domain.append(("email", "ilike", self.email))
-        if self.contact_type:
-            if self.contact_type == ContactType.agency:
-                domain.append(("is_agency", "=", True))
-            elif self.contact_type == ContactType.customer:
-                domain.append(("customer_rank", ">", 0))
-            elif self.contact_type == ContactType.supplier:
-                domain.append(("supplier_rank", ">", 0))
-            elif self.contact_type == ContactType.guest:
-                domain.append(("pms_checkin_partner_ids", "!=", False))
+        if self.contact_types:
+            type_domains = []
+            for contact_type in self.contact_types:
+                if contact_type == ContactType.agency:
+                    type_domains.append([("is_agency", "=", True)])
+                elif contact_type == ContactType.customer:
+                    type_domains.append([("customer_rank", ">", 0)])
+                elif contact_type == ContactType.supplier:
+                    type_domains.append([("supplier_rank", ">", 0)])
+                elif contact_type == ContactType.guest:
+                    type_domains.append([("pms_checkin_partner_ids", "!=", False)])
+            if type_domains:
+                domain = expression.AND([domain, expression.OR(type_domains)])
         if self.countries:
             subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
             domain = expression.AND([domain, expression.OR(subdomains)])
