@@ -755,15 +755,21 @@ class PmsProperty(models.Model):
     def get_roomdoo_support_url(self):
         """Get Roomdoo Support URL for the property."""
         self.ensure_one()
-        return (
-            self.env["roomdoo.app.menu"]
-            .search(
+
+        support_url = self.env["roomdoo.app.menu"].search(
                 [
-                    "|",
-                    ("property_ids", "=", False),
                     ("property_ids", "in", self._ids),
                     ("support_url", "=", True),
                 ],
                 limit=1,
             )
-        )
+        if not support_url:
+
+            support_url = self.env["roomdoo.app.menu"].search(
+                    [
+                    ("property_ids", "=", False),
+                        ("support_url", "=", True),
+                    ],
+                    limit=1,
+                )
+        return support_url
