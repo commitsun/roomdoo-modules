@@ -632,12 +632,18 @@ class PmsProperty(models.Model):
                             ]
                         )
                     )
-                    pms_property_id = pms_property.id
+                    if (
+                        not property_client_conf
+                        or (filter_room_type_id and filter_room_type_id in (
+                            property_client_conf.excluded_room_type_ids.ids
+                        ))
+                    ):
+                        continue
                     room_type_ids = (
                         [filter_room_type_id]
                         if filter_room_type_id
                         else self.env["pms.room"]
-                        .search([("pms_property_id", "=", pms_property_id)])
+                        .search([("pms_property_id", "=", pms_property.id)])
                         .mapped("room_type_id")
                         .filtered(
                             lambda r: r.id
@@ -646,7 +652,7 @@ class PmsProperty(models.Model):
                         .ids
                     )
                     payload = {
-                        "pmsPropertyId": pms_property_id,
+                        "pmsPropertyId": pms_property.id,
                     }
                     data = []
                     for room_type_id in room_type_ids:
@@ -656,7 +662,7 @@ class PmsProperty(models.Model):
                                 pms_property.generate_availability_json(
                                     date_from=date_from,
                                     date_to=date_to,
-                                    pms_property_id=pms_property_id,
+                                    pms_property_id=pms_property.id,
                                     room_type_id=room_type_id,
                                     client=client,
                                 )
@@ -668,7 +674,7 @@ class PmsProperty(models.Model):
                                 pms_property.generate_restrictions_json(
                                     date_from=date_from,
                                     date_to=date_to,
-                                    pms_property_id=pms_property_id,
+                                    pms_property_id=pms_property.id,
                                     room_type_id=room_type_id,
                                     client=client,
                                 )
@@ -680,7 +686,7 @@ class PmsProperty(models.Model):
                                 pms_property.generate_prices_json(
                                     date_from=date_from,
                                     date_to=date_to,
-                                    pms_property_id=pms_property_id,
+                                    pms_property_id=pms_property.id,
                                     room_type_id=room_type_id,
                                     client=client,
                                 )
@@ -698,7 +704,7 @@ class PmsProperty(models.Model):
                     self.invalidate_model()
                     self.env["pms.api.log"].sudo().create(
                         {
-                            "pms_property_id": pms_property_id,
+                            "pms_property_id": pms_property.id,
                             "client_id": client.id,
                             "request": payload,
                             "response": str(response),
@@ -716,7 +722,7 @@ class PmsProperty(models.Model):
                     _logger.error(f"""PMS API push batch error: {e}""")
                     self.env["pms.api.log"].sudo().create(
                         {
-                            "pms_property_id": pms_property_id,
+                            "pms_property_id": pms_property.id,
                             "client_id": client.id,
                             "request": payload,
                             "response": str(e),
