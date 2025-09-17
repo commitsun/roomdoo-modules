@@ -62,6 +62,7 @@ class SupplierSearch:
         ),
         phone: str | None = Query(
             default=None,
+            min_length=3,
             description="Search for contacts whose phones contains " "this value.",
         ),
         email: str | None = Query(
@@ -91,16 +92,17 @@ class SupplierSearch:
             domain += [
                 "|",
                 "|",
-                "|",
-                ("name", "ilike", self.globalSearch),
+                ("display_name", "ilike", self.globalSearch),
                 ("email", "ilike", self.globalSearch),
-                ("phone_mobile_search", "ilike", self.globalSearch),
                 ("vat", "ilike", self.globalSearch),
             ]
+            if len(self.globalSearch) >= 3:
+                phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
+                domain = expression.OR([domain, phone_domain])
         if self.vat:
             domain.append(("vat", "ilike", self.vat))
         if self.name:
-            domain.append(("name", "ilike", self.name))
+            domain.append(("display_name", "ilike", self.name))
         if self.phone:
             domain.append(("phone_mobile_search", "ilike", self.phone))
         if self.email:
