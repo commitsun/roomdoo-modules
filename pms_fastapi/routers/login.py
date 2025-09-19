@@ -73,6 +73,6 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
             path=validator.cookie_path or "/",
             secure=validator.cookie_secure,
             httponly=True,
-            samesite="Strict",
+            samesite="None",
         )
         return response
