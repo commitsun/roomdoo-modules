@@ -177,7 +177,6 @@ class PmsTransactionService(Component):
                 )
                 if inbound_transaction:
                     destination_journal_id = inbound_transaction.journal_id.id
-
             result_transactions.append(
                 PmsTransactiontInfo(
                     id=transaction.id,
