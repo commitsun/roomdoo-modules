@@ -3,3 +3,7 @@ from . import language
 from . import user
 from . import pms_property
 from . import country
+from . import country_state
+from . import payment_term
+from . import pricelist
+from . import contact_id_number

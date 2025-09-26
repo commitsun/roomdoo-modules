@@ -1,3 +1,4 @@
+from datetime import date
 from enum import Enum
 from typing import Annotated
 
@@ -7,7 +8,11 @@ from odoo import api
 from odoo.osv import expression
 
 from .base import PmsBaseModel
-from .country import CountrySummary
+from .contact_id_number import ContactIdNumberId
+from .country import CountryId, CountrySummary
+from .country_state import CountryStateId
+from .payment_term import PaymentTermId
+from .pricelist import PricelistId
 
 
 class ContactOrderField(str, Enum):
@@ -23,11 +28,30 @@ CONTACT_ORDER_MAPPING = {
 }
 
 
+class ContactGenderEnum(str, Enum):
+    male = "male"
+    female = "female"
+    other = "other"
+
+
+class ContactInvoicingPolicyEnum(str, Enum):
+    property = "property"
+    manual = "manual"
+    checkout = "checkout"
+    month_day = "month_day"
+
+
 class ContactType(str, Enum):
     customer = "customer"
     supplier = "supplier"
     guest = "guest"
     agency = "agency"
+
+
+class ContactTypeDetail(str, Enum):
+    agency = "agency"
+    person = "person"
+    company = "company"
 
 
 class PhoneType(str, Enum):
@@ -39,11 +63,35 @@ class Phone(PmsBaseModel):
     type: PhoneType
     number: str
 
+    @classmethod
+    def from_res_partner(cls, partner) -> list[dict]:
+        res = []
+        if partner.phone or partner.mobile:
+            if partner.phone:
+                res.append({"type": PhoneType.phone, "number": partner.phone})
+            if partner.mobile:
+                res.append({"type": PhoneType.mobile, "number": partner.mobile})
+        return res
+
+
+class ContactTagId(PmsBaseModel):
+    id: int
+    name: str
+
+    @classmethod
+    def from_res_partner_category(cls, partner_category):
+        return cls(
+            **{
+                "id": partner_category.id,
+                "name": partner_category.name,
+            }
+        )
+
 
 class ContactBase(PmsBaseModel):
     id: int
     name: str
-    phones: list[Phone] | None = None
+    phones: list[Phone]
     country: CountrySummary | None = None
 
     @classmethod
@@ -55,16 +103,7 @@ class ContactBase(PmsBaseModel):
             if partner.country_id
             else None,
         }
-        if partner.phone or partner.mobile:
-            record_dict["phones"] = []
-            if partner.phone:
-                record_dict["phones"].append(
-                    {"type": PhoneType.phone, "number": partner.phone}
-                )
-            if partner.mobile:
-                record_dict["phones"].append(
-                    {"type": PhoneType.mobile, "number": partner.mobile}
-                )
+        record_dict["phones"] = Phone.from_res_partner(partner)
         return record_dict
 
 
@@ -87,6 +126,87 @@ class ContactSummary(ContactBase):
             partner_type.append(ContactType.supplier)
         data["types"] = partner_type
         return cls(**data)
+
+
+class ContactDetail(PmsBaseModel):
+    contactType: str = ""
+    reference: str = ""
+    name: str = ""
+    firstname: str = ""
+    lastname: str = ""
+    email: str = ""
+    phones: list[Phone]
+    lang: str = ""
+    nationality: CountryId | None = None
+    gender: ContactGenderEnum | None = None
+    birthdate: date | None = None
+    street: str = ""
+    street2: str = ""
+    zipCode: str = ""
+    city: str = ""
+    state: CountryStateId | None = None
+    country: CountryId | None = None
+    paymentTerm: PaymentTermId | None = None
+    invoicingPolicy: ContactInvoicingPolicyEnum | None = None
+    pricelist: PricelistId | None = None
+    tags: list[ContactTagId]
+    internalNotes: str = ""
+    idNumbers: list[ContactIdNumberId]
+    fiscalIdNumber: str = ""
+    fiscalIdNumberType: str = ""
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        contact_type = False
+        if partner.is_agency:
+            contact_type = "agency"
+        else:
+            contact_type = partner.company_type
+        partner_dict = {
+            "contactType": contact_type,
+            "name": partner.name or "",
+            "firstname": partner.firstname or "",
+            "lastname": partner.lastname or "",
+            "email": partner.email or "",
+            "phones": Phone.from_res_partner(partner),
+            "lang": partner.lang,
+            "nationality": CountryId.from_res_country(partner.nationality_id)
+            if partner.nationality_id
+            else None,
+            "gender": partner.gender or None,
+            "birthdate": partner.birthdate_date or None,
+            "street": partner.street or "",
+            "street2": partner.street2 or "",
+            "city": partner.city or "",
+            "zipCode": partner.zip or "",
+            "state": CountryStateId.from_res_country_state(partner.state_id)
+            if partner.state_id
+            else None,
+            "country": CountryId.from_res_country(partner.country_id)
+            if partner.country_id
+            else None,
+            "paymentTerm": PaymentTermId.from_account_payment_term(
+                partner.customer_payment_mode_id
+            ),
+            "invoicingPolicy": partner.invoicing_policy or None,
+            "pricelist": PricelistId.from_product_pricelist(
+                partner.property_product_pricelist
+            ),
+            "internalNotes": partner.comment or "",
+            "tags": [],
+            "idNumbers": [],
+            "fiscalIdNumber": partner.vat or "",
+            "fiscalIdNumberType": "vat",  # Temporary
+        }
+        for partner_tag in partner.category_id:
+            partner_dict["tags"].append(
+                ContactTagId.from_res_partner_category(partner_tag)
+            )
+        for id_number in partner.id_numbers:
+            partner_dict["idNumbers"].append(
+                ContactIdNumberId.from_res_partner_id_number(id_number)
+            )
+        return cls(**partner_dict)
 
 
 class ContactSearch:

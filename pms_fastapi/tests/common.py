@@ -4,8 +4,8 @@ from functools import partial
 from fastapi import status
 from requests import Response
 
+from odoo.addons.extendable_fastapi.tests.common import FastAPITransactionCase
 from odoo.addons.fastapi.dependencies import fastapi_endpoint
-from odoo.addons.fastapi.tests.common import FastAPITransactionCase
 
 
 class CommonTestRoomdooApi(FastAPITransactionCase):
