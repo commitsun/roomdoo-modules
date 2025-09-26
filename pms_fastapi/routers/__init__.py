@@ -4,3 +4,6 @@ from . import user
 from . import contact
 from . import country
 from . import pms_property
+from . import payment_term
+from . import pricelist
+from . import country_state
