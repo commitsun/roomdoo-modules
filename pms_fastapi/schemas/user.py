@@ -7,9 +7,8 @@ from .pms_property import PropertyId
 class User(PmsBaseModel):
     id: int
     name: str
-    firstName: str = ""
-    lastName: str = ""
-    lastName2: str = ""
+    firstname: str = ""
+    lastname: str = ""
     email: str = ""
     phone: str = ""
     image: AnyHttpUrl | None = None
@@ -20,9 +19,8 @@ class User(PmsBaseModel):
         data = {
             "id": user_record.id,
             "name": user_record.name,
-            "firstName": user_record.firstname or "",
-            "lastName": user_record.lastname or "",
-            "lastName2": user_record.lastname2 or "",
+            "firstname": user_record.firstname or "",
+            "lastname": user_record.lastname or "",
             "email": user_record.email or "",
             "phone": user_record.phone or "",
         }

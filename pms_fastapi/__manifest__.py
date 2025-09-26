@@ -7,10 +7,11 @@
     "category": "Generic Modules/Property Management System",
     "license": "AGPL-3",
     "depends": [
-        "fastapi",
+        "extendable_fastapi",
         "auth_jwt_login",
         "partner_firstname",
         "phone_validation",
+        "account_payment_partner",
         "pms_api_rest",  # temporal
     ],
     "data": [
