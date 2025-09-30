@@ -9,6 +9,7 @@ from odoo.osv import expression
 
 from .base import PmsBaseModel
 from .contact_id_number import ContactIdNumberId
+from .contact_tag import ContactTagId
 from .country import CountryId, CountrySummary
 from .country_state import CountryStateId
 from .payment_term import PaymentTermId
@@ -72,20 +73,6 @@ class Phone(PmsBaseModel):
             if partner.mobile:
                 res.append({"type": PhoneType.mobile, "number": partner.mobile})
         return res
-
-
-class ContactTagId(PmsBaseModel):
-    id: int
-    name: str
-
-    @classmethod
-    def from_res_partner_category(cls, partner_category):
-        return cls(
-            **{
-                "id": partner_category.id,
-                "name": partner_category.name,
-            }
-        )
 
 
 class ContactBase(PmsBaseModel):
