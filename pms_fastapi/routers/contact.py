@@ -159,7 +159,13 @@ async def update_contact_id_number(
 ) -> ContactIdNumberSummary:
     id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
     if id_number.partner_id.id != contact_id:
-        raise Exception()
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"The id number {idNumber_id} does not belog "
+                f"to the contact {contact_id}"
+            ),
+        )
     helper = env["pms_api_contact.contact_id_number_router.helper"].new()
     helper.write_id_number(id_number, idNumberData)
     return ContactIdNumberSummary.from_res_partner_id_number(id_number)
