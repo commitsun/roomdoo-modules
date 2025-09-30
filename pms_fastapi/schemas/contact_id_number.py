@@ -49,6 +49,44 @@ class ContactIdNumberId(PmsBaseModel):
         )
 
 
+class ContactIdNumberInsert(PmsBaseModel):
+    name: str
+    category: int
+    supportNumber: str
+    country: int
+
+    def to_res_partner_id_number(self, partner_id: int) -> dict:
+        values = self.model_dump(exclude_unset=True)
+        vals = {
+            "name": values.get("name"),
+            "category_id": values.get("category"),
+            "support_number": values.get("supportNumber"),
+            "country_id": values.get("country"),
+            "partner_id": partner_id,
+        }
+        return vals
+
+
+class ContactIdNumberUpdate(PmsBaseModel):
+    name: str = ""
+    category: int = 0
+    supportNumber: str = ""
+    country: int = 0
+
+    def to_res_partner_id_number(self) -> dict:
+        values = self.model_dump(exclude_unset=True)
+        vals = {}
+        if "name" in values:
+            vals["name"] = values.get("name")
+        if "category" in values:
+            vals["category_id"] = values.get("category")
+        if "supportNumber" in values:
+            vals["support_number"] = values.get("supportNumber")
+        if "country" in values:
+            vals["country_id"] = values.get("country")
+        return vals
+
+
 class ContactIdNumberSummary(PmsBaseModel):
     id: int
     category: ContactIdNumberCategoryId | None = None
