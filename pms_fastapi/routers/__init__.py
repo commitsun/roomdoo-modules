@@ -7,3 +7,5 @@ from . import pms_property
 from . import payment_term
 from . import pricelist
 from . import country_state
+from . import contact_tags
+from . import contact_id_number
