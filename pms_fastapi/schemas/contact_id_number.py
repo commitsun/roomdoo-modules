@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from .base import PmsBaseModel
 from .country import CountryId
 
@@ -50,41 +52,25 @@ class ContactIdNumberId(PmsBaseModel):
 
 
 class ContactIdNumberInsert(PmsBaseModel):
-    name: str
-    category: int
-    supportNumber: str
-    country: int
+    name: str = Field(alias="name")
+    category_id: int = Field(alias="category")
+    support_number: str = Field(alias="supportNumber")
+    country_id: int = Field(alias="country")
 
-    def to_res_partner_id_number(self, partner_id: int) -> dict:
-        values = self.model_dump(exclude_unset=True)
-        vals = {
-            "name": values.get("name"),
-            "category_id": values.get("category"),
-            "support_number": values.get("supportNumber"),
-            "country_id": values.get("country"),
-            "partner_id": partner_id,
-        }
-        return vals
+    def to_res_partner_id_number(self, partner_id: int = 0) -> dict:
+        data = self.dict(
+            exclude_unset=True,
+        )
+        if partner_id:
+            data["partner_id"] = partner_id
+        return data
 
 
-class ContactIdNumberUpdate(PmsBaseModel):
-    name: str = ""
-    category: int = 0
-    supportNumber: str = ""
-    country: int = 0
-
-    def to_res_partner_id_number(self) -> dict:
-        values = self.model_dump(exclude_unset=True)
-        vals = {}
-        if "name" in values:
-            vals["name"] = values.get("name")
-        if "category" in values:
-            vals["category_id"] = values.get("category")
-        if "supportNumber" in values:
-            vals["support_number"] = values.get("supportNumber")
-        if "country" in values:
-            vals["country_id"] = values.get("country")
-        return vals
+class ContactIdNumberUpdate(ContactIdNumberInsert):
+    name: str = Field("", alias="name")
+    category_id: int = Field(0, alias="category")
+    support_number: str = Field("", alias="supportNumber")
+    country_id: int = Field(0, alias="country")
 
 
 class ContactIdNumberSummary(PmsBaseModel):
