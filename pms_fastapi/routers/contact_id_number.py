@@ -18,7 +18,7 @@ from odoo.addons.pms_fastapi.schemas.contact_id_number import (
 @pms_api_router.get(
     "/id-number-categories",
     response_model=list[ContactIdNumberCategorySummary],
-    tags=["contact"],
+    tags=["contact_id_number"],
 )
 async def list_id_number_categories(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
@@ -41,7 +41,7 @@ async def list_id_number_categories(
 @pms_api_router.get(
     "/contacts/{contact_id}/id-numbers",
     response_model=list[ContactIdNumberSummary],
-    tags=["contact"],
+    tags=["contact_id_number"],
 )
 async def contact_id_numbers(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
@@ -63,7 +63,7 @@ async def contact_id_numbers(
 @pms_api_router.post(
     "/contacts/{contact_id}/id-numbers",
     response_model=ContactIdNumberSummary,
-    tags=["contact"],
+    tags=["contact_id_number"],
 )
 async def create_contact_id_number(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
@@ -78,7 +78,7 @@ async def create_contact_id_number(
 @pms_api_router.patch(
     "/contacts/{contact_id}/id-numbers/{idNumber_id}",
     response_model=ContactIdNumberSummary,
-    tags=["contact"],
+    tags=["contact_id_number"],
 )
 async def update_contact_id_number(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],

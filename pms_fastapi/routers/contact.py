@@ -17,9 +17,11 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import (
     CONTACT_ORDER_MAPPING,
     ContactDetail,
+    ContactInsert,
     ContactOrderField,
     ContactSearch,
     ContactSummary,
+    ContactUpdate,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
@@ -29,7 +31,9 @@ ContactOrderDependency = create_order_dependency(
 
 
 @pms_api_router.get(
-    "/contacts", response_model=PagedCollection[ContactSummary], tags=["contact"]
+    "/contacts",
+    response_model=PagedCollection[ContactSummary],
+    tags=["contact"],
 )
 async def list_contacts(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
@@ -60,7 +64,9 @@ async def contact_extra_features(
 
 
 @pms_api_router.get(
-    "/contacts/{contact_id}", response_model=ContactDetail, tags=["contact"]
+    "/contacts/{contact_id}",
+    response_model=ContactDetail,
+    tags=["contact"],
 )
 async def contactDetail(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
@@ -75,6 +81,42 @@ async def contactDetail(
         )
     ContactDetail.pms_api_check_access(env.user, partner)
     return ContactDetail.from_res_partner(partner)
+
+
+@pms_api_router.post(
+    "/contacts",
+    response_model=ContactDetail,
+    tags=["contact"],
+)
+async def create_contact(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    contactData: ContactInsert,
+) -> ContactDetail:
+    helper = env["pms_api_contact.contact_router.helper"].new()
+    new_contact = helper.create_contact(contactData)
+    return ContactDetail.from_res_partner(new_contact)
+
+
+@pms_api_router.patch(
+    "/contacts/{contact_id}",
+    response_model=ContactDetail,
+    tags=["contact"],
+)
+async def update_contact(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    contact_id: int,
+    contactData: ContactUpdate,
+) -> ContactDetail:
+    helper = env["pms_api_contact.contact_router.helper"].new()
+    helper.update_contact(contactData, contact_id)
+    contact = env["res.partner"].sudo().search([("id", "=", contact_id)])
+    if not contact:
+        raise HTTPException(
+            status_code=404,
+            detail="contact not found",
+        )
+    ContactDetail.pms_api_check_access(env.user, contact)
+    return ContactDetail.from_res_partner(contact)
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):
@@ -102,3 +144,17 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     @api.model
     def extra_features(self):
         return []
+
+    def _prepare_create_write_res_partner_vals(
+        self,
+        data: ContactInsert | ContactUpdate,
+    ):
+        return data.to_res_partner()
+
+    def create_contact(self, data: ContactInsert):
+        vals = self._prepare_create_write_res_partner_vals(data)
+        return self.env["res.partner"].sudo().create(vals)
+
+    def update_contact(self, data: ContactUpdate, contact_id: int):
+        vals = self._prepare_create_write_res_partner_vals(data)
+        return self.env["res.partner"].sudo().browse(contact_id).write(vals)
