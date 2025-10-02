@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Annotated
 
 from fastapi import Query
+from pydantic import Field
 
 from odoo import api
 from odoo.osv import expression
@@ -116,84 +117,125 @@ class ContactSummary(ContactBase):
 
 
 class ContactDetail(PmsBaseModel):
+    id: int
     contactType: str = ""
-    reference: str = ""
-    name: str = ""
-    firstname: str = ""
-    lastname: str = ""
-    email: str = ""
-    phones: list[Phone]
-    lang: str = ""
+    ref: str = Field("", alias="reference")
+    name: str = Field("", alias="name")
+    firstname: str = Field("", alias="firstname")
+    lastname: str = Field("", alias="lastname")
+    email: str = Field("", alias="email")
+    phones: list[Phone] = Field(default_factory=list)
+    lang: str = Field("", alias="lang")
     nationality: CountryId | None = None
-    gender: ContactGenderEnum | None = None
-    birthdate: date | None = None
-    street: str = ""
-    street2: str = ""
-    zipCode: str = ""
-    city: str = ""
+    gender: ContactGenderEnum | None = Field(None, alias="gender")
+    birthdate_date: date | None = Field(None, alias="birthdate")
+    street: str = Field("", alias="street")
+    street2: str = Field("", alias="street2")
+    zip: str = Field("", alias="zipCode")
+    city: str = Field("", alias="city")
     state: CountryStateId | None = None
     country: CountryId | None = None
     paymentTerm: PaymentTermId | None = None
     invoicingPolicy: ContactInvoicingPolicyEnum | None = None
     pricelist: PricelistId | None = None
-    tags: list[ContactTagId]
-    internalNotes: str = ""
-    idNumbers: list[ContactIdNumberId]
+    tags: list[ContactTagId] = Field(default_factory=list)
+    comment: str = Field("", alias="internalNotes")
+    idNumbers: list[ContactIdNumberId] = Field(default_factory=list)
     fiscalIdNumber: str = ""
     fiscalIdNumberType: str = ""
 
     @classmethod
     def from_res_partner(cls, partner):
+        record = partner.read()[0]
+        model_fields = cls.model_fields.keys()
+        filtered_data = {k: v for k, v in record.items() if v and k in model_fields}
         contact_type = False
         if partner.is_agency:
             contact_type = "agency"
         else:
             contact_type = partner.company_type
-        partner_dict = {
-            "contactType": contact_type,
-            "name": partner.name or "",
-            "firstname": partner.firstname or "",
-            "lastname": partner.lastname or "",
-            "email": partner.email or "",
-            "phones": Phone.from_res_partner(partner),
-            "lang": partner.lang,
-            "nationality": CountryId.from_res_country(partner.nationality_id)
-            if partner.nationality_id
-            else None,
-            "gender": partner.gender or None,
-            "birthdate": partner.birthdate_date or None,
-            "street": partner.street or "",
-            "street2": partner.street2 or "",
-            "city": partner.city or "",
-            "zipCode": partner.zip or "",
-            "state": CountryStateId.from_res_country_state(partner.state_id)
-            if partner.state_id
-            else None,
-            "country": CountryId.from_res_country(partner.country_id)
-            if partner.country_id
-            else None,
-            "paymentTerm": PaymentTermId.from_account_payment_term(
-                partner.customer_payment_mode_id
-            ),
-            "invoicingPolicy": partner.invoicing_policy or None,
-            "pricelist": PricelistId.from_product_pricelist(
+        filtered_data["contactType"] = contact_type
+        if partner.nationality_id:
+            filtered_data["nationality"] = CountryId.from_res_country(
+                partner.nationality_id
+            )
+        if partner.state_id:
+            filtered_data["state"] = CountryStateId.from_res_country_state(
+                partner.state_id
+            )
+        if partner.country_id:
+            filtered_data["country"] = CountryId.from_res_country(partner.country_id)
+        if partner.property_payment_term_id:
+            filtered_data["paymentTerm"] = PaymentTermId.from_account_payment_term(
+                partner.property_payment_term_id
+            )
+        if partner.property_product_pricelist:
+            filtered_data["pricelist"] = PricelistId.from_product_pricelist(
                 partner.property_product_pricelist
-            ),
-            "internalNotes": partner.comment or "",
-            "tags": [],
-            "idNumbers": [],
-            "fiscalIdNumber": partner.vat or "",
-            "fiscalIdNumberType": "vat",  # Temporary
-        }
-        for partner_tag in partner.category_id:
-            partner_dict["tags"].append(
-                ContactTagId.from_res_partner_category(partner_tag)
             )
-        for id_number in partner.id_numbers:
-            partner_dict["idNumbers"].append(
-                ContactIdNumberId.from_res_partner_id_number(id_number)
-            )
-        return cls(**partner_dict)
+        filtered_data["phones"] = Phone.from_res_partner(partner)
+        filtered_data["tags"] = [
+            ContactTagId.from_res_partner_category(tag) for tag in partner.category_id
+        ]
+        filtered_data["idNumbers"] = [
+            ContactIdNumberId.from_res_partner_id_number(id_number)
+            for id_number in partner.id_numbers
+        ]
+        filtered_data["fiscalIdNumber"] = partner.vat or ""
+        filtered_data["fiscalIdNumberType"] = "vat"  # Temporary
+        return cls(**filtered_data)
+
+
+class ContactInsert(PmsBaseModel):
+    contactType: str
+    ref: str = Field("", alias="reference")
+    name: str = Field("", alias="name")
+    firstname: str = Field("", alias="firstname")
+    lastname: str = Field("", alias="lastname")
+    email: str = Field("", alias="email")
+    phones: list[Phone] = Field(default_factory=list)
+    lang: str = Field("", alias="lang")
+    nationality_id: int | None = Field(None, alias="nationality")
+    gender: ContactGenderEnum | None = Field(None, alias="gender")
+    birthdate_date: date | None = Field(None, alias="birthdate")
+    street: str = Field("", alias="street")
+    street2: str = Field("", alias="street2")
+    zip: str = Field("", alias="zipCode")
+    city: str = Field("", alias="city")
+    state_id: int | None = Field(None, alias="state")
+    country_id: int | None = Field(None, alias="country")
+    property_payment_term_id: int | None = Field(None, alias="paymentTerm")
+    invoicing_policy: ContactInvoicingPolicyEnum | None = Field(
+        None, alias="invoicingPolicy"
+    )
+    property_product_pricelist: int | None = Field(None, alias="pricelist")
+    tags: list[int] = Field(default_factory=list)
+    comment: str = Field("", alias="internalNotes")
+
+    def to_res_partner(self) -> dict:
+        data = self.dict(exclude_unset=True, exclude={"phones", "contactType", "tags"})
+        # We need a second dump without exclude to check if the special fields
+        # are set in the request
+        values = self.model_dump(exclude_unset=True)
+        if values.get("tags"):
+            data["category_id"] = [(6, 0, values.get("tags"))]
+        contact_type = values.get("contactType")
+        if contact_type == "agency":
+            data["company_type"] = "company"
+            data["is_agency"] = True
+        elif contact_type in ["person", "company"]:
+            data["company_type"] = contact_type
+            data["is_agency"] = False
+        for phone in values.get("phones", []):
+            if phone.type == PhoneType.phone:
+                data["phone"] = phone.number
+            elif phone.type == PhoneType.mobile:
+                data["mobile"] = phone.number
+        return data
+
+
+class ContactUpdate(ContactInsert):
+    contactType: str = ""
 
 
 class ContactSearch:
