@@ -118,7 +118,7 @@ class ContactSummary(ContactBase):
 
 class ContactDetail(PmsBaseModel):
     id: int
-    contactType: str = ""
+    contactType: ContactTypeDetail = ""
     ref: str = Field("", alias="reference")
     name: str = Field("", alias="name")
     firstname: str = Field("", alias="firstname")
@@ -187,7 +187,7 @@ class ContactDetail(PmsBaseModel):
 
 
 class ContactInsert(PmsBaseModel):
-    contactType: str
+    contactType: ContactTypeDetail
     ref: str = Field("", alias="reference")
     name: str = Field("", alias="name")
     firstname: str = Field("", alias="firstname")
@@ -235,7 +235,7 @@ class ContactInsert(PmsBaseModel):
 
 
 class ContactUpdate(ContactInsert):
-    contactType: str = ""
+    contactType: ContactTypeDetail = ""
 
 
 class ContactSearch:
