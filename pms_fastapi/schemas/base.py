@@ -1,10 +1,13 @@
 from extendable_pydantic import StrictExtendableBaseModel
+from pydantic import ConfigDict
 
 from odoo import _
 from odoo.exceptions import AccessDenied
 
 
 class PmsBaseModel(StrictExtendableBaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     @staticmethod
     def url_image_pms_api_rest(env, model, record_id, field):
         PmsBaseModel.pms_api_check_access(
