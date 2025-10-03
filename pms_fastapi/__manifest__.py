@@ -13,6 +13,7 @@
         "phone_validation",
         "account_payment_partner",
         "pms_api_rest",  # temporal
+        "pms_l10n_es",  # temporal
     ],
     "data": [
         "security/pms_fastapi_groups.xml",
