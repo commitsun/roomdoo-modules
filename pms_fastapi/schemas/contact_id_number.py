@@ -58,7 +58,7 @@ class ContactIdNumberInsert(PmsBaseModel):
     country_id: int = Field(alias="country")
 
     def to_res_partner_id_number(self, partner_id: int = 0) -> dict:
-        data = self.dict(
+        data = self.model_dump(
             exclude_unset=True,
         )
         if partner_id:

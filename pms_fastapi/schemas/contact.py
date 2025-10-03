@@ -213,7 +213,9 @@ class ContactInsert(PmsBaseModel):
     comment: str = Field("", alias="internalNotes")
 
     def to_res_partner(self) -> dict:
-        data = self.dict(exclude_unset=True, exclude={"phones", "contactType", "tags"})
+        data = self.model_dump(
+            exclude_unset=True, exclude={"phones", "contactType", "tags"}
+        )
         # We need a second dump without exclude to check if the special fields
         # are set in the request
         values = self.model_dump(exclude_unset=True)
@@ -227,10 +229,10 @@ class ContactInsert(PmsBaseModel):
             data["company_type"] = contact_type
             data["is_agency"] = False
         for phone in values.get("phones", []):
-            if phone.type == PhoneType.phone:
-                data["phone"] = phone.number
-            elif phone.type == PhoneType.mobile:
-                data["mobile"] = phone.number
+            if phone["type"] == PhoneType.phone:
+                data["phone"] = phone["number"]
+            elif phone["type"] == PhoneType.mobile:
+                data["mobile"] = phone["number"]
         return data
 
 

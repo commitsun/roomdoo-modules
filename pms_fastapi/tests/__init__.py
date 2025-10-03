@@ -4,3 +4,4 @@ from . import test_countries
 from . import test_languages
 from . import test_user
 from . import test_properties
+from . import test_contact_id_numbers
