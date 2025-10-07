@@ -1,29 +1,25 @@
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, Field
 
 from .base import PmsBaseModel
 from .pms_property import PropertyId
 
 
 class User(PmsBaseModel):
-    id: int
-    name: str
-    firstname: str = ""
-    lastname: str = ""
-    email: str = ""
-    phone: str = ""
+    id: int = Field(alias="id")
+    name: str = Field(alias="name")
+    firstname: str = Field("", alias="firstname")
+    lastname: str = Field("", alias="lastname")
+    email: str = Field("", alias="email")
+    phone: str = Field("", alias="phone")
+    lang: str = Field("", alias="lang")
     image: AnyHttpUrl | None = None
     defaultPmsProperty: PropertyId | None = None
 
     @classmethod
     def from_res_users(cls, user_record):
-        data = {
-            "id": user_record.id,
-            "name": user_record.name,
-            "firstname": user_record.firstname or "",
-            "lastname": user_record.lastname or "",
-            "email": user_record.email or "",
-            "phone": user_record.phone or "",
-        }
+        record = user_record.read()[0]
+        model_fields = cls.model_fields.keys()
+        data = {k: v for k, v in record.items() if v and k in model_fields}
         if user_record.pms_property_id:
             data["defaultPmsProperty"] = PropertyId.from_pms_property(
                 user_record.pms_property_id
@@ -34,3 +30,15 @@ class User(PmsBaseModel):
         if image_url:
             data["image"] = image_url
         return cls(**data)
+
+
+class UserUpdate(PmsBaseModel):
+    firstname: str | None = Field(None, alias="firstname")
+    lastname: str | None = Field(None, alias="lastname")
+    email: str | None = Field(None, alias="email")
+    phone: str | None = Field(None, alias="phone")
+    lang: str | None = Field(None, alias="lang")
+
+    def to_res_users(self) -> dict:
+        data = self.model_dump(exclude_unset=True)
+        return data
