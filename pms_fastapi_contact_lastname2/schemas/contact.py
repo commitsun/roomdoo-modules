@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from odoo.addons.pms_fastapi.schemas import contact
 
 
@@ -9,3 +11,7 @@ class ContactDetailLastname2(contact.ContactDetail, extends=True):
         res = super().from_res_partner(partner)
         res.lastname2 = partner.lastname2 or ""
         return res
+
+
+class ContactInsert(contact.ContactInsert, extends=True):
+    lastname2: str = Field("", alias="lastname2")
