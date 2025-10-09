@@ -37,27 +37,38 @@ class ResPartner(models.Model):
 
     def _compute_reservation_data(self):
         for partner in self:
-            checkin_partner = self.env["pms.checkin.partner"].search(
-                [("partner_id", "=", partner.id)]
+            checkin_partner = self.env["pms.checkin.partner"].search_read(
+                [("partner_id", "=", partner.id)], ["reservation_id"]
             )
-            current_guest = any(
-                checkin_partner.filtered(lambda r: r.state == "onboard")
+            current_guest = (
+                self.env["pms.checkin.partner"].search_count(
+                    [("partner_id", "=", partner.id), ("state", "=", "onboard")]
+                )
+                > 0
             )
-            checkin_reservation_ids = checkin_partner.mapped("reservation_id.id")
-            reservation = self.env["pms.reservation"].search(
+
+            checkin_reservation_ids = [
+                rec["reservation_id"][0] for rec in checkin_partner
+            ]
+            # current_guest = any(
+            #     checkin_partner.filtered(lambda r: r.state == "onboard")
+            # )
+            # checkin_reservation_ids = checkin_partner.mapped("reservation_id.id")
+            reservation = self.env["pms.reservation"].search_read(
                 [
                     "|",
                     (
-                        "partner_id.id",
-                        "child_of",
+                        "partner_id",
+                        "=",
                         partner.id if isinstance(partner.id, int) else False,
                     ),
                     ("id", "in", checkin_reservation_ids),
                 ],
+                fields=["id"],
                 order="checkout desc",
                 limit=1,
             )
-            partner.last_reservation_id = reservation
+            partner.last_reservation_id = reservation[0]["id"] if reservation else False
             partner.in_house = current_guest
 
     def _search_in_house(self, operator, value):
