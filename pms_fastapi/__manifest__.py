@@ -18,6 +18,5 @@
     "data": [
         "security/pms_fastapi_groups.xml",
         "data/res_users.xml",
-        "data/fastapi_endpoint.xml",
     ],
 }
