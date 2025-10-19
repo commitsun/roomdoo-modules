@@ -714,29 +714,33 @@ class PmsFolioService(Component):
             raise MissingError(_("Folio not found"))
         pms_api_check_access(user=self.env.user, records=folio_record)
         for reservation in folio_info.reservations:
-            new_reservation_record = self.env["pms.reservation"].sudo().create(
-                {
-                    "folio_id": folio_record.id,
-                    "pricelist_id": folio_info.pricelistId,
-                    "pms_property_id": folio_record.pms_property_id.id,
-                    "checkin": datetime.strptime(
-                        reservation.checkin, "%Y-%m-%d"
-                    ).date(),
-                    "checkout": datetime.strptime(
-                        reservation.checkout, "%Y-%m-%d"
-                    ).date(),
-                    "room_type_id": reservation.roomTypeId,
-                    "adults": reservation.adults,
-                    "children": reservation.children or 0,
-                    "board_service_room_id": reservation.boardServiceId,
-                    "preferred_room_id": reservation.preferredRoomId
-                    if reservation.preferredRoomId
-                    else None,
-                    "splitted": reservation.isSplitted
-                    if reservation.isSplitted
-                    else False,
-                    "reservation_type": reservation.reservationType or "normal",
-                }
+            new_reservation_record = (
+                self.env["pms.reservation"]
+                .sudo()
+                .create(
+                    {
+                        "folio_id": folio_record.id,
+                        "pricelist_id": folio_info.pricelistId,
+                        "pms_property_id": folio_record.pms_property_id.id,
+                        "checkin": datetime.strptime(
+                            reservation.checkin, "%Y-%m-%d"
+                        ).date(),
+                        "checkout": datetime.strptime(
+                            reservation.checkout, "%Y-%m-%d"
+                        ).date(),
+                        "room_type_id": reservation.roomTypeId,
+                        "adults": reservation.adults,
+                        "children": reservation.children or 0,
+                        "board_service_room_id": reservation.boardServiceId,
+                        "preferred_room_id": reservation.preferredRoomId
+                        if reservation.preferredRoomId
+                        else None,
+                        "splitted": reservation.isSplitted
+                        if reservation.isSplitted
+                        else False,
+                        "reservation_type": reservation.reservationType or "normal",
+                    }
+                )
             )
 
     @restapi.method(
@@ -1269,9 +1273,11 @@ class PmsFolioService(Component):
             # TODO: only send first cancel reservation, not all
             # the template is not ready for multiple reservations
             model = folio.pms_property_id.property_canceled_template.model
-            res_ids = folio.id if model == "pms.folio" else folio.reservation_ids.filtered(
-                lambda r: r.state == "cancel"
-            ).ids
+            res_ids = (
+                folio.id
+                if model == "pms.folio"
+                else folio.reservation_ids.filtered(lambda r: r.state == "cancel").ids
+            )
             compose_vals = {
                 "template_id": folio.pms_property_id.property_canceled_template.id,
                 "model": model,
@@ -1291,8 +1297,8 @@ class PmsFolioService(Component):
         PmsMailInfo = self.env.datamodels["pms.mail.info"]
 
         return PmsMailInfo(
-            bodyMail=values.get("body") or next(iter(values.values()))['body'],
-            subject=values.get("subject") or next(iter(values.values()))['subject'],
+            bodyMail=values.get("body") or next(iter(values.values()))["body"],
+            subject=values.get("subject") or next(iter(values.values()))["subject"],
         )
 
     @restapi.method(
@@ -2185,6 +2191,8 @@ class PmsFolioService(Component):
                             # delete from reservations_vals the field state
                             val[2].pop("state")
                         update_reservation_ids.append(val[1])
+                    if val[0] == 1:
+                        update_reservation_ids.append(val[1])
                 old_reservations_to_cancel = folio.reservation_ids.filtered(
                     lambda r: r.state != "cancel" and r.id not in update_reservation_ids
                 )
@@ -2454,7 +2462,7 @@ class PmsFolioService(Component):
                 if reservation_services_cmds:
                     vals.update({"service_ids": reservation_services_cmds})
             if not vals:
-                continue
+                cmds.append((4, proposed_reservation.id))
             elif new_res:
                 cmds.append((0, False, vals))
             else:
