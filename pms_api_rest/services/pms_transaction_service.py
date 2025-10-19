@@ -177,7 +177,14 @@ class PmsTransactionService(Component):
                 )
                 if inbound_transaction:
                     destination_journal_id = inbound_transaction.journal_id.id
-
+            downpayment_invoice = next(
+                (
+                    inv
+                    for inv in transaction.reconciled_invoice_ids
+                    if inv._is_downpayment()
+                ),
+                None,
+            )
             result_transactions.append(
                 PmsTransactiontInfo(
                     id=transaction.id,
@@ -207,9 +214,9 @@ class PmsTransactionService(Component):
                     else None,
                     transactionType=transaction.pms_api_transaction_type or None,
                     isReconcilied=transaction.is_reconciled,
-                    downPaymentInvoiceId=transaction.reconciled_invoice_ids.filtered(
-                        lambda inv: inv._is_downpayment()
-                    ),
+                    downPaymentInvoiceId=downpayment_invoice.id
+                    if downpayment_invoice
+                    else None,
                 )
             )
         return PmsTransactionResults(
@@ -241,6 +248,14 @@ class PmsTransactionService(Component):
             destination_journal_id = (
                 transaction.pms_api_counterpart_payment_id.journal_id.id
             )
+        downpayment_invoice = next(
+            (
+                inv
+                for inv in transaction.reconciled_invoice_ids
+                if inv._is_downpayment()
+            ),
+            None,
+        )
         return PmsTransactiontInfo(
             id=transaction.id,
             name=transaction.name if transaction.name else None,
@@ -254,9 +269,9 @@ class PmsTransactionService(Component):
             createUid=transaction.create_uid.id if transaction.create_uid else None,
             transactionType=transaction.pms_api_transaction_type or None,
             isReconcilied=transaction.is_reconciled,
-            downPaymentInvoiceId=transaction.reconciled_invoice_ids.filtered(
-                lambda inv: inv._is_downpayment()
-            ),
+            downPaymentInvoiceId=downpayment_invoice.id
+            if downpayment_invoice
+            else None,
         )
 
     @restapi.method(
