@@ -359,5 +359,5 @@ class ChannelWubookBackend(models.Model):
         for i in range(0, interval_sec, int(interval_sec / count)):
             eta = fields.Datetime.add(now, seconds=i)
             self.with_delay(eta=eta)._scheduler_export_avail()
-        self._scheduler_export_rules()
+        # self._scheduler_export_rules()
         self._scheduler_export_pricelist_items()
