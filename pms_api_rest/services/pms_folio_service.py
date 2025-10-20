@@ -2191,7 +2191,7 @@ class PmsFolioService(Component):
                             # delete from reservations_vals the field state
                             val[2].pop("state")
                         update_reservation_ids.append(val[1])
-                    if val[0] == 1:
+                    if val[0] == 4:
                         update_reservation_ids.append(val[1])
                 old_reservations_to_cancel = folio.reservation_ids.filtered(
                     lambda r: r.state != "cancel" and r.id not in update_reservation_ids
