@@ -8,12 +8,15 @@
         <record id="config_param_ocr_klippa_url" model="ir.config_parameter">
             <field name="key">ocr_klippa_url</field>
             <field
-                name="value"
-            >https://custom-ocr.klippa.com/api/v1/parseDocument/identity</field>
+        name="value"
+      >https://custom-ocr.klippa.com/api/v1/parseDocument/identity</field>
         </record>
     </data>
     <data noupdate="0">
-        <record id="pms.document_type_passport" model="res.partner.id_category">
+        <record
+      id="pms_partner_identification.document_type_passport"
+      model="res.partner.id_category"
+    >
             <field name="klippa_code">P</field>
             <field name="klippa_subtype_code">P</field>
         </record>

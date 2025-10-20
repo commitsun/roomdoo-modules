@@ -16,7 +16,7 @@ class AgencyOrderField(str, Enum):
 
 
 AGENCY_ORDER_MAPPING = {
-    "name": "name",
+    "name": "display_name",
     "country": "country_id",
     "email": "email",
 }

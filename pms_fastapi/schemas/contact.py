@@ -24,7 +24,7 @@ class ContactOrderField(str, Enum):
 
 
 CONTACT_ORDER_MAPPING = {
-    "name": "name",
+    "name": "display_name",
     "country": "country_id",
     "email": "email",
 }
@@ -292,9 +292,11 @@ class ContactSearch:
             domain += [
                 "|",
                 "|",
+                "|",
                 ("display_name", "ilike", self.globalSearch),
                 ("email", "ilike", self.globalSearch),
                 ("vat", "ilike", self.globalSearch),
+                ("identification_number", "ilike", self.globalSearch),
             ]
             if len(self.globalSearch) >= 3:
                 phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
