@@ -11,6 +11,8 @@
     "website": "https://github.com/OCA/pms",
     "depends": [
         "pms_api_rest",
+        "pms_partner_type_residence",
+        "pms_partner_identification",
     ],
     "external_dependencies": {"python": ["thefuzz", "geopy"]},
     "data": [

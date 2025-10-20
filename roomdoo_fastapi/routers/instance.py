@@ -27,6 +27,5 @@ async def get_instance_info(env: Annotated[Environment, Depends(odoo_env)]) -> I
         image_attachment = env["ir.attachment"].sudo().browse(int(instance_image))
         instance_image = PmsBaseModel.get_attachment_url(env, image_attachment)
     if not instance_image:
-        web_base_url = env["ir.config_parameter"].sudo().get_param("web.base.url")
-        instance_image = f"{web_base_url}/web/binary/company_logo"
+        instance_image = None
     return Instance(name=instance_name, image=instance_image)
