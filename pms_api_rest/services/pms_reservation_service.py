@@ -1668,10 +1668,8 @@ class PmsReservationService(Component):
                 )
             )
             is_mandatory_fields = True
-            for field in self.env["pms.checkin.partner"]._checkin_mandatory_fields():
-                if not getattr(checkin_partner, field):
-                    is_mandatory_fields = False
-                    break
+            if checkin_partner.state not in ["precheckin", "onboard", "done"]:
+                is_mandatory_fields = False
             if is_mandatory_fields:
                 reservation_checkin_partner_names.append(checkin_partner.firstname)
                 folio_checkin_partner_names.append(checkin_partner.firstname)
