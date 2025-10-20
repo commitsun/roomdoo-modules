@@ -15,7 +15,7 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
 CHECKIN_FIELDS = {
     "nationality": "partner_id.nationality_id.id",
-    "country_id": "partner_id.residence_country_id.id",
+    "country_id": "partner_id.residence_partner_id.country_id.id",
     "firstname": "partner_id.firstname",
     "lastname": "partner_id.lastname",
     "lastname2": "partner_id.lastname2",
@@ -25,11 +25,11 @@ CHECKIN_FIELDS = {
     "document_expedition_date": "valid_from",
     "document_support_number": "support_number",
     "document_number": "name",
-    "residence_street": "partner_id.residence_street",
-    "residence_city": "partner_id.residence_city",
-    "country_state": "partner_id.residence_state_id.id",
+    "residence_street": "partner_id.residence_partner_id.street",
+    "residence_city": "partner_id.residence_partner_id.city",
+    "country_state": "partner_id.residence_partner_id.state_id.id",
     "document_country_id": "country_id.id",
-    "zip": "partner_id.zip",
+    "zip": "partner_id.residence_partner_id.zip",
 }
 
 
@@ -336,11 +336,11 @@ class PmsProperty(models.Model):
             document_subtype = document_type.filtered(
                 lambda dt: dt.klippa_subtype_code == klippa_subtype
             )
-            document_type = (
-                document_subtype[0] if document_subtype else False
-            )
+            document_type = document_subtype[0] if document_subtype else False
         if not document_type:
-            document_type = self.env.ref("pms.document_type_other")
+            document_type = self.env.ref(
+                "pms_partner_identification.document_type_other"
+            )
         return document_type[0] if document_type else False
 
     def _get_country_id(self, country_code):
@@ -557,9 +557,9 @@ class PmsProperty(models.Model):
                             "address", {}
                         ).get("road", False)
 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             _logger.error("Error in request to Nominatim: %s", traceback.format_exc())
-        except requests.exceptions.JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError:
             _logger.error("Error decoding JSON response: %s", traceback.format_exc())
         except Exception:
             _logger.error("Internal error: %s", traceback.format_exc())
