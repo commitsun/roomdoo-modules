@@ -1692,26 +1692,24 @@ class PmsFolioService(Component):
                         ).isoformat()
                         if checkin_partner.birthdate_date
                         else None,
-                        residenceStreet=checkin_partner.residence_street
-                        if checkin_partner.residence_street
+                        residenceStreet=checkin_partner.street
+                        if checkin_partner.street
                         else None,
-                        zip=checkin_partner.residence_zip
-                        if checkin_partner.residence_zip
-                        else None,
-                        residenceCity=checkin_partner.residence_city
-                        if checkin_partner.residence_city
+                        zip=checkin_partner.zip if checkin_partner.zip else None,
+                        residenceCity=checkin_partner.city
+                        if checkin_partner.city
                         else None,
                         nationality=checkin_partner.nationality_id.id
                         if checkin_partner.nationality_id
                         else None,
-                        countryState=checkin_partner.residence_state_id.id
-                        if checkin_partner.residence_state_id
+                        countryState=checkin_partner.state_id.id
+                        if checkin_partner.state_id
                         else None,
-                        countryStateName=checkin_partner.residence_state_id.name
-                        if checkin_partner.residence_state_id
+                        countryStateName=checkin_partner.state_id.name
+                        if checkin_partner.state_id
                         else None,
-                        countryId=checkin_partner.residence_country_id.id
-                        if checkin_partner.residence_country_id
+                        countryId=checkin_partner.country_id.id
+                        if checkin_partner.country_id
                         else None,
                         checkinPartnerState=checkin_partner.state,
                         signature=checkin_partner.signature
@@ -2620,12 +2618,7 @@ class PmsFolioService(Component):
             reservation_checkin_partner_names = [
                 checkin_partner.firstname
                 for checkin_partner in reservation.checkin_partner_ids
-                if all(
-                    getattr(checkin_partner, field)
-                    for field in self.env[
-                        "pms.checkin.partner"
-                    ]._checkin_mandatory_fields()
-                )
+                if checkin_partner.state in ["precheckin", "onboard", "done"]
             ]
             reservations.append(
                 self.env.datamodels["pms.reservation.public.info"](
@@ -2674,10 +2667,7 @@ class PmsFolioService(Component):
             checkin_partner.firstname
             for reservation in folio_record.reservation_ids
             for checkin_partner in reservation.checkin_partner_ids
-            if all(
-                getattr(checkin_partner, field)
-                for field in self.env["pms.checkin.partner"]._checkin_mandatory_fields()
-            )
+            if checkin_partner.state in ["precheckin", "onboard", "done"]
         ]
 
     # PUBLIC ENDPOINTS
