@@ -139,6 +139,7 @@ class PmsApiContactRouterHelper(models.AbstractModel):
             limit=paging.limit,
             offset=paging.offset,
             order=order,
+            context=params.to_odoo_context(self.env),
         )
 
     @api.model
