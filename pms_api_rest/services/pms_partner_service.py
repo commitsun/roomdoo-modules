@@ -910,7 +910,7 @@ class PmsPartnerService(Component):
             "firstname": pms_partner_info.firstname,
             "lastname": pms_partner_info.lastname,
             "lastname2": pms_partner_info.lastname2,
-            "email": pms_partner_info.email,
+            "email": pms_partner_info.email or None,
             "mobile": pms_partner_info.mobile,
             "phone": pms_partner_info.phone,
             "gender": pms_partner_info.gender,
