@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import MissingError
 
 
 class ResConfigSettings(models.TransientModel):
@@ -25,6 +26,10 @@ class ResConfigSettings(models.TransientModel):
             image_attachment = (
                 self.env["ir.attachment"].sudo().browse(int(image_parameter))
             )
+            try:
+                image_attachment.datas  # noqa: B018  # Access to check if attachment exists
+            except MissingError:
+                image_attachment = False
             res["roomdoo_fastapi_image"] = (
                 image_attachment.datas if image_attachment else False
             )

@@ -3,12 +3,12 @@ from enum import Enum
 from typing import Annotated
 
 from fastapi import Query
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 
 from odoo import api
 from odoo.osv import expression
 
-from .base import PmsBaseModel
+from .base import BaseSearch, PmsBaseModel
 from .contact_id_number import ContactIdNumberId
 from .contact_tag import ContactTagId
 from .country import CountryId, CountrySummary
@@ -81,6 +81,7 @@ class ContactBase(PmsBaseModel):
     name: str
     phones: list[Phone]
     country: CountrySummary | None = None
+    image: AnyHttpUrl | None = None
 
     @classmethod
     def parse_common_fields(cls, partner) -> dict:
@@ -92,6 +93,15 @@ class ContactBase(PmsBaseModel):
             else None,
         }
         record_dict["phones"] = Phone.from_res_partner(partner)
+        if partner.image_128:
+            image_url = cls.url_image_pms_api_rest(
+                partner.env,
+                "res.partner",
+                partner.id,
+                "image_128",
+            )
+            if image_url:
+                record_dict["image"] = image_url
         return record_dict
 
 
@@ -240,7 +250,7 @@ class ContactUpdate(ContactInsert):
     contactType: ContactTypeDetail = ""
 
 
-class ContactSearch:
+class ContactSearch(BaseSearch):
     def __init__(
         self,
         globalSearch: str | None = Query(

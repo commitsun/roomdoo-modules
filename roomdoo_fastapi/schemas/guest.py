@@ -6,6 +6,7 @@ from fastapi import Query
 from odoo import api
 from odoo.osv import expression
 
+from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 from odoo.addons.pms_fastapi.schemas.pms_reservation import ReservationId
 from odoo.addons.roomdoo_fastapi.schemas.id_document import IdDocument
@@ -43,9 +44,13 @@ class GuestSummary(ContactBase):
         return cls(**data)
 
 
-class GuestSearch:
+class GuestSearch(BaseSearch):
     def __init__(
         self,
+        pmsProperty: int | None = Query(
+            default=None,
+            description="Filter guests of the given property.",
+        ),
         globalSearch: str | None = Query(
             default=None,
             description="Search across name, email, phone and VAT fields"
@@ -82,7 +87,22 @@ class GuestSearch:
                 "e.g., ?countries=Spain&countries=France",
             ),
         ] = None,
+        checkin_date_from: Annotated[
+            str | None,
+            Query(
+                description="Search contacts with a checkin between dates "
+                "(only works if checkin_date_to is also setted)"
+            ),
+        ] = None,
+        checkin_date_to: Annotated[
+            str | None,
+            Query(
+                description="Search contacts with a checkin between dates "
+                "(only works if checkin_date_from is also setted)"
+            ),
+        ] = None,
     ):
+        self.pmsProperty = pmsProperty
         self.globalSearch = globalSearch
         self.name = name
         self.email = email
@@ -90,9 +110,23 @@ class GuestSearch:
         self.inHouse = inHouse
         self.vat = vat
         self.phone = phone
+        self.checkin_date_from = checkin_date_from
+        self.checkin_date_to = checkin_date_to
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
+        if self.pmsProperty:
+            domain += [
+                ("pms_checkin_partner_ids.pms_property_id", "=", self.pmsProperty)
+            ]
+        else:
+            domain += [
+                (
+                    "pms_checkin_partner_ids.pms_property_id",
+                    "in",
+                    env.user.pms_property_ids.ids,
+                )
+            ]
         if self.globalSearch:
             domain += [
                 "|",
@@ -121,4 +155,36 @@ class GuestSearch:
         if self.countries:
             subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
             domain = expression.AND([domain, expression.OR(subdomains)])
+        if self.checkin_date_from and self.checkin_date_to:
+            subdomains = expression.OR(
+                [
+                    [
+                        (
+                            "pms_checkin_partner_ids.arrival",
+                            ">=",
+                            self.checkin_date_from,
+                        ),
+                        ("pms_checkin_partner_ids.arrival", "<=", self.checkin_date_to),
+                    ],
+                    [
+                        (
+                            "pms_checkin_partner_ids.departure",
+                            ">=",
+                            self.checkin_date_from,
+                        ),
+                        (
+                            "pms_checkin_partner_ids.departure",
+                            "<=",
+                            self.checkin_date_to,
+                        ),
+                    ],
+                ]
+            )
+            domain = expression.AND([domain, subdomains])
         return domain
+
+    def to_odoo_context(self, env: api.Environment) -> dict:
+        if self.pmsProperty:
+            return {"pms_property_ids": [self.pmsProperty]}
+        else:
+            return {"pms_property_ids": env.user.pms_property_ids.ids}
