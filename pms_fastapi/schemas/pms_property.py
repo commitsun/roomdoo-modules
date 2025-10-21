@@ -1,6 +1,7 @@
 from pydantic import AnyHttpUrl
 
 from .base import PmsBaseModel
+from .currency import CurrencySummary
 
 
 class PropertyId(PmsBaseModel):
@@ -23,10 +24,14 @@ class PropertyId(PmsBaseModel):
 
 class PropertySummary(PropertyId):
     image: AnyHttpUrl | None = None
+    currency: CurrencySummary
 
     @classmethod
     def from_pms_property(cls, pms_property):
         data = cls.parse_common_fields(pms_property)
+        data["currency"] = CurrencySummary.from_res_currency(
+            pms_property.company_id.currency_id
+        )
         image_url = cls.url_image_pms_api_rest(
             pms_property.env,
             "pms.property",

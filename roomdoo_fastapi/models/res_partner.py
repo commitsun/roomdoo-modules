@@ -36,13 +36,19 @@ class ResPartner(models.Model):
             )
 
     def _compute_reservation_data(self):
+        property_domain = []
+        if self._context.get("pms_property_ids"):
+            property_domain = [
+                ("pms_property_id", "in", self._context["pms_property_ids"])
+            ]
         for partner in self:
             checkin_partner = self.env["pms.checkin.partner"].search_read(
-                [("partner_id", "=", partner.id)], ["reservation_id"]
+                property_domain + [("partner_id", "=", partner.id)], ["reservation_id"]
             )
             current_guest = (
                 self.env["pms.checkin.partner"].search_count(
-                    [("partner_id", "=", partner.id), ("state", "=", "onboard")]
+                    property_domain
+                    + [("partner_id", "=", partner.id), ("state", "=", "onboard")]
                 )
                 > 0
             )
@@ -55,7 +61,8 @@ class ResPartner(models.Model):
             # )
             # checkin_reservation_ids = checkin_partner.mapped("reservation_id.id")
             reservation = self.env["pms.reservation"].search_read(
-                [
+                property_domain
+                + [
                     "|",
                     (
                         "partner_id",
@@ -72,7 +79,14 @@ class ResPartner(models.Model):
             partner.in_house = current_guest
 
     def _search_in_house(self, operator, value):
-        checkins = self.env["pms.checkin.partner"].search([("state", "=", "onboard")])
+        property_domain = []
+        if self._context.get("pms_property_ids"):
+            property_domain = [
+                ("pms_property_id", "in", self._context["pms_property_ids"])
+            ]
+        checkins = self.env["pms.checkin.partner"].search(
+            property_domain + [("state", "=", "onboard")]
+        )
         partner_ids = checkins.mapped("partner_id.id")
         if (operator, value) in [("=", True), ("!=", False)]:
             return [("id", "in", partner_ids)]

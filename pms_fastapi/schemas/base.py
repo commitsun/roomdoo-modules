@@ -1,7 +1,7 @@
 from extendable_pydantic import StrictExtendableBaseModel
 from pydantic import ConfigDict
 
-from odoo import _
+from odoo import _, api
 from odoo.exceptions import AccessDenied
 
 
@@ -96,3 +96,11 @@ class PmsBaseModel(StrictExtendableBaseModel):
                         _("You are not allowed to access this properties. %s")
                         % properties_not_allowed.mapped("pms_property_ids.name")
                     )
+
+
+class BaseSearch:
+    def to_odoo_domain(self, env: api.Environment) -> list:
+        return []
+
+    def to_odoo_context(self, env: api.Environment) -> dict:
+        return {}
