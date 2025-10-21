@@ -8,6 +8,7 @@ from odoo import api
 from odoo.osv import expression
 from odoo.tools.float_utils import float_round
 
+from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 
 
@@ -42,7 +43,7 @@ class SupplierSummary(ContactBase):
         return cls(**data)
 
 
-class SupplierSearch:
+class SupplierSearch(BaseSearch):
     def __init__(
         self,
         globalSearch: str | None = Query(

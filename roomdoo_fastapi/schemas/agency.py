@@ -6,6 +6,7 @@ from fastapi import Query
 from odoo import api
 from odoo.osv import expression
 
+from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 
 
@@ -32,7 +33,7 @@ class AgencySummary(ContactBase):
         return cls(**data)
 
 
-class AgencySearch:
+class AgencySearch(BaseSearch):
     def __init__(
         self,
         globalSearch: str | None = Query(

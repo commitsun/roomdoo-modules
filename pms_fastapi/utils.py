@@ -29,26 +29,41 @@ class FilteredModelAdapter(Generic[T]):
         self._model: T = env[type_args[0]._name]
         self._base_domain: list = base_domain
 
-    def get(self, record_id: int) -> T:
-        record = self._model.sudo().browse(record_id).filtered_domain(self._base_domain)
+    def get(self, record_id: int, context=None) -> T:
+        if not context:
+            context = {}
+        record = (
+            self._model.sudo()
+            .browse(record_id)
+            .with_context(**context)
+            .filtered_domain(self._base_domain)
+        )
         if record:
             PmsBaseModel.pms_api_check_access(self.env.user, record)
             return record
         else:
             raise MissingError(_("The record do not exist"))
 
-    def search(self, domain: list) -> T:
+    def search(self, domain: list, context=None) -> T:
+        if not context:
+            context = {}
         domain = expression.AND([self._base_domain, domain])
-        records = self._model.sudo().search(domain)
+        records = self._model.sudo().with_context(**context).search(domain)
 
         PmsBaseModel.pms_api_check_access(self.env.user, records)
         return records
 
-    def search_with_count(self, domain: list, limit, offset, order) -> tuple[int, T]:
+    def search_with_count(
+        self, domain: list, limit, offset, order, context=None
+    ) -> tuple[int, T]:
+        if not context:
+            context = {}
         domain = expression.AND([self._base_domain, domain])
-        count = self._model.sudo().search_count(domain)
-        records = self._model.sudo().search(
-            domain, limit=limit, offset=offset, order=order
+        count = self._model.sudo().with_context(**context).search_count(domain)
+        records = (
+            self._model.sudo()
+            .with_context(**context)
+            .search(domain, limit=limit, offset=offset, order=order)
         )
         PmsBaseModel.pms_api_check_access(self.env.user, records)
         return count, records
