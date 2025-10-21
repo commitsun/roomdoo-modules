@@ -18,7 +18,7 @@ from odoo.addons.pms_fastapi.schemas.pms_property import PropertySummary
     response_model=list[PropertySummary],
     tags=["property"],
 )
-async def get_property_links(
+async def get_properties(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
 ) -> list[PropertySummary]:
     """
