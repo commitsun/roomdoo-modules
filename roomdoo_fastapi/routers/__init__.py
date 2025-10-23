@@ -6,3 +6,4 @@ from . import customer
 from . import guest
 from . import agency
 from . import supplier
+from . import contact
