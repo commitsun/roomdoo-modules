@@ -77,7 +77,7 @@ async def contactDetail(
     if not partner:
         raise HTTPException(
             status_code=404,
-            detail="property not found",
+            detail="contact not found",
         )
     ContactDetail.pms_api_check_access(env.user, partner)
     return ContactDetail.from_res_partner(partner)
@@ -146,16 +146,22 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     def extra_features(self):
         return []
 
-    def _prepare_create_write_res_partner_vals(
+    def _prepare_create_res_partner_vals(
         self,
-        data: ContactInsert | ContactUpdate,
+        data: ContactInsert,
+    ):
+        return data.to_res_partner()
+
+    def _prepare_write_res_partner_vals(
+        self,
+        data: ContactUpdate,
     ):
         return data.to_res_partner()
 
     def create_contact(self, data: ContactInsert):
-        vals = self._prepare_create_write_res_partner_vals(data)
+        vals = self._prepare_create_res_partner_vals(data)
         return self.env["res.partner"].sudo().create(vals)
 
     def update_contact(self, data: ContactUpdate, contact_id: int):
-        vals = self._prepare_create_write_res_partner_vals(data)
+        vals = self._prepare_write_res_partner_vals(data)
         return self.env["res.partner"].sudo().browse(contact_id).write(vals)

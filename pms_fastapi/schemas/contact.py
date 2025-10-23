@@ -222,10 +222,11 @@ class ContactInsert(PmsBaseModel):
     tags: list[int] = Field(default_factory=list)
     comment: str = Field("", alias="internalNotes")
 
-    def to_res_partner(self) -> dict:
-        data = self.model_dump(
-            exclude_unset=True, exclude={"phones", "contactType", "tags"}
-        )
+    def to_res_partner(self, extra_exclude=None) -> dict:
+        exclude_fields = {"phones", "contactType", "tags"}
+        if extra_exclude:
+            exclude_fields = exclude_fields.union(extra_exclude)
+        data = self.model_dump(exclude_unset=True, exclude=exclude_fields)
         # We need a second dump without exclude to check if the special fields
         # are set in the request
         values = self.model_dump(exclude_unset=True)

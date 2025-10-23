@@ -14,7 +14,14 @@ class CommonTestRoomdooApi(FastAPITransactionCase):
         super().setUpClass()
         jwt_validator = cls.env["auth.jwt.validator"].search([("name", "=", "api_pms")])
         jwt_validator.cookie_secure = False
-        cls.pms_fastapi_app = cls.env.ref("pms_fastapi.pms_fastapi_endpoint")
+        cls.pms_fastapi_app = cls.env["fastapi.endpoint"].create(
+            {
+                "name": "PMS FastAPI",
+                "app": "pms_api",
+                "root_path": "/pmsApi",
+                "user_id": cls.env.ref("pms_fastapi.pms_fastapi_user").id,
+            }
+        )
         cls.env = cls.env(context=dict(cls.env.context, queue_job__no_delay=True))
         cls.default_fastapi_app = cls.pms_fastapi_app._get_app()
         cls.default_fastapi_dependency_overrides = {
