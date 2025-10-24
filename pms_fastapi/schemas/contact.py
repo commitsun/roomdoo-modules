@@ -61,6 +61,10 @@ class PhoneType(str, Enum):
     mobile = "mobile"
 
 
+class ContactFiscalDocumentType(PmsBaseModel):
+    name: str
+
+
 class Phone(PmsBaseModel):
     type: PhoneType
     number: str
@@ -192,7 +196,7 @@ class ContactDetail(PmsBaseModel):
             for id_number in partner.id_numbers
         ]
         filtered_data["fiscalIdNumber"] = partner.vat or ""
-        filtered_data["fiscalIdNumberType"] = "vat"  # Temporary
+        filtered_data["fiscalIdNumberType"] = "vat"
         return cls(**filtered_data)
 
 
@@ -221,9 +225,17 @@ class ContactInsert(PmsBaseModel):
     property_product_pricelist: int | None = Field(None, alias="pricelist")
     tags: list[int] = Field(default_factory=list)
     comment: str = Field("", alias="internalNotes")
+    fiscalIdNumber: str = ""
+    fiscalIdNumberType: str = ""
 
     def to_res_partner(self, extra_exclude=None) -> dict:
-        exclude_fields = {"phones", "contactType", "tags"}
+        exclude_fields = {
+            "phones",
+            "contactType",
+            "tags",
+            "fiscalIdNumber",
+            "fiscalIdNumberType",
+        }
         if extra_exclude:
             exclude_fields = exclude_fields.union(extra_exclude)
         data = self.model_dump(exclude_unset=True, exclude=exclude_fields)
