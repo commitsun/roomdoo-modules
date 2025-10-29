@@ -12,13 +12,21 @@ class ResPartner(models.Model):
         comodel_name="res.partner", compute="_compute_residence_partner_id"
     )
 
+    def init(self):
+        self.env.cr.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS res_partner_residence_partner_id_uniq
+                ON %s (parent_id)
+            WHERE type = 'residence'
+        """
+            % self._table
+        )
+
     def _compute_residence_partner_id(self):
         for partner in self:
-            residence_partner = False
-            for child in partner.child_ids:
-                if child.type == "residence":
-                    residence_partner = child
-                    break
+            residence_partner = (
+                partner.child_ids.filtered(lambda p: p.type == "residence") or None
+            )
             if not residence_partner:
                 residence_partner = partner
             partner.residence_partner_id = residence_partner
