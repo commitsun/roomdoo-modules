@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <menuitem
+    id="menu_hotel_kellys_report"
+    name="Listado limpieza habitaciones"
+    parent="pms.pms_rooms_menu"
+    action="report_kellys_act"
+    sequence="60"
+  />
+</odoo>
