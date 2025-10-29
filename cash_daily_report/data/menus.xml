@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <menuitem
+    id="cash_daily_report_wizard"
+    name="Cash Daily Report Wizard"
+    parent="pms.pms_sales_menu"
+    action="action_open_cash_daily_report_wizard"
+    sequence="45"
+  />
+
+</odoo>
