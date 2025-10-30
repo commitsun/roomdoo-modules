@@ -6,6 +6,11 @@
     "website": "https://github.com/commitsun/roomdoo-modules",
     "category": "Generic Modules/Property Management System",
     "license": "AGPL-3",
-    "depends": ["pms_fastapi", "pms_partner_type_residence"],
+    "depends": [
+        "pms_fastapi",
+        "pms_partner_type_residence",
+        "kellys_daily_report",
+        "cash_daily_report",
+    ],
     "data": ["views/res_config_settings.xml", "views/auth_jwt_validator.xml"],
 }
