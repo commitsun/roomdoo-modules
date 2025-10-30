@@ -35,10 +35,17 @@ class RoomdooAppMenu(models.Model):
         default=True,
     )
     support_url = fields.Boolean()
+    report_url = fields.Boolean()
     param_ids = fields.One2many(
         "roomdoo.app.menu.url.param",
         "menu_id",
         string="URL Parameters",
+    )
+    params_as_fragments = fields.Boolean(
+        string="Use URL Fragments for Parameters",
+        default=False,
+        help="If enabled, parameters will be added as URL fragments "
+        "(after #) instead of query parameters.",
     )
 
     def generate_url(self, property_obj):
@@ -56,9 +63,11 @@ class RoomdooAppMenu(models.Model):
 
         # Parse the base URL
         parsed_url = urlparse(self.base_url)
-
-        # Get existing query parameters
-        query_params = parse_qs(parsed_url.query)
+        if self.params_as_fragments:
+            query_params = parse_qs(parsed_url.fragment)
+        else:
+            # Get existing query parameters
+            query_params = parse_qs(parsed_url.query)
 
         # Update with evaluated parameters
         for param in self.param_ids:
@@ -67,7 +76,12 @@ class RoomdooAppMenu(models.Model):
                 query_params[param.name] = [str(value)]
 
         # Reconstruct URL with updated parameters
-        new_query = urlencode(query_params, doseq=True)
+        if self.params_as_fragments:
+            new_query = parsed_url.query
+            new_fragment = urlencode(query_params, doseq=True)
+        else:
+            new_query = urlencode(query_params, doseq=True)
+            new_fragment = parsed_url.fragment
         final_url = urlunparse(
             (
                 parsed_url.scheme,
@@ -75,53 +89,58 @@ class RoomdooAppMenu(models.Model):
                 parsed_url.path,
                 parsed_url.params,
                 new_query,
-                parsed_url.fragment,
+                new_fragment,
             )
         )
         return final_url
 
-    @api.constrains("support_url", "property_ids")
-    def _check_support_url(self):
+    @api.constrains("support_url", "report_url", "property_ids")
+    def _check_special_url(self):
         """Ensure only one record can be marked as support URL."""
         for record in self:
-            if record.support_url:
-                domain = [("support_url", "=", True), ("id", "!=", record.id)]
-                if not record.property_ids:
-                    domain.append(("property_ids", "=", False))
-                else:
-                    domain.append(("property_ids", "in", record.property_ids._ids))
-                if self.search_count(domain):
-                    raise ValidationError(
-                        _("Only one menu item can be marked as Support URL")
-                    )
+            for special_field in ["support_url", "report_url"]:
+                if record[special_field]:
+                    domain = [(special_field, "=", True), ("id", "!=", record.id)]
+                    if not record.property_ids:
+                        domain.append(("property_ids", "=", False))
+                    else:
+                        domain.append(("property_ids", "in", record.property_ids._ids))
+                    if self.search_count(domain):
+                        raise ValidationError(
+                            _("Only one menu item can be marked as {} URL").format(
+                                special_field.replace("_", " ")
+                            )
+                        )
 
     def write(self, vals):
         """Prevent removing the last support URL."""
-        if "support_url" in vals and not vals["support_url"]:
-            domain = [("support_url", "=", True), ("id", "in", self.ids)]
-            if self.search_count(domain) and not self.search_count(
-                [("support_url", "=", True), ("id", "not in", self.ids)]
-            ):
-                raise ValidationError(
-                    _(
-                        "Cannot unset support URL. At least one menu item must be "
-                        "marked as support URL."
+        for special_field in ["support_url", "report_url"]:
+            if special_field in vals and not vals[special_field]:
+                domain = [(special_field, "=", True), ("id", "in", self.ids)]
+                if self.search_count(domain) and not self.search_count(
+                    [(special_field, "=", True), ("id", "not in", self.ids)]
+                ):
+                    raise ValidationError(
+                        _(
+                            "Cannot unset support URL. At least one menu item must be "
+                            "marked as support URL."
+                        )
                     )
-                )
         return super().write(vals)
 
     def unlink(self):
         """Prevent deleting the last support URL menu item."""
-        domain = [("support_url", "=", True), ("id", "in", self.ids)]
-        if self.search_count(domain) and not self.search_count(
-            [("support_url", "=", True), ("id", "not in", self.ids)]
-        ):
-            raise ValidationError(
-                _(
-                    "Cannot delete the last support URL menu item. At least one "
-                    "menu item must be marked as support URL."
+        for special_field in ["support_url", "report_url"]:
+            domain = [(special_field, "=", True), ("id", "in", self.ids)]
+            if self.search_count(domain) and not self.search_count(
+                [(special_field, "=", True), ("id", "not in", self.ids)]
+            ):
+                raise ValidationError(
+                    _(
+                        "Cannot delete the last support URL menu item. At least one "
+                        "menu item must be marked as support URL."
+                    )
                 )
-            )
         return super().unlink()
 
 
