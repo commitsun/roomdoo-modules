@@ -5,8 +5,8 @@
         <field name="name">Export Departures</field>
         <field name="file_format">excel</field>
         <field
-            name="query"
-        ><![CDATA[
+      name="query"
+    ><![CDATA[
 SELECT
     TO_CHAR(reservation.checkout, 'DD-MM-YYYY') as "Departure",
     folio.name as "Reservation",
@@ -27,24 +27,24 @@ ORDER BY reservation.name
 ]]>
         </field>
         <field
-            name="query_properties_definition"
-            eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
-        />
+      name="query_properties_definition"
+      eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
+    />
     </record>
 
     <function
-        model="sql.export"
-        name="button_validate_sql_expression"
-        eval="([ref('sql_export_departures')])"
-    />
+    model="sql.export"
+    name="button_validate_sql_expression"
+    eval="([ref('sql_export_departures')])"
+  />
 
     <!-- ARRIVALS REPORT -->
     <record id="sql_export_arrivals" model="sql.export">
         <field name="name">Export Arrivals</field>
         <field name="file_format">excel</field>
         <field
-            name="query"
-        ><![CDATA[
+      name="query"
+    ><![CDATA[
 SELECT
     TO_CHAR(reservation.checkin, 'DD-MM-YYYY') as "Arrival",
     folio.name as "Reservation",
@@ -65,24 +65,24 @@ ORDER BY reservation.name
 ]]>
         </field>
         <field
-            name="query_properties_definition"
-            eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
-        />
+      name="query_properties_definition"
+      eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
+    />
     </record>
 
     <function
-        model="sql.export"
-        name="button_validate_sql_expression"
-        eval="([ref('sql_export_arrivals')])"
-    />
+    model="sql.export"
+    name="button_validate_sql_expression"
+    eval="([ref('sql_export_arrivals')])"
+  />
 
     <!-- SERVICES REPORT -->
     <record id="sql_export_services" model="sql.export">
         <field name="name">Export Services</field>
         <field name="file_format">excel</field>
         <field
-            name="query"
-        ><![CDATA[
+      name="query"
+    ><![CDATA[
 SELECT
     TO_CHAR(line.date, 'DD-MM-YYYY') as "Date",
     reservation.name as "Reservation",
@@ -101,8 +101,8 @@ FROM pms_service_line line
         ON line.reservation_id = reservation.id
     LEFT JOIN pms_checkin_partner room_host
         ON room_host.reservation_id = reservation.id
-WHERE (line.date &gt; %(x_date_from)s)
-    AND (line.date &lt; %(x_date_to)s)
+WHERE (line.date >= %(x_date_from)s)
+    AND (line.date <= %(x_date_to)s)
     AND (line.pms_property_id = %(x_pms_property_id)s)
     AND (reservation.state != 'cancel')
 GROUP BY line.id, service.name, reservation.name, reservation.rooms, reservation.adults, reservation.children, reservation.partner_name,   line.price_unit
@@ -110,14 +110,14 @@ ORDER BY date asc
 ]]>
         </field>
         <field
-            name="query_properties_definition"
-            eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_date_to', 'type': 'date', 'string': 'x_date_to'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
-        />
+      name="query_properties_definition"
+      eval="[{'name': 'x_date_from', 'type': 'date', 'string': 'x_date_from'}, {'name': 'x_date_to', 'type': 'date', 'string': 'x_date_to'}, {'name': 'x_pms_property_id', 'type': 'integer', 'string': 'x_pms_property_id'}]"
+    />
     </record>
 
     <function
-        model="sql.export"
-        name="button_validate_sql_expression"
-        eval="([ref('pms_api_rest.sql_export_services')])"
-    />
+    model="sql.export"
+    name="button_validate_sql_expression"
+    eval="([ref('pms_api_rest.sql_export_services')])"
+  />
 </odoo>

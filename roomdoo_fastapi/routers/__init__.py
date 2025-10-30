@@ -8,3 +8,4 @@ from . import agency
 from . import supplier
 from . import contact
 from . import zip_autocomplete
+from . import reports
