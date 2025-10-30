@@ -1,9 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
     <record id="default_support_url" model="roomdoo.app.menu">
         <field name="name">Support</field>
         <field name="base_url">https://dummy.local</field>
-        <field name="support_url" eval="True"/>
+        <field name="support_url" eval="True" />
         <field name="sequence">100</field>
+    </record>
+    <record id="default_report_url" model="roomdoo.app.menu">
+        <field name="name">Reports</field>
+        <field name="base_url">http://localhost:16069</field>
+        <field name="report_url" eval="True" />
+        <field name="params_as_fragments" eval="True" />
+        <field name="sequence">100</field>
+        <field
+      name="param_ids"
+      eval="[(0, 0, {'name': 'action', 'value': 'env.ref('spreadsheet_dashboard.ir_actions_dashboard_action').id'}), (0, 0, {'name': 'dashboard_id', 'value': 'env.ref('spreadsheet_dasbhoard_pms.spreadsheet_dashboard_group_sales').id'})]"
+    />
     </record>
 </odoo>
