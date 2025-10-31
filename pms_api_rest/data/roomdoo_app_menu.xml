@@ -8,13 +8,29 @@
     </record>
     <record id="default_report_url" model="roomdoo.app.menu">
         <field name="name">Reports</field>
-        <field name="base_url">http://localhost:16069</field>
+        <field name="base_url">https://dummy.local</field>
         <field name="report_url" eval="True" />
-        <field name="params_as_fragments" eval="True" />
         <field name="sequence">100</field>
+    </record>
+
+    <record id="default_report_url_token_param" model="roomdoo.app.menu.url.param">
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">token</field>
+        <field name="value">ots_token</field>
+    </record>
+    <record id="default_report_url_login_param" model="roomdoo.app.menu.url.param">
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">login</field>
+        <field name="value">user.login</field>
+    </record>
+    <record
+    id="default_report_url_redirect_url_param"
+    model="roomdoo.app.menu.url.param"
+  >
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">redirect_url</field>
         <field
-      name="param_ids"
-      eval="[(0, 0, {'name': 'action', 'value': 'env.ref('spreadsheet_dashboard.ir_actions_dashboard_action').id'}), (0, 0, {'name': 'dashboard_id', 'value': 'env.ref('spreadsheet_dasbhoard_pms.spreadsheet_dashboard_group_sales').id'})]"
-    />
+      name="value"
+    >'/web#action=' + str(env.ref('spreadsheet_dashboard.ir_actions_dashboard_action').id) + '&amp;dashboard_id=' + str(env.ref('spreadsheet_dasbhoard_pms.spreadsheet_dashboard_production').id)</field>
     </record>
 </odoo>
