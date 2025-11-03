@@ -9,6 +9,7 @@ class User(PmsBaseModel):
     name: str = Field(alias="name")
     firstname: str = Field("", alias="firstname")
     lastname: str = Field("", alias="lastname")
+    login: str = Field("", alias="login")
     email: str = Field("", alias="email")
     phone: str = Field("", alias="phone")
     lang: str = Field("", alias="lang")
@@ -36,6 +37,7 @@ class UserUpdate(PmsBaseModel):
     firstname: str | None = Field(None, alias="firstname")
     lastname: str | None = Field(None, alias="lastname")
     email: str | None = Field(None, alias="email")
+    login: str = Field("", alias="login")
     phone: str | None = Field(None, alias="phone")
     lang: str | None = Field(None, alias="lang")
 
