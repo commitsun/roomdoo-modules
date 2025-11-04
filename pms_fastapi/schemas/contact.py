@@ -14,6 +14,7 @@ from .contact_tag import ContactTagId
 from .country import CountryId, CountrySummary
 from .country_state import CountryStateId
 from .payment_term import PaymentTermId
+from .pms_sale_channel import SaleChannelId
 from .pricelist import PricelistId
 
 
@@ -146,6 +147,7 @@ class ContactDetail(PmsBaseModel):
     street: str = Field("", alias="street")
     street2: str = Field("", alias="street2")
     zip: str = Field("", alias="zipCode")
+    default_commission: float = Field(0.0, alias="defaultCommission")
     city: str = Field("", alias="city")
     state: CountryStateId | None = None
     country: CountryId | None = None
@@ -157,6 +159,7 @@ class ContactDetail(PmsBaseModel):
     idNumbers: list[ContactIdNumberId] = Field(default_factory=list)
     fiscalIdNumber: str = ""
     fiscalIdNumberType: str = ""
+    saleChannel: SaleChannelId | None = None
 
     @classmethod
     def from_res_partner(cls, partner):
@@ -186,6 +189,10 @@ class ContactDetail(PmsBaseModel):
         if partner.property_product_pricelist:
             filtered_data["pricelist"] = PricelistId.from_product_pricelist(
                 partner.property_product_pricelist
+            )
+        if partner.sale_channel_id:
+            filtered_data["saleChannel"] = SaleChannelId.from_pms_sale_channel(
+                partner.sale_channel_id
             )
         filtered_data["phones"] = Phone.from_res_partner(partner)
         filtered_data["tags"] = [
@@ -227,6 +234,8 @@ class ContactInsert(PmsBaseModel):
     comment: str = Field("", alias="internalNotes")
     fiscalIdNumber: str = ""
     fiscalIdNumberType: str = ""
+    default_commission: float = Field(0.0, alias="defaultCommission")
+    sale_channel_id: int | None = Field(None, alias="saleChannel")
 
     def to_res_partner(self, extra_exclude=None) -> dict:
         exclude_fields = {

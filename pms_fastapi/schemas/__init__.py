@@ -8,3 +8,4 @@ from . import payment_term
 from . import pricelist
 from . import contact_id_number
 from . import contact_tag
+from . import pms_sale_channel
