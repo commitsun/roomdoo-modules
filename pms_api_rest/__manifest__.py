@@ -17,6 +17,7 @@
         "spreadsheet_dasbhoard_pms",
         "sql_export_excel",
         "feed_rss",
+        "pms_partner_type_residence",
     ],
     "external_dependencies": {
         "python": ["jwt", "simplejson", "marshmallow", "jose"],
