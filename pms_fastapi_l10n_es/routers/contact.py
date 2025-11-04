@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from odoo import models
+from odoo import api, models
 
 from odoo.addons.pms_fastapi.schemas.contact import (
     ContactInsert,
@@ -56,4 +56,10 @@ class PmsApiContactRouterHelper(models.AbstractModel):
                 )
             else:
                 partner.aeat_identification_type = False
+        return res
+
+    @api.model
+    def extra_features(self):
+        res = super().extra_features()
+        res.append("comercial_name")
         return res
