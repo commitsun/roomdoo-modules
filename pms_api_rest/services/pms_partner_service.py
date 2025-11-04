@@ -265,23 +265,23 @@ class PmsPartnerService(Component):
                     else None,
                     age=partner.age if partner.age else None,
                     mobile=partner.mobile if partner.mobile else None,
-                    residenceStreet=partner.residence_street
-                    if partner.residence_street
+                    residenceStreet=partner.residence_partner_id.street
+                    if partner.residence_partner_id.street
                     else None,
-                    residenceStreet2=partner.residence_street2
-                    if partner.residence_street2
+                    residenceStreet2=partner.residence_partner_id.street2
+                    if partner.residence_partner_id.street2
                     else None,
-                    residenceZip=partner.residence_zip
-                    if partner.residence_zip
+                    residenceZip=partner.residence_partner_id.zip
+                    if partner.residence_partner_id.zip
                     else None,
-                    residenceCity=partner.residence_city
-                    if partner.residence_city
+                    residenceCity=partner.residence_partner_id.city
+                    if partner.residence_partner_id.city
                     else None,
                     nationality=partner.nationality_id.id
                     if partner.nationality_id
                     else None,
-                    residenceStateId=partner.residence_state_id.id
-                    if partner.residence_state_id
+                    residenceStateId=partner.residence_partner_id.state_id.id
+                    if partner.residence_partner_id.state_id
                     else None,
                     street=partner.street if partner.street else None,
                     street2=partner.street2 if partner.street2 else None,
@@ -291,8 +291,8 @@ class PmsPartnerService(Component):
                     city=partner.city if partner.city else None,
                     isAgency=partner.is_agency,
                     isCompany=partner.is_company,
-                    residenceCountryId=partner.residence_country_id.id
-                    if partner.residence_country_id
+                    residenceCountryId=partner.residence_partner_id.country_id.id
+                    if partner.residence_partner_id.country_id
                     else None,
                     documentNumber=document_number if document_number else None,
                     documentType=document_type if document_type else None,
@@ -596,17 +596,21 @@ class PmsPartnerService(Component):
             if partner.birthdate_date
             else None,
             age=partner.age if partner.age else None,
-            residenceStreet=partner.residence_street
-            if partner.residence_street
+            residenceStreet=partner.residence_partner_id.street
+            if partner.residence_partner_id.street
             else None,
-            residenceStreet2=partner.residence_street2
-            if partner.residence_street2
+            residenceStreet2=partner.residence_partner_id.street2
+            if partner.residence_partner_id.street2
             else None,
-            residenceCity=partner.residence_city if partner.residence_city else None,
-            residenceZip=partner.residence_zip if partner.residence_zip else None,
+            residenceCity=partner.residence_partner_id.city
+            if partner.residence_partner_id.city
+            else None,
+            residenceZip=partner.residence_partner_id.zip
+            if partner.residence_partner_id.zip
+            else None,
             nationality=partner.nationality_id.id if partner.nationality_id else None,
-            residenceStateId=partner.residence_state_id.id
-            if partner.residence_state_id
+            residenceStateId=partner.residence_partner_id.state_id.id
+            if partner.residence_partner_id.state_id
             else None,
             isAgency=partner.is_agency,
             isCompany=partner.is_company,
