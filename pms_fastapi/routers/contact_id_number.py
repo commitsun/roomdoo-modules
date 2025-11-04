@@ -100,6 +100,28 @@ async def update_contact_id_number(
     return ContactIdNumberSummary.from_res_partner_id_number(id_number)
 
 
+@pms_api_router.delete(
+    "/contacts/{contact_id}/id-numbers/{idNumber_id}",
+    status_code=204,
+    tags=["contact_id_number"],
+)
+async def delete_contact_id_number(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    contact_id: int,
+    idNumber_id: int,
+):
+    id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
+    if id_number.partner_id.id != contact_id:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"The id number {idNumber_id} does not belog "
+                f"to the contact {contact_id}"
+            ),
+        )
+    id_number.sudo().unlink()
+
+
 class PmsApiContactIdNumberRouterHelper(models.AbstractModel):
     _name = "pms_api_contact.contact_id_number_router.helper"
     _description = "Pms api contact  id number Service Helper"
