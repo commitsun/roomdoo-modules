@@ -746,26 +746,24 @@ class PmsReservationService(Component):
                         ).isoformat()
                         if checkin_partner.birthdate_date
                         else None,
-                        residenceStreet=checkin_partner.residence_street
-                        if checkin_partner.residence_street
+                        residenceStreet=checkin_partner.street
+                        if checkin_partner.street
                         else None,
-                        zip=checkin_partner.residence_zip
-                        if checkin_partner.residence_zip
-                        else None,
-                        residenceCity=checkin_partner.residence_city
-                        if checkin_partner.residence_city
+                        zip=checkin_partner.zip if checkin_partner.zip else None,
+                        residenceCity=checkin_partner.city
+                        if checkin_partner.city
                         else None,
                         nationality=checkin_partner.nationality_id.id
                         if checkin_partner.nationality_id
                         else None,
-                        countryState=checkin_partner.residence_state_id.id
-                        if checkin_partner.residence_state_id
+                        countryState=checkin_partner.state_id.id
+                        if checkin_partner.state_id
                         else None,
-                        countryStateName=checkin_partner.residence_state_id.name
-                        if checkin_partner.residence_state_id
+                        countryStateName=checkin_partner.state_id.name
+                        if checkin_partner.state_id
                         else None,
-                        countryId=checkin_partner.residence_country_id.id
-                        if checkin_partner.residence_country_id
+                        countryId=checkin_partner.country_id.id
+                        if checkin_partner.country_id
                         else None,
                         checkinPartnerState=checkin_partner.state,
                         signature=checkin_partner.signature
@@ -1131,12 +1129,12 @@ class PmsReservationService(Component):
             "document_country_id": pms_checkin_partner_info.documentCountryId,
             "support_number": pms_checkin_partner_info.documentSupportNumber,
             "gender": pms_checkin_partner_info.gender,
-            "residence_street": pms_checkin_partner_info.residenceStreet,
+            "street": pms_checkin_partner_info.residenceStreet,
             "nationality_id": pms_checkin_partner_info.nationality,
-            "residence_zip": pms_checkin_partner_info.zip,
-            "residence_city": pms_checkin_partner_info.residenceCity,
-            "residence_state_id": pms_checkin_partner_info.countryState,
-            "residence_country_id": pms_checkin_partner_info.countryId,
+            "zip": pms_checkin_partner_info.zip,
+            "city": pms_checkin_partner_info.residenceCity,
+            "state_id": pms_checkin_partner_info.countryState,
+            "country_id": pms_checkin_partner_info.countryId,
             "origin_input_data": pms_checkin_partner_info.originInputData,
         }
         if pms_checkin_partner_info.partnerId != partner_id:
@@ -1853,13 +1851,17 @@ class PmsReservationService(Component):
                     # nationality
                     nationality=-1 if partner.nationality_id.id else None,
                     # residence info
-                    countryId=partner.residence_country_id
-                    if partner.residence_country_id
+                    countryId=partner.residence_partner_id.country_id.id
+                    if partner.residence_partner_id
                     else None,
-                    residenceStreet="#" if partner.residence_street else None,
-                    zip="#" if partner.residence_zip else None,
-                    residenceCity="#" if partner.residence_city else None,
-                    countryState=-1 if partner.residence_state_id.id else None,
+                    residenceStreet="#"
+                    if partner.residence_partner_id.street
+                    else None,
+                    zip="#" if partner.residence_partner_id.zip else None,
+                    residenceCity="#" if partner.residence_partner_id.city else None,
+                    countryState=-1
+                    if partner.residence_partner_id.state_id.id
+                    else None,
                     # is already in reservation
                     isAlreadyInReservation=True
                     if document_numbers_in_reservation
@@ -1960,23 +1962,15 @@ class PmsReservationService(Component):
             checkin_partner_record.nationality_id = pms_checkin_partner_info.nationality
         # residence info
         if pms_checkin_partner_info.countryId:
-            checkin_partner_record.residence_country_id = (
-                pms_checkin_partner_info.countryId
-            )
+            checkin_partner_record.country_id = pms_checkin_partner_info.countryId
         if pms_checkin_partner_info.zip:
-            checkin_partner_record.residence_zip = pms_checkin_partner_info.zip
+            checkin_partner_record.zip = pms_checkin_partner_info.zip
         if pms_checkin_partner_info.residenceCity:
-            checkin_partner_record.residence_city = (
-                pms_checkin_partner_info.residenceCity
-            )
+            checkin_partner_record.city = pms_checkin_partner_info.residenceCity
         if pms_checkin_partner_info.countryState:
-            checkin_partner_record.residence_state_id = (
-                pms_checkin_partner_info.countryState
-            )
+            checkin_partner_record.state_id = pms_checkin_partner_info.countryState
         if pms_checkin_partner_info.residenceStreet:
-            checkin_partner_record.residence_street = (
-                pms_checkin_partner_info.residenceStreet
-            )
+            checkin_partner_record.street = pms_checkin_partner_info.residenceStreet
         # contact
         if pms_checkin_partner_info.email:
             checkin_partner_record.email = pms_checkin_partner_info.email
