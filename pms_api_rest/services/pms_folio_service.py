@@ -463,7 +463,7 @@ class PmsFolioService(Component):
         folio = self.env["pms.folio"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=folio)
         transactions = []
-        PmsTransactiontInfo = self.env.datamodels["pms.transaction.info"]
+        PmsTransactionInfo = self.env.datamodels["pms.transaction.info"]
         if not folio:
             pass
         else:
@@ -474,9 +474,17 @@ class PmsFolioService(Component):
                 for payment in folio.payment_ids.filtered(
                     lambda p: p.state == "posted"
                 ):
+                    downpayment_invoice = next(
+                        (
+                            inv
+                            for inv in payment.reconciled_invoice_ids
+                            if inv._is_downpayment()
+                        ),
+                        None,
+                    )
                     payment._compute_pms_api_transaction_type()
                     transactions.append(
-                        PmsTransactiontInfo(
+                        PmsTransactionInfo(
                             id=payment.id,
                             amount=round(payment.amount, 2),
                             journalId=payment.journal_id.id,
@@ -492,9 +500,9 @@ class PmsFolioService(Component):
                             else None,
                             reference=payment.ref if payment.ref else None,
                             isReconcilied=payment.is_reconciled,
-                            downPaymentInvoiceId=payment.reconciled_invoice_ids.filtered(
-                                lambda inv: inv._is_downpayment()
-                            ),
+                            downPaymentInvoiceId=downpayment_invoice.id
+                            if downpayment_invoice
+                            else None,
                         )
                     )
         return transactions
@@ -2193,8 +2201,12 @@ class PmsFolioService(Component):
                         update_reservation_ids.append(val[1])
                     if val[0] == 4:
                         update_reservation_ids.append(val[1])
+                # Get old reservations to cancel, filter by created by the user to avoid
+                # cancel reservations added manually
                 old_reservations_to_cancel = folio.reservation_ids.filtered(
-                    lambda r: r.state != "cancel" and r.id not in update_reservation_ids
+                    lambda r: r.state != "cancel"
+                    and r.create_uid == self.env.user.id
+                    and r.id not in update_reservation_ids
                 )
                 old_reservations_to_cancel.with_context(
                     modified=True, force_write_blocked=True
