@@ -620,8 +620,8 @@ class PmsPartnerService(Component):
             city=partner.city if partner.city else None,
             stateId=partner.state_id.id if partner.state_id else None,
             countryId=partner.country_id.id if partner.country_id else None,
-            residenceCountryId=partner.residence_country_id.id
-            if partner.residence_country_id
+            residenceCountryId=partner.residence_partner_id.country_id.id
+            if partner.residence_partner_id.country_id
             else None,
             vatNumber=partner.vat
             if partner.vat
@@ -718,12 +718,12 @@ class PmsPartnerService(Component):
                     ).isoformat()
                     if partner.birthdate_date
                     else None,
-                    residenceStreet=partner.residence_street or None,
-                    zip=partner.residence_zip or None,
-                    residenceCity=partner.residence_city or None,
+                    residenceStreet=partner.residence_partner_id.street or None,
+                    zip=partner.residence_partner_id.zip or None,
+                    residenceCity=partner.residence_partner_id.city or None,
                     nationality=partner.nationality_id.id or None,
-                    countryId=partner.residence_country_id or None,
-                    countryState=partner.residence_state_id.id or None,
+                    countryId=partner.residence_partner_id.country_id or None,
+                    countryState=partner.residence_partner_id.state_id.id or None,
                 )
             )
         return partners
@@ -841,21 +841,23 @@ class PmsPartnerService(Component):
                 if partner.birthdate_date
                 else None,
                 age=partner.age if partner.age else None,
-                residenceStreet=partner.residence_street
-                if partner.residence_street
+                residenceStreet=partner.residence_partner_id.street
+                if partner.residence_partner_id.street
                 else None,
-                residenceStreet2=partner.residence_street2
-                if partner.residence_street2
+                residenceStreet2=partner.residence_partner_id.street2
+                if partner.residence_partner_id.street2
                 else None,
-                residenceZip=partner.residence_zip if partner.residence_zip else None,
-                residenceCity=partner.residence_city
-                if partner.residence_city
+                residenceZip=partner.residence_partner_id.zip
+                if partner.residence_partner_id.zip
+                else None,
+                residenceCity=partner.residence_partner_id.city
+                if partner.residence_partner_id.city
                 else None,
                 nationality=partner.nationality_id.id
                 if partner.nationality_id
                 else None,
-                residenceStateId=partner.residence_state_id.id
-                if partner.residence_state_id
+                residenceStateId=partner.residence_partner_id.state_id.id
+                if partner.residence_partner_id.state_id
                 else None,
                 street=partner.street if partner.street else None,
                 street2=partner.street2 if partner.street2 else None,
@@ -865,8 +867,8 @@ class PmsPartnerService(Component):
                 city=partner.city if partner.city else None,
                 isAgency=partner.is_agency,
                 isCompany=partner.is_company,
-                residenceCountryId=partner.residence_country_id.id
-                if partner.residence_country_id
+                residenceCountryId=partner.residence_partner_id.country_id.id
+                if partner.residence_partner_id.country_id
                 else None,
                 vatNumber=partner.vat
                 if partner.vat
@@ -918,13 +920,13 @@ class PmsPartnerService(Component):
             "mobile": pms_partner_info.mobile,
             "phone": pms_partner_info.phone,
             "gender": pms_partner_info.gender,
-            "residence_street": pms_partner_info.residenceStreet,
-            "residence_street2": pms_partner_info.residenceStreet2,
+            # "residence_street": pms_partner_info.residenceStreet,
+            # "residence_street2": pms_partner_info.residenceStreet2,
             "nationality_id": pms_partner_info.nationality,
-            "residence_zip": pms_partner_info.residenceZip,
-            "residence_city": pms_partner_info.residenceCity,
-            "residence_state_id": pms_partner_info.residenceStateId,
-            "residence_country_id": pms_partner_info.residenceCountryId,
+            # "residence_zip": pms_partner_info.residenceZip,
+            # "residence_city": pms_partner_info.residenceCity,
+            # "residence_state_id": pms_partner_info.residenceStateId,
+            # "residence_country_id": pms_partner_info.residenceCountryId,
             "is_agency": pms_partner_info.isAgency,
             "is_company": pms_partner_info.isCompany,
             "street": pms_partner_info.street,
