@@ -4,6 +4,7 @@ from odoo import fields, models
 class ResPartnerIdCategory(models.Model):
     _inherit = "res.partner.id_category"
 
+    validable_document = fields.Boolean(string="Validable document")
     aeat_identification_type = fields.Selection(
         string="AEAT Identification type equivalent",
         help=(
