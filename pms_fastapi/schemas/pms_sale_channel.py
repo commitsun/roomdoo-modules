@@ -11,7 +11,7 @@ class SaleChannelSummary(PmsBaseModel):
         return cls(
             id=channel.id,
             name=channel.name,
-            type=channel.type,
+            type=channel.channel_type,
         )
 
 

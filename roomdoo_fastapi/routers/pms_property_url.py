@@ -33,6 +33,8 @@ async def get_property_links(
             detail="property not found",
         )
     menus = property_obj.get_roomdoo_app_menu() + property_obj.get_roomdoo_support_url()
+    if not env.user.has_group("base.group_user"):
+        menus = menus.filtered(lambda r: not r.report_url)
     return [PropertyLink.from_pms_property_menu(menu) for menu in menus]
 
 
