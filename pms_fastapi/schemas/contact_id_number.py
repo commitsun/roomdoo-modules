@@ -22,6 +22,7 @@ class ContactIdNumberCategorySummary(PmsBaseModel):
     id: int
     name: str
     code: str
+    isValidableDocument: bool = Field()
     countries: list[CountryId]
 
     @classmethod
@@ -30,6 +31,7 @@ class ContactIdNumberCategorySummary(PmsBaseModel):
             "id": id_number_category.id,
             "name": id_number_category.name,
             "code": id_number_category.code,
+            "isValidableDocument": id_number_category.validable_document,
             "countries": [],
         }
         for country in id_number_category.country_ids:

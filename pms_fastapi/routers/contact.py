@@ -124,7 +124,7 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     _description = "Pms api contact Service Helper"
 
     def _get_domain_adapter(self):
-        return []
+        return [("type", "in", ["contact"])]
 
     @property
     def model_adapter(self) -> FilteredModelAdapter[Partner]:

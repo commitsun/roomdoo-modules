@@ -4,6 +4,7 @@ from fastapi import Depends
 
 from odoo import models
 from odoo.api import Environment
+from odoo.osv import expression
 
 from odoo.addons.fastapi.dependencies import (
     paging,
@@ -52,4 +53,8 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     _description = "Pms api customer Service Helper"
 
     def _get_domain_adapter(self):
-        return [("customer_rank", ">", 0)]
+        res = super()._get_domain_adapter()
+        if res is None:
+            res = []
+        res = expression.AND([res, [("customer_rank", ">", 0)]])
+        return res
