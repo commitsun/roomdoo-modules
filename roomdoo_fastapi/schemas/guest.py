@@ -1,3 +1,4 @@
+from datetime import date
 from enum import Enum
 from typing import Annotated
 
@@ -88,18 +89,18 @@ class GuestSearch(BaseSearch):
                 "e.g., ?countries=Spain&countries=France",
             ),
         ] = None,
-        checkin_date_from: Annotated[
-            str | None,
+        checkinDateFrom: Annotated[
+            date | None,
             Query(
                 description="Search contacts with a checkin between dates "
-                "(only works if checkin_date_to is also setted)"
+                "(only works if checkinDateTo is also setted)"
             ),
         ] = None,
-        checkin_date_to: Annotated[
-            str | None,
+        checkinDateTo: Annotated[
+            date | None,
             Query(
                 description="Search contacts with a checkin between dates "
-                "(only works if checkin_date_from is also setted)"
+                "(only works if checkinDateFrom is also setted)"
             ),
         ] = None,
     ):
@@ -111,8 +112,8 @@ class GuestSearch(BaseSearch):
         self.inHouse = inHouse
         self.vat = vat
         self.phone = phone
-        self.checkin_date_from = checkin_date_from
-        self.checkin_date_to = checkin_date_to
+        self.checkinDateFrom = checkinDateFrom
+        self.checkinDateTo = checkinDateTo
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -159,27 +160,27 @@ class GuestSearch(BaseSearch):
         if self.countries:
             subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
             domain = expression.AND([domain, expression.OR(subdomains)])
-        if self.checkin_date_from and self.checkin_date_to:
+        if self.checkinDateFrom and self.checkinDateTo:
             subdomains = expression.OR(
                 [
                     [
                         (
                             "pms_checkin_partner_ids.arrival",
                             ">=",
-                            self.checkin_date_from,
+                            self.checkinDateFrom,
                         ),
-                        ("pms_checkin_partner_ids.arrival", "<=", self.checkin_date_to),
+                        ("pms_checkin_partner_ids.arrival", "<=", self.checkinDateTo),
                     ],
                     [
                         (
                             "pms_checkin_partner_ids.departure",
                             ">=",
-                            self.checkin_date_from,
+                            self.checkinDateFrom,
                         ),
                         (
                             "pms_checkin_partner_ids.departure",
                             "<=",
-                            self.checkin_date_to,
+                            self.checkinDateTo,
                         ),
                     ],
                 ]
