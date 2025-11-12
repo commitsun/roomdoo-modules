@@ -6,6 +6,8 @@
     "version": "16.0.1.1.0",
     "license": "AGPL-3",
     "depends": [
+        "pms_partner_identification",
+        "base_vat",
         "partner_identification_map_partner_field",
     ],
     "data": [],
