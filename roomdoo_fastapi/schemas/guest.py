@@ -9,7 +9,6 @@ from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
-from odoo.addons.pms_fastapi.schemas.pms_reservation import ReservationId
 from odoo.addons.roomdoo_fastapi.schemas.id_document import IdDocument
 
 
@@ -27,7 +26,7 @@ GUEST_ORDER_MAPPING = {
 class GuestSummary(ContactBase):
     identificationDocuments: list[IdDocument]
     internalNotes: str = ""
-    lastReservation: ReservationId
+    lastReservationDate: date | None = None
     inHouse: bool
 
     @classmethod
@@ -39,9 +38,7 @@ class GuestSummary(ContactBase):
         ]
         data["inHouse"] = partner.in_house
         if partner.last_reservation_id:
-            data["lastReservation"] = ReservationId.from_pms_reservation(
-                partner.last_reservation_id
-            )
+            data["lastReservationDate"] = partner.last_reservation_id.checkin
         return cls(**data)
 
 
