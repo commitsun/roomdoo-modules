@@ -8,8 +8,7 @@
     />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='code']" position="after">
-                <field name="validable_document" />
-               <field name="aeat_identification_type" />
+               <field name="partner_map_field" />
             </xpath>
         </field>
     </record>
