@@ -2,12 +2,13 @@ from fastapi import HTTPException
 
 from odoo import api, models
 
+from odoo.addons.l10n_es_aeat_partner_identification.models.res_partner import (
+    AEAT_TYPES_ID_CATEGORY_MAP,
+)
 from odoo.addons.pms_fastapi.schemas.contact import (
     ContactInsert,
     ContactUpdate,
 )
-
-from .contact_fiscal_document_type import AEAT_TYPES_MAP
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):
@@ -42,7 +43,7 @@ class PmsApiContactRouterHelper(models.AbstractModel):
             if data.fiscalIdNumberType != "vat":
                 odoo_fiscal_type = [
                     key
-                    for key, value in AEAT_TYPES_MAP.items()
+                    for key, value in AEAT_TYPES_ID_CATEGORY_MAP.items()
                     if value == data.fiscalIdNumberType
                 ]
                 if not odoo_fiscal_type:

@@ -81,6 +81,15 @@ class Phone(PmsBaseModel):
         return res
 
 
+class ContactId(PmsBaseModel):
+    id: int
+    name: str | None = None
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        return cls(id=partner.id, name=partner.name)
+
+
 class ContactBase(PmsBaseModel):
     id: int
     name: str
