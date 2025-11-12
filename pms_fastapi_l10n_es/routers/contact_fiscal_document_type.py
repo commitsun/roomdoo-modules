@@ -1,10 +1,8 @@
 from odoo import models
 
-AEAT_TYPES_MAP = {
-    "03": "passport",
-    "05": "residence_card",
-    "06": "other",
-}
+from odoo.addons.l10n_es_aeat_partner_identification.models.res_partner import (
+    AEAT_TYPES_ID_CATEGORY_MAP,
+)
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):
@@ -12,5 +10,5 @@ class PmsApiContactRouterHelper(models.AbstractModel):
 
     def get_fiscal_document_types(self) -> list[str]:
         res = super().get_fiscal_document_types()
-        res += ["passport", "residence_card", "other"]
+        res += list(AEAT_TYPES_ID_CATEGORY_MAP.values())
         return res
