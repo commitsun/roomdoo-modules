@@ -1,18 +1,77 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
+from fastapi.responses import Response
 
 from odoo import models
 from odoo.api import Environment
 
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
+from odoo.addons.pms_fastapi.schemas.contact import ContactId
 from odoo.addons.pms_fastapi.schemas.contact_id_number import (
     ContactIdNumberCategorySummary,
     ContactIdNumberInsert,
     ContactIdNumberSummary,
     ContactIdNumberUpdate,
 )
+
+
+@pms_api_router.get(
+    "/contacts/duplicate/id-numbers",
+    response_model=ContactId,
+    responses={
+        204: {"description": "No duplicate identification number found"},
+    },
+    tags=["utilities"],
+)
+async def get_duplicate_id_numbers(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    category: int,
+    number: str,
+    country: int,
+) -> ContactId:
+    """
+    Get duplicate contact by identification number. Should be called before
+    creating or updating a contact id number.
+    """
+    duplicate_partner = (
+        env["res.partner.id_number"]
+        .sudo()
+        .get_duplicate(
+            number,
+            env["res.partner.id_category"].sudo().browse(category),
+            env["res.country"].sudo().browse(country),
+        )
+    )
+    if duplicate_partner:
+        return ContactId.from_res_partner(duplicate_partner)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@pms_api_router.get(
+    "/contacts/duplicate/fiscal-number",
+    response_model=ContactId,
+    responses={
+        204: {"description": "No duplicate fiscal number found"},
+    },
+    tags=["utilities"],
+)
+async def get_duplicate_fiscal_number(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    type: str,
+    number: str,
+    country: int | None = None,
+) -> ContactId:
+    """
+    Get duplicate contact by fiscal number. Should be called before
+    creating or updating a contact fiscal number.
+    """
+    helper = env["pms_api_contact.contact_id_number_router.helper"].new()
+    duplicate_partner = helper.get_duplicate_fiscal_number(number, type, country)
+    if duplicate_partner:
+        return ContactId.from_res_partner(duplicate_partner)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @pms_api_router.get(
@@ -125,6 +184,15 @@ async def delete_contact_id_number(
 class PmsApiContactIdNumberRouterHelper(models.AbstractModel):
     _name = "pms_api_contact.contact_id_number_router.helper"
     _description = "Pms api contact  id number Service Helper"
+
+    def get_duplicate_fiscal_number(
+        self, fiscal_number: str, document_type: str, country_id: int | None = None
+    ):
+        if document_type == "vat":
+            country = self.env["res.country"].browse(country_id) if country_id else None
+            return (
+                self.env["res.partner"].sudo().get_duplicate_vat(fiscal_number, country)
+            )
 
     def _prepare_create_id_number_vals(
         self,

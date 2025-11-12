@@ -14,6 +14,7 @@
         "account_payment_partner",
         "pms_api_rest",  # temporal
         "pms_l10n_es",  # temporal
+        "partner_identification_map_partner_field",
     ],
     "data": [
         "security/pms_fastapi_groups.xml",
