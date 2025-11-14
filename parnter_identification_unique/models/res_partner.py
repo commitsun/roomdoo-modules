@@ -54,7 +54,7 @@ class ResPartner(models.Model):
                 [("vat", "=ilike", vat_with_country)],
                 [
                     ("vat", "=ilike", vat_without_country),
-                    ("country_id", "=", country.id),
+                    ("country_id", "=", self._get_vat_country_code(vat, country)),
                 ],
             ]
         )
