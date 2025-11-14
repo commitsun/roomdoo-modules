@@ -211,8 +211,9 @@ class ContactDetail(PmsBaseModel):
             ContactIdNumberId.from_res_partner_id_number(id_number)
             for id_number in partner.id_numbers
         ]
-        filtered_data["fiscalIdNumber"] = partner.vat or ""
-        filtered_data["fiscalIdNumberType"] = "vat"
+        if partner.vat:
+            filtered_data["fiscalIdNumber"] = partner.vat
+            filtered_data["fiscalIdNumberType"] = "vat"
         return cls(**filtered_data)
 
 
