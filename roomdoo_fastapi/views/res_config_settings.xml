@@ -11,7 +11,7 @@
           class="app_settings_block"
           data-string="Roomdoo"
           string="Roomdoo"
-          data-key="roomdoo"
+          data-key="roomdoo_fastapi"
         >
                         <h2>Roomdoo</h2>
                         <div
