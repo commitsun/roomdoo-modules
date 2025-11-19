@@ -1,0 +1,218 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* roomdoo_fastapi
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-18 11:29+0000\n"
+"PO-Revision-Date: 2025-11-18 11:29+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_res_config_settings
+msgid "Config Settings"
+msgstr "Ajustes de configuración"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_auth_jwt_validator_form
+msgid "Cookie"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__expire
+msgid "Expire"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__fastapi_refresh_token_ids
+msgid "Fastapi Refresh Token"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_fastapi_user_refresh_token
+msgid "Fastapi refresh tokens"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__id
+msgid "ID"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_image
+msgid "Image of the Roomdoo FastAPI instance"
+msgstr "Imágen de la instancia"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__in_house
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__in_house
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__in_house
+msgid "In House"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_auth_jwt_validator
+msgid "JWT Validator Configuration"
+msgstr "Configuración del validador JWT"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__last_reservation_id
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__last_reservation_id
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__last_reservation_id
+msgid "Last Reservation"
+msgstr "Última reserva"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_instance_name
+msgid "Name of the Roomdoo FastAPI instance"
+msgstr "Nombre de la instancia"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_api_agency_agency_router_helper
+msgid "Pms api agency Service Helper"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_api_contact_contact_router_helper
+msgid "Pms api contact Service Helper"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_api_customer_customer_router_helper
+msgid "Pms api customer Service Helper"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_api_guest_guest_router_helper
+msgid "Pms api guest Service Helper"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_api_supplier_supplier_router_helper
+msgid "Pms api supplier Service Helper"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_cookie_max_age
+msgid "Refresh Cookie Max Age"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_cookie_name
+msgid "Refresh Cookie Name"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_token_path
+msgid "Refresh Token Path"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_token_secret
+msgid "Refresh Token Secret"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.res_config_settings_view_form
+msgid "Roomdoo"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_image
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.res_config_settings_view_form
+msgid "Roomdoo FastAPI Image"
+msgstr "Imágen Roomdoo"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_instance_name
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.res_config_settings_view_form
+msgid "Roomdoo FastAPI Instance Name"
+msgstr "Nombre de la instancia Roomdoo"
+
+#. module: roomdoo_fastapi
+#. odoo-python
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#, python-format
+msgid "SQL query not found"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#. odoo-python
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#: code:addons/roomdoo_fastapi/routers/reports.py:0
+#, python-format
+msgid "The Query params was modifieds, please contact the administrator"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.constraint,message:roomdoo_fastapi.constraint_fastapi_user_refresh_token_unique_token
+msgid "The token must be unique!"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__token
+msgid "Token"
+msgstr ""
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__total_invoiced_last_year
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__total_invoiced_last_year
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__total_invoiced_last_year
+msgid "Total Invoiced Last Year"
+msgstr "Total facturado último año"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_res_users
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__user_id
+msgid "User"
+msgstr "Usuario"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_pms_fastapi_login_endpoint
+msgid "login endpoint helper"
+msgstr ""
