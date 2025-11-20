@@ -17,4 +17,5 @@
     ],
     "data": ["data/res_partner_id_category.xml"],
     "installable": True,
+    "auto_install": True,
 }
