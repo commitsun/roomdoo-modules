@@ -159,6 +159,29 @@ async def update_contact_id_number(
     return ContactIdNumberSummary.from_res_partner_id_number(id_number)
 
 
+@pms_api_router.put(
+    "/contacts/{contact_id}/id-numbers/{idNumber_id}/set-fiscal-number",
+    response_model=ContactIdNumberSummary,
+    tags=["contact_id_number"],
+)
+async def set_fiscal_number_contact_id_number(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    contact_id: int,
+    idNumber_id: int,
+) -> ContactIdNumberSummary:
+    id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
+    if id_number.partner_id.id != contact_id:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"The id number {idNumber_id} does not belog "
+                f"to the contact {contact_id}"
+            ),
+        )
+    id_number.sudo().set_partner_id_field()
+    return ContactIdNumberSummary.from_res_partner_id_number(id_number)
+
+
 @pms_api_router.delete(
     "/contacts/{contact_id}/id-numbers/{idNumber_id}",
     status_code=204,
