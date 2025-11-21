@@ -1,4 +1,4 @@
-<odoo>
+<odoo noupdate="1">
     <record id="demo_validator" model="auth.jwt.validator">
         <field name="name">api_pms</field>
         <field name="audience">api_pms</field>
