@@ -5,9 +5,7 @@
     "category": "Generic Modules/Property Management System",
     "version": "16.0.1.1.0",
     "license": "AGPL-3",
-    "depends": [
-        "partner_identification",
-    ],
+    "depends": ["partner_identification", "pms_partner_identification"],
     "data": ["views/res_partner_id_category.xml"],
     "installable": True,
 }
