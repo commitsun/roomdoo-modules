@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<odoo noupdate="1">
-    <record id="pms_l10n_es.document_type_dni" model="res.partner.id_category">
+<odoo>
+    <record
+    id="pms_partner_identification.document_type_national_id"
+    model="res.partner.id_category"
+  >
         <field name="partner_map_field">vat</field>
     </record>
     <record
