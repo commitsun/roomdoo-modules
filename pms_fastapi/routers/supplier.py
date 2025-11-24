@@ -13,48 +13,48 @@ from odoo.addons.fastapi.schemas import PagedCollection, Paging
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.dependencies import create_order_dependency
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
-from odoo.addons.roomdoo_fastapi.schemas.agency import (
-    AGENCY_ORDER_MAPPING,
-    AgencyOrderField,
-    AgencySearch,
-    AgencySummary,
+from odoo.addons.pms_fastapi.schemas.supplier import (
+    SUPPLIER_ORDER_MAPPING,
+    SupplierOrderField,
+    SupplierSearch,
+    SupplierSummary,
 )
 
 ContactOrderDependency = create_order_dependency(
-    AgencyOrderField, AGENCY_ORDER_MAPPING, ["name"]
+    SupplierOrderField, SUPPLIER_ORDER_MAPPING, ["name"]
 )
 
 
 @pms_api_router.get(
-    "/agencies", response_model=PagedCollection[AgencySummary], tags=["contact"]
+    "/suppliers", response_model=PagedCollection[SupplierSummary], tags=["contact"]
 )
-async def list_agencies(
+async def list_suppliers(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
-    filters: Annotated[AgencySearch, Depends()],
+    filters: Annotated[SupplierSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[AgencySummary]:
-    """Get the list of the agencies"""
-    count, agencies = (
-        env["pms_api_agency.agency_router.helper"]
+) -> list[SupplierSummary]:
+    """Get the list of the suppliers"""
+    count, suppliers = (
+        env["pms_api_supplier.supplier_router.helper"]
         .new()
         ._search(paging, filters, orderBy)
     )
 
-    return PagedCollection[AgencySummary](
+    return PagedCollection[SupplierSummary](
         count=count,
-        items=[AgencySummary.from_res_partner(agency) for agency in agencies],
+        items=[SupplierSummary.from_res_partner(supplier) for supplier in suppliers],
     )
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):
-    _name = "pms_api_agency.agency_router.helper"
+    _name = "pms_api_supplier.supplier_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
-    _description = "Pms api agency Service Helper"
+    _description = "Pms api supplier Service Helper"
 
     def _get_domain_adapter(self):
         res = super()._get_domain_adapter()
         if res is None:
             res = []
-        res = expression.AND([res, [("is_agency", "=", True)]])
+        res = expression.AND([res, [("supplier_rank", ">", 0)]])
         return res
