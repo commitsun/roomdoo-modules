@@ -5,3 +5,7 @@ from . import test_languages
 from . import test_user
 from . import test_properties
 from . import test_contact_id_numbers
+from . import test_agencies
+from . import test_customers
+from . import test_guests
+from . import test_suppliers

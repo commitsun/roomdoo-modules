@@ -9,7 +9,7 @@ from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
-from odoo.addons.roomdoo_fastapi.schemas.id_document import IdDocument
+from odoo.addons.pms_fastapi.schemas.id_document import IdDocument
 
 
 class GuestOrderField(str, Enum):

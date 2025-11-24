@@ -9,3 +9,7 @@ from . import pricelist
 from . import contact_id_number
 from . import contact_tag
 from . import pms_sale_channel
+from . import agency
+from . import customer
+from . import supplier
+from . import guest
