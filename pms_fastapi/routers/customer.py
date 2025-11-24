@@ -13,46 +13,48 @@ from odoo.addons.fastapi.schemas import PagedCollection, Paging
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.dependencies import create_order_dependency
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
-from odoo.addons.roomdoo_fastapi.schemas.guest import (
-    GUEST_ORDER_MAPPING,
-    GuestOrderField,
-    GuestSearch,
-    GuestSummary,
+from odoo.addons.pms_fastapi.schemas.customer import (
+    CUSTOMER_ORDER_MAPPING,
+    CustomerOrderField,
+    CustomerSearch,
+    CustomerSummary,
 )
 
 ContactOrderDependency = create_order_dependency(
-    GuestOrderField, GUEST_ORDER_MAPPING, ["name"]
+    CustomerOrderField, CUSTOMER_ORDER_MAPPING, ["name"]
 )
 
 
 @pms_api_router.get(
-    "/guests", response_model=PagedCollection[GuestSummary], tags=["contact"]
+    "/customers", response_model=PagedCollection[CustomerSummary], tags=["contact"]
 )
-async def list_guests(
+async def list_customers(
     env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
-    filters: Annotated[GuestSearch, Depends()],
+    filters: Annotated[CustomerSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[GuestSummary]:
-    """Get the list of the guests"""
-    count, guests = (
-        env["pms_api_guest.guest_router.helper"].new()._search(paging, filters, orderBy)
+) -> list[CustomerSummary]:
+    """Get the list of the customers"""
+    count, customers = (
+        env["pms_api_customer.customer_router.helper"]
+        .new()
+        ._search(paging, filters, orderBy)
     )
 
-    return PagedCollection[GuestSummary](
+    return PagedCollection[CustomerSummary](
         count=count,
-        items=[GuestSummary.from_res_partner(guest) for guest in guests],
+        items=[CustomerSummary.from_res_partner(customer) for customer in customers],
     )
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):
-    _name = "pms_api_guest.guest_router.helper"
+    _name = "pms_api_customer.customer_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
-    _description = "Pms api guest Service Helper"
+    _description = "Pms api customer Service Helper"
 
     def _get_domain_adapter(self):
         res = super()._get_domain_adapter()
         if res is None:
             res = []
-        res = expression.AND([res, [("pms_checkin_partner_ids", "!=", False)]])
+        res = expression.AND([res, [("customer_rank", ">", 0)]])
         return res
