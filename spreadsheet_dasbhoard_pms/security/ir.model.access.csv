@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_hotel_room_type_daily_summary,access.hotel.room.type.daily.summary,model_hotel_room_type_daily_summary,,1,0,0,0
+access_hotel_room_type_daily_summary,access.hotel.room.type.daily.summary,model_hotel_room_type_daily_summary,pms.group_pms_user,1,0,0,0
+access_pms_room_history,access.pms.room.history,model_pms_room_history,pms.group_pms_user,1,1,1,0
