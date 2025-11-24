@@ -1,5 +1,5 @@
-from odoo.tests.common import TransactionCase
 from odoo.exceptions import ValidationError
+from odoo.tests.common import TransactionCase
 
 
 class TestRoomdooAppMenu(TransactionCase):
@@ -83,9 +83,8 @@ class TestRoomdooAppMenu(TransactionCase):
 
         # Get menus for property
         menus = self.property.get_roomdoo_app_menu()
-        menu_urls = [menu["url"] for menu in menus]
-        self.assertIn(property_menu.generate_url(self.property), menu_urls)
-        self.assertIn(global_menu.generate_url(self.property), menu_urls)
+        self.assertIn(property_menu, menus)
+        self.assertIn(global_menu, menus)
 
     def test_param_evaluation(self):
         """Test parameter value evaluation"""
