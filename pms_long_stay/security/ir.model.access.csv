@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pms_reservation_long_stay_group_user,pms.reservation.long.stay.group.user,model_pms_reservation_long_stay_group,pms.group_pms_user,1,1,1,1
