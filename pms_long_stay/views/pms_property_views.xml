@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_pms_property_form_week_start_day" model="ir.ui.view">
+        <field name="name">pms.property.form.week.start.day</field>
+        <field name="model">pms.property</field>
+
+        <!-- TODO: adjust inherit_id to match your real PMS property form view -->
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+
+        <field name="arch" type="xml">
+
+            <!-- Insert week_start_day right after timezone field -->
+            <xpath expr="//field[@name='tz']" position="after">
+                <field name="week_start_day" />
+            </xpath>
+            <xpath expr="//page[@name='property_invoicing']/group" position="inside">
+                <field name="long_stay_billing_timing" />
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
