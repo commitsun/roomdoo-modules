@@ -140,3 +140,63 @@ class TestContactsEndpoints(CommonTestRoomdooApi):
             self.assertEqual(residence_partner.street, "456 Elm St")
             self.assertEqual(residence_partner.city, "Othertown")
             self.assertEqual(residence_partner.zip, "67890")
+
+    def test_contact_count(self):
+        """Test the contact count endpoint."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/contacts-count")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            count_from_endpoint = response.json()
+            self.assertIsInstance(count_from_endpoint, int)
+
+            # Call contacts endpoint to get actual count
+            response = test_client.get("/contacts")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            contacts_count = response.json().get("count")
+            self.assertEqual(count_from_endpoint, contacts_count)
+
+    def test_customer_count(self):
+        """Test the customer count endpoint."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/customers-count")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            count_from_endpoint = response.json()
+            self.assertIsInstance(count_from_endpoint, int)
+
+            # Call customers endpoint to get actual count
+            response = test_client.get("/customers")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            customers_count = response.json().get("count")
+            self.assertEqual(count_from_endpoint, customers_count)
+
+    def test_supplier_count(self):
+        """Test the supplier count endpoint."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/suppliers-count")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            count_from_endpoint = response.json()
+            self.assertIsInstance(count_from_endpoint, int)
+
+            # Call suppliers endpoint to get actual count
+            response = test_client.get("/suppliers")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            suppliers_count = response.json().get("count")
+            self.assertEqual(count_from_endpoint, suppliers_count)
+
+    def test_guests_count(self):
+        """Test the guests count endpoint."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/guests-count")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            count_from_endpoint = response.json()
+            self.assertIsInstance(count_from_endpoint, int)
+
+            # Call guests endpoint to get actual count
+            response = test_client.get("/guests")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            guests_count = response.json().get("count")
+            self.assertEqual(count_from_endpoint, guests_count)
