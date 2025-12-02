@@ -45,8 +45,22 @@ async def update_user_image(
     image: Annotated[UploadFile, File(description="User image")],
 ):
     contents = await image.read()
+    if not contents:
+        raise HTTPException(
+            status_code=400,
+            detail="Empty image file uploaded. Use DELETE to remove image.",
+        )
     helper = env["pms_api.user_router.helper"].new()
     helper.update_user_image(env.user.id, base64.b64encode(contents))
+    return User.from_res_users(env.user)
+
+
+@pms_api_router.delete("/user/image", response_model=User, tags=["user"])
+async def delete_user_image(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+):
+    helper = env["pms_api.user_router.helper"].new()
+    helper.update_user_image(env.user.id, False)
     return User.from_res_users(env.user)
 
 
