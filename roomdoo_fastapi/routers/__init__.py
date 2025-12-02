@@ -5,3 +5,6 @@ from . import pms_property_url
 from . import contact
 from . import zip_autocomplete
 from . import reports
+from . import customer
+from . import guest
+from . import supplier

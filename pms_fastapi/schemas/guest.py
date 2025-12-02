@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Annotated
 
 from fastapi import Query
+from fastapi.params import Query as QueryType
 
 from odoo import api
 from odoo.osv import expression
@@ -100,16 +101,54 @@ class GuestSearch(BaseSearch):
             ),
         ] = None,
     ):
-        self.pmsProperty = pmsProperty
-        self.globalSearch = globalSearch
-        self.name = name
-        self.email = email
-        self.countries = countries
-        self.inHouse = inHouse
-        self.vat = vat
-        self.phone = phone
-        self.checkinDateFrom = checkinDateFrom
-        self.checkinDateTo = checkinDateTo
+        if not isinstance(pmsProperty, QueryType):
+            self.pmsProperty = pmsProperty
+        else:
+            self.pmsProperty = None
+        if not isinstance(globalSearch, QueryType):
+            self.globalSearch = globalSearch
+        else:
+            self.globalSearch = None
+
+        if not isinstance(name, QueryType):
+            self.name = name
+        else:
+            self.name = None
+
+        if not isinstance(email, QueryType):
+            self.email = email
+        else:
+            self.email = None
+
+        if not isinstance(countries, QueryType):
+            self.countries = countries
+        else:
+            self.countries = None
+
+        if not isinstance(inHouse, QueryType):
+            self.inHouse = inHouse
+        else:
+            self.inHouse = None
+
+        if not isinstance(vat, QueryType):
+            self.vat = vat
+        else:
+            self.vat = None
+
+        if not isinstance(phone, QueryType):
+            self.phone = phone
+        else:
+            self.phone = None
+
+        if not isinstance(checkinDateFrom, QueryType):
+            self.checkinDateFrom = checkinDateFrom
+        else:
+            self.checkinDateFrom = None
+
+        if not isinstance(checkinDateTo, QueryType):
+            self.checkinDateTo = checkinDateTo
+        else:
+            self.checkinDateTo = None
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []

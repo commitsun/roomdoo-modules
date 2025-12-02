@@ -1,9 +1,27 @@
-from odoo import models
+from typing import Annotated
 
+from fastapi import Depends
+
+from odoo import models
+from odoo.api import Environment
+
+from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import (
     ContactInsert,
     ContactUpdate,
 )
+
+
+@pms_api_router.get(
+    "/contacts-count",
+    response_model=int,
+    tags=["contact"],
+)
+async def count_contacts(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+) -> int:
+    return env["pms_api_contact.contact_router.helper"].new().count()
 
 
 class PmsApiContactRouterHelper(models.AbstractModel):

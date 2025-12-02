@@ -142,6 +142,13 @@ class PmsApiContactRouterHelper(models.AbstractModel):
             context=params.to_odoo_context(self.env),
         )
 
+    def count(self, params=None) -> int:
+        if params:
+            domain = params.to_odoo_domain(self.env)
+        else:
+            domain = []
+        return self.model_adapter.count(domain)
+
     @api.model
     def extra_features(self):
         return []
