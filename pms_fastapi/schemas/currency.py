@@ -21,7 +21,7 @@ class CurrencyId(PmsBaseModel):
 
 
 class CurrencySummary(CurrencyId):
-    code: str = Field(descrption="ISO 4217 currency code")
+    code: str = Field(description="ISO 4217 currency code")
 
     @classmethod
     def from_res_currency(cls, currency):
