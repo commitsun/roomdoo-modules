@@ -53,6 +53,12 @@ class FilteredModelAdapter(Generic[T]):
         PmsBaseModel.pms_api_check_access(self.env.user, records)
         return records
 
+    def count(self, domain: list, context=None) -> int:
+        if not context:
+            context = {}
+        domain = expression.AND([self._base_domain, domain])
+        return self._model.sudo().with_context(**context).search_count(domain)
+
     def search_with_count(
         self, domain: list, limit, offset, order, context=None
     ) -> tuple[int, T]:
