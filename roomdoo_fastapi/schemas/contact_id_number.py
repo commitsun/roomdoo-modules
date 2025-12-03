@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from odoo.addons.pms_fastapi.schemas import contact_id_number
+from odoo.addons.pms_fastapi.schemas import contact_id_number, id_document
 
 
 class ContactIdNumberCategoryId(
@@ -33,3 +33,11 @@ class ContactIdNumberCategorySummary(
         )
         category_record.shortCode = id_number_category.short_code or ""
         return category_record
+
+
+class IdDocument(id_document.IdDocument, extends=True):
+    @classmethod
+    def from_id_number(cls, document_rec):
+        id_document_record = super().from_id_number(document_rec)
+        id_document_record.type = document_rec.category_id.short_code or ""
+        return id_document_record
