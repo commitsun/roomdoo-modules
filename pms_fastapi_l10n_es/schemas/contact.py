@@ -7,7 +7,7 @@ from odoo.addons.pms_fastapi.schemas import contact
 
 
 class contactDetailFiscalDocument(contact.ContactDetail, extends=True):
-    comercial_name: str = Field("", alias="comercial")
+    comercial: str = Field("", alias="comercial")
 
     @classmethod
     def from_res_partner(cls, partner):
@@ -21,4 +21,4 @@ class contactDetailFiscalDocument(contact.ContactDetail, extends=True):
 
 
 class ContactInsertComercialName(contact.ContactInsert, extends=True):
-    comercial_name: str = Field("", alias="comercial")
+    comercial: str = Field("", alias="comercial")
