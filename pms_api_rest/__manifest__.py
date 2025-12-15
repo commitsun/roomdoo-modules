@@ -14,7 +14,6 @@
         "auth_jwt_login",
         "base_location",
         "l10n_es_aeat",
-        "spreadsheet_dasbhoard_pms",
         "sql_export_excel",
         "feed_rss",
         "pms_partner_type_residence",
