@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <record id="default_report_url" model="roomdoo.app.menu">
+        <field name="name">Reports</field>
+        <field name="base_url">https://dummy.local</field>
+        <field name="report_url" eval="True" />
+        <field name="sequence">100</field>
+    </record>
+
+    <record id="default_report_url_token_param" model="roomdoo.app.menu.url.param">
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">token</field>
+        <field name="value">ots_token</field>
+    </record>
+    <record id="default_report_url_login_param" model="roomdoo.app.menu.url.param">
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">login</field>
+        <field name="value">user.login</field>
+    </record>
+    <record
+    id="default_report_url_redirect_url_param"
+    model="roomdoo.app.menu.url.param"
+  >
+        <field name="menu_id" ref="default_report_url" />
+        <field name="name">redirect_url</field>
+        <field
+      name="value"
+    >'/web#action=' + str(env.ref('spreadsheet_dashboard.ir_actions_dashboard_action').id) + '&amp;dashboard_id=' + str(env.ref('spreadsheet_dasbhoard_pms.spreadsheet_dashboard_production').id)</field>
+    </record>
+</odoo>

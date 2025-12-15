@@ -12,8 +12,3 @@ def post_init_hook(cr, registry):
     if first_subdomain:
         app_url = f"https://{first_subdomain}.roomdoo.com"
         env["ir.config_parameter"].sudo().set_param("roomdoo_app_url", app_url)
-
-    # set the roomdoo app menu base url
-    env.ref("pms_api_rest.default_report_url").write(
-        {"base_url": base_url + "/login_portal_token"}
-    )
