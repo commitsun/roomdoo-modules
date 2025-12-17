@@ -1,0 +1,770 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+
+    <!-- =========================================================
+         Mail Template record (mail.template) for confirmation folio
+         ========================================================= -->
+    <record id="mail_template_pms_folio_confirmation" model="mail.template">
+        <field name="name">PMS: Booking Confirmation (Folio)</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+
+        <field
+      name="subject"
+    >Your booking is confirmed - {{ object.pms_property_id.name }}</field>
+
+        <field
+      name="email_from"
+    >{{ (object.pms_property_id.email_formatted or user.email_formatted) if object.pms_property_id else user.email_formatted }}</field>
+        <field name="email_to">{{ object.email or '' }}</field>
+        <field name="lang">{{ object.lang or user.lang }}</field>
+
+        <field name="auto_delete" eval="True" />
+
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0;">
+                <t t-set="o" t-value="object" />
+                <t t-set="property" t-value="o.pms_property_id" />
+                <t t-set="customer" t-value="o.partner_id" />
+                <t t-set="company" t-value="o.company_id" />
+                <t t-set="currency" t-value="o.currency_id" />
+
+                <p style="margin: 0 0 12px 0;">
+                    <t t-if="customer and customer.name">
+                        Hello <strong><t t-out="customer.name" /></strong>,
+                    </t>
+                    <t t-else="">Hello,</t>
+                    <br />
+                    Your reservation has been confirmed.
+                </p>
+
+                <t t-if="property and property.welcome_message">
+                    <div
+            style="margin: 0 0 14px 0; padding: 10px 12px; border-left: 3px solid #ddd; background: #fafafa;"
+          >
+                        <t t-out="property.welcome_message" />
+                    </div>
+                </t>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Booking summary</h3>
+
+                <table
+          style="width: 100%; border-collapse: collapse; margin: 0 0 16px 0;"
+        >
+                    <tbody>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Booking reference</td>
+                            <td style="padding: 2px 0;"><t t-out="o.name or ''" /></td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-in</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="format_date(o.first_checkin) if o.first_checkin else ''"
+                />
+                                <t t-if="property and property.checkin_time_info">
+                                    &#160;(<t t-out="property.checkin_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-out</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="format_date(o.last_checkout) if o.last_checkout else ''"
+                />
+                                <t t-if="property and property.checkout_time_info">
+                                    &#160;(<t t-out="property.checkout_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Total</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_amount(o.amount_total, currency)" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Amount due</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_amount(o.pending_amount, currency)" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Rooms</h3>
+
+                <t t-if="o.reservation_ids">
+                    <t t-foreach="o.reservation_ids" t-as="r">
+                        <t t-set="room_type" t-value="r.room_type_id" />
+                        <t t-set="rate" t-value="r.pricelist_id" />
+                        <!-- In your case the cancellation rule is on pricelist (NOT on reservation) -->
+                        <t t-set="cancel_rule" t-value="rate.cancelation_rule_id" />
+
+                        <div
+              style="margin: 0 0 12px 0; padding: 12px; border: 1px solid #eee; border-radius: 8px;"
+            >
+                            <div style="margin: 0 0 8px 0;">
+                                <strong>
+                                    <t
+                    t-if="room_type and room_type.guest_display_name"
+                  ><t t-out="room_type.guest_display_name" /></t>
+                                    <t t-elif="room_type and room_type.name"><t
+                      t-out="room_type.name"
+                    /></t>
+                                    <t t-else="">Room</t>
+                                </strong>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tbody>
+                                    <tr>
+                                        <td
+                      style="padding: 2px 0; width: 170px; color: #666;"
+                    >Dates</td>
+                                        <td style="padding: 2px 0;">
+                                            <t
+                        t-out="format_date(r.checkin) if r.checkin else ''"
+                      />
+                                            &#160;→&#160;
+                                            <t
+                        t-out="format_date(r.checkout) if r.checkout else ''"
+                      />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                      style="padding: 2px 0; width: 170px; color: #666;"
+                    >Guests</td>
+                                        <td style="padding: 2px 0;">
+                                            <t t-out="(r.adults or 0)" /> adults
+                                            <t t-if="(r.children or 0) &gt; 0">, <t
+                          t-out="r.children"
+                        /> children</t>
+                                        </td>
+                                    </tr>
+
+                                    <t t-if="rate">
+                                        <tr>
+                                            <td
+                        style="padding: 2px 0; width: 170px; color: #666;"
+                      >Rate</td>
+                                            <td style="padding: 2px 0;">
+                                                <t t-if="rate.guest_rate_name"><t
+                            t-out="rate.guest_rate_name"
+                          /></t>
+                                                <t t-else=""><t t-out="rate.name" /></t>
+                                            </td>
+                                        </tr>
+                                    </t>
+
+                                    <t
+                    t-if="room_type and room_type.guest_short_description"
+                  >
+                                        <tr>
+                                            <td
+                        style="padding: 2px 0; width: 170px; color: #666;"
+                      >Room details</td>
+                                            <td style="padding: 2px 0;"><t
+                          t-out="room_type.guest_short_description"
+                        /></td>
+                                        </tr>
+                                    </t>
+
+                                    <t t-if="room_type and room_type.amenities_summary">
+                                        <tr>
+                                            <td
+                        style="padding: 2px 0; width: 170px; color: #666;"
+                      >Amenities</td>
+                                            <td style="padding: 2px 0;"><t
+                          t-out="room_type.amenities_summary"
+                        /></td>
+                                        </tr>
+                                    </t>
+
+                                    <t t-if="r.service_ids">
+                                        <tr>
+                                            <td
+                        style="padding: 2px 0; width: 170px; color: #666;"
+                      >Services</td>
+                                            <td style="padding: 2px 0;">
+                                                <t t-foreach="r.service_ids" t-as="s">
+                                                    <span
+                            style="display: inline-block; margin: 0 6px 6px 0; padding: 2px 8px; border: 1px solid #eee; border-radius: 999px;"
+                          >
+                                                        <t t-out="s.name" />
+                                                    </span>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <t t-if="rate and rate.guest_rate_description">
+                                <div style="margin: 10px 0 0 0; color: #444;">
+                                    <strong>Rate details:</strong>
+                                    <div><t t-out="rate.guest_rate_description" /></div>
+                                </div>
+                            </t>
+
+                            <t t-if="rate and rate.payment_terms_text">
+                                <div style="margin: 10px 0 0 0; color: #444;">
+                                    <strong>Payment terms:</strong>
+                                    <div><t t-out="rate.payment_terms_text" /></div>
+                                </div>
+                            </t>
+
+                            <t t-if="rate and rate.cancellation_terms_text_override">
+                                <div style="margin: 10px 0 0 0; color: #444;">
+                                    <strong>Cancellation policy:</strong>
+                                    <div><t
+                      t-out="rate.cancellation_terms_text_override"
+                    /></div>
+                                </div>
+                            </t>
+                            <t t-elif="cancel_rule and cancel_rule.short_policy_text">
+                                <div style="margin: 10px 0 0 0; color: #444;">
+                                    <strong>Cancellation policy:</strong>
+                                    <div><t
+                      t-out="cancel_rule.short_policy_text"
+                    /></div>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </t>
+                <t t-else="">
+                    <p
+            style="margin: 0 0 16px 0;"
+          >No rooms were found for this booking.</p>
+                </t>
+
+                <t
+          t-if="property and (property.arrival_instructions or property.parking_info or property.prearrival_extra_info or property.digital_checkin_help)"
+        >
+                    <h3
+            style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+          >Useful information</h3>
+
+                    <t t-if="property.arrival_instructions">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Arrival instructions</strong><br />
+                            <t t-out="property.arrival_instructions" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.parking_info">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Parking</strong><br />
+                            <t t-out="property.parking_info" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.digital_checkin_help">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Digital check-in</strong><br />
+                            <t t-out="property.digital_checkin_help" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.prearrival_extra_info">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Before you arrive</strong><br />
+                            <t t-out="property.prearrival_extra_info" />
+                        </div>
+                    </t>
+                </t>
+
+                <t t-if="property and property.critical_contact_phone">
+                    <p style="margin: 12px 0 0 0;">
+                        For urgent matters, you can reach us at:
+                        <strong><t t-out="property.critical_contact_phone" /></strong>
+                    </p>
+                </t>
+
+                <t
+          t-if="company and (company.privacy_policy_text or company.terms_and_conditions_text or company.legal_notice_text)"
+        >
+                    <div
+            style="margin-top: 18px; padding-top: 12px; border-top: 1px solid #eee; color: #666; font-size: 12px;"
+          >
+                        <t t-if="company.privacy_policy_text">
+                            <div style="margin: 0 0 8px 0;"><t
+                  t-out="company.privacy_policy_text"
+                /></div>
+                        </t>
+                        <t t-if="company.terms_and_conditions_text">
+                            <div style="margin: 0 0 8px 0;"><t
+                  t-out="company.terms_and_conditions_text"
+                /></div>
+                        </t>
+                        <t t-if="company.legal_notice_text">
+                            <div style="margin: 0;"><t
+                  t-out="company.legal_notice_text"
+                /></div>
+                        </t>
+                    </div>
+                </t>
+
+                <t t-if="property and property.default_email_signature">
+                    <div style="margin-top: 18px;">
+                        <t t-raw="property.default_email_signature" />
+                    </div>
+                </t>
+            </div>
+        </field>
+    </record>
+
+    <!-- =========================================================
+        Mail Template record (mail.template) for pms.reservation
+        Pre-arrival (3 days before check-in)
+        ========================================================= -->
+
+    <record id="mail_template_pms_reservation_prearrival" model="mail.template">
+        <field name="name">PMS: Pre-arrival Information</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="subject"
+    >Your upcoming stay - {{ object.pms_property_id.name }}</field>
+        <field
+      name="email_from"
+    >{{ (object.pms_property_id.email_formatted or user.email_formatted) if object.pms_property_id else user.email_formatted }}</field>
+        <field name="email_to">{{ object.email or '' }}</field>
+        <field name="lang">{{ object.lang or user.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0;">
+                <t t-set="property" t-value="object.pms_property_id" />
+                <t t-set="customer" t-value="object.partner_id" />
+
+                <p style="margin: 0 0 12px 0;">
+                    <t t-if="customer and customer.name">
+                        Hello <strong><t t-out="customer.name" /></strong>,
+                    </t>
+                    <t t-else="">Hello,</t>
+                    <br />
+                    We look forward to welcoming you soon. Here is some useful information to help you prepare your arrival.
+                </p>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Your stay</h3>
+
+                <table
+          style="width: 100%; border-collapse: collapse; margin: 0 0 16px 0;"
+        >
+                    <tbody>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-in</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkin)" />
+                                <t t-if="property and property.checkin_time_info">
+                                    &#160;(<t t-out="property.checkin_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-out</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkout)" />
+                                <t t-if="property and property.checkout_time_info">
+                                    &#160;(<t t-out="property.checkout_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr t-if="object.room_type_id">
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Room type</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="object.room_type_id.guest_display_name or object.room_type_id.name"
+                />
+                            </td>
+                        </tr>
+                        <tr t-if="object.pricelist_id">
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Rate</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="object.pricelist_id.guest_rate_name or object.pricelist_id.name"
+                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <t
+          t-if="property and (property.arrival_instructions or property.parking_info or property.digital_checkin_help or property.prearrival_extra_info)"
+        >
+                    <h3
+            style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+          >Useful information</h3>
+
+                    <t t-if="property.arrival_instructions">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Arrival instructions</strong><br />
+                            <t t-out="property.arrival_instructions" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.parking_info">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Parking</strong><br />
+                            <t t-out="property.parking_info" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.digital_checkin_help">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Digital check-in</strong><br />
+                            <t t-out="property.digital_checkin_help" />
+                        </div>
+                    </t>
+
+                    <t t-if="property.prearrival_extra_info">
+                        <div style="margin: 0 0 10px 0;">
+                            <strong>Before you arrive</strong><br />
+                            <t t-out="property.prearrival_extra_info" />
+                        </div>
+                    </t>
+                </t>
+
+                <t t-if="property and property.critical_contact_phone">
+                    <p style="margin: 12px 0 0 0;">
+                        For urgent matters, you can reach us at:
+                        <strong><t t-out="property.critical_contact_phone" /></strong>
+                    </p>
+                </t>
+
+                <p style="margin: 14px 0 0 0;">
+                    If you have any questions before arrival, simply reply to this email and we’ll be happy to help.
+                </p>
+
+                <t t-if="property and property.default_email_signature">
+                    <div style="margin-top: 18px;">
+                        <t t-raw="property.default_email_signature" />
+                    </div>
+                </t>
+            </div>
+        </field>
+    </record>
+
+    <!-- =========================================================
+        Mail Template record (mail.template) for pms.reservation
+        Digital check-in reminder (24h before check-in)
+        ========================================================= -->
+
+    <record
+    id="mail_template_pms_reservation_digital_checkin_reminder"
+    model="mail.template"
+  >
+        <field name="name">PMS: Digital Check-in Reminder</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="subject"
+    >Digital check-in reminder - {{ object.pms_property_id.name }}</field>
+        <field
+      name="email_from"
+    >{{ (object.pms_property_id.email_formatted or user.email_formatted) if object.pms_property_id else user.email_formatted }}</field>
+        <field name="email_to">{{ object.email or '' }}</field>
+        <field name="lang">{{ object.lang or user.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0;">
+                <t t-set="property" t-value="object.pms_property_id" />
+                <t t-set="customer" t-value="object.partner_id" />
+
+                <p style="margin: 0 0 12px 0;">
+                    <t t-if="customer and customer.name">
+                        Hello <strong><t t-out="customer.name" /></strong>,
+                    </t>
+                    <t t-else="">Hello,</t>
+                    <br />
+                    Your check-in date is coming up. We recommend completing the digital check-in in advance to make your arrival faster and easier.
+                </p>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Your stay</h3>
+
+                <table
+          style="width: 100%; border-collapse: collapse; margin: 0 0 16px 0;"
+        >
+                    <tbody>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-in</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkin)" />
+                                <t t-if="property and property.checkin_time_info">
+                                    &#160;(<t t-out="property.checkin_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-out</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkout)" />
+                                <t t-if="property and property.checkout_time_info">
+                                    &#160;(<t t-out="property.checkout_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr t-if="object.room_type_id">
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Room type</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="object.room_type_id.guest_display_name or object.room_type_id.name"
+                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <t t-if="property and property.digital_checkin_help">
+                    <div style="margin: 0 0 10px 0;">
+                        <strong>How to complete digital check-in</strong><br />
+                        <t t-out="property.digital_checkin_help" />
+                    </div>
+                </t>
+                <t t-else="">
+                    <p style="margin: 0 0 10px 0;">
+                        If you have already completed the digital check-in, you can ignore this message.
+                    </p>
+                </t>
+
+                <t t-if="property and property.critical_contact_phone">
+                    <p style="margin: 12px 0 0 0;">
+                        For urgent matters, you can reach us at:
+                        <strong><t t-out="property.critical_contact_phone" /></strong>
+                    </p>
+                </t>
+
+                <p style="margin: 14px 0 0 0;">
+                    If you need any help, simply reply to this email and we’ll be happy to assist.
+                </p>
+
+                <t t-if="property and property.default_email_signature">
+                    <div style="margin-top: 18px;">
+                        <t t-raw="property.default_email_signature" />
+                    </div>
+                </t>
+            </div>
+        </field>
+    </record>
+
+
+    <!-- =========================================================
+        Mail Template record (mail.template) for pms.reservation
+        Checkout reminder (1 day before checkout)
+        ========================================================= -->
+
+    <record id="mail_template_pms_reservation_checkout_reminder" model="mail.template">
+        <field name="name">PMS: Checkout Reminder</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="subject"
+    >Checkout reminder - {{ object.pms_property_id.name }}</field>
+        <field
+      name="email_from"
+    >{{ (object.pms_property_id.email_formatted or user.email_formatted) if object.pms_property_id else user.email_formatted }}</field>
+        <field name="email_to">{{ object.email or '' }}</field>
+        <field name="lang">{{ object.lang or user.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0;">
+                <t t-set="property" t-value="object.pms_property_id" />
+                <t t-set="customer" t-value="object.partner_id" />
+
+                <p style="margin: 0 0 12px 0;">
+                    <t t-if="customer and customer.name">
+                        Hello <strong><t t-out="customer.name" /></strong>,
+                    </t>
+                    <t t-else="">Hello,</t>
+                    <br />
+                    This is a friendly reminder that your checkout is scheduled for tomorrow. Below you’ll find the main checkout information.
+                </p>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Your stay</h3>
+
+                <table
+          style="width: 100%; border-collapse: collapse; margin: 0 0 16px 0;"
+        >
+                    <tbody>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-out</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkout)" />
+                                <t t-if="property and property.checkout_time_info">
+                                    &#160;(<t t-out="property.checkout_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-in</td>
+                            <td style="padding: 2px 0;">
+                                <t t-out="format_date(object.checkin)" />
+                                <t t-if="property and property.checkin_time_info">
+                                    &#160;(<t t-out="property.checkin_time_info" />)
+                                </t>
+                            </td>
+                        </tr>
+                        <tr t-if="object.room_type_id">
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Room type</td>
+                            <td style="padding: 2px 0;">
+                                <t
+                  t-out="object.room_type_id.guest_display_name or object.room_type_id.name"
+                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <t t-if="property and property.checkout_time_info">
+                    <div style="margin: 0 0 10px 0;">
+                        <strong>Checkout time</strong><br />
+                        <t t-out="property.checkout_time_info" />
+                    </div>
+                </t>
+
+                <p style="margin: 0 0 10px 0;">
+                    If you need assistance or would like to request a late checkout (subject to availability), please contact us.
+                </p>
+
+                <t t-if="property and property.critical_contact_phone">
+                    <p style="margin: 12px 0 0 0;">
+                        For urgent matters, you can reach us at:
+                        <strong><t t-out="property.critical_contact_phone" /></strong>
+                    </p>
+                </t>
+
+                <t t-if="property and property.default_email_signature">
+                    <div style="margin-top: 18px;">
+                        <t t-raw="property.default_email_signature" />
+                    </div>
+                </t>
+            </div>
+        </field>
+    </record>
+
+
+    <!-- =========================================================
+        Mail Template record (mail.template) for pms.reservation
+        Thank you + review request (1 day after checkout)
+        ========================================================= -->
+
+    <record id="mail_template_pms_reservation_thank_you_review" model="mail.template">
+        <field name="name">PMS: Thank You Review Request</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="subject"
+    >Thank you for staying with us - {{ object.pms_property_id.name }}</field>
+        <field
+      name="email_from"
+    >{{ (object.pms_property_id.email_formatted or user.email_formatted) if object.pms_property_id else user.email_formatted }}</field>
+        <field name="email_to">{{ object.email or '' }}</field>
+        <field name="lang">{{ object.lang or user.lang }}</field>
+        <field name="auto_delete" eval="True" />
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0;">
+                <t t-set="property" t-value="object.pms_property_id" />
+                <t t-set="customer" t-value="object.partner_id" />
+
+                <p style="margin: 0 0 12px 0;">
+                    <t t-if="customer and customer.name">
+                        Hello <strong><t t-out="customer.name" /></strong>,
+                    </t>
+                    <t t-else="">Hello,</t>
+                    <br />
+                    Thank you for choosing <t
+            t-out="property.name if property else ''"
+          />. We hope you had a great stay.
+                </p>
+
+                <h3
+          style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+        >Your stay</h3>
+
+                <table
+          style="width: 100%; border-collapse: collapse; margin: 0 0 16px 0;"
+        >
+                    <tbody>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-in</td>
+                            <td style="padding: 2px 0;"><t
+                  t-out="format_date(object.checkin)"
+                /></td>
+                        </tr>
+                        <tr>
+                            <td
+                style="padding: 2px 0; width: 170px; color: #666;"
+              >Check-out</td>
+                            <td style="padding: 2px 0;"><t
+                  t-out="format_date(object.checkout)"
+                /></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p style="margin: 0 0 10px 0;">
+                    If you have a moment, we would really appreciate your feedback. Your review helps us improve and helps future guests choose with confidence.
+                </p>
+
+                <p style="margin: 0 0 10px 0;">
+                    If anything was not perfect, please reply to this email so we can make it right.
+                </p>
+
+                <t t-if="property and property.critical_contact_phone">
+                    <p style="margin: 12px 0 0 0;">
+                        For urgent matters, you can reach us at:
+                        <strong><t t-out="property.critical_contact_phone" /></strong>
+                    </p>
+                </t>
+
+                <t t-if="property and property.default_email_signature">
+                    <div style="margin-top: 18px;">
+                        <t t-raw="property.default_email_signature" />
+                    </div>
+                </t>
+            </div>
+        </field>
+    </record>
+
+
+</odoo>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit PMS Cancellation Rule form to add guest-facing policy texts -->
+    <record id="view_pms_cancelation_rule_form_notifications" model="ir.ui.view">
+        <field name="name">pms.cancelation.rule.form.notifications</field>
+        <field name="model">pms.cancelation.rule</field>
+        <!-- Inherit from the original view you provided -->
+        <field name="inherit_id" ref="pms.pms_cancelation_rule_form" />
+        <field name="arch" type="xml">
+            <!-- Insert a new group for guest communication fields after the existing groups -->
+            <xpath expr="//sheet/group[last()]" position="after">
+                <group string="Guest Communication">
+                    <group>
+                        <field name="guest_policy_name" />
+                        <field name="short_policy_text" widget="text" />
+                    </group>
+                    <group>
+                        <field name="no_show_policy_text" widget="text" />
+                        <field name="refund_timing_text" widget="text" />
+                    </group>
+                    <group>
+                        <field name="full_policy_text" widget="text" />
+                        <field name="notification_internal_note" widget="text" />
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

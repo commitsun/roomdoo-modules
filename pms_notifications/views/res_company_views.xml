@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit Company form to add legal and privacy fields for communications -->
+    <record id="view_res_company_form_notifications" model="ir.ui.view">
+        <field name="name">res.company.form.notifications</field>
+        <field name="model">res.company</field>
+        <!-- TODO: adjust inherit_id to your real res.company form view ID -->
+        <field name="inherit_id" ref="base.view_company_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Guest Legal &amp; Privacy">
+                    <group>
+                        <group string="Privacy">
+                            <field name="privacy_policy_url" />
+                            <field name="privacy_policy_text" />
+                            <field name="data_protection_contact_email" />
+                        </group>
+                        <group string="Legal &amp; Terms">
+                            <field name="terms_and_conditions_url" />
+                            <field name="terms_and_conditions_text" />
+                            <field name="legal_notice_text" />
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
