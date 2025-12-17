@@ -232,56 +232,22 @@ class PmsReservation(models.Model):
     # ---------------------------------------------------------
     # SERVICE LONG STAY
     # --------------------------------------------------------
-    def _get_long_stay_service_price(self, product_tmpl):
-        """
-        Computes the unit price for the long stay service based on the
-        reservation's or folio's pricelist. Falls back to the product
-        list price if no pricelist is found.
-        """
-        self.ensure_one()
-
-        product = product_tmpl.product_variant_id
-        if not product:
-            return product_tmpl.list_price
-
-        pricelist = getattr(self, "pricelist_id", False) or getattr(
-            self.folio_id, "pricelist_id", False
-        )
-        if pricelist:
-            return pricelist.get_product_price(product, 1.0, self.partner_id)
-
-        # Fallback: use product's list price
-        return product.lst_price
-
     def _get_long_stay_service_description(self):
-        """
-        Builds the description for the long stay service line based on
-        the reservation period type (monthly/weekly) and room type name.
-
-        Examples:
-        - Monthly: "October 2025 - Double Room"
-        - Weekly:  "S1 October 2025 - Double Room"
-        """
         self.ensure_one()
 
         room_type = self.room_type_id
         checkin_date = self._to_date(self.checkin)
         period = room_type.long_stay_period or "monthly"
 
-        # Month label localized using Odoo's format_date
-        month_label = format_date(self.env, checkin_date, date_format="MMMM yyyy")
+        env_lang = self.env(context=dict(self.env.context, lang=self.lang))
+
+        month_label = format_date(env_lang, checkin_date)
         room_name = room_type.display_name or ""
 
         if period == "monthly":
-            # Example: "October 2025 - Double Room"
             return f"{month_label} - {room_name}"
 
-        # Weekly case: determine week index within the month
-        # Day 1-7   -> week 1
-        # Day 8-14  -> week 2
-        # ...
         week_index = ((checkin_date.day - 1) // 7) + 1
-        # Example: "S1 October 2025 - Double Room"
         return f"S{week_index} {month_label} - {room_name}"
 
     def _create_long_stay_service_for_segment(self):
