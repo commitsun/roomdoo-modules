@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="0">
+
+        <!-- QWeb helper blocks loaded as an ir.ui.view (type="qweb") -->
+        <record id="view_pms_notifications_email_blocks_qweb" model="ir.ui.view">
+            <field name="name">pms_notifications.email.blocks.qweb</field>
+            <field name="type">qweb</field>
+            <field name="arch" type="xml">
+                <templates xml:space="preserve">
+
+                    <!-- Monetary helper (expects: amount, currency) -->
+                    <t t-name="pms_notifications.email_money">
+                        <t t-if="amount is not None">
+                            <span t-esc="format_amount(amount, currency)" />
+                        </t>
+                    </t>
+
+                    <!-- Date helper (expects: date_value) -->
+                    <t t-name="pms_notifications.email_date">
+                        <t t-if="date_value">
+                            <span t-esc="format_date(date_value)" />
+                        </t>
+                    </t>
+
+                    <!-- Section title helper (expects: title) -->
+                    <t t-name="pms_notifications.email_section_title">
+                        <h3
+            style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;"
+          >
+                            <t t-esc="title" />
+                        </h3>
+                    </t>
+
+                    <!-- Key/Value row helper (expects: label, value) -->
+                    <t t-name="pms_notifications.email_kv_row">
+                        <tr>
+                            <td style="padding: 2px 0; width: 170px; color: #666;">
+                                <t t-esc="label" />
+                            </td>
+                            <td style="padding: 2px 0;">
+                                <t t-esc="value" />
+                            </td>
+                        </tr>
+                    </t>
+
+                </templates>
+            </field>
+        </record>
+
+</odoo>
