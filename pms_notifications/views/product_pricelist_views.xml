@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit Product Pricelist form to add guest-facing rate info -->
+    <record id="view_product_pricelist_form_notifications" model="ir.ui.view">
+        <field name="name">product.pricelist.form.notifications</field>
+        <field name="model">product.pricelist</field>
+        <!-- TODO: adjust inherit_id to your real pricelist form view ID if needed -->
+        <field name="inherit_id" ref="product.product_pricelist_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Guest Communication">
+                    <group>
+                        <group>
+                            <field name="guest_rate_name" />
+                            <field name="guest_rate_description" />
+                        </group>
+                        <group>
+                            <field name="payment_terms_text" />
+                            <field name="cancellation_terms_text_override" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notification_internal_note" widget="text" />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

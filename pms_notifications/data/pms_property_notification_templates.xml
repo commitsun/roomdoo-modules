@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="0">
+
+    <!-- Booking confirmation email -->
+    <record
+    id="pms_notification_template_folio_confirmation_email"
+    model="pms.notification.template"
+  >
+        <field name="name">Booking confirmation (Email)</field>
+        <field name="code">folio_booking_confirmation_email_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="mail_template_id"
+      ref="pms_notifications.mail_template_pms_folio_confirmation"
+    />
+        <field
+      name="description"
+    >Email confirmation sent when a booking (folio) is confirmed/created.</field>
+        <field name="active" eval="True" />
+    </record>
+
+    <!-- Pre-arrival information (3 days before check-in) -->
+    <record
+    id="pms_notification_template_reservation_prearrival_email"
+    model="pms.notification.template"
+  >
+        <field name="name">Pre-arrival Information (Email)</field>
+        <field name="code">reservation_prearrival_email</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="mail_template_id"
+      ref="pms_notifications.mail_template_pms_reservation_prearrival"
+    />
+        <field
+      name="description"
+    >Automated pre-arrival email sent 3 days before check-in.</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Digital check-in reminder (24h before check-in) -->
+    <record
+    id="pms_notification_template_reservation_digital_checkin_reminder_email"
+    model="pms.notification.template"
+  >
+        <field name="name">Digital Check-in Reminder (Email)</field>
+        <field name="code">reservation_digital_checkin_reminder_email</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="mail_template_id"
+      ref="pms_notifications.mail_template_pms_reservation_digital_checkin_reminder"
+    />
+        <field
+      name="description"
+    >Automated reminder to complete digital check-in, sent 24h before check-in.</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Checkout reminder (1 day before checkout) -->
+    <record
+    id="pms_notification_template_reservation_checkout_reminder_email"
+    model="pms.notification.template"
+  >
+        <field name="name">Checkout Reminder (Email)</field>
+        <field name="code">reservation_checkout_reminder_email</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="mail_template_id"
+      ref="pms_notifications.mail_template_pms_reservation_checkout_reminder"
+    />
+        <field
+      name="description"
+    >Automated checkout reminder email sent 1 day before checkout.</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Thank you + review request (1 day after checkout) -->
+    <record
+    id="pms_notification_template_reservation_thank_you_review_email"
+    model="pms.notification.template"
+  >
+        <field name="name">Thank You Review Request (Email)</field>
+        <field name="code">reservation_thank_you_review_email</field>
+        <field name="model_id" ref="pms.model_pms_reservation" />
+        <field
+      name="mail_template_id"
+      ref="pms_notifications.mail_template_pms_reservation_thank_you_review"
+    />
+        <field
+      name="description"
+    >Automated thank-you email with review request, sent 1 day after checkout.</field>
+        <field name="active">True</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ================================ -->
+    <!-- Property Notification Rule Views -->
+    <!-- ================================ -->
+
+    <record id="view_pms_property_notification_rule_tree" model="ir.ui.view">
+        <field name="name">pms.property.notification.rule.tree</field>
+        <field name="model">pms.property.notification.rule</field>
+        <field name="arch" type="xml">
+            <tree string="Notification Rules">
+                <field name="name" />
+                <field name="active" />
+                <field name="rule_type" />
+                <field name="channel" />
+                <field name="template_id" />
+                <field name="target_model_id" />
+                <field name="send_immediately" />
+                <field name="max_sends_per_record" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pms_property_notification_rule_form" model="ir.ui.view">
+        <field name="name">pms.property.notification.rule.form</field>
+        <field name="model">pms.property.notification.rule</field>
+        <field name="arch" type="xml">
+            <form string="Notification Rule">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="active" />
+                            <field name="template_id" />
+                            <field name="target_model_id" />
+                        </group>
+                        <group>
+                            <field name="channel" />
+                            <field name="rule_type" />
+                            <field name="send_immediately" />
+                            <field name="max_sends_per_record" />
+                        </group>
+                    </group>
+
+                    <group>
+                        <field
+              name="pms_property_ids"
+              widget="many2many_tags"
+              options="{'no_create': True}"
+            />
+                    </group>
+
+                    <notebook>
+                        <page
+              string="Event"
+              name="event"
+              attrs="{'invisible': [('rule_type','!=','event')]}"
+            >
+                            <group>
+                                <field name="event_type" />
+                                <field
+                  name="event_domain"
+                  placeholder="[('state','=','confirm')]"
+                />
+                            </group>
+                        </page>
+
+                        <page
+              string="Scheduled"
+              name="scheduled"
+              attrs="{'invisible': [('rule_type','!=','scheduled')]}"
+            >
+                            <group>
+                                <field name="time_field_name" placeholder="checkin" />
+                                <field name="offset_days" />
+                                <field name="offset_hours" />
+                                <field name="time_window_minutes" />
+                            </group>
+                            <group>
+                                <field
+                  name="scheduled_domain"
+                  placeholder="[('state','=','confirm')]"
+                />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pms_property_notification_rule" model="ir.actions.act_window">
+        <field name="name">Notification Rules</field>
+        <field name="res_model">pms.property.notification.rule</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    id="menu_pms_property_notification_rule"
+    name="Notification Rules"
+    parent="menu_pms_notifications_root"
+    action="action_pms_property_notification_rule"
+    sequence="20"
+  />
+</odoo>

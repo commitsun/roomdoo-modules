@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- =========================== -->
+    <!-- Notification Template Views -->
+    <!-- =========================== -->
+
+    <record id="view_pms_notification_template_tree" model="ir.ui.view">
+        <field name="name">pms.notification.template.tree</field>
+        <field name="model">pms.notification.template</field>
+        <field name="arch" type="xml">
+            <tree string="Notification Templates">
+                <field name="name" />
+                <field name="code" />
+                <field name="model_id" />
+                <field name="mail_template_id" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pms_notification_template_form" model="ir.ui.view">
+        <field name="name">pms.notification.template.form</field>
+        <field name="model">pms.notification.template</field>
+        <field name="arch" type="xml">
+            <form string="Notification Template">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="code" />
+                            <field name="model_id" />
+                            <field name="active" />
+                        </group>
+                        <group>
+                            <field name="mail_template_id" />
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="description" widget="text" />
+                    </group>
+
+                    <notebook>
+                        <page string="Rules" name="rules">
+                            <field
+                name="notification_rule_ids"
+                context="{'default_template_id': active_id}"
+              >
+                                <tree string="Rules">
+                                    <field name="name" />
+                                    <field name="active" />
+                                    <field name="rule_type" />
+                                    <field name="channel" />
+                                    <field name="send_immediately" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pms_notification_template" model="ir.actions.act_window">
+        <field name="name">Notification Templates</field>
+        <field name="res_model">pms.notification.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Root menu (base module) -->
+    <menuitem
+    id="menu_pms_notifications_root"
+    name="PMS Notifications"
+    parent="pms.pms_configuration_menu"
+    sequence="90"
+  />
+
+    <menuitem
+    id="menu_pms_notification_template"
+    name="Notification Templates"
+    parent="menu_pms_notifications_root"
+    action="action_pms_notification_template"
+    sequence="10"
+  />
+</odoo>

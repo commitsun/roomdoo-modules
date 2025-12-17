@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="0">
+
+    <!-- Cron job to process pending/scheduled email notifications -->
+    <record id="ir_cron_pms_notifications_sender" model="ir.cron">
+        <field name="name">PMS Notifications: Send Pending Email Notifications</field>
+        <field name="model_id" ref="model_pms_notification_log" />
+        <field name="state">code</field>
+        <field name="code">model.action_send_pending_batch()</field>
+        <field name="active">True</field>
+
+        <!-- Execute every 5 minutes -->
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+
+        <!-- Start immediately -->
+        <field name="numbercall">-1</field>
+        <field name="doall">False</field>
+    </record>
+
+        <record id="ir_cron_pms_notifications_scheduled_rules" model="ir.cron">
+        <field name="name">PMS Notifications: Run Scheduled Rules</field>
+        <field name="model_id" ref="model_pms_property_notification_rule" />
+        <field name="state">code</field>
+        <field name="code">model.run_scheduled_rules()</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="doall">False</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit PMS Property form view to add guest communication fields -->
+    <record id="view_pms_property_form_notifications" model="ir.ui.view">
+        <field name="name">pms.property.form.notifications</field>
+        <field name="model">pms.property</field>
+        <!-- TODO: adjust inherit_id to your real PMS property form view ID -->
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <!-- Add a new page in the notebook with notification-related fields -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Guest Communication">
+                    <group>
+                        <group>
+                            <field name="welcome_message" />
+                            <field name="arrival_instructions" />
+                            <field name="prearrival_extra_info" />
+                            <field name="digital_checkin_help" />
+                        </group>
+                        <group>
+                            <field name="parking_info" />
+                            <field name="checkin_time_info" />
+                            <field name="checkout_time_info" />
+                            <field name="critical_contact_phone" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="default_email_signature" widget="text" />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

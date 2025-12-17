@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit PMS Room form to add guest-facing fields -->
+    <record id="view_pms_room_form_notifications" model="ir.ui.view">
+        <field name="name">pms.room.form.notifications</field>
+        <field name="model">pms.room</field>
+        <!-- TODO: adjust inherit_id to your real PMS room form view ID -->
+        <field name="inherit_id" ref="pms.pms_room_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Guest Communication">
+                    <group>
+                        <group>
+                            <field name="guest_visible_name" />
+                            <field name="building_label" />
+                        </group>
+                        <group>
+                            <field name="location_hint" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notification_internal_note" widget="text" />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pms_notification_template_manager,pms.notification.template manager,model_pms_notification_template,base.group_system,1,1,1,1
+access_pms_notification_template_user,pms.notification.template user,model_pms_notification_template,pms.group_pms_user,1,0,0,0
+access_pms_property_notification_rule_manager,pms.property.notification.rule manager,model_pms_property_notification_rule,base.group_system,1,1,1,1
+access_pms_property_notification_rule_user,pms.property.notification.rule user,model_pms_property_notification_rule,pms.group_pms_user,1,0,0,0
+access_pms_notification_log_manager,pms.notification.log manager,model_pms_notification_log,base.group_system,1,1,1,1
+access_pms_notification_log_user,pms.notification.log user,model_pms_notification_log,pms.group_pms_user,1,0,0,0
+access_pms_notification_manual_send_wizard,pms.notification.manual.send.wizard,model_pms_notification_manual_send_wizard,base.group_user,1,1,1,0

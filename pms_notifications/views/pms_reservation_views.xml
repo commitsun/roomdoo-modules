@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+
+        <record id="view_pms_reservation_form_inherit_notifications" model="ir.ui.view">
+            <field name="name">pms.reservation.form.inherit.notifications</field>
+            <field name="model">pms.reservation</field>
+            <field name="inherit_id" ref="pms.pms_reservation_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button
+            name="action_open_send_notification_wizard"
+            type="object"
+            string="Send notification"
+            class="btn-primary"
+          />
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

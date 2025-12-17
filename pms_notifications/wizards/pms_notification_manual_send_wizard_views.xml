@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ===================================== -->
+    <!-- Manual Send Wizard (Transient) - Views -->
+    <!-- ===================================== -->
+
+    <record id="view_pms_notification_manual_send_wizard_form" model="ir.ui.view">
+        <field name="name">pms.notification.manual.send.wizard.form</field>
+        <field name="model">pms.notification.manual.send.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send Notification" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="template_id" required="1" />
+                            <field name="channel" required="1" />
+                            <field name="send_immediately" />
+                        </group>
+                        <group>
+                            <!-- Hidden technical context -->
+                            <field name="res_model" invisible="1" />
+                            <field name="res_id" invisible="1" />
+                        </group>
+                    </group>
+
+                    <separator string="Recipients (optional overrides)" />
+
+                    <group>
+                        <group>
+                            <field
+                name="recipient_partner_ids"
+                widget="many2many_tags"
+                placeholder="Select partners..."
+              />
+                        </group>
+                        <group attrs="{'invisible': [('channel','!=','email')]}">
+                            <field
+                name="recipient_emails"
+                placeholder="email1@example.com; email2@example.com"
+              />
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button
+              name="action_send"
+              type="object"
+              string="Send"
+              class="btn-primary"
+            />
+                        <button
+              special="cancel"
+              string="Cancel"
+              class="btn-secondary"
+            />
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action used to open the wizard -->
+    <record
+    id="action_pms_notification_manual_send_wizard"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Send Notification</field>
+        <field name="res_model">pms.notification.manual.send.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

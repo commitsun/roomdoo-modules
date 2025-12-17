@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ===================== -->
+    <!-- Notification Log Views -->
+    <!-- ===================== -->
+
+    <record id="view_pms_notification_log_tree" model="ir.ui.view">
+        <field name="name">pms.notification.log.tree</field>
+        <field name="model">pms.notification.log</field>
+        <field name="arch" type="xml">
+            <tree string="Notification Logs">
+                <field name="create_date" />
+                <field name="name" />
+                <field name="state" />
+                <field name="channel" />
+                <field name="property_id" />
+                <field name="template_id" />
+                <field name="rule_id" />
+                <field name="origin_model" />
+                <field name="origin_res_id" />
+                <field name="sent_date" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pms_notification_log_form" model="ir.ui.view">
+        <field name="name">pms.notification.log.form</field>
+        <field name="model">pms.notification.log</field>
+        <field name="arch" type="xml">
+            <form string="Notification Log">
+                <header>
+                    <button
+            name="action_send_by_channel"
+            type="object"
+            string="Send Now"
+            class="btn-primary"
+            attrs="{'invisible': [('state', 'in', ('sent','cancelled'))]}"
+          />
+                    <button
+            name="action_retry"
+            type="object"
+            string="Retry"
+            attrs="{'invisible': [('state', '!=', 'error')]}"
+          />
+                    <button
+            name="action_cancel"
+            type="object"
+            string="Cancel"
+            attrs="{'invisible': [('state', 'in', ('sent','cancelled'))]}"
+          />
+                    <field
+            name="state"
+            widget="statusbar"
+            statusbar_visible="pending,scheduled,sent,error,cancelled,skipped"
+          />
+                </header>
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="channel" />
+                            <field name="template_id" />
+                            <field name="rule_id" />
+                            <field name="property_id" />
+                        </group>
+                        <group>
+                            <field name="scheduled_date" />
+                            <field name="sent_date" />
+                            <field name="create_date" readonly="1" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Recipients" name="recipients">
+                            <group>
+                                <field name="recipient_mode" />
+                                <field
+                  name="recipient_partner_ids"
+                  widget="many2many_tags"
+                />
+                                <field
+                  name="recipient_emails"
+                  placeholder="email1@example.com; email2@example.com"
+                />
+                            </group>
+                        </page>
+
+                        <page string="Origin" name="origin">
+                            <group>
+                                <field name="origin_model" />
+                                <field name="origin_res_id" />
+                            </group>
+                            <group>
+                                <field name="context_json" widget="text" />
+                            </group>
+                        </page>
+
+                        <page string="External" name="external">
+                            <group>
+                                <field name="external_reference" />
+                                <field name="external_status" />
+                            </group>
+                            <group>
+                                <field name="external_payload" widget="text" />
+                            </group>
+                        </page>
+
+                        <page string="Error" name="error">
+                            <group>
+                                <field name="error_message" widget="text" />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pms_notification_log" model="ir.actions.act_window">
+        <field name="name">Notification Logs</field>
+        <field name="res_model">pms.notification.log</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    id="menu_pms_notification_log"
+    name="Notification Logs"
+    parent="menu_pms_notifications_root"
+    action="action_pms_notification_log"
+    sequence="30"
+  />
+</odoo>
