@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-
 from fastapi.middleware.cors import CORSMiddleware
+
 from odoo import api, fields, models
 
 APP_NAME = "pms_api"
@@ -22,12 +22,18 @@ class FastapiEndpoint(models.Model):
 
     def _get_app(self):
         app = super()._get_app()
+        app_url = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("roomdoo_app_url", default="*")
+        )
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=[app_url],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
+            expose_headers=["set-cookie"],
         )
 
         return app

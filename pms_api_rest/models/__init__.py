@@ -13,3 +13,4 @@ from . import pms_reservation
 from . import pms_availability
 from . import roomdoo_app_menu
 from . import pms_room
+from . import ir_http
