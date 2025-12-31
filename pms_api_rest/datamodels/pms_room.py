@@ -26,3 +26,4 @@ class PmsRoomInfo(Datamodel):
     roomAmenityIds = fields.List(fields.Integer(), required=False, allow_none=True)
     roomAmenityInName = fields.String(required=False, allow_none=True)
     pmsPropertyId = fields.Integer(required=False, allow_none=True)
+    cleaningStatus = fields.String(required=False, allow_none=True)
