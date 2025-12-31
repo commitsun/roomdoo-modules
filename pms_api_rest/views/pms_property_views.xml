@@ -5,15 +5,15 @@
         <field name="inherit_id" ref="pms.pms_property_views_form" />
         <field name="arch" type="xml">
             <xpath
-                expr="//page[@name='property_general']//field[@name='street']"
-                position="before"
-            >
+        expr="//page[@name='property_general']//field[@name='street']"
+        position="before"
+      >
                 <group>
                     <field
-                        name="hotel_image_pms_api_rest"
-                        widget="image"
-                        class="oe_avatar"
-                    />
+            name="hotel_image_pms_api_rest"
+            widget="image"
+            class="oe_avatar"
+          />
                 </group>
             </xpath>
             <xpath expr="//field[@name='default_departure_hour']" position="after">
@@ -21,72 +21,77 @@
                     <field name="color_option_config" />
                     <group>
                         <field
-                            name="simple_in_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
-                        />
+              name="simple_in_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
+            />
                         <field
-                            name="simple_out_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
-                        />
+              name="simple_out_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
+            />
                         <field
-                            name="simple_future_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
-                        />
+              name="simple_future_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'simple')]}"
+            />
                     </group>
                     <group colspan="4" col="4">
                         <field
-                            name="pre_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="pre_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="out_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="out_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="confirmed_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="confirmed_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="paid_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="paid_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="staff_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="staff_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="on_board_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="on_board_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="to_assign_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="to_assign_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="paid_checkin_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="paid_checkin_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="pending_payment_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="pending_payment_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                         <field
-                            name="overpayment_reservation_color"
-                            widget="color"
-                            attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
-                        />
+              name="overpayment_reservation_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
+                        <field
+              name="warning_to_invoice_color"
+              widget="color"
+              attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
+            />
                     </group>
                 </group>
             </xpath>
@@ -101,20 +106,20 @@
                             <field name="agency_id" options="{'no_create': True}" />
                             <field name="pms_api_alowed_payments" />
                             <field
-                                name="pms_api_payment_journal_id"
-                                options="{'no_create': True}"
-                            />
+                name="pms_api_payment_journal_id"
+                options="{'no_create': True}"
+              />
                             <field name="pms_api_payment_identifier" />
                             <field
-                                name="main_avail_plan_id"
-                                string="Main Availability Plan"
-                            />
+                name="main_avail_plan_id"
+                string="Main Availability Plan"
+              />
                             <field name="main_pricelist_id" string="Main Pricelist" />
                             <field
-                                name="excluded_room_type_ids"
-                                widget="many2many_tags"
-                                string="Excluded Room Types"
-                            />
+                name="excluded_room_type_ids"
+                widget="many2many_tags"
+                string="Excluded Room Types"
+              />
                         </tree>
                     </field>
                 </group>

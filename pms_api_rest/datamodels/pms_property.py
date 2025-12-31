@@ -8,6 +8,7 @@ class PmsPropertySearchParam(Datamodel):
     _name = "pms.property.search.param"
     name = fields.String(required=False, allow_none=False)
 
+
 class RoomdooAppMenu(Datamodel):
     _name = "roomdoo.app.menu"
     label = fields.String(required=True)
@@ -35,6 +36,7 @@ class PmsPropertyInfo(Datamodel):
     simpleOutColor = fields.String(required=False, allow_none=True)
     simpleInColor = fields.String(required=False, allow_none=True)
     simpleFutureColor = fields.String(required=False, allow_none=True)
+    warningToInvoiceColor = fields.String(required=False, allow_none=True)
     language = fields.String(required=True, allow_none=False)
     hotelImageUrl = fields.String(required=False, allow_none=True)
     street = fields.String(required=False, allow_none=True)
@@ -48,5 +50,6 @@ class PmsPropertyInfo(Datamodel):
     canDownloadIneReport = fields.Boolean(required=True, allow_none=False)
     companyName = fields.String(required=False, allow_none=True)
     maxAmountSimplifiedInvoice = fields.Float(required=False, allow_none=True)
-    supportUrl =  NestedModel("roomdoo.app.menu")
+    supportUrl = NestedModel("roomdoo.app.menu")
     linksRoomdoo = fields.List(NestedModel("roomdoo.app.menu"))
+    warningToInvoiceColor = fields.String(required=False, allow_none=True)

@@ -26,6 +26,18 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
             or previous_item["reservation_id"] != calendar_item["reservation_id"]
         )
     )
+    # Warning to invoice to reservation with checkout < today
+    # and invoice_state in ('to invoice','to_confirm')
+    warning_to_invoice = (
+        True
+        if (
+            calendar_item["checkout"]
+            and calendar_item["checkout"] < datetime.today().date()
+            and calendar_item["invoice_status"] in ("to invoice", "to_confirm")
+        )
+        else None
+    )
+
     return {
         "date": datetime.combine(
             calendar_item["date"], datetime.min.time()
@@ -63,6 +75,7 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         else None,
         "nextLineSplitted": next_itemSplitted,
         "previousLineSplitted": previous_itemSplitted,
+        "isWarningToInvoice": warning_to_invoice,
     }
 
 
@@ -143,6 +156,7 @@ class PmsCalendarService(Component):
             "min_stay_arrival": "ru.min_stay_arrival min_stay_arrival",
             "max_stay": "ru.max_stay max_stay",
             "max_stay_arrival": "ru.max_stay_arrival max_stay_arrival",
+            "invoice_status": "f.invoice_status invoice_status",
         }
         selected_fields_sql = list(selected_fields_mapper.values())
         sql_select = "SELECT %s" % ", ".join(selected_fields_sql)
@@ -805,7 +819,6 @@ class PmsCalendarService(Component):
     )
     def update_reservation(self, reservation_id, reservation_lines_changes):
         if reservation_lines_changes.reservationLinesChanges:
-
             # TEMP: Disabled temporal date changes to avoid drag&drops errors
             lines_to_change = (
                 self.env["pms.reservation.line"]

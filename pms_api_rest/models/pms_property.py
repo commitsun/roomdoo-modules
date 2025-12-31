@@ -99,6 +99,12 @@ class PmsProperty(models.Model):
         default="rgba(4, 95, 118)",
     )
 
+    warning_to_invoice_color = fields.Char(
+        string="Warning to Invoice",
+        help="Color for reservations with warning to invoice in the planning.",
+        default="rgba(255, 165, 0)",
+    )
+
     hotel_image_pms_api_rest = fields.Image(
         string="Hotel image",
         store=True,
@@ -632,11 +638,10 @@ class PmsProperty(models.Model):
                             ]
                         )
                     )
-                    if (
-                        not property_client_conf
-                        or (filter_room_type_id and filter_room_type_id in (
-                            property_client_conf.excluded_room_type_ids.ids
-                        ))
+                    if not property_client_conf or (
+                        filter_room_type_id
+                        and filter_room_type_id
+                        in (property_client_conf.excluded_room_type_ids.ids)
                     ):
                         continue
                     room_type_ids = (
@@ -740,16 +745,13 @@ class PmsProperty(models.Model):
     def get_roomdoo_app_menu(self):
         """Get Roomdoo App Menu for the property."""
         self.ensure_one()
-        return (
-            self.env["roomdoo.app.menu"]
-            .search(
-                [
-                    "|",
-                    ("property_ids", "=", False),
-                    ("property_ids", "in", self._ids),
-                    ("support_url", "=", False),
-                ]
-            )
+        return self.env["roomdoo.app.menu"].search(
+            [
+                "|",
+                ("property_ids", "=", False),
+                ("property_ids", "in", self._ids),
+                ("support_url", "=", False),
+            ]
         )
 
     def get_roomdoo_support_url(self):
@@ -757,19 +759,18 @@ class PmsProperty(models.Model):
         self.ensure_one()
 
         support_url = self.env["roomdoo.app.menu"].search(
+            [
+                ("property_ids", "in", self._ids),
+                ("support_url", "=", True),
+            ],
+            limit=1,
+        )
+        if not support_url:
+            support_url = self.env["roomdoo.app.menu"].search(
                 [
-                    ("property_ids", "in", self._ids),
+                    ("property_ids", "=", False),
                     ("support_url", "=", True),
                 ],
                 limit=1,
             )
-        if not support_url:
-
-            support_url = self.env["roomdoo.app.menu"].search(
-                    [
-                    ("property_ids", "=", False),
-                        ("support_url", "=", True),
-                    ],
-                    limit=1,
-                )
         return support_url

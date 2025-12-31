@@ -89,6 +89,7 @@ class PmsCalendarInfo(Datamodel):
     priceDayTotal = fields.Float(required=False, allow_none=True)
     priceDayTotalServices = fields.Float(required=False, allow_none=True)
     isReselling = fields.Boolean(required=False, allow_none=False)
+    isWarningToInvoice = fields.Boolean(required=False, allow_none=False)
 
 
 class PmsCalendarRenderInfo(Datamodel):

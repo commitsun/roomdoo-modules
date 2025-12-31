@@ -79,6 +79,7 @@ class PmsPropertyService(Component):
                     simpleOutColor=prop.simple_out_color,
                     simpleInColor=prop.simple_in_color,
                     simpleFutureColor=prop.simple_future_color,
+                    warningToInvoiceColor=prop.warning_to_invoice_color,
                     language=prop.lang,
                     isOCRAvailable=True if prop.ocr_checkin_supplier else False,
                     hotelImageUrl=url_image_pms_api_rest(
@@ -176,6 +177,7 @@ class PmsPropertyService(Component):
                 staffReservationColor=pms_property.staff_reservation_color,
                 toAssignReservationColor=pms_property.to_assign_reservation_color,
                 pendingPaymentReservationColor=pms_property.pending_payment_reservation_color,
+                warningToInvoiceColor=pms_property.warning_to_invoice_color,
                 language=pms_property.lang,
                 street=pms_property.street if pms_property.street else None,
                 street2=pms_property.street2 if pms_property.street2 else None,
@@ -196,17 +198,17 @@ class PmsPropertyService(Component):
                 maxAmountSimplifiedInvoice=pms_property.max_amount_simplified_invoice
                 if pms_property.max_amount_simplified_invoice
                 else None,
-                    supportUrl=RoomdooAppMenu(
-                        label=property_support_menu.name,
-                        id=property_support_menu.id,
-                    ),
-                    linksRoomdoo=[
-                        RoomdooAppMenu(
-                            label=menu.name,
-                            id=menu.id,
-                        )
-                        for menu in property_menus
-                    ],
+                supportUrl=RoomdooAppMenu(
+                    label=property_support_menu.name,
+                    id=property_support_menu.id,
+                ),
+                linksRoomdoo=[
+                    RoomdooAppMenu(
+                        label=menu.name,
+                        id=menu.id,
+                    )
+                    for menu in property_menus
+                ],
             )
 
         return res
