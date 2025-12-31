@@ -10,5 +10,4 @@ class PmsRoom(models.Model):
             ("dirty", "Dirty"),
         ],
         string="Cleaning Status",
-        compute="_compute_cleaning_status",
     )

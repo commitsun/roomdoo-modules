@@ -38,13 +38,18 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         else None
     )
 
-    # Precheckin status, "completed" if ratio_checkin_data is 100,
-    # "partial" if between 0 and 100, "todo" if 0 or None
+    # Precheckin status, "completed" if count_pending_arrival == 0
+    # "partial" if 0 < count_pending_arrival < adults + children
+    # "todo" if count_pending_arrival == adults + children
     precheckin_status = None
-    if calendar_item["ratio_checkin_data"] is not None:
-        if calendar_item["ratio_checkin_data"] == 100:
+    if calendar_item["count_pending_arrival"] is not None:
+        if calendar_item["count_pending_arrival"] == 0:
             precheckin_status = "completed"
-        elif 0 < calendar_item["ratio_checkin_data"] < 100:
+        elif (
+            0
+            < calendar_item["count_pending_arrival"]
+            < calendar_item["adults"] + calendar_item["children"]
+        ):
             precheckin_status = "partial"
         else:
             precheckin_status = "todo"
@@ -169,7 +174,7 @@ class PmsCalendarService(Component):
             "max_stay": "ru.max_stay max_stay",
             "max_stay_arrival": "ru.max_stay_arrival max_stay_arrival",
             "invoice_status": "f.invoice_status invoice_status",
-            "ratio_checkin_data": "r.ratio_checkin_data ratio_checkin_data",
+            "count_pending_arrival": "r.count_pending_arrival count_pending_arrival",
         }
         selected_fields_sql = list(selected_fields_mapper.values())
         sql_select = "SELECT %s" % ", ".join(selected_fields_sql)
