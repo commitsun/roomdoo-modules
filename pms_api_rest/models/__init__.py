@@ -12,3 +12,4 @@ from . import pms_checkin_partner
 from . import pms_reservation
 from . import pms_availability
 from . import roomdoo_app_menu
+from . import ir_http
