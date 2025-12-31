@@ -38,6 +38,17 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         else None
     )
 
+    # Precheckin status, "completed" if ratio_checkin_data is 100,
+    # "partial" if between 0 and 100, "todo" if 0 or None
+    precheckin_status = None
+    if calendar_item["ratio_checkin_data"] is not None:
+        if calendar_item["ratio_checkin_data"] == 100:
+            precheckin_status = "completed"
+        elif 0 < calendar_item["ratio_checkin_data"] < 100:
+            precheckin_status = "partial"
+        else:
+            precheckin_status = "todo"
+
     return {
         "date": datetime.combine(
             calendar_item["date"], datetime.min.time()
@@ -76,6 +87,7 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         "nextLineSplitted": next_itemSplitted,
         "previousLineSplitted": previous_itemSplitted,
         "isWarningToInvoice": warning_to_invoice,
+        "precheckinStatus": precheckin_status,
     }
 
 
@@ -157,6 +169,7 @@ class PmsCalendarService(Component):
             "max_stay": "ru.max_stay max_stay",
             "max_stay_arrival": "ru.max_stay_arrival max_stay_arrival",
             "invoice_status": "f.invoice_status invoice_status",
+            "ratio_checkin_data": "r.ratio_checkin_data ratio_checkin_data",
         }
         selected_fields_sql = list(selected_fields_mapper.values())
         sql_select = "SELECT %s" % ", ".join(selected_fields_sql)
