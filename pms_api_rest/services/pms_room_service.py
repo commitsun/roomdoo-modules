@@ -105,6 +105,7 @@ class PmsRoomService(Component):
                         lambda x: x.is_add_code_room_name
                     ).name
                     else "",
+                    cleaningStatus=room.cleaning_status,
                 )
             )
         return result_rooms
@@ -134,6 +135,7 @@ class PmsRoomService(Component):
             capacity=room.capacity,
             shortName=room.short_name,
             extraBedsAllowed=room.extra_beds_allowed,
+            cleaningStatus=room.cleaning_status,
         )
 
     @restapi.method(
@@ -156,6 +158,11 @@ class PmsRoomService(Component):
         room_vals = {}
         if pms_room_info_data.name:
             room_vals["name"] = pms_room_info_data.name
+        if (
+            pms_room_info_data.cleaningStatus
+            and pms_room_info_data.cleaningStatus != room.cleaning_status
+        ):
+            room_vals["cleaning_status"] = pms_room_info_data.cleaningStatus
         if room_vals:
             room.write(room_vals)
 

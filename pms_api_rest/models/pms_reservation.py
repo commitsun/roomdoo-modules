@@ -103,3 +103,13 @@ class PmsReservation(models.Model):
         ):
             cmds.append((2, service_to_remove.id))
         return cmds
+
+    def action_reservation_checkout(self):
+        res = super().action_reservation_checkout()
+        for reservation in self:
+            last_line = max(
+                reservation.reservation_line_ids, key=lambda l: l.date, default=False
+            )
+            if last_line:
+                last_line.room_id.cleaning_status = "dirty"
+        return res
