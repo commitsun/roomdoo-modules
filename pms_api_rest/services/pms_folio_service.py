@@ -231,6 +231,20 @@ class PmsFolioService(Component):
                 subdomains = [
                     [("name", "ilike", target)],
                     [("partner_name", "ilike", "%".join(target.split(" ")))],
+                    [
+                        (
+                            "partner_name",
+                            "ilike",
+                            "%".join(target.split(" ")),
+                        )
+                    ],
+                    [
+                        (
+                            "checkin_partner_ids.name",
+                            "ilike",
+                            "%".join(target.split(" ")),
+                        )
+                    ],
                     [("mobile", "ilike", target)],
                     [("external_reference", "ilike", target)],
                 ]
