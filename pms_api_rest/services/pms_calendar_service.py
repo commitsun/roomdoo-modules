@@ -48,7 +48,7 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         elif (
             0
             < calendar_item["count_pending_arrival"]
-            < calendar_item["adults"] + calendar_item["children"]
+            < (calendar_item["adults"] or 0) + (calendar_item["children"] or 0)
         ):
             precheckin_status = "partial"
         else:
@@ -78,7 +78,7 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
             calendar_item["checkout"], datetime.min.time()
         ).isoformat(),
         "priceTotal": calendar_item["price_total"],
-        "adults": calendar_item["adults"],
+        "adults": calendar_item["adults"] or 0,
         "children": calendar_item["children"] or 0,
         "pendingPayment": calendar_item["folio_pending_amount"],
         "closureReasonId": calendar_item["closure_reason_id"],
