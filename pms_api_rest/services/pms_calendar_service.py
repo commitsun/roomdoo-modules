@@ -33,21 +33,21 @@ def build_reservation_line_info(calendar_item, previous_item=False, next_item=Fa
         if (
             calendar_item["checkout"]
             and calendar_item["checkout"] < datetime.today().date()
-            and calendar_item["invoice_status"] in ("to invoice", "to_confirm")
+            and calendar_item["invoice_status"] in ("to_invoice", "to_confirm")
         )
         else None
     )
 
-    # Precheckin status, "completed" if count_pending_arrival == 0
-    # "partial" if 0 < count_pending_arrival < adults + children
-    # "todo" if count_pending_arrival == adults + children
+    # Precheckin status, "completed" if pending_checkin_data == 0
+    # "partial" if 0 < pending_checkin_data < adults + children
+    # "todo" if pending_checkin_data == adults + children
     precheckin_status = None
-    if calendar_item["count_pending_arrival"] is not None:
-        if calendar_item["count_pending_arrival"] == 0:
+    if calendar_item["pending_checkin_data"] is not None:
+        if calendar_item["pending_checkin_data"] == 0:
             precheckin_status = "completed"
         elif (
             0
-            < calendar_item["count_pending_arrival"]
+            < calendar_item["pending_checkin_data"]
             < (calendar_item["adults"] or 0) + (calendar_item["children"] or 0)
         ):
             precheckin_status = "partial"
@@ -174,7 +174,7 @@ class PmsCalendarService(Component):
             "max_stay": "ru.max_stay max_stay",
             "max_stay_arrival": "ru.max_stay_arrival max_stay_arrival",
             "invoice_status": "f.invoice_status invoice_status",
-            "count_pending_arrival": "r.count_pending_arrival count_pending_arrival",
+            "pending_checkin_data": "r.pending_checkin_data pending_checkin_data",
         }
         selected_fields_sql = list(selected_fields_mapper.values())
         sql_select = "SELECT %s" % ", ".join(selected_fields_sql)
