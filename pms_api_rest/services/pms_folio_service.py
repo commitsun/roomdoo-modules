@@ -897,10 +897,12 @@ class PmsFolioService(Component):
             else:
                 vals = {
                     "pms_property_id": pms_folio_info.pmsPropertyId,
-                    "agency_id": agency.id if agency else False,
+                    "agency_id": self.get_channel_origin_id(
+                        pms_folio_info.saleChannelId, pms_folio_info.agencyId
+                    )[1],
                     "sale_channel_origin_id": self.get_channel_origin_id(
                         pms_folio_info.saleChannelId, pms_folio_info.agencyId
-                    ),
+                    )[0],
                     "reservation_type": pms_folio_info.reservationType or "normal",
                     "external_reference": pms_folio_info.externalReference,
                     "internal_comment": pms_folio_info.internalComment,
@@ -1942,26 +1944,28 @@ class PmsFolioService(Component):
         Returns the channel origin id for the given agency
         or website channel if not agency is given
         (TODO change by configuration user api in the future)
+        Return de agency sale channel id and agency id tuple
         """
         external_app = self.env.user.pms_api_client
         if sale_channel_id:
-            return sale_channel_id
+            return sale_channel_id, agency_id
         if not agency_id and external_app:
-            channel_origin_id = (
-                self.env.user.partner_id.sale_channel_id.id
-                if self.env.user.partner_id.sale_channel_id
-                else self.env["pms.sale.channel"]
-                .sudo()
-                .search(
-                    [("channel_type", "=", "direct"), ("is_on_line", "=", True)],
-                    limit=1,
+            partner = self.env.user.partner_id
+            agency_id = partner if partner.is_agency else False
+            if not agency_id:
+                channel_origin_id = (
+                    self.env["pms.sale.channel"]
+                    .sudo()
+                    .search(
+                        [("channel_type", "=", "direct"), ("is_on_line", "=", True)],
+                        limit=1,
+                    )
+                    .id
                 )
-                .id
-            )
-            return channel_origin_id
+                return channel_origin_id, False
         agency = self.env["res.partner"].sudo().browse(agency_id)
         if agency:
-            return agency.sale_channel_id.id
+            return agency.sale_channel_id.id, agency_id.id
         return False
 
     def get_language(self, lang_code):
