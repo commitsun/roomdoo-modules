@@ -213,7 +213,7 @@ class PmsTransactionService(Component):
                     if transaction.create_uid
                     else None,
                     transactionType=transaction.pms_api_transaction_type or None,
-                    isReconcilied=transaction.is_reconciled,
+                    isReconcilied=transaction.is_reconciled or transaction.is_matched,
                     downPaymentInvoiceId=downpayment_invoice.id
                     if downpayment_invoice
                     else None,
@@ -268,7 +268,7 @@ class PmsTransactionService(Component):
             reference=transaction.ref if transaction.ref else None,
             createUid=transaction.create_uid.id if transaction.create_uid else None,
             transactionType=transaction.pms_api_transaction_type or None,
-            isReconcilied=transaction.is_reconciled,
+            isReconcilied=transaction.is_reconciled or transaction.is_matched,
             downPaymentInvoiceId=downpayment_invoice.id
             if downpayment_invoice
             else None,
