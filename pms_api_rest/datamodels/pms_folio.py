@@ -17,6 +17,12 @@ class PmsFolioSearchParam(Datamodel):
     createDateFrom = fields.String(required=False, allow_none=True)
     createDateTo = fields.String(required=False, allow_none=True)
     lastUpdateFrom = fields.String(required=False, allow_none=True)
+    checkinDate = fields.String(required=False, allow_none=True)
+    checkoutDate = fields.String(required=False, allow_none=True)
+    pendingCheckin = fields.Boolean(required=False, allow_none=True)
+    pendingCheckout = fields.Boolean(required=False, allow_none=True)
+    completedCheckin = fields.Boolean(required=False, allow_none=True)
+    completedCheckout = fields.Boolean(required=False, allow_none=True)
 
 
 class PmsFolioInfo(Datamodel):
