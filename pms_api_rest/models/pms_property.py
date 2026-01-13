@@ -102,7 +102,7 @@ class PmsProperty(models.Model):
     warning_to_invoice_color = fields.Char(
         string="Warning to Invoice",
         help="Color for reservations with warning to invoice in the planning.",
-        default="rgba(255, 165, 0)",
+        default="rgba(117, 77, 77)",
     )
 
     hotel_image_pms_api_rest = fields.Image(
