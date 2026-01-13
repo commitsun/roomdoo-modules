@@ -193,6 +193,14 @@ class PmsPartnerService(Component):
                 )
             domain_partner_search_field = expression.OR(subdomains)
             domain = expression.AND([domain, domain_partner_search_field])
+        allowed_company_ids = self.env.user.company_ids.ids
+        company_domain = expression.OR(
+            [
+                [("company_id", "=", False)],
+                [("company_id", "in", allowed_company_ids)],
+            ]
+        )
+        domain = expression.AND([domain, company_domain])
         PmsPartnerResults = self.env.datamodels["pms.partner.results"]
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         total_partners = self.env["res.partner"].sudo().search_count(domain)
