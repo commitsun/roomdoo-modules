@@ -4,6 +4,8 @@ from fastapi import Depends, HTTPException
 
 from odoo import api, models
 from odoo.api import Environment
+from odoo.exceptions import MissingError
+from odoo.osv import expression
 
 from odoo.addons.base.models.res_partner import Partner
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -73,13 +75,14 @@ async def contactDetail(
     contact_id: int,
 ) -> ContactDetail:
     """Get detail info of a contact"""
-    partner = env["res.partner"].sudo().search([("id", "=", contact_id)])
-    if not partner:
+    helper = env["pms_api_contact.contact_router.helper"].new()
+    try:
+        partner = helper.get(contact_id)
+    except MissingError as err:
         raise HTTPException(
             status_code=404,
             detail="contact not found",
-        )
-    ContactDetail.pms_api_check_access(env.user, partner)
+        ) from err
     return ContactDetail.from_res_partner(partner)
 
 
@@ -126,11 +129,24 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     def _get_domain_adapter(self):
         return [("type", "in", ["contact"])]
 
+    def _get_multicompany_rule(self):
+        allowed_company_ids = self.env.user.company_ids.ids
+        company_domain = expression.OR(
+            [
+                [("company_id", "=", False)],
+                [("company_id", "in", allowed_company_ids)],
+            ]
+        )
+        return company_domain
+
     @property
     def model_adapter(self) -> FilteredModelAdapter[Partner]:
-        return FilteredModelAdapter[Partner](self.env, self._get_domain_adapter())
+        base_domain = self._get_domain_adapter()
+        multicompany_domain = self._get_multicompany_rule()
+        model_domain = expression.AND([base_domain, multicompany_domain])
+        return FilteredModelAdapter[Partner](self.env, model_domain)
 
-    def _get(self, record_id) -> Partner:
+    def get(self, record_id) -> Partner:
         return self.model_adapter.get(record_id)
 
     def _search(self, paging, params, order) -> tuple[int, Partner]:
