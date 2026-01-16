@@ -18,3 +18,4 @@ from . import customer
 from . import supplier
 from . import guest
 from . import pms_reservation
+from . import invoice
