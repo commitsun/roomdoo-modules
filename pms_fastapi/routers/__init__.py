@@ -16,3 +16,4 @@ from . import customer
 from . import supplier
 from . import guest
 from . import pms_folio
+from . import invoice

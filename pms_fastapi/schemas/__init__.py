@@ -21,3 +21,4 @@ from . import pms_reservation
 from . import pms_folio
 from . import pms_service
 from . import pms_room
+from . import invoice
