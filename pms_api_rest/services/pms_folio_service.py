@@ -1951,7 +1951,7 @@ class PmsFolioService(Component):
             return sale_channel_id, agency_id
         if not agency_id and external_app:
             partner = self.env.user.partner_id
-            agency_id = partner if partner.is_agency else False
+            agency_id = partner.id if partner.is_agency else False
             if not agency_id:
                 channel_origin_id = (
                     self.env["pms.sale.channel"]
@@ -1965,7 +1965,7 @@ class PmsFolioService(Component):
                 return channel_origin_id, False
         agency = self.env["res.partner"].sudo().browse(agency_id)
         if agency:
-            return agency.sale_channel_id.id, agency_id.id
+            return agency.sale_channel_id.id, agency.id
         return False
 
     def get_language(self, lang_code):
@@ -2059,7 +2059,6 @@ class PmsFolioService(Component):
                     [
                         ("external_reference", "ilike", external_reference),
                         ("pms_property_id", "=", pms_folio_info.pmsPropertyId),
-                        ("agency_id", "=", pms_folio_info.agencyId),
                     ]
                 )
             )
