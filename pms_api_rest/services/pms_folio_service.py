@@ -2711,6 +2711,22 @@ class PmsFolioService(Component):
 
     def _generate_payment_link(self, folio_record, amount=False):
         vals = dict()
+        # if not provider configured, return ""
+        providers = (
+            self.env["payment.provider"]
+            .sudo()
+            .search(
+                [
+                    ("state", "=", "enabled"),
+                    ("company_id", "=", folio_record.company_id.id),
+                    "|",
+                    ("pms_property_ids", "=", folio_record.pms_property_id.id),
+                    ("pms_property_ids", "=", False),
+                ],
+            )
+        )
+        if not providers:
+            return ""
         if amount:
             vals["amount"] = amount
         wizard_payment_link = (
