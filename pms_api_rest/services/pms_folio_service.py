@@ -1062,14 +1062,36 @@ class PmsFolioService(Component):
                                 "reservation_id": reservation_record.id,
                                 "discount": service.discount or 0,
                             }
-                            if not (product.per_day or product.per_person):
-                                vals.update(
+                            new_service = self.env["pms.service"].sudo().create(vals)
+                            # REVIEW (ExternalApps integration):
+                            # For per-day products, ExternalApps sends `priceUnit` as the total price
+                            # for all days, so it must be divided by the number of days.
+                            # For per-person services, `qty` is already sent as persons per day.
+                            if external_app and (
+                                product.per_day
+                                and product.consumed_on in ("before", "after")
+                            ):
+                                days = (
+                                    reservation_record.checkout
+                                    - reservation_record.checkin
+                                ).days
+                                new_service.service_line_ids.write(
                                     {
-                                        "product_qty": service.quantity,
+                                        "day_qty": service.quantity,
+                                        "price_unit": round(
+                                            service.priceUnit / days, 2
+                                        ),
+                                        "discount": service.discount or 0,
                                     }
                                 )
-                            new_service = self.env["pms.service"].sudo().create(vals)
-                            new_service.service_line_ids.price_unit = service.priceUnit
+                            else:
+                                new_service.service_line_ids.write(
+                                    {
+                                        "discount": service.discount or 0,
+                                        "price_unit": service.priceUnit,
+                                        "day_qty": service.quantity,
+                                    }
+                                )
                 # Force compute board service default if not board service is set
                 # REVIEW: Precharge the board service in the app form?
                 if (
