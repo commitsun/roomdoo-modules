@@ -2287,7 +2287,7 @@ class PmsFolioService(Component):
                 # cancel reservations added manually
                 old_reservations_to_cancel = folio.reservation_ids.filtered(
                     lambda r: r.state != "cancel"
-                    and r.create_uid == self.env.user.id
+                    and r.create_uid.id == self.env.user.id
                     and r.id not in update_reservation_ids
                 )
                 old_reservations_to_cancel.with_context(
