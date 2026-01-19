@@ -578,7 +578,7 @@ class PmsFolioService(Component):
                             if payment.partner_id
                             else None,
                             reference=payment.ref if payment.ref else None,
-                            isReconcilied=payment.is_reconciled,
+                            isReconcilied=payment.is_matched,
                             downPaymentInvoiceId=downpayment_invoice.id
                             if downpayment_invoice
                             else None,
@@ -1988,7 +1988,7 @@ class PmsFolioService(Component):
         agency = self.env["res.partner"].sudo().browse(agency_id)
         if agency:
             return agency.sale_channel_id.id, agency.id
-        return False
+        return False, False
 
     def get_language(self, lang_code):
         """

@@ -434,7 +434,7 @@ class PmsPartnerService(Component):
                     reference=payment.ref if payment.ref else None,
                     createUid=payment.create_uid.id if payment.create_uid else None,
                     transactionType=payment.pms_api_transaction_type or None,
-                    isReconcilied=payment.is_reconciled,
+                    isReconcilied=payment.is_matched,
                     downPaymentInvoiceId=payment.reconciled_invoice_ids.filtered(
                         lambda inv: inv._is_downpayment()
                     ),
