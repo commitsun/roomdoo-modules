@@ -837,14 +837,16 @@ class PmsProperty(models.Model):
     @api.model
     def pms_cron_rule_push(self):
         neobookings_user = self.env["res.users"].search(
-            [("login", "=", "neobookings@roomdoo.com")]
+            [("pms_api_client", "=", True)], limit=1
         )
         neobookings_property_ids = neobookings_user.pms_property_ids.ids
-        rules_to_export = self.env["pms.availability.plan.rule"].search([
-            ("date", ">=", fields.Date.today()),
-            ("pms_property_id", "in", neobookings_property_ids),
-            ("write_date", ">", fields.Datetime.now() - timedelta(minutes=10))
-        ])
+        rules_to_export = self.env["pms.availability.plan.rule"].search(
+            [
+                ("date", ">=", fields.Date.today()),
+                ("pms_property_id", "in", neobookings_property_ids),
+                ("write_date", ">", fields.Datetime.now() - timedelta(minutes=10)),
+            ]
+        )
         pms_properties = rules_to_export.mapped("pms_property_id")
         for pms_property in pms_properties:
             neobookings_property = pms_property
@@ -853,8 +855,8 @@ class PmsProperty(models.Model):
             )
             neobookings_availability_plan_id = ota_neo_settings.main_avail_plan_id.id
             items_to_upload = rules_to_export.filtered(
-                lambda r: r.pms_property_id.id == pms_property.id and
-                r.availability_plan_id.id == neobookings_availability_plan_id
+                lambda r: r.pms_property_id.id == pms_property.id
+                and r.availability_plan_id.id == neobookings_availability_plan_id
             )
             payload, endpoint = neobookings_property.get_payload_rules(
                 rules=items_to_upload, client=neobookings_user
