@@ -103,7 +103,7 @@ class ChannelChildMapperImport(AbstractComponent):
     def get_all_items(self, mapper, items, parent, to_attr, options):
         mapped = []
         neobookings_user = self.env["res.users"].search(
-            [("login", "=", "neobookings@roomdoo.com")]
+            [("pms_api_client", "=", True)], limit=1
         )
         neobooking_item_ids = []
         for item in items:
@@ -154,10 +154,16 @@ class ChannelChildMapperImport(AbstractComponent):
                 max_date = max(items_to_upload.mapped("date_end_consumption"))
                 room_type_ids = (
                     self.env["pms.room.type"]
-                    .search([
-                        ("product_id", "in", items_to_upload.mapped("product_id").ids),
-                        ("id", "not in", room_types_excluded_ids),
-                    ])
+                    .search(
+                        [
+                            (
+                                "product_id",
+                                "in",
+                                items_to_upload.mapped("product_id").ids,
+                            ),
+                            ("id", "not in", room_types_excluded_ids),
+                        ]
+                    )
                     .ids
                 )
                 payload, endpoint = neobookings_property.get_payload_prices(
