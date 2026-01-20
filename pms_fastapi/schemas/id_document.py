@@ -7,4 +7,4 @@ class IdDocument(PmsBaseModel):
 
     @classmethod
     def from_id_number(cls, document_rec):
-        return IdDocument(type=document_rec.category_id.name, number=document_rec.name)
+        return cls(type=document_rec.category_id.name, number=document_rec.name)
