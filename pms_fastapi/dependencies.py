@@ -43,6 +43,8 @@ def create_order_dependency(
     ) -> str:
         valid_fields = set(f.value for f in field_enum)
         result = []
+        if len(orderBy) == 1 and "," in orderBy[0]:
+            orderBy = [f.strip() for f in orderBy[0].split(",")]
 
         for field in orderBy:
             direction = "asc"
