@@ -11,6 +11,7 @@ from odoo.osv import expression
 from .base import BaseSearch, PmsBaseModel
 from .contact import ContactId
 from .currency import CurrencySummary
+from .payment_method import PaymentMethodSummary
 
 
 class InvoiceOrderField(str, Enum):
@@ -22,6 +23,11 @@ INVOICE_ORDER_MAPPING = {
     "name": "name",
     "invoice_date": "invoice_date",
 }
+
+
+class InvoiceTypeEnum(str, Enum):
+    out_invoice = "out_invoice"
+    out_refund = "out_refund"
 
 
 class InvoiceStateEnum(str, Enum):
@@ -40,6 +46,7 @@ class InvoicePaymentStateEnum(str, Enum):
 class InvoicePayment(PmsBaseModel):
     # The field is called date in account.payment, so we can map it accordingly.
     paymentDate: date
+    paymentMethod: PaymentMethodSummary | None = None
     amount: float = Field(0.0, alias="amount")
     currency_id: CurrencySummary = Field(alias="currency")
     ref: str
@@ -54,12 +61,19 @@ class InvoicePayment(PmsBaseModel):
             data["currency_id"] = CurrencySummary.from_res_currency(
                 account_payment.currency_id
             )
+        if account_payment.payment_method_line_id:
+            data[
+                "paymentMethod"
+            ] = PaymentMethodSummary.from_account_payment_method_line(
+                account_payment.payment_method_line_id
+            )
         return cls(**data)
 
 
 class InvoiceSummary(PmsBaseModel):
     id: int
     name: str = Field(alias="name")
+    move_type: InvoiceTypeEnum | None = Field(None, alias="invoiceType")
     partner_id: ContactId | None = Field(None, alias="partnerId")
     invoice_date: date | None = Field(None, alias="invoiceDate")
     ref: str | None = Field(None, alias="reference")
@@ -112,6 +126,12 @@ class InvoiceSearch(BaseSearch):
             description="Search across number, origin, reference, "
             "payment reference, contact(email, vat, name).",
         ),
+        invoiceType: Annotated[
+            InvoiceTypeEnum | None,
+            Query(
+                description="Filter by invoice type.",
+            ),
+        ] = None,
         name: str | None = Query(
             default=None,
             description="Filter by invoice number.",
@@ -154,6 +174,7 @@ class InvoiceSearch(BaseSearch):
         self.pmsProperty = pmsProperty
         self.globalSearch = globalSearch
         self.name = name
+        self.invoiceType = invoiceType
         self.reference = reference
         self.priceTotal = priceTotal
         self.paymentState = paymentState
@@ -175,6 +196,13 @@ class InvoiceSearch(BaseSearch):
                 [
                     domain,
                     [("pms_property_id", "in", env.user.pms_property_ids.ids)],
+                ]
+            )
+        if self.invoiceType:
+            domain = expression.AND(
+                [
+                    domain,
+                    [("move_type", "=", self.invoiceType.value)],
                 ]
             )
         if self.globalSearch:
