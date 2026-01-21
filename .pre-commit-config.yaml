@@ -106,3 +106,10 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: check-schemas-init
+        name: Check schemas __init__.py imports
+        entry: python scripts/check_schemas_init_pydantic.py
+        language: system
+        pass_filenames: false
