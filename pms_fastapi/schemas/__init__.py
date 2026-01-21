@@ -1,3 +1,4 @@
+from . import base
 from . import pms_login
 from . import language
 from . import user
@@ -6,6 +7,9 @@ from . import country
 from . import country_state
 from . import payment_term
 from . import pricelist
+from . import contact
+from . import currency
+from . import id_document
 from . import contact_id_number
 from . import contact_tag
 from . import pms_sale_channel
@@ -13,3 +17,4 @@ from . import agency
 from . import customer
 from . import supplier
 from . import guest
+from . import pms_reservation
