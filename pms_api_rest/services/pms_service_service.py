@@ -203,12 +203,6 @@ class PmsServiceService(Component):
         report_wizard = (
             self.env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
         )
-        if not report_wizard._fields.get(
-            "x_date_from"
-        ) or not report_wizard._fields.get("x_pms_property_id"):
-            raise MissingError(
-                _("The Query params was modifieds, please contact the administrator")
-            )
         charge_params = {
             "x_date_from": pms_report_search_param.dateFrom,
             "x_date_to": pms_report_search_param.dateTo,

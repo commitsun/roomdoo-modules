@@ -186,7 +186,7 @@ class PmsReservationService(Component):
                 isBlocked=reservation.blocked,
                 cancelledReason=reservation.cancelled_reason
                 if reservation.cancelled_reason
-                else None
+                else None,
             )
         return res
 
@@ -1310,12 +1310,6 @@ class PmsReservationService(Component):
         report_wizard = (
             self.env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
         )
-        if not report_wizard._fields.get(
-            "x_date_from"
-        ) or not report_wizard._fields.get("x_pms_property_id"):
-            raise MissingError(
-                _("The Query params was modifieds, please contact the administrator")
-            )
         charge_params = {
             "x_date_from": pms_report_search_param.dateFrom,
             "x_pms_property_id": pms_property_id,
@@ -1362,12 +1356,6 @@ class PmsReservationService(Component):
         report_wizard = (
             self.env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
         )
-        if not report_wizard._fields.get(
-            "x_date_from"
-        ) or not report_wizard._fields.get("x_pms_property_id"):
-            raise MissingError(
-                _("The Query params was modifieds, please contact the administrator")
-            )
         charge_params = {
             "x_date_from": pms_report_search_param.dateFrom,
             "x_pms_property_id": pms_property_id,
@@ -1532,7 +1520,7 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": f"Esta reserva está pendiente de cobro y de que los huéspedes "
+                "text": "Esta reserva está pendiente de cobro y de que los huéspedes "
                 " registren sus datos: puedes enviarles un recordatorio desde aquí",
                 "priority": 600,
             },
