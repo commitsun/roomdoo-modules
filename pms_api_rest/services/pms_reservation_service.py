@@ -265,7 +265,10 @@ class PmsReservationService(Component):
                 reservation_vals.update({"partner_id": reservation_data.partnerId})
             else:
                 reservation_vals.update({"partner_id": False})
-        if reservation_data.partnerRequests != reservation.partner_requests:
+        if (
+                reservation_data.partnerRequests is not None
+                and reservation_data.partnerRequests != reservation.partner_requests
+        ):
             reservation_vals.update(
                 {"partner_requests": reservation_data.partnerRequests}
             )
