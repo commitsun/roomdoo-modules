@@ -46,7 +46,7 @@ class GuestSummary(ContactBase):
 class GuestSearch(BaseSearch):
     def __init__(
         self,
-        pmsProperty: int | None = Query(
+        pmsPropertyId: int | None = Query(
             default=None,
             description="Filter guests of the given property.",
         ),
@@ -102,10 +102,10 @@ class GuestSearch(BaseSearch):
             ),
         ] = None,
     ):
-        if not isinstance(pmsProperty, QueryType):
-            self.pmsProperty = pmsProperty
+        if not isinstance(pmsPropertyId, QueryType):
+            self.pmsPropertyId = pmsPropertyId
         else:
-            self.pmsProperty = None
+            self.pmsPropertyId = None
         if not isinstance(globalSearch, QueryType):
             self.globalSearch = globalSearch
         else:
@@ -153,9 +153,9 @@ class GuestSearch(BaseSearch):
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
-        if self.pmsProperty:
+        if self.pmsPropertyId:
             domain += [
-                ("pms_checkin_partner_ids.pms_property_id", "=", self.pmsProperty)
+                ("pms_checkin_partner_ids.pms_property_id", "=", self.pmsPropertyId)
             ]
         else:
             domain += [
@@ -225,7 +225,7 @@ class GuestSearch(BaseSearch):
         return domain
 
     def to_odoo_context(self, env: api.Environment) -> dict:
-        if self.pmsProperty:
-            return {"pms_property_ids": [self.pmsProperty]}
+        if self.pmsPropertyId:
+            return {"pms_property_ids": [self.pmsPropertyId]}
         else:
             return {"pms_property_ids": env.user.pms_property_ids.ids}
