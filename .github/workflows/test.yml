@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - "16.0*"
+  push:
+    branches:
+      - "16.0"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    container: ghcr.io/oca/oca-ci/py3.10-odoo16.0:latest
+
+    services:
+      postgres:
+        image: postgres:12.0
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: odoo
+        ports:
+          - 5432:5432
+
+    env:
+      EXCLUDE: "connector_pms_wubook" # Module with broken tests. To be refactored.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install addons and dependencies
+        run: oca_install_addons
+
+      - name: Initialize test db
+        run: oca_init_test_database
+
+      - name: Run tests
+        run: oca_run_tests
+        
+      - name: Coverage summary
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total:** $(coverage report | tail -1 | awk '{print $NF}')" >> $GITHUB_STEP_SUMMARY
