@@ -754,6 +754,7 @@ class PmsPartnerService(Component):
                 {
                     "name": document_number,
                     "category_id": document_type,
+                    "country_id": country,
                 }
             )
         )
