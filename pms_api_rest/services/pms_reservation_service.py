@@ -838,10 +838,6 @@ class PmsReservationService(Component):
                     pms_checkin_partner_info.relationship
                 )
 
-        # if not partner_id we need to force compute to create partner
-        if not checkin_partner.partner_id:
-            checkin_partner._compute_partner_id()
-
         return checkin_partner.id
 
     @restapi.method(
@@ -1082,9 +1078,6 @@ class PmsReservationService(Component):
                     else False,
                 )
             )
-            # if not partner_id we need to force compute to create partner
-            if not checkin_partner_last.partner_id:
-                checkin_partner_last._compute_partner_id()
             return checkin_partner_last.id
         else:
             raise MissingError(
