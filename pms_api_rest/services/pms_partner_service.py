@@ -687,6 +687,19 @@ class PmsPartnerService(Component):
             .sudo()
             ._get_partner_by_document(document_number, doc_type)
         )
+        if not partner:
+            partner = (
+                self.env["res.partner"]
+                .sudo()
+                .search(
+                    [
+                        "|",
+                        ("vat", "ilike", document_number),
+                        ("aeat_identification", "ilike", document_number),
+                    ],
+                    limit=1,
+                )
+            )
         pms_api_check_access(user=self.env.user, records=partner)
         partners = []
         if partner:
