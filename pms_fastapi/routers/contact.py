@@ -183,8 +183,17 @@ class PmsApiContactRouterHelper(models.AbstractModel):
 
     def create_contact(self, data: ContactInsert):
         vals = self._prepare_create_res_partner_vals(data)
-        return self.env["res.partner"].sudo().create(vals)
+        res = self.env["res.partner"].sudo().create(vals)
+        if data.fiscalIdNumberType or data.fiscalIdNumber:
+            res.set_fiscal_document_data(data.fiscalIdNumber, data.fiscalIdNumberType)
+        return res
 
     def update_contact(self, data: ContactUpdate, contact_id: int):
         vals = self._prepare_write_res_partner_vals(data)
-        return self.env["res.partner"].sudo().browse(contact_id).write(vals)
+        partner = self.env["res.partner"].sudo().browse(contact_id)
+        res = partner.write(vals)
+        if data.fiscalIdNumberType or data.fiscalIdNumber:
+            partner.set_fiscal_document_data(
+                data.fiscalIdNumber, data.fiscalIdNumberType
+            )
+        return res

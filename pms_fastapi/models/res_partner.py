@@ -100,3 +100,20 @@ class ResPartner(models.Model):
         """This method returns the fields to use to find the number to use to
         send an SMS on a record."""
         return ["mobile", "phone"]
+
+    def set_fiscal_document_data(
+        self, fiscal_id_number=False, fiscal_id_number_type=False
+    ):
+        """
+        Set the fiscal document data for the partner if the type is vat,
+        Otherwise will be set by other module.
+        The function can receive only one of the two parameters, in that case
+        the other parameter will be taken from the partner record.
+        """
+        if not fiscal_id_number and not fiscal_id_number_type:
+            return
+        if not fiscal_id_number:
+            fiscal_id_number = self.vat
+        if not fiscal_id_number_type:
+            fiscal_id_number_type = "vat"
+        self.write({"vat": fiscal_id_number})

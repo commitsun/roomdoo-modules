@@ -25,6 +25,7 @@ class PropertyId(PmsBaseModel):
 class PropertySummary(PropertyId):
     image: AnyHttpUrl | None = None
     currency: CurrencySummary
+    timezone: str | None = None
 
     @classmethod
     def from_pms_property(cls, pms_property):
@@ -40,4 +41,6 @@ class PropertySummary(PropertyId):
         )
         if image_url:
             data["image"] = image_url
+        if pms_property.tz:
+            data["timezone"] = pms_property.tz
         return cls(**data)

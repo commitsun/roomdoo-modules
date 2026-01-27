@@ -3,14 +3,14 @@ import os
 
 from fastapi import status
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 from ..schemas.instance import Instance
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-class TestInstanceEndpoints(CommonTestRoomdooApi):
+class TestInstanceEndpoints(CommonTestPmsApi):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

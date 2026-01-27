@@ -1,9 +1,9 @@
 from fastapi import status
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 
-class TestsuppliersEndpoints(CommonTestRoomdooApi):
+class TestsuppliersEndpoints(CommonTestPmsApi):
     def test_suppliers_get(self):
         with self._create_test_client() as test_client:
             response = self._login(test_client)

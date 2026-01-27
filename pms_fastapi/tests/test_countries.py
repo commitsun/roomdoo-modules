@@ -1,11 +1,11 @@
 from fastapi import status
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 from ..schemas.country import CountrySummary
 
 
-class TestCountriesEndpoints(CommonTestRoomdooApi):
+class TestCountriesEndpoints(CommonTestPmsApi):
     def test_countries_get(self):
         with self._create_test_client() as test_client:
             response = self._login(test_client)
