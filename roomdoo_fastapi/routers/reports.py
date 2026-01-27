@@ -143,15 +143,6 @@ async def services_report(
     if not query:
         raise MissingError(_("SQL query not found"))
     report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    properties_names = [x["name"] for x in report_wizard.query_properties]
-    if (
-        "x_date_from" not in properties_names
-        or "x_date_to" not in properties_names
-        or "x_pms_property_id" not in properties_names
-    ):
-        raise MissingError(
-            _("The Query params was modifieds, please contact the administrator")
-        )
     charge_params = {
         "x_date_from": fields.Date.to_string(dateFrom),
         "x_date_to": fields.Date.to_string(dateTo),
@@ -159,8 +150,8 @@ async def services_report(
     }
     vals = []
     for item in report_wizard.query_properties:
-        if item["name"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["name"]]})
+        if item["string"] in charge_params:
+            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
 
     report_wizard.write({"query_properties": vals})
     report_wizard.export_sql()
@@ -192,22 +183,14 @@ async def departures_report(
     if not query:
         raise MissingError(_("SQL query not found"))
     report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    properties_names = [x["name"] for x in report_wizard.query_properties]
-    if (
-        "x_date_from" not in properties_names
-        or "x_pms_property_id" not in properties_names
-    ):
-        raise MissingError(
-            _("The Query params was modifieds, please contact the administrator")
-        )
     charge_params = {
         "x_date_from": fields.Date.to_string(dateFrom),
         "x_pms_property_id": pmsPropertyId,
     }
     vals = []
     for item in report_wizard.query_properties:
-        if item["name"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["name"]]})
+        if item["string"] in charge_params:
+            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
 
     report_wizard.write({"query_properties": vals})
     report_wizard.export_sql()
@@ -239,22 +222,14 @@ async def arrivals_report(
     if not query:
         raise MissingError(_("SQL query not found"))
     report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    properties_names = [x["name"] for x in report_wizard.query_properties]
-    if (
-        "x_date_from" not in properties_names
-        or "x_pms_property_id" not in properties_names
-    ):
-        raise MissingError(
-            _("The Query params was modifieds, please contact the administrator")
-        )
     charge_params = {
         "x_date_from": fields.Date.to_string(dateFrom),
         "x_pms_property_id": pmsPropertyId,
     }
     vals = []
     for item in report_wizard.query_properties:
-        if item["name"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["name"]]})
+        if item["string"] in charge_params:
+            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
 
     report_wizard.write({"query_properties": vals})
     report_wizard.export_sql()
