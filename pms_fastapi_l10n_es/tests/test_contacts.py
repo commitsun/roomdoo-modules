@@ -42,10 +42,12 @@ class TestContactsEndpoints(CommonTestPmsApi):
             response = self._login(test_client)
             response = test_client.patch(
                 f"/contacts/{self.test_partner_aeat.id}",
-                json={"fiscalIdNumberType": "other"},
+                json={"fiscalIdNumberType": "another_document"},
             )
             self.env.invalidate_all()
-            self.assertEqual(response.json().get("fiscalIdNumberType"), "other")
+            self.assertEqual(
+                response.json().get("fiscalIdNumberType"), "another_document"
+            )
             self.assertEqual(response.json().get("fiscalIdNumber"), "ABC123456")
             self.assertEqual(self.test_partner_aeat.aeat_identification_type, "06")
             self.assertEqual(self.test_partner_aeat.aeat_identification, "ABC123456")
@@ -55,7 +57,9 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 json={"fiscalIdNumber": "XYZ987654"},
             )
             self.env.invalidate_all()
-            self.assertEqual(response.json().get("fiscalIdNumberType"), "other")
+            self.assertEqual(
+                response.json().get("fiscalIdNumberType"), "another_document"
+            )
             self.assertEqual(response.json().get("fiscalIdNumber"), "XYZ987654")
             self.assertEqual(self.test_partner_aeat.aeat_identification_type, "06")
             self.assertEqual(self.test_partner_aeat.aeat_identification, "XYZ987654")
@@ -87,14 +91,14 @@ class TestContactsEndpoints(CommonTestPmsApi):
             response = self._login(test_client)
             response = test_client.patch(
                 f"/contacts/{self.test_partner_vat.id}",
-                json={"fiscalIdNumber": "ABC123456", "fiscalIdNumberType": "passport"},
+                json={"fiscalIdNumber": "ABC1234567", "fiscalIdNumberType": "passport"},
             )
             self.env.invalidate_all()
             self.assertEqual(response.json().get("fiscalIdNumberType"), "passport")
-            self.assertEqual(response.json().get("fiscalIdNumber"), "ABC123456")
+            self.assertEqual(response.json().get("fiscalIdNumber"), "ABC1234567")
             self.assertEqual(self.test_partner_vat.vat, False)
             self.assertEqual(self.test_partner_vat.aeat_identification_type, "03")
-            self.assertEqual(self.test_partner_vat.aeat_identification, "ABC123456")
+            self.assertEqual(self.test_partner_vat.aeat_identification, "ABC1234567")
 
     def test_change_aeat_identification_to_vat(self):
         with self._create_test_client() as test_client:
