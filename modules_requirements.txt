@@ -1,0 +1,1 @@
+odoo-addon-auth-jwt-login @ git+https://github.com/commitsun/server-auth.git@16.0-mig-auth_jwt_login#subdirectory=auth_jwt_login

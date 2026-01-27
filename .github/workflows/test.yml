@@ -31,6 +31,8 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install custom dependencies
+        run: pip install -r modules_requirements.txt
       - name: Install addons and dependencies
         run: oca_install_addons
 
@@ -39,7 +41,7 @@ jobs:
 
       - name: Run tests
         run: oca_run_tests
-        
+
       - name: Coverage summary
         run: |
           echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
