@@ -2,14 +2,14 @@ import os
 
 from fastapi import status
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 from ..schemas.user import User
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-class TestUserEndpoints(CommonTestRoomdooApi):
+class TestUserEndpoints(CommonTestPmsApi):
     def test_user_get(self):
         with self._create_test_client() as test_client:
             response = self._login(test_client)

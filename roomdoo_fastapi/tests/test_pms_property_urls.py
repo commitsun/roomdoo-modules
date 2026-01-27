@@ -1,9 +1,9 @@
 from fastapi import status
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestRoomdooApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 
-class TestLinksEndpoints(CommonTestRoomdooApi):
+class TestLinksEndpoints(CommonTestPmsApi):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

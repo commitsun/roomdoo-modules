@@ -8,7 +8,7 @@ from odoo.addons.extendable_fastapi.tests.common import FastAPITransactionCase
 from odoo.addons.fastapi.dependencies import fastapi_endpoint
 
 
-class CommonTestRoomdooApi(FastAPITransactionCase):
+class CommonTestPmsApi(FastAPITransactionCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
@@ -49,6 +49,7 @@ class CommonTestRoomdooApi(FastAPITransactionCase):
         cls.test_company = cls.env["res.company"].create(
             {
                 "name": "Company 1",
+                "vat": "ES11111111H",
             }
         )
         cls.test_property = cls.env["pms.property"].create(
