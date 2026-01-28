@@ -34,8 +34,12 @@ class TestPms(common.TransactionCase):
 
         """
         self.partner_1.with_context(test_vat=True).write({"vat": "ES12345678Z"})
-        identification_type_vat = self.env["res.partner.id_category"].search(
-            [("partner_map_field", "=", "vat")], limit=1
+        identification_type_vat = self.env["res.partner.id_category"].create(
+            {
+                "name": "test_vat_type",
+                "code": "VAT",
+                "partner_map_field": "vat",
+            }
         )
         with self.assertRaises(ValidationError):
             self.env["res.partner.id_number"].create(
