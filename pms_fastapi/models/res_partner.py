@@ -1,5 +1,3 @@
-from dateutil.relativedelta import relativedelta
-
 from odoo import fields, models
 
 
@@ -7,9 +5,8 @@ class ResPartner(models.Model):
     _name = "res.partner"
     _inherit = ["mail.thread.phone", "res.partner"]
 
-    total_invoiced_last_year = fields.Monetary(
-        compute="_compute_total_invoiced_last_year"
-    )
+    # new field to avoid interference with total_invoiced from account module
+    fastapi_total_invoiced = fields.Monetary(compute="_compute_fastapi_total_invoiced")
     last_reservation_id = fields.Many2one(
         "pms.reservation", compute="_compute_reservation_data"
     )
@@ -17,22 +14,25 @@ class ResPartner(models.Model):
         compute="_compute_reservation_data", search="_search_in_house"
     )
 
-    def _compute_total_invoiced_last_year(self):
+    def _compute_fastapi_total_invoiced(self):
+        property_domain = []
+        if self._context.get("pms_property_ids"):
+            property_domain = [
+                ("pms_property_id", "in", self._context["pms_property_ids"])
+            ]
         invoice_type = self._context.get("invoice_type", "out_invoice")
         for partner in self:
-            today = fields.Date.context_today(self)
-            a_year_ago = today - relativedelta(years=1)
             result = self.env["account.move"].read_group(
-                domain=[
+                domain=property_domain
+                + [
                     ("partner_id", "child_of", partner.id),
                     ("move_type", "=", invoice_type),
                     ("state", "=", "posted"),
-                    ("invoice_date", ">", a_year_ago),
                 ],
                 fields=["amount_total_signed"],
                 groupby=[],
             )
-            partner.total_invoiced_last_year = (
+            partner.fastapi_total_invoiced = (
                 result[0]["amount_total_signed"] if result else 0.0
             )
 
