@@ -26,7 +26,6 @@ jobs:
           --health-retries 5
 
     env:
-      ODOO_VERSION: "16.0"
       PGHOST: localhost
       PGPORT: 5432
       PGUSER: odoo
@@ -46,19 +45,19 @@ jobs:
           path: odoo
           fetch-depth: 1
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
       - name: Clone dependencies
         run: |
           pip install git-aggregator
           git config --global user.email "ci@example.com"
           git config --global user.name "CI"
-          if [ -f repo/repos.yaml ]; then
-            gitaggregate -c repo/repos.yaml
+          if [ -f repo/.github/repos.yaml ]; then
+            gitaggregate -c repo/.github/repos.yaml
           fi
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
 
       - name: Install system dependencies
         run: |
@@ -98,12 +97,8 @@ jobs:
           pip install -r repo/requirements.txt
 
           for dep in deps/*; do
-              if [ -f "$dep/requirements.txt" ]; then
-                  pip install -r "$dep/requirements.txt"
-              fi
-              if [ -f "$dep/test-requirements.txt" ]; then
-                  pip install -r "$dep/test-requirements.txt"
-              fi
+            [ -f "$dep/requirements.txt" ] && pip install -r "$dep/requirements.txt" || true
+            [ -f "$dep/test-requirements.txt" ] && pip install -r "$dep/test-requirements.txt" || true
           done
 
 
@@ -130,7 +125,7 @@ jobs:
         run: |
           TEST_TAGS=$(echo "${{ steps.modules.outputs.modules }}" | sed 's/,/,\//g; s/^/\//')
 
-          coverage run --source=repo \
+          coverage run --rcfile=repo/.github/.coveragerc --source=repo \
             odoo/odoo-bin \
             --addons-path=${{ steps.addons.outputs.path }} \
             -d test_db \
@@ -146,6 +141,30 @@ jobs:
         if: always()
         run: |
           echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Por módulo" >> $GITHUB_STEP_SUMMARY
+          echo "| Módulo | Statements | Miss | Cover |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------------|------|-------|" >> $GITHUB_STEP_SUMMARY
+          for dir in repo/*/; do
+            if [ -f "${dir}__manifest__.py" ]; then
+              MODULE=$(basename "$dir")
+              RESULT=$(coverage report --rcfile=repo/.github/.coveragerc --include="repo/${MODULE}/*" 2>/dev/null | tail -1)
+              if echo "$RESULT" | grep -q "TOTAL"; then
+                STMTS=$(echo "$RESULT" | awk '{print $2}')
+                MISS=$(echo "$RESULT" | awk '{print $3}')
+                COVER=$(echo "$RESULT" | awk '{print $NF}')
+                echo "| $MODULE | $STMTS | $MISS | $COVER |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| $MODULE | - | - | N/A |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details>" >> $GITHUB_STEP_SUMMARY
+          echo "<summary>Ver detalle por fichero</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          coverage report >> $GITHUB_STEP_SUMMARY
+          coverage report --rcfile=repo/.github/.coveragerc >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
