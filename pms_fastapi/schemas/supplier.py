@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Annotated
 
 from fastapi import Query
+from fastapi.params import Query as QueryType
 from pydantic import Field
 
 from odoo import api
@@ -37,7 +38,7 @@ class SupplierSummary(ContactBase):
         data["email"] = partner.email or ""
         data["vat"] = partner.vat or ""
         data["totalInvoiced"] = float_round(
-            partner.with_context(invoice_type="in_invoice").total_invoiced_last_year,
+            partner.with_context(invoice_type="in_invoice").fastapi_total_invoiced,
             precision,
         )
         return cls(**data)
@@ -46,6 +47,10 @@ class SupplierSummary(ContactBase):
 class SupplierSearch(BaseSearch):
     def __init__(
         self,
+        pmsPropertyId: int | None = Query(
+            default=None,
+            description="Filter totalInvoiced by property.",
+        ),
         globalSearch: str | None = Query(
             default=None,
             description="Search across name, email, phone and VAT fields"
@@ -80,6 +85,10 @@ class SupplierSearch(BaseSearch):
             ),
         ] = None,
     ):
+        if not isinstance(pmsPropertyId, QueryType):
+            self.pmsPropertyId = pmsPropertyId
+        else:
+            self.pmsPropertyId = None
         self.globalSearch = globalSearch
         self.vat = vat
         self.name = name
@@ -112,3 +121,9 @@ class SupplierSearch(BaseSearch):
             subdomains = [[("country_id.name", "ilike", c)] for c in self.countries]
             domain = expression.AND([domain, expression.OR(subdomains)])
         return domain
+
+    def to_odoo_context(self, env: api.Environment) -> dict:
+        if self.pmsPropertyId:
+            return {"pms_property_ids": [self.pmsPropertyId]}
+        else:
+            return {"pms_property_ids": env.user.pms_property_ids.ids}
