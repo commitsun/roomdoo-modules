@@ -33,7 +33,12 @@ class PMSCheckinPartner(models.Model):
         address_fields_writed = residence_vals.keys()
         conflict_partner_address = any(
             self.partner_id[field]
-            and self.partner_id[field] != residence_vals.get(field)
+            and (
+                self.partner_id[field].id
+                if hasattr(self.partner_id[field], "id")
+                else self.partner_id[field]
+            )
+            != residence_vals.get(field)
             for field in address_fields_writed
         )
         residence = self.partner_id.residence_partner_id
