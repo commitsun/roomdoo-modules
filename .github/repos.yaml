@@ -1,0 +1,124 @@
+./deps/server-auth:
+  remotes:
+    origin: https://github.com/OCA/server-auth.git
+    commitsun: https://github.com/commitsun/server-auth.git
+  target: origin 16.0
+  merges:
+    - origin 16.0
+    - commitsun 16.0-mig-auth_jwt_login
+    - commitsun staging_auth_jwt_cookie
+
+./deps/pms:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/pms.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/rest-framework:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/rest-framework.git
+    commitsun: https://github.com/commitsun/rest-framework.git
+  merges:
+    - oca 16.0
+    - commitsun 16.0-base_rest_auth_jwt_installable
+    - oca refs/pull/550/head
+  target: oca 16.0
+
+./deps/web-api:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/web-api.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/reporting-engine:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/reporting-engine.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/partner-contact:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/partner-contact.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/l10n-spain:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/l10n-spain.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/social:
+  depth: 1
+  remotes:
+    commitsun: https://github.com/commitsun/social.git
+  merges:
+    - commitsun 16.0-mig-feed_rss
+  target: commitsun 16.0-mig-feed_rss
+
+./deps/connector:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/connector.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/queue:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/queue.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/web:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/web.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/account-financial-reporting:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/account-financial-reporting.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/server-ux:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/server-ux.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/community-data-files:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/community-data-files.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
+
+./deps/bank-payment:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/bank-payment.git
+  merges:
+    - oca 16.0
+  target: oca 16.0

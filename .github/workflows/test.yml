@@ -1,0 +1,170 @@
+name: Tests
+
+on:
+  push:
+    branches: ["16.0"]
+  pull_request:
+    branches: ["16.0"]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: odoo
+      PGPASSWORD: odoo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Checkout Odoo
+        uses: actions/checkout@v4
+        with:
+          repository: odoo/odoo
+          ref: "16.0"
+          path: odoo
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Clone dependencies
+        run: |
+          pip install git-aggregator
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          if [ -f repo/.github/repos.yaml ]; then
+            gitaggregate -c repo/.github/repos.yaml
+          fi
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            libfreetype6-dev \
+            libfribidi-dev \
+            libghc-zlib-dev \
+            libharfbuzz-dev \
+            libjpeg-dev \
+            liblcms2-dev \
+            libldap2-dev \
+            libopenjp2-7-dev \
+            libpq-dev \
+            libsasl2-dev \
+            libtiff5-dev \
+            libwebp-dev \
+            libxml2-dev \
+            libxslt-dev \
+            tcl-dev \
+            tk-dev \
+            zlib1g-dev \
+            openssl \
+            libssl-dev
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel coverage
+
+          # gevent / greenlet fixes for Python 3.10
+          sed -i -E "s/(gevent==)21\.8\.0/\122.10.2/" odoo/requirements.txt
+          sed -i -E "s/(greenlet==)1\.1\.2/\12.0.2/" odoo/requirements.txt
+
+          pip install cryptography==38.0.4 pyOpenSSL==22.1.0 urllib3==1.26.18
+          pip install -r odoo/requirements.txt
+          pip install -r repo/requirements.txt
+
+          for dep in deps/*; do
+            [ -f "$dep/requirements.txt" ] && pip install -r "$dep/requirements.txt" || true
+            [ -f "$dep/test-requirements.txt" ] && pip install -r "$dep/test-requirements.txt" || true
+          done
+
+
+      - name: Build addons path
+        id: addons
+        run: |
+          ADDONS_PATH="odoo/addons,repo"
+          for dir in deps/*; do
+            [ -d "$dir" ] && ADDONS_PATH="$ADDONS_PATH,$dir"
+          done
+          echo "path=$ADDONS_PATH" >> $GITHUB_OUTPUT
+
+      - name: Get modules to test
+        id: modules
+        run: |
+          cd repo
+          MODULES=$(find . -maxdepth 2 -name "__manifest__.py" -exec dirname {} \; \
+            | xargs -I {} basename {} | tr '\n' ',' | sed 's/,$//')
+
+          echo "modules=$MODULES" >> $GITHUB_OUTPUT
+          echo "Testing: $MODULES"
+
+      - name: Run tests with coverage
+        run: |
+          TEST_TAGS=$(echo "${{ steps.modules.outputs.modules }}" | sed 's/,/,\//g; s/^/\//')
+
+          coverage run --rcfile=repo/.github/.coveragerc --source=repo \
+            odoo/odoo-bin \
+            --addons-path=${{ steps.addons.outputs.path }} \
+            -d test_db \
+            --http-interface=127.0.0.1 \
+            --http-port=8069 \
+            -i ${{ steps.modules.outputs.modules }} \
+            --test-enable \
+            --test-tags=$TEST_TAGS \
+            --stop-after-init \
+            --log-level=test
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Por módulo" >> $GITHUB_STEP_SUMMARY
+          echo "| Módulo | Statements | Miss | Cover |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------------|------|-------|" >> $GITHUB_STEP_SUMMARY
+          for dir in repo/*/; do
+            if [ -f "${dir}__manifest__.py" ]; then
+              MODULE=$(basename "$dir")
+              RESULT=$(coverage report --rcfile=repo/.github/.coveragerc --include="repo/${MODULE}/*" 2>/dev/null | tail -1)
+              if echo "$RESULT" | grep -q "TOTAL"; then
+                STMTS=$(echo "$RESULT" | awk '{print $2}')
+                MISS=$(echo "$RESULT" | awk '{print $3}')
+                COVER=$(echo "$RESULT" | awk '{print $NF}')
+                echo "| $MODULE | $STMTS | $MISS | $COVER |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| $MODULE | - | - | N/A |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details>" >> $GITHUB_STEP_SUMMARY
+          echo "<summary>Ver detalle por fichero</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report --rcfile=repo/.github/.coveragerc >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
