@@ -191,6 +191,11 @@ class PmsPartnerService(Component):
                 subdomains.append(
                     [("email", "ilike", pms_partner_search_params.filter)]
                 )
+            document_partner_ids = self._partner_ids_from_id_numbers_sql(
+                pms_partner_search_params.filter
+            )
+            if document_partner_ids:
+                subdomains.append([("id", "in", document_partner_ids)])
             domain_partner_search_field = expression.OR(subdomains)
             domain = expression.AND([domain, domain_partner_search_field])
         allowed_company_ids = self.env.user.company_ids.ids
@@ -349,6 +354,25 @@ class PmsPartnerService(Component):
             )
         return PmsPartnerResults(partners=result_partners, total=total_partners)
 
+    def _partner_ids_from_id_numbers_sql(self, term, limit=3000):
+        term = (term or "").strip()
+        if not term:
+            return []
+
+        pattern = f"%{term}%"
+
+        self.env.cr.execute(
+            """
+            SELECT DISTINCT partner_id
+            FROM res_partner_id_number
+            WHERE partner_id IS NOT NULL
+            AND name ILIKE %s
+            LIMIT %s
+        """,
+            (pattern, limit),
+        )
+        return [r[0] for r in self.env.cr.fetchall()]
+
     @restapi.method(
         [
             (
@@ -403,7 +427,7 @@ class PmsPartnerService(Component):
             .search(
                 [
                     ("partner_id", "=", partner_id),
-                    ("pms_property_id", "=", self.env.user.pms_property_ids.ids),
+                    ("pms_property_id", "in", self.env.user.pms_property_ids.ids),
                 ]
             )
         )
