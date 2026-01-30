@@ -1,0 +1,69 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* l10n_es_aeat_partner_identification
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-30 17:37+0000\n"
+"PO-Revision-Date: 2026-01-30 17:37+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model.fields.selection,name:l10n_es_aeat_partner_identification.selection__res_partner_id_category__partner_map_field__another_document
+msgid "Another document"
+msgstr "Otro documento"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model,name:l10n_es_aeat_partner_identification.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model.fields,field_description:l10n_es_aeat_partner_identification.field_res_partner_id_category__partner_map_field
+msgid "Partner Field to map"
+msgstr "Campo de mapeo en partner"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model,name:l10n_es_aeat_partner_identification.model_res_partner_id_category
+msgid "Partner ID Category"
+msgstr "Categoría Empresa"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model,name:l10n_es_aeat_partner_identification.model_res_partner_id_number
+msgid "Partner ID Number"
+msgstr "Número ID de Socio"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model.fields.selection,name:l10n_es_aeat_partner_identification.selection__res_partner_id_category__partner_map_field__passport
+msgid "Passport"
+msgstr "Pasaporte"
+
+#. module: l10n_es_aeat_partner_identification
+#: model:ir.model.fields.selection,name:l10n_es_aeat_partner_identification.selection__res_partner_id_category__partner_map_field__residential_certificate
+msgid "Residential certificate"
+msgstr "Certificado de residencia"
+
+#. module: l10n_es_aeat_partner_identification
+#. odoo-python
+#: code:addons/l10n_es_aeat_partner_identification/models/res_partner.py:0
+#, python-format
+msgid ""
+"The AEAT Identification %s already exists in another partner via "
+"identification number."
+msgstr ""
+"El identificador AEAT %s ya está establecido en otro contacto en "
+"Números ID."
+
+#. module: l10n_es_aeat_partner_identification
+#. odoo-python
+#: code:addons/l10n_es_aeat_partner_identification/models/res_partner.py:0
+#, python-format
+msgid "The AEAT Identification %s already exists in another partner."
+msgstr "El identificador AEAT %s ya existe en otro contacto."
