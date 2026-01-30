@@ -52,7 +52,6 @@ class ContactType(str, Enum):
 
 
 class ContactTypeDetail(str, Enum):
-    agency = "agency"
     person = "person"
     company = "company"
 
@@ -143,6 +142,7 @@ class ContactSummary(ContactBase):
 class ContactDetail(PmsBaseModel):
     id: int
     contactType: ContactTypeDetail = ""
+    is_agency: bool = Field(False, alias="isAgency")
     ref: str = Field("", alias="reference")
     name: str = Field("", alias="name")
     firstname: str = Field("", alias="firstname")
@@ -175,11 +175,7 @@ class ContactDetail(PmsBaseModel):
         record = partner.read()[0]
         model_fields = cls.model_fields.keys()
         filtered_data = {k: v for k, v in record.items() if v and k in model_fields}
-        contact_type = False
-        if partner.is_agency:
-            contact_type = "agency"
-        else:
-            contact_type = partner.company_type
+        contact_type = partner.company_type
         filtered_data["contactType"] = contact_type
         if partner.nationality_id:
             filtered_data["nationality"] = CountryId.from_res_country(
@@ -219,6 +215,7 @@ class ContactDetail(PmsBaseModel):
 
 class ContactInsert(PmsBaseModel):
     contactType: ContactTypeDetail
+    is_agency: bool = Field(False, alias="isAgency")
     ref: str = Field("", alias="reference")
     name: str = Field("", alias="name")
     firstname: str = Field("", alias="firstname")
@@ -264,12 +261,8 @@ class ContactInsert(PmsBaseModel):
         if values.get("tags"):
             data["category_id"] = [(6, 0, values.get("tags"))]
         contact_type = values.get("contactType")
-        if contact_type == "agency":
-            data["company_type"] = "company"
-            data["is_agency"] = True
-        elif contact_type in ["person", "company"]:
+        if contact_type in ["person", "company"]:
             data["company_type"] = contact_type
-            data["is_agency"] = False
         for phone in values.get("phones", []):
             if phone["type"] == PhoneType.phone:
                 data["phone"] = phone["number"]
