@@ -200,7 +200,7 @@ class PmsPartnerService(Component):
                 [("company_id", "in", allowed_company_ids)],
             ]
         )
-        domain = expression.AND([domain, company_domain])
+        domain = expression.AND([[("type", "!=", "residence")], domain, company_domain])
         PmsPartnerResults = self.env.datamodels["pms.partner.results"]
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         total_partners = self.env["res.partner"].sudo().search_count(domain)
