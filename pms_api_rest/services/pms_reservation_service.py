@@ -1137,7 +1137,7 @@ class PmsReservationService(Component):
             "country_id": pms_checkin_partner_info.countryId,
             "origin_input_data": pms_checkin_partner_info.originInputData,
         }
-        if pms_checkin_partner_info.partnerId != partner_id:
+        if pms_checkin_partner_info.partnerId and pms_checkin_partner_info.partnerId != partner_id:
             vals.update({"partner_id": pms_checkin_partner_info.partnerId})
         if pms_checkin_partner_info.documentExpeditionDate:
             document_expedition_date = datetime.strptime(
