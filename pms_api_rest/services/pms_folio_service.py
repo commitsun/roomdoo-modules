@@ -1515,7 +1515,9 @@ class PmsFolioService(Component):
                             if sale_line.default_invoice_to
                             else None,
                             isDownPayment=sale_line.is_downpayment,
-                            sectionId=sale_line.section_id.id,
+                            sectionId=sale_line.section_id
+                            and sale_line.section_id.id
+                            or None,
                         )
                     )
 
