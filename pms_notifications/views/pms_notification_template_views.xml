@@ -12,6 +12,12 @@
                 <field name="name" />
                 <field name="code" />
                 <field name="model_id" />
+                <field
+          name="pms_property_ids"
+          widget="many2many_tags"
+          optional="hide"
+        />
+                <field name="apply_domain" optional="hide" />
                 <field name="mail_template_id" />
                 <field name="active" />
             </tree>
@@ -33,6 +39,8 @@
                         </group>
                         <group>
                             <field name="mail_template_id" />
+                            <field name="pms_property_ids" widget="many2many_tags" />
+                            <field name="apply_domain" />
                         </group>
                     </group>
 

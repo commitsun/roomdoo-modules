@@ -1,0 +1,1895 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_notifications
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_notifications
+#: model:mail.template,body_html:pms_notifications.mail_template_pms_folio_confirmation
+msgid ""
+"<div style=\"margin:0; padding:0;\">\n"
+"                <t t-set=\"o\" t-value=\"object\"></t>\n"
+"                <t t-set=\"property\" t-value=\"o.pms_property_id\"></t>\n"
+"                <t t-set=\"customer\" t-value=\"o.partner_id\"></t>\n"
+"                <t t-set=\"company\" t-value=\"o.company_id\"></t>\n"
+"                <t t-set=\"currency\" t-value=\"o.currency_id\"></t>\n"
+"\n"
+"                <p style=\"margin: 0 0 12px 0;\">\n"
+"                    <t t-if=\"customer and customer.name\">\n"
+"                        Hello <strong><t t-out=\"customer.name\"></t></strong>,\n"
+"                    </t>\n"
+"                    <t t-else=\"\">Hello,</t>\n"
+"                    <br>\n"
+"                    Your reservation has been confirmed.\n"
+"                </p>\n"
+"\n"
+"                <t t-if=\"property and property.welcome_message\">\n"
+"                    <div style=\"margin: 0 0 14px 0; padding: 10px 12px; border-left: 3px solid #ddd; background: #fafafa;\">\n"
+"                        <t t-out=\"property.welcome_message\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Booking summary</h3>\n"
+"\n"
+"                <table style=\"width: 100%; border-collapse: collapse; margin: 0 0 16px 0;\">\n"
+"                    <tbody>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Booking reference</td>\n"
+"                            <td style=\"padding: 2px 0;\"><t t-out=\"o.name or ''\"></t></td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-in</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(o.first_checkin) if o.first_checkin else ''\"></t>\n"
+"                                <t t-if=\"property and property.checkin_time_info\">\n"
+"                                     (<t t-out=\"property.checkin_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-out</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(o.last_checkout) if o.last_checkout else ''\"></t>\n"
+"                                <t t-if=\"property and property.checkout_time_info\">\n"
+"                                     (<t t-out=\"property.checkout_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Total</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_amount(o.amount_total, currency)\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Amount due</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_amount(o.pending_amount, currency)\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Rooms</h3>\n"
+"\n"
+"                <t t-if=\"o.reservation_ids\">\n"
+"                    <t t-foreach=\"o.reservation_ids\" t-as=\"r\">\n"
+"                        <t t-set=\"room_type\" t-value=\"r.room_type_id\"></t>\n"
+"                        <t t-set=\"rate\" t-value=\"r.pricelist_id\"></t>\n"
+"                        <!-- In your case the cancellation rule is on pricelist (NOT on reservation) -->\n"
+"                        <t t-set=\"cancel_rule\" t-value=\"rate.cancelation_rule_id\"></t>\n"
+"\n"
+"                        <div style=\"margin: 0 0 12px 0; padding: 12px; border: 1px solid #eee; border-radius: 8px;\">\n"
+"                            <div style=\"margin: 0 0 8px 0;\">\n"
+"                                <strong>\n"
+"                                    <t t-if=\"room_type and room_type.guest_display_name\"><t t-out=\"room_type.guest_display_name\"></t></t>\n"
+"                                    <t t-elif=\"room_type and room_type.name\"><t t-out=\"room_type.name\"></t></t>\n"
+"                                    <t t-else=\"\">Room</t>\n"
+"                                </strong>\n"
+"                            </div>\n"
+"\n"
+"                            <table style=\"width: 100%; border-collapse: collapse;\">\n"
+"                                <tbody>\n"
+"                                    <tr>\n"
+"                                        <td style=\"padding: 2px 0; width: 170px; color: #666;\">Dates</td>\n"
+"                                        <td style=\"padding: 2px 0;\">\n"
+"                                            <t t-out=\"format_date(r.checkin) if r.checkin else ''\"></t>\n"
+"                                             → \n"
+"                                            <t t-out=\"format_date(r.checkout) if r.checkout else ''\"></t>\n"
+"                                        </td>\n"
+"                                    </tr>\n"
+"                                    <tr>\n"
+"                                        <td style=\"padding: 2px 0; width: 170px; color: #666;\">Guests</td>\n"
+"                                        <td style=\"padding: 2px 0;\">\n"
+"                                            <t t-out=\"(r.adults or 0)\"></t> adults\n"
+"                                            <t t-if=\"(r.children or 0) &gt; 0\">, <t t-out=\"r.children\"></t> children</t>\n"
+"                                        </td>\n"
+"                                    </tr>\n"
+"\n"
+"                                    <t t-if=\"rate\">\n"
+"                                        <tr>\n"
+"                                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Rate</td>\n"
+"                                            <td style=\"padding: 2px 0;\">\n"
+"                                                <t t-if=\"rate.guest_rate_name\"><t t-out=\"rate.guest_rate_name\"></t></t>\n"
+"                                                <t t-else=\"\"><t t-out=\"rate.name\"></t></t>\n"
+"                                            </td>\n"
+"                                        </tr>\n"
+"                                    </t>\n"
+"\n"
+"                                    <t t-if=\"room_type and room_type.guest_short_description\">\n"
+"                                        <tr>\n"
+"                                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Room details</td>\n"
+"                                            <td style=\"padding: 2px 0;\"><t t-out=\"room_type.guest_short_description\"></t></td>\n"
+"                                        </tr>\n"
+"                                    </t>\n"
+"\n"
+"                                    <t t-if=\"room_type and room_type.amenities_summary\">\n"
+"                                        <tr>\n"
+"                                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Amenities</td>\n"
+"                                            <td style=\"padding: 2px 0;\"><t t-out=\"room_type.amenities_summary\"></t></td>\n"
+"                                        </tr>\n"
+"                                    </t>\n"
+"\n"
+"                                    <t t-if=\"r.service_ids\">\n"
+"                                        <tr>\n"
+"                                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Services</td>\n"
+"                                            <td style=\"padding: 2px 0;\">\n"
+"                                                <t t-foreach=\"r.service_ids\" t-as=\"s\">\n"
+"                                                    <span style=\"display: inline-block; margin: 0 6px 6px 0; padding: 2px 8px; border: 1px solid #eee; border-radius: 999px;\">\n"
+"                                                        <t t-out=\"s.name\"></t>\n"
+"                                                    </span>\n"
+"                                                </t>\n"
+"                                            </td>\n"
+"                                        </tr>\n"
+"                                    </t>\n"
+"                                </tbody>\n"
+"                            </table>\n"
+"\n"
+"                            <t t-if=\"rate and rate.guest_rate_description\">\n"
+"                                <div style=\"margin: 10px 0 0 0; color: #444;\">\n"
+"                                    <strong>Rate details:</strong>\n"
+"                                    <div><t t-out=\"rate.guest_rate_description\"></t></div>\n"
+"                                </div>\n"
+"                            </t>\n"
+"\n"
+"                            <t t-if=\"rate and rate.payment_terms_text\">\n"
+"                                <div style=\"margin: 10px 0 0 0; color: #444;\">\n"
+"                                    <strong>Payment terms:</strong>\n"
+"                                    <div><t t-out=\"rate.payment_terms_text\"></t></div>\n"
+"                                </div>\n"
+"                            </t>\n"
+"\n"
+"                            <t t-if=\"rate and rate.cancellation_terms_text_override\">\n"
+"                                <div style=\"margin: 10px 0 0 0; color: #444;\">\n"
+"                                    <strong>Cancellation policy:</strong>\n"
+"                                    <div><t t-out=\"rate.cancellation_terms_text_override\"></t></div>\n"
+"                                </div>\n"
+"                            </t>\n"
+"                            <t t-elif=\"cancel_rule and cancel_rule.short_policy_text\">\n"
+"                                <div style=\"margin: 10px 0 0 0; color: #444;\">\n"
+"                                    <strong>Cancellation policy:</strong>\n"
+"                                    <div><t t-out=\"cancel_rule.short_policy_text\"></t></div>\n"
+"                                </div>\n"
+"                            </t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"                </t>\n"
+"                <t t-else=\"\">\n"
+"                    <p style=\"margin: 0 0 16px 0;\">No rooms were found for this booking.</p>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and (property.arrival_instructions or property.parking_info or property.prearrival_extra_info or property.digital_checkin_help)\">\n"
+"                    <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Useful information</h3>\n"
+"\n"
+"                    <t t-if=\"property.arrival_instructions\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Arrival instructions</strong><br>\n"
+"                            <t t-out=\"property.arrival_instructions\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.parking_info\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Parking</strong><br>\n"
+"                            <t t-out=\"property.parking_info\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.digital_checkin_help\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Digital check-in</strong><br>\n"
+"                            <t t-out=\"property.digital_checkin_help\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.prearrival_extra_info\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Before you arrive</strong><br>\n"
+"                            <t t-out=\"property.prearrival_extra_info\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.critical_contact_phone\">\n"
+"                    <p style=\"margin: 12px 0 0 0;\">\n"
+"                        For urgent matters, you can reach us at:\n"
+"                        <strong><t t-out=\"property.critical_contact_phone\"></t></strong>\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"company and (company.privacy_policy_text or company.terms_and_conditions_text or company.legal_notice_text)\">\n"
+"                    <div style=\"margin-top: 18px; padding-top: 12px; border-top: 1px solid #eee; color: #666; font-size: 12px;\">\n"
+"                        <t t-if=\"company.privacy_policy_text\">\n"
+"                            <div style=\"margin: 0 0 8px 0;\"><t t-out=\"company.privacy_policy_text\"></t></div>\n"
+"                        </t>\n"
+"                        <t t-if=\"company.terms_and_conditions_text\">\n"
+"                            <div style=\"margin: 0 0 8px 0;\"><t t-out=\"company.terms_and_conditions_text\"></t></div>\n"
+"                        </t>\n"
+"                        <t t-if=\"company.legal_notice_text\">\n"
+"                            <div style=\"margin: 0;\"><t t-out=\"company.legal_notice_text\"></t></div>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.default_email_signature\">\n"
+"                    <div style=\"margin-top: 18px;\">\n"
+"                        <t t-raw=\"property.default_email_signature\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,body_html:pms_notifications.mail_template_pms_reservation_thank_you_review
+msgid ""
+"<div style=\"margin:0; padding:0;\">\n"
+"                <t t-set=\"property\" t-value=\"object.pms_property_id\"></t>\n"
+"                <t t-set=\"customer\" t-value=\"object.partner_id\"></t>\n"
+"\n"
+"                <p style=\"margin: 0 0 12px 0;\">\n"
+"                    <t t-if=\"customer and customer.name\">\n"
+"                        Hello <strong><t t-out=\"customer.name\"></t></strong>,\n"
+"                    </t>\n"
+"                    <t t-else=\"\">Hello,</t>\n"
+"                    <br>\n"
+"                    Thank you for choosing <t t-out=\"property.name if property else ''\"></t>. We hope you had a great stay.\n"
+"                </p>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Your stay</h3>\n"
+"\n"
+"                <table style=\"width: 100%; border-collapse: collapse; margin: 0 0 16px 0;\">\n"
+"                    <tbody>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-in</td>\n"
+"                            <td style=\"padding: 2px 0;\"><t t-out=\"format_date(object.checkin)\"></t></td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-out</td>\n"
+"                            <td style=\"padding: 2px 0;\"><t t-out=\"format_date(object.checkout)\"></t></td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"\n"
+"                <p style=\"margin: 0 0 10px 0;\">\n"
+"                    If you have a moment, we would really appreciate your feedback. Your review helps us improve and helps future guests choose with confidence.\n"
+"                </p>\n"
+"\n"
+"                <p style=\"margin: 0 0 10px 0;\">\n"
+"                    If anything was not perfect, please reply to this email so we can make it right.\n"
+"                </p>\n"
+"\n"
+"                <t t-if=\"property and property.critical_contact_phone\">\n"
+"                    <p style=\"margin: 12px 0 0 0;\">\n"
+"                        For urgent matters, you can reach us at:\n"
+"                        <strong><t t-out=\"property.critical_contact_phone\"></t></strong>\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.default_email_signature\">\n"
+"                    <div style=\"margin-top: 18px;\">\n"
+"                        <t t-raw=\"property.default_email_signature\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,body_html:pms_notifications.mail_template_pms_reservation_checkout_reminder
+msgid ""
+"<div style=\"margin:0; padding:0;\">\n"
+"                <t t-set=\"property\" t-value=\"object.pms_property_id\"></t>\n"
+"                <t t-set=\"customer\" t-value=\"object.partner_id\"></t>\n"
+"\n"
+"                <p style=\"margin: 0 0 12px 0;\">\n"
+"                    <t t-if=\"customer and customer.name\">\n"
+"                        Hello <strong><t t-out=\"customer.name\"></t></strong>,\n"
+"                    </t>\n"
+"                    <t t-else=\"\">Hello,</t>\n"
+"                    <br>\n"
+"                    This is a friendly reminder that your checkout is scheduled for tomorrow. Below you’ll find the main checkout information.\n"
+"                </p>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Your stay</h3>\n"
+"\n"
+"                <table style=\"width: 100%; border-collapse: collapse; margin: 0 0 16px 0;\">\n"
+"                    <tbody>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-out</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkout)\"></t>\n"
+"                                <t t-if=\"property and property.checkout_time_info\">\n"
+"                                     (<t t-out=\"property.checkout_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-in</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkin)\"></t>\n"
+"                                <t t-if=\"property and property.checkin_time_info\">\n"
+"                                     (<t t-out=\"property.checkin_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr t-if=\"object.room_type_id\">\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Room type</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"object.room_type_id.guest_display_name or object.room_type_id.name\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"\n"
+"                <t t-if=\"property and property.checkout_time_info\">\n"
+"                    <div style=\"margin: 0 0 10px 0;\">\n"
+"                        <strong>Checkout time</strong><br>\n"
+"                        <t t-out=\"property.checkout_time_info\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"\n"
+"                <p style=\"margin: 0 0 10px 0;\">\n"
+"                    If you need assistance or would like to request a late checkout (subject to availability), please contact us.\n"
+"                </p>\n"
+"\n"
+"                <t t-if=\"property and property.critical_contact_phone\">\n"
+"                    <p style=\"margin: 12px 0 0 0;\">\n"
+"                        For urgent matters, you can reach us at:\n"
+"                        <strong><t t-out=\"property.critical_contact_phone\"></t></strong>\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.default_email_signature\">\n"
+"                    <div style=\"margin-top: 18px;\">\n"
+"                        <t t-raw=\"property.default_email_signature\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,body_html:pms_notifications.mail_template_pms_reservation_prearrival
+msgid ""
+"<div style=\"margin:0; padding:0;\">\n"
+"                <t t-set=\"property\" t-value=\"object.pms_property_id\"></t>\n"
+"                <t t-set=\"customer\" t-value=\"object.partner_id\"></t>\n"
+"\n"
+"                <p style=\"margin: 0 0 12px 0;\">\n"
+"                    <t t-if=\"customer and customer.name\">\n"
+"                        Hello <strong><t t-out=\"customer.name\"></t></strong>,\n"
+"                    </t>\n"
+"                    <t t-else=\"\">Hello,</t>\n"
+"                    <br>\n"
+"                    We look forward to welcoming you soon. Here is some useful information to help you prepare your arrival.\n"
+"                </p>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Your stay</h3>\n"
+"\n"
+"                <table style=\"width: 100%; border-collapse: collapse; margin: 0 0 16px 0;\">\n"
+"                    <tbody>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-in</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkin)\"></t>\n"
+"                                <t t-if=\"property and property.checkin_time_info\">\n"
+"                                     (<t t-out=\"property.checkin_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-out</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkout)\"></t>\n"
+"                                <t t-if=\"property and property.checkout_time_info\">\n"
+"                                     (<t t-out=\"property.checkout_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr t-if=\"object.room_type_id\">\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Room type</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"object.room_type_id.guest_display_name or object.room_type_id.name\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr t-if=\"object.pricelist_id\">\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Rate</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"object.pricelist_id.guest_rate_name or object.pricelist_id.name\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"\n"
+"                <t t-if=\"property and (property.arrival_instructions or property.parking_info or property.digital_checkin_help or property.prearrival_extra_info)\">\n"
+"                    <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Useful information</h3>\n"
+"\n"
+"                    <t t-if=\"property.arrival_instructions\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Arrival instructions</strong><br>\n"
+"                            <t t-out=\"property.arrival_instructions\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.parking_info\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Parking</strong><br>\n"
+"                            <t t-out=\"property.parking_info\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.digital_checkin_help\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Digital check-in</strong><br>\n"
+"                            <t t-out=\"property.digital_checkin_help\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"\n"
+"                    <t t-if=\"property.prearrival_extra_info\">\n"
+"                        <div style=\"margin: 0 0 10px 0;\">\n"
+"                            <strong>Before you arrive</strong><br>\n"
+"                            <t t-out=\"property.prearrival_extra_info\"></t>\n"
+"                        </div>\n"
+"                    </t>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.critical_contact_phone\">\n"
+"                    <p style=\"margin: 12px 0 0 0;\">\n"
+"                        For urgent matters, you can reach us at:\n"
+"                        <strong><t t-out=\"property.critical_contact_phone\"></t></strong>\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <p style=\"margin: 14px 0 0 0;\">\n"
+"                    If you have any questions before arrival, simply reply to this email and we’ll be happy to help.\n"
+"                </p>\n"
+"\n"
+"                <t t-if=\"property and property.default_email_signature\">\n"
+"                    <div style=\"margin-top: 18px;\">\n"
+"                        <t t-raw=\"property.default_email_signature\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,body_html:pms_notifications.mail_template_pms_reservation_digital_checkin_reminder
+msgid ""
+"<div style=\"margin:0; padding:0;\">\n"
+"                <t t-set=\"property\" t-value=\"object.pms_property_id\"></t>\n"
+"                <t t-set=\"customer\" t-value=\"object.partner_id\"></t>\n"
+"\n"
+"                <p style=\"margin: 0 0 12px 0;\">\n"
+"                    <t t-if=\"customer and customer.name\">\n"
+"                        Hello <strong><t t-out=\"customer.name\"></t></strong>,\n"
+"                    </t>\n"
+"                    <t t-else=\"\">Hello,</t>\n"
+"                    <br>\n"
+"                    Your check-in date is coming up. We recommend completing the digital check-in in advance to make your arrival faster and easier.\n"
+"                </p>\n"
+"\n"
+"                <h3 style=\"margin: 0 0 8px 0; padding: 0; font-size: 16px; font-weight: 600;\">Your stay</h3>\n"
+"\n"
+"                <table style=\"width: 100%; border-collapse: collapse; margin: 0 0 16px 0;\">\n"
+"                    <tbody>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-in</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkin)\"></t>\n"
+"                                <t t-if=\"property and property.checkin_time_info\">\n"
+"                                     (<t t-out=\"property.checkin_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr>\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Check-out</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"format_date(object.checkout)\"></t>\n"
+"                                <t t-if=\"property and property.checkout_time_info\">\n"
+"                                     (<t t-out=\"property.checkout_time_info\"></t>)\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <tr t-if=\"object.room_type_id\">\n"
+"                            <td style=\"padding: 2px 0; width: 170px; color: #666;\">Room type</td>\n"
+"                            <td style=\"padding: 2px 0;\">\n"
+"                                <t t-out=\"object.room_type_id.guest_display_name or object.room_type_id.name\"></t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"\n"
+"                <t t-if=\"property and property.digital_checkin_help\">\n"
+"                    <div style=\"margin: 0 0 10px 0;\">\n"
+"                        <strong>How to complete digital check-in</strong><br>\n"
+"                        <t t-out=\"property.digital_checkin_help\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"                <t t-else=\"\">\n"
+"                    <p style=\"margin: 0 0 10px 0;\">\n"
+"                        If you have already completed the digital check-in, you can ignore this message.\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <t t-if=\"property and property.critical_contact_phone\">\n"
+"                    <p style=\"margin: 12px 0 0 0;\">\n"
+"                        For urgent matters, you can reach us at:\n"
+"                        <strong><t t-out=\"property.critical_contact_phone\"></t></strong>\n"
+"                    </p>\n"
+"                </t>\n"
+"\n"
+"                <p style=\"margin: 14px 0 0 0;\">\n"
+"                    If you need any help, simply reply to this email and we’ll be happy to assist.\n"
+"                </p>\n"
+"\n"
+"                <t t-if=\"property and property.default_email_signature\">\n"
+"                    <div style=\"margin-top: 18px;\">\n"
+"                        <t t-raw=\"property.default_email_signature\"></t>\n"
+"                    </div>\n"
+"                </t>\n"
+"            </div>\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__active
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__active
+msgid "Active"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__prearrival_extra_info
+msgid ""
+"Additional information useful before arrival (transport, access, etc.)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__pms_property_ids
+msgid "Allowed Properties"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__amenities_summary
+msgid "Amenities Summary"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__apply_domain
+msgid "Apply Domain"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_template.py:0
+#, python-format
+msgid "Apply domain on template '%s' must evaluate to a list or tuple."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__arrival_instructions
+msgid "Arrival Instructions"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__arrival_instructions
+msgid "Arrival instructions that will be used in guest communications."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__bed_configuration_text
+msgid "Bed Configuration Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room__building_label
+msgid "Building Label"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "Cancel"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_cancelation_rule
+msgid "Cancelation Rules"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_product_pricelist__cancellation_terms_text_override
+msgid "Cancellation Terms Text Override"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__cancelled
+msgid "Cancelled"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid ""
+"Cannot send email: all selected partners have no email address.\n"
+"Please add an email to at least one partner or provide Recipient Emails."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_log.py:0
+#, python-format
+msgid "Cannot send email: no valid recipients were provided."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__channel
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__channel
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__channel
+msgid "Channel"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__channel
+msgid ""
+"Channel used by this rule. Other modules may extend this selection to add "
+"more channels."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__checkin_time_info
+msgid "Check-in Time Info"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__checkout_time_info
+msgid "Check-out Time Info"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,subject:pms_notifications.mail_template_pms_reservation_checkout_reminder
+msgid "Checkout reminder - {{ object.pms_property_id.name }}"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__code
+msgid "Code"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__short_policy_text
+msgid "Compact guest-facing summary of the cancellation policy."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__amenities_summary
+msgid "Compact summary of key amenities to show in guest communications."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_res_company
+msgid "Companies"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__data_protection_contact_email
+msgid "Contact email for data protection and privacy requests."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__critical_contact_phone
+msgid "Contact phone number for critical incidents."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__context_json
+msgid "Context Json"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__create_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__create_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__create_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__create_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__create_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__create_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__critical_contact_phone
+msgid "Critical Contact Phone"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__data_protection_contact_email
+msgid "Data Protection Contact Email"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__offset_days
+msgid ""
+"Days offset relative to the time field (negative=before, positive=after)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__default_email_signature
+msgid "Default Email Signature"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__default_email_signature
+msgid "Default signature for PMS-generated emails."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__channel
+msgid "Delivery channel used for this log."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__description
+msgid "Description"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__view_description
+msgid "Description of the room view, e.g. 'Sea view', 'City view'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__digital_checkin_help
+msgid "Digital Check-in Help"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,subject:pms_notifications.mail_template_pms_reservation_digital_checkin_reminder
+msgid "Digital check-in reminder - {{ object.pms_property_id.name }}"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__display_name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__display_name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__display_name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__event_domain
+msgid ""
+"Domain (string) applied AFTER the event. Only records matching this domain "
+"will generate notifications."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_domain
+msgid ""
+"Domain (string) applied on the target model when running this scheduled "
+"rule."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__channel__email
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_manual_send_wizard__channel__email
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__channel__email
+msgid "Email"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_log.py:0
+#, python-format
+msgid "Email channel requires template.mail_template_id."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__recipient_mode__emails
+msgid "Emails"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__error
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Error"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__error_message
+msgid "Error Message"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__error_message
+msgid "Error details if sending failed."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_form
+msgid "Event"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__event_domain
+msgid "Event Domain"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__event_type
+msgid "Event Type"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__event_type
+msgid "Event type for event-based rules. Ignored for scheduled rules."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__rule_type__event
+msgid "Event-based"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__rule_type
+msgid ""
+"Event-based rules are triggered on create/write of the target model. "
+"Scheduled rules are processed by a cron job."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Event-based rules require an Event Type (on_create/on_write)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__digital_checkin_help
+msgid "Explanation about how to use digital check-in."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__refund_timing_text
+msgid ""
+"Explanation of when refunds are processed (e.g. 'Refund will be processed "
+"within 7 working days')."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "External"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__external_payload
+msgid "External Payload"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__external_reference
+msgid "External Reference"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__external_status
+msgid "External Status"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__external_reference
+msgid "External provider message ID/reference."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__external_payload
+msgid "External provider raw response payload (JSON)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__external_status
+msgid "External provider status."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__full_policy_text
+msgid "Full Policy Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__full_policy_text
+msgid "Full guest-facing description of the cancellation policy."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__description
+msgid "Functional description of when and how this template is used."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__code
+msgid "Functional unique code, e.g. 'booking_confirmation_email_v1'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__legal_notice_text
+msgid ""
+"Generic legal footer text for communications (company data, registration "
+"details, etc.)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__welcome_message
+msgid "Generic welcome message that can be reused across multiple templates."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_cancelation_rule_form_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_form_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_room_form_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_room_type_form_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_product_pricelist_form_notifications
+msgid "Guest Communication"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__guest_display_name
+msgid "Guest Display Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_res_company_form_notifications
+msgid "Guest Legal & Privacy"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__guest_long_description
+msgid "Guest Long Description"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__guest_policy_name
+msgid "Guest Policy Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_product_pricelist__guest_rate_description
+msgid "Guest Rate Description"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_product_pricelist__guest_rate_name
+msgid "Guest Rate Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__guest_short_description
+msgid "Guest Short Description"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room__guest_visible_name
+msgid "Guest Visible Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room__building_label
+msgid "Guest-facing building label when the property has multiple buildings."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_product_pricelist__payment_terms_text
+msgid ""
+"Guest-facing explanation of\n"
+"        payment terms (deposits, charge timings, etc.).\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__guest_policy_name
+msgid ""
+"Guest-facing label for this cancellation policy, e.g. 'Flexible 24h', 'Non-"
+"refundable'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room__guest_visible_name
+msgid "Guest-facing room name or label, e.g. 'Room 101 – Sea View'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__no_show_policy_text
+msgid ""
+"Guest-facing text describing the no-show policy, if different from the "
+"standard cancellation terms."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__offset_hours
+msgid "Hours offset relative to the time field."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__recipient_mode
+msgid "How recipients were chosen. Used for manual sends and auditing."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__guest_display_name
+msgid "Human-friendly name shown to guests, e.g. 'Double Room with Sea View'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__id
+msgid "ID"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__pms_property_ids
+msgid ""
+"If empty, template is available for all properties. If not empty, template "
+"is only available for selected properties."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__send_immediately
+msgid "If enabled, logs created by this rule will be sent immediately."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__checkin_time_info
+msgid "Information about check-in time (e.g. 'From 15:00')."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__checkout_time_info
+msgid "Information about check-out time."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property__parking_info
+msgid "Information about the property's parking facilities."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__notification_internal_note
+msgid ""
+"Internal note for staff about how this room type should be communicated."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room__notification_internal_note
+msgid ""
+"Internal note related to how this specific room should be mentioned in guest"
+" communications."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_product_pricelist__notification_internal_note
+msgid ""
+"Internal notes about how this rate\n"
+"        should be described in communications.\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_cancelation_rule__notification_internal_note
+msgid "Internal remarks on how to explain this policy to guests."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Invalid Event Domain on rule '%s'."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Invalid Scheduled Domain on rule '%s'."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_template.py:0
+#, python-format
+msgid "Invalid apply domain on template '%s'."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_template.py:0
+#, python-format
+msgid "Invalid apply domain structure on template '%s'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__context_json
+msgid "JSON context captured at creation time (optional)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_account_move
+msgid "Journal Entry"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log____last_update
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard____last_update
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template____last_update
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__write_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__write_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__write_uid
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__write_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__write_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__write_date
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_res_company_form_notifications
+msgid "Legal & Terms"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__legal_notice_text
+msgid "Legal Notice Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room__location_hint
+msgid "Location Hint"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__guest_long_description
+msgid "Longer description that can be used in richer email templates."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__mail_template_id
+msgid "Mail Template"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__mail_template_id
+msgid "Mail template used for the email channel."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__max_sends_per_record
+msgid "Max Sends per Record"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__max_sends_per_record
+msgid ""
+"Maximum number of logs this rule can generate for the same origin record. 0 "
+"= no limit."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__model_id
+msgid "Model on which this notification applies (reservation, folio, etc.)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__target_model_id
+msgid "Model where this rule applies, e.g. pms.folio, pms.reservation, etc."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__name
+msgid "Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__no_show_policy_text
+msgid "No-show Policy Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__notification_internal_note
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room__notification_internal_note
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__notification_internal_note
+#: model:ir.model.fields,field_description:pms_notifications.field_product_pricelist__notification_internal_note
+msgid "Notification Internal Note"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Notification Log"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.act_window,name:pms_notifications.action_pms_notification_log
+#: model:ir.ui.menu,name:pms_notifications.menu_pms_notification_log
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_tree
+msgid "Notification Logs"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_form
+msgid "Notification Rule"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.act_window,name:pms_notifications.action_pms_property_notification_rule
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__notification_rule_ids
+#: model:ir.ui.menu,name:pms_notifications.menu_pms_property_notification_rule
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_tree
+msgid "Notification Rules"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__template_id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__template_id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__template_id
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_template_form
+msgid "Notification Template"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.act_window,name:pms_notifications.action_pms_notification_template
+#: model:ir.ui.menu,name:pms_notifications.menu_pms_notification_template
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_template_tree
+msgid "Notification Templates"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__notification_rule_ids
+msgid "Notification rules associated with this template."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__template_id
+msgid "Notification template to use when this rule is triggered."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__offset_days
+msgid "Offset Days"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__offset_hours
+msgid "Offset Hours"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__event_type__on_create
+msgid "On Create"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__event_type__on_write
+msgid "On Write"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_template__apply_domain
+msgid ""
+"Optional Odoo domain evaluated on pms.folio to decide if this template "
+"applies. Empty or [] means it always applies."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_product_pricelist__cancellation_terms_text_override
+msgid ""
+"Optional guest-facing cancellation text\n"
+"        used instead of the default cancellation rule\n"
+"        text when this rate has special conditions.\n"
+"        "
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_manual_send_wizard__recipient_partner_ids
+msgid "Optional override recipients (partners)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__recipient_emails
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_manual_send_wizard__recipient_emails
+msgid ""
+"Optional override recipients. Multiple emails separated by commas, "
+"semicolons or new lines."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Origin"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__origin_model
+msgid "Origin Model"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__origin_res_id
+msgid "Origin Res"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_folio
+msgid "PMS Folio"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_notification_log
+msgid "PMS Notification Log"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_notification_mixin
+msgid "PMS Notification Mixin"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_notification_template
+msgid "PMS Notification Template"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.ui.menu,name:pms_notifications.menu_pms_notifications_root
+msgid "PMS Notifications"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_notification_manual_send_wizard
+msgid "PMS Notifications: Manual Send Wizard"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.server,name:pms_notifications.ir_cron_pms_notifications_scheduled_rules_ir_actions_server
+#: model:ir.cron,cron_name:pms_notifications.ir_cron_pms_notifications_scheduled_rules
+msgid "PMS Notifications: Run Scheduled Rules"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.server,name:pms_notifications.ir_cron_pms_notifications_sender_ir_actions_server
+#: model:ir.cron,cron_name:pms_notifications.ir_cron_pms_notifications_sender
+msgid "PMS Notifications: Send Pending Email Notifications"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__pms_property_ids
+msgid "PMS Properties"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_property_notification_rule
+msgid "PMS Property Notification Rule"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__pms_property_ids
+msgid ""
+"PMS properties where this notification rule applies. Empty = all properties."
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,name:pms_notifications.mail_template_pms_folio_confirmation
+msgid "PMS: Booking Confirmation (Folio)"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,name:pms_notifications.mail_template_pms_reservation_checkout_reminder
+msgid "PMS: Checkout Reminder"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,name:pms_notifications.mail_template_pms_reservation_digital_checkin_reminder
+msgid "PMS: Digital Check-in Reminder"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,name:pms_notifications.mail_template_pms_reservation_prearrival
+msgid "PMS: Pre-arrival Information"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,name:pms_notifications.mail_template_pms_reservation_thank_you_review
+msgid "PMS: Thank You Review Request"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__parking_info
+msgid "Parking Information"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__recipient_mode__partners
+msgid "Partners"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__recipient_mode__partners_and_emails
+msgid "Partners and Emails"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_product_pricelist__payment_terms_text
+msgid "Payment Terms Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_account_payment
+msgid "Payments"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__pending
+msgid "Pending"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__prearrival_extra_info
+msgid "Pre-arrival Extra Info"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_product_pricelist
+msgid "Pricelist"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_res_company_form_notifications
+msgid "Privacy"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__privacy_policy_text
+msgid "Privacy Policy Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__privacy_policy_url
+msgid "Privacy Policy URL"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_property
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__property_id
+msgid "Property"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_room
+msgid "Property Room"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__property_id
+msgid "Property context (hotel) for this notification, if applicable."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_product_pricelist__guest_rate_name
+msgid "Rate name shown to guests, e.g. 'Flexible Rate with Breakfast'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__recipient_emails
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__recipient_emails
+msgid "Recipient Emails"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__recipient_mode
+msgid "Recipient Mode"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__recipient_partner_ids
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__recipient_partner_ids
+msgid "Recipient Partners"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__recipient_partner_ids
+msgid "Recipient partners for this notification."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Recipients"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "Recipients (optional overrides)"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__refund_timing_text
+msgid "Refund Timing Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__res_id
+msgid "Res"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__res_model
+msgid "Res Model"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_reservation
+msgid "Reservation"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Retry"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model,name:pms_notifications.model_pms_room_type
+msgid "Room Type"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__rule_id
+msgid "Rule"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid ""
+"Rule '%(rule)s' targets '%(target)s' but template '%(tpl)s' is configured "
+"for '%(tpl_model)s'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__rule_type
+msgid "Rule Type"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__rule_id
+msgid "Rule that created this log (empty for manual sends)."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_template_form
+msgid "Rules"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__scheduled
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__rule_type__scheduled
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_form
+msgid "Scheduled"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__scheduled_date
+msgid "Scheduled Date"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_domain
+msgid "Scheduled Domain"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Scheduled rules require a Time Field Name."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "Select partners..."
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "Send"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_manual_send_wizard__send_immediately
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__send_immediately
+msgid "Send Immediately"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.actions.act_window,name:pms_notifications.action_pms_notification_manual_send_wizard
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "Send Notification"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+msgid "Send Now"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_folio_form_inherit_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_reservation_form_inherit_notifications
+msgid "Send notification"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__sent
+msgid "Sent"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__sent_date
+msgid "Sent Date"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_cancelation_rule__short_policy_text
+msgid "Short Policy Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__guest_short_description
+msgid "Short description suitable for emails or messaging (1–2 sentences)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_product_pricelist__guest_rate_description
+msgid ""
+"Short guest-facing description of what the rate includes and itsmain "
+"conditions."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room__location_hint
+msgid ""
+"Short instructions to help guests locate the room (e.g. '2nd floor, left "
+"wing, near the elevator')."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__privacy_policy_text
+msgid "Short privacy notice snippet to include in guest communications."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__terms_and_conditions_text
+msgid "Short terms and conditions snippet suitable for message footers."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__time_window_minutes
+msgid ""
+"Size of the time window used by the cron to decide which records should be "
+"processed now."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__state__skipped
+msgid "Skipped"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid "Some partners have no email"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_log__state
+msgid "State"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__model_id
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__target_model_id
+msgid "Target Model"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_notification_template__target_model_name
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__target_model_name
+msgid "Target Model Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__time_field_name
+msgid ""
+"Technical name of the datetime/date field used as reference for scheduled "
+"rules."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_notification_log__recipient_mode__template
+msgid "Template Default"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.constraint,message:pms_notifications.constraint_pms_notification_template_code_unique
+msgid "Template code must be unique."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__terms_and_conditions_text
+msgid "Terms and Conditions Text"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_res_company__terms_and_conditions_url
+msgid "Terms and Conditions URL"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_room_type__bed_configuration_text
+msgid "Text description of the bed setup, e.g. '1 double bed', '2 twin beds'."
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,subject:pms_notifications.mail_template_pms_reservation_thank_you_review
+msgid "Thank you for staying with us - {{ object.pms_property_id.name }}"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_log.py:0
+#: code:addons/pms_notifications/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid "The origin record does not exist or was deleted."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid ""
+"These partners do not have an email address and will be ignored for email sending:\n"
+"- %s"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid "This notification template is not configured with a Mail Template."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__time_field_name
+msgid "Time Field Name"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__time_window_minutes
+msgid "Time Window (minutes)"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__terms_and_conditions_url
+msgid "URL pointing to the company's general terms and conditions."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_res_company__privacy_policy_url
+msgid "URL pointing to the company's privacy policy."
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_notification_log.py:0
+#, python-format
+msgid "Unsupported channel(s) in this database: %s"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__view_description
+msgid "View Description"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property__welcome_message
+msgid "Welcome Message"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid ""
+"When channel is 'Email', the selected notification template must have an "
+"associated mail template."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__scheduled_date
+msgid "When this log is scheduled to be processed."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__sent_date
+msgid "When this log was successfully sent."
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,subject:pms_notifications.mail_template_pms_folio_confirmation
+msgid "Your booking is confirmed - {{ object.pms_property_id.name }}"
+msgstr ""
+
+#. module: pms_notifications
+#: model:mail.template,subject:pms_notifications.mail_template_pms_reservation_prearrival
+msgid "Your upcoming stay - {{ object.pms_property_id.name }}"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_form
+msgid "[('state','=','confirm')]"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_property_notification_rule_form
+msgid "checkin"
+msgstr ""
+
+#. module: pms_notifications
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_log_form
+#: model_terms:ir.ui.view,arch_db:pms_notifications.view_pms_notification_manual_send_wizard_form
+msgid "email1@example.com; email2@example.com"
+msgstr ""

@@ -441,6 +441,11 @@ class PmsPropertyNotificationRule(models.Model):
         Log = self.env["pms.notification.log"].sudo()
 
         for rec in records:
+            if (
+                rec._name == "pms.folio"
+                and not self.template_id._is_applicable_to_folio(rec)
+            ):
+                continue
             prop = prop_map.get(rec.id)
             vals_log = self._scheduled_build_log_vals(now, rec, prop)
             log = Log.create(vals_log)

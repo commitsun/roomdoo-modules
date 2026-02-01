@@ -1,0 +1,722 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_bookai
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_manual_send_wizard_form_inherit_bookai
+msgid ""
+"<span class=\"text-muted\">\n"
+"                        WhatsApp will be sent as one request per partner (one log per partner).\n"
+"                    </span>"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_property__bookai_mode__ai
+msgid "AI"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__body
+msgid "Body"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_property_form_inherit_bookai
+msgid "BookAI"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI API connection error: %s"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI API endpoint/token is not configured."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI API request failed with status %s: %s"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_log_form_bookai
+msgid "BookAI Debug"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__bookai_last_http_status
+msgid "BookAI HTTP Status"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_channel_wubook_pms_property_availability__bookai_mode
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_property__bookai_mode
+msgid "BookAI Mode"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_param_ids
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_bookai_param_tree
+msgid "BookAI Parameters"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__bookai_last_request_headers
+msgid "BookAI Request Headers (JSON)"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__bookai_last_request_payload
+msgid "BookAI Request Payload (JSON)"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__bookai_last_response_body
+msgid "BookAI Response Body"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_template_code
+#, python-format
+msgid "BookAI Template Code"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_notification_template_bookai_param
+msgid "BookAI Template Parameter"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_log__channel__bookai_whatsapp
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_manual_send_wizard__channel__bookai_whatsapp
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_property_notification_rule__channel__bookai_whatsapp
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "BookAI WhatsApp"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid "BookAI WhatsApp does not support raw email recipients."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI disabled for property '%s'."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI is in MANUAL mode for property '%s'; rule sending is disabled."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template_bookai_param.py:0
+#, python-format
+msgid "BookAI param '%s': field is required."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template_bookai_param.py:0
+#, python-format
+msgid "BookAI param '%s': inline template is required."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template_bookai_param.py:0
+#, python-format
+msgid "BookAI param '%s': literal value is required."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "BookAI recipient phone is empty after rendering."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_template_code
+msgid "BookAI template code (e.g. booking_confirmation_v1)."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Cannot determine recipient country for phone '%s'."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__channel
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_manual_send_wizard__channel
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_property_notification_rule__channel
+msgid "Channel"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_property_notification_rule__channel
+msgid ""
+"Channel used by this rule. Other modules may extend this selection to add "
+"more channels."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_channel_wubook_pms_property_availability__bookai_mode
+#: model:ir.model.fields,help:pms_bookai.field_pms_property__bookai_mode
+msgid ""
+"Controls BookAI usage for this property.\n"
+"- Disabled: no BookAI sending.\n"
+"- Manual: BookAI can be used only when triggered manually.\n"
+"- AI: BookAI can be used automatically by rules / flows."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__channel
+msgid "Delivery channel used for this log."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__description
+msgid "Description"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_property__bookai_mode__disabled
+msgid "Disabled"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__channel_bookai_whatsapp_enabled
+msgid "Enable BookAI WhatsApp"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__bookai_last_request_payload
+msgid "Exact JSON payload sent to BookAI in the last send attempt."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_recipient_name_tmpl
+msgid "Expression that returns an optional recipient display name."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_origin_folio_id_tmpl
+msgid ""
+"Expression that returns the origin pms.folio ID (required by BookAI "
+"payload)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_recipient_phone_tmpl
+msgid ""
+"Expression that returns the recipient phone (E.164 preferred, e.g. +34...)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_language_tmpl
+msgid "Expression that returns the template language code (e.g. es, en)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_channel_wubook_pms_property_availability__external_code
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_property__external_code
+msgid "External Hotel Code"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_channel_wubook_pms_property_availability__external_code
+#: model:ir.model.fields,help:pms_bookai.field_pms_property__external_code
+msgid "External hotel code for BookAI integration (e.g., 'EXT_TEST')."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_fastapi_endpoint
+msgid "FastAPI Endpoint"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__field_id
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_template_bookai_param__value_type__field
+msgid "Field"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid ""
+"For dynamic blocks (loops/conditionals), define a Python helper on the target model\n"
+"                                    and call it from an inline template, e.g.:\n"
+"                                    <code>{{ object._bookai_room_links_block() }}</code>"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__bookai_last_http_status
+msgid "HTTP status code returned by BookAI in the last send attempt."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__bookai_last_request_headers
+msgid ""
+"Headers sent to BookAI in the last send attempt (Authorization masked)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_request_eta_whatsapp
+msgid ""
+"Hello {{ buyer_name }}, to prepare your arrival at {{ hotel_name }}, could you please tell us your approximate arrival time?\n"
+"You can reply directly to this message."
+msgstr ""
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_reactivate_chat_critical_whatsapp
+msgid ""
+"Hello {{ buyer_name }}, we have an important pending action for your reservation {{ reservation_locator }} at {{ hotel_name }}.\n"
+"To continue, we need your confirmation.\n"
+"Reply \"yes\" now and we will continue."
+msgstr ""
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_confirmation_whatsapp
+msgid ""
+"Hello {{ buyer_name }}, your reservation at {{ hotel_name }} has been confirmed.\n"
+"Check-in: {{ checkin_date }}\n"
+"Check-out: {{ checkout_date }}\n"
+"Locator: {{ reservation_locator }}\n"
+"You can manage your reservation (payment, pre-check-in, details, etc.) here:\n"
+"{{ reservation_details_url }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_cancellation_whatsapp
+msgid ""
+"Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been successfully canceled.\n"
+"If you need help making a new reservation, we are available."
+msgstr ""
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_modification_whatsapp
+msgid ""
+"Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been updated.\n"
+"New check-in: {{ checkin_date }}\n"
+"New check-out: {{ checkout_date }}\n"
+"You can review the changes here:\n"
+"{{ reservation_details_url }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "Hola {{ buyer_name }}, tu reserva {{ reservation_locator }}..."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__value_type
+msgid "How the value is produced."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__id
+msgid "ID"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__value_inline_tmpl
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_template_bookai_param__value_type__inline
+msgid "Inline Template"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__value_inline_tmpl
+msgid ""
+"Inline template using {{ ... }} with 'object' available.\n"
+"Example: {{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__key
+msgid "Key"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_language_tmpl
+#, python-format
+msgid "Language (Template)"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_template_bookai_param__value_type__literal
+msgid "Literal"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__value_literal
+msgid "Literal Value"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_property__bookai_mode__manual
+msgid "Manual"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Missing BookAI template code on notification template."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Missing Origin Folio ID template expression."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Missing recipient phone/country on the log."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__description
+msgid "Optional description shown to API clients."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__bookai_origin_folio_id
+msgid "Origin Folio"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_origin_folio_id_tmpl
+#, python-format
+msgid "Origin Folio ID (Template)"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Origin Folio ID must be an integer. Got: %s"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Origin Folio ID template rendered empty."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Origin folio not found: id=%s"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_api_bookai_template_router_helper
+msgid "PMS API BookAI Template Helper"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_notification_log
+msgid "PMS Notification Log"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_notification_mixin
+msgid "PMS Notification Mixin"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_notification_template
+msgid "PMS Notification Template"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_notification_manual_send_wizard
+msgid "PMS Notifications: Manual Send Wizard"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_property_notification_rule
+msgid "PMS Property Notification Rule"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.constraint,message:pms_bookai.constraint_pms_notification_template_bookai_param_bookai_param_key_uniq
+msgid "Parameter key must be unique per template."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__key
+msgid "Parameter key sent to BookAI (e.g. buyer_name, hotel_name...)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__bookai_param_ids
+msgid "Parameters injected into BookAI WhatsApp template."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/res_partner.py:0
+#, python-format
+msgid "Partner %s has no country set."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/res_partner.py:0
+#, python-format
+msgid "Partner %s has no phone/mobile."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/res_partner.py:0
+#, python-format
+msgid "Partner %s phone must include country prefix (e.g. +34...). Got: %s"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Phone must be in international format (e.g. +346...). Got: %s"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/wizards/pms_notification_manual_send_wizard.py:0
+#, python-format
+msgid "Please select at least one recipient partner for WhatsApp."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model,name:pms_bookai.model_pms_property
+msgid "Property"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__bookai_last_response_body
+msgid ""
+"Raw response body returned by BookAI in the last send attempt (JSON or "
+"text)."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_recipient_name_tmpl
+msgid "Recipient Display Name (Template)"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_recipient_phone_tmpl
+#, python-format
+msgid "Recipient Phone (Template)"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_log.py:0
+#, python-format
+msgid "Recipient phone is missing."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_log__whatsapp_template_parameters
+msgid "Resolved JSON parameters sent to BookAI."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__target_model_name
+msgid "Target Model Name"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__channel_bookai_whatsapp_enabled
+msgid "Technical flag used by the UI to show BookAI WhatsApp fields."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__template_id
+msgid "Template"
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#, python-format
+msgid ""
+"Template '%(template)s' has unknown placeholders in body: %(keys)s. Define "
+"those keys in BookAI Parameters."
+msgstr ""
+
+#. module: pms_bookai
+#. odoo-python
+#: code:addons/pms_bookai/models/pms_notification_template.py:0
+#, python-format
+msgid ""
+"Template '%s' is used by BookAI WhatsApp rules but is missing:\n"
+"- %s"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "Template Parameters"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "Tip"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__field_id
+msgid "Used when Value Type = Field."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__value_literal
+msgid "Used when Value Type = Literal."
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template_bookai_param__value_type
+msgid "Value Type"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_country
+msgid "WhatsApp Country Code"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_log_form_bookai
+msgid "WhatsApp Details"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_language
+msgid "WhatsApp Language"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_phone
+msgid "WhatsApp Phone"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_recipient_name
+msgid "WhatsApp Recipient Name"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_template_parameters
+msgid "WhatsApp Template Parameters (JSON)"
+msgstr ""
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_notification_template__body
+msgid ""
+"WhatsApp message body. Use placeholders like {{ buyer_name }} and define "
+"each key in BookAI Parameters."
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "{{ (object if object._name == 'pms.folio' else object.folio_id).id }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "{{ object.lang or user.lang }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "{{ object.partner_id.mobile or object.mobile }}"
+msgstr ""
+
+#. module: pms_bookai
+#: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
+msgid "{{ object.partner_id.name or object.partner_name }}"
+msgstr ""
