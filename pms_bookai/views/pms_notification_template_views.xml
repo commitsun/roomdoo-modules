@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- BookAI params tree used inside the template form -->
+    <record id="view_pms_notification_template_bookai_param_tree" model="ir.ui.view">
+        <field name="name">pms.notification.template.bookai.param.tree</field>
+        <field name="model">pms.notification.template.bookai.param</field>
+        <field name="arch" type="xml">
+            <tree string="BookAI Parameters" editable="bottom">
+                <!-- Required in the view because it is used in a domain -->
+                <field name="target_model_name" invisible="1" />
+
+                <field name="sequence" widget="handle" />
+                <field name="key" />
+                <field name="description" />
+                <field name="value_type" />
+
+                <field
+          name="field_id"
+          attrs="{'invisible':[('value_type','!=','field')], 'required':[('value_type','=','field')]}"
+          domain="[('model', '=', target_model_name),
+                                ('ttype', 'not in', ('one2many','many2many','binary'))]"
+        />
+
+                <field
+          name="value_inline_tmpl"
+          attrs="{'invisible':[('value_type','!=','inline')], 'required':[('value_type','=','inline')]}"
+        />
+
+                <field
+          name="value_literal"
+          attrs="{'invisible':[('value_type','!=','literal')], 'required':[('value_type','=','literal')]}"
+        />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Inherit PMS notification template form to add a BookAI WhatsApp tab -->
+    <record id="view_pms_notification_template_form_inherit_bookai" model="ir.ui.view">
+        <field name="name">pms.notification.template.form.inherit.bookai</field>
+        <field name="model">pms.notification.template</field>
+        <field
+      name="inherit_id"
+      ref="pms_notifications.view_pms_notification_template_form"
+    />
+        <field name="arch" type="xml">
+
+            <!-- Ensure target_model_name is present (invisible) for domains in embedded views -->
+            <xpath expr="//form/sheet" position="inside">
+                <field name="target_model_name" invisible="1" />
+            </xpath>
+
+            <!-- If base form has no notebook, we add one. If it already has, we append a page. -->
+            <xpath expr="//form/sheet" position="inside">
+                <notebook>
+
+                    <page string="BookAI WhatsApp">
+                        <group>
+                            <group>
+                                <field name="bookai_template_code" />
+                                <field
+                  name="bookai_language_tmpl"
+                  placeholder="{{ object.lang or user.lang }}"
+                />
+                            </group>
+                            <group>
+                                <field
+                  name="bookai_recipient_phone_tmpl"
+                  placeholder="{{ object.partner_id.mobile or object.mobile }}"
+                />
+                                <field
+                  name="bookai_recipient_name_tmpl"
+                  placeholder="{{ object.partner_id.name or object.partner_name }}"
+                />
+                            </group>
+                        </group>
+
+                        <group>
+                            <field
+                name="bookai_origin_folio_id_tmpl"
+                placeholder="{{ (object if object._name == 'pms.folio' else object.folio_id).id }}"
+              />
+                        </group>
+                        <group>
+                <field
+                name="body"
+                widget="text"
+                placeholder="Hello {{ buyer_name }}, your reservation {{ reservation_locator }}..."
+              />
+                        </group>
+
+                        <group string="Template Parameters">
+                            <field
+                name="bookai_param_ids"
+                context="{'default_template_id': active_id}"
+              >
+                                <tree
+                  ref="pms_bookai.view_pms_notification_template_bookai_param_tree"
+                />
+                            </field>
+                        </group>
+
+                        <!-- Tip for 'block' params like room_links_block -->
+                        <group>
+                            <separator string="Tip" />
+                            <div>
+                                <p>
+                                    For dynamic blocks (loops/conditionals), define a Python helper on the target model
+                                    and call it from an inline template, e.g.:
+                                    <code>{{ object._bookai_room_links_block() }}</code>
+                                </p>
+                            </div>
+                        </group>
+
+                    </page>
+                </notebook>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
