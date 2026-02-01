@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="0">
+
+    <!-- =========================================================
+         COMMON INLINE TEMPLATES (by convention, repeated per record)
+         - phone: required
+         - lang: required
+         - origin folio: required (folio id)
+         - display name: optional
+         ========================================================= -->
+
+    <!-- 1) Booking confirmation (simple) -->
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Booking confirmation (BookAI WhatsApp)</field>
+        <field name="code">folio_booking_confirmation_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >WhatsApp confirmation sent when a reservation (folio) is confirmed/created.</field>
+        <field name="active" eval="True" />
+
+        <field name="bookai_template_code">booking_confirmation_v1</field>
+
+        <!-- Core BookAI fields (rendered using mail engine) -->
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_checkin_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">checkin_date</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.first_checkin or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_checkout_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">checkout_date</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.last_checkout or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">50</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_reservation_details_url"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
+    />
+        <field name="sequence">60</field>
+        <field name="key">reservation_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[{{ ((((object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip()).rstrip('/') + '/' + str(object.id) + '/precheckin/' + (object.access_token or '') + '/' + ((object.env.context.get('lang') or user.lang or 'es_ES').split('_')[0])) if (object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip() else '') }}]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello {{ buyer_name }}, your reservation at {{ hotel_name }} has been confirmed.
+Check-in: {{ checkin_date }}
+Check-out: {{ checkout_date }}
+Locator: {{ reservation_locator }}
+You can manage your reservation (payment, pre-check-in, details, etc.) here:
+{{ reservation_details_url }}]]></field>
+    </record>
+
+    <!-- 3) Booking modification -->
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Booking modification (BookAI WhatsApp)</field>
+        <field name="code">folio_booking_modification_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >WhatsApp sent when a reservation (folio) is modified.</field>
+        <field name="active" eval="True" />
+
+        <field name="bookai_template_code">booking_modification_v1</field>
+
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_checkin_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">checkin_date</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.first_checkin or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_checkout_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">50</field>
+        <field name="key">checkout_date</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.last_checkout or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_reservation_details_url"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_modification_whatsapp"
+    />
+        <field name="sequence">60</field>
+        <field name="key">reservation_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[{{ ((((object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip()).rstrip('/') + '/' + str(object.id) + '/precheckin/' + (object.access_token or '') + '/' + ((object.env.context.get('lang') or user.lang or 'es_ES').split('_')[0])) if (object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip() else '') }}]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been updated.
+New check-in: {{ checkin_date }}
+New check-out: {{ checkout_date }}
+You can review the changes here:
+{{ reservation_details_url }}]]></field>
+    </record>
+
+
+    <!-- 4) Booking cancellation -->
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Booking cancellation (BookAI WhatsApp)</field>
+        <field name="code">folio_booking_cancellation_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >WhatsApp sent when a reservation (folio) is canceled.</field>
+        <field name="active" eval="True" />
+
+        <field name="bookai_template_code">booking_cancellation_v1</field>
+
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_cancellation_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_cancellation_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_booking_cancellation_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been successfully canceled.
+If you need help making a new reservation, we are available.]]></field>
+    </record>
+
+
+    <!-- 10) Request ETA -->
+    <record
+    id="pms_notification_template_folio_request_eta_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Request ETA (BookAI WhatsApp)</field>
+        <field name="code">folio_request_eta_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Ask the guest for the estimated arrival time (ETA).</field>
+        <field name="active" eval="True" />
+
+        <field name="bookai_template_code">request_eta_v1</field>
+
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_request_eta_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_request_eta_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_request_eta_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_request_eta_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_request_eta_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello {{ buyer_name }}, to prepare your arrival at {{ hotel_name }}, could you please tell us your approximate arrival time?
+You can reply directly to this message.]]></field>
+    </record>
+
+
+    <!-- 11) Reactivate critical chat -->
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Reactivate critical chat (BookAI WhatsApp)</field>
+        <field name="code">folio_reactivate_chat_critical_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Critical follow-up requesting guest confirmation to continue.</field>
+        <field name="active" eval="True" />
+
+        <field name="bookai_template_code">reactivate_chat_critical_v1</field>
+
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello {{ buyer_name }}, we have an important pending action for your reservation {{ reservation_locator }} at {{ hotel_name }}.
+To continue, we need your confirmation.
+Reply "yes" now and we will continue.]]></field>
+    </record>
+
+</odoo>

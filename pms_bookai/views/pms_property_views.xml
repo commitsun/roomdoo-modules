@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+  <record id="view_pms_property_form_inherit_bookai" model="ir.ui.view">
+    <field name="name">pms.property.form.inherit.bookai</field>
+    <field name="model">pms.property</field>
+    <field name="inherit_id" ref="pms.pms_property_views_form" />
+    <field name="arch" type="xml">
+
+        <xpath expr="//sheet/notebook" position="inside">
+            <page string="BookAI" name="bookai">
+                <group>
+                    <group>
+                        <field name="bookai_mode" />
+                        <field name="external_code" />
+                    </group>
+                </group>
+            </page>
+        </xpath>
+
+    </field>
+  </record>
+
+  <record id="view_pms_property_tree_inherit_bookai" model="ir.ui.view">
+    <field name="name">pms.property.tree.inherit.bookai</field>
+    <field name="model">pms.property</field>
+    <!-- Adjust this inherit_id too -->
+    <field name="inherit_id" ref="pms.pms_property_views_tree" />
+    <field name="arch" type="xml">
+      <xpath expr="//tree" position="inside">
+        <field name="bookai_mode" />
+      </xpath>
+    </field>
+  </record>
+
+</odoo>

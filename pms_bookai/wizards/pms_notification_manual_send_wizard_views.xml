@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record
+    id="view_pms_notification_manual_send_wizard_form_inherit_bookai"
+    model="ir.ui.view"
+  >
+        <field
+      name="name"
+    >pms.notification.manual.send.wizard.form.inherit.bookai</field>
+        <field name="model">pms.notification.manual.send.wizard</field>
+        <field
+      name="inherit_id"
+      ref="pms_notifications.view_pms_notification_manual_send_wizard_form"
+    />
+        <field name="arch" type="xml">
+
+            <!-- Hide emails for WhatsApp -->
+            <xpath expr="//field[@name='recipient_emails']" position="attributes">
+                <attribute
+          name="attrs"
+        >{'invisible': [('channel','=','bookai_whatsapp')]}</attribute>
+            </xpath>
+
+            <!-- Add helper text under partners field when WhatsApp -->
+            <xpath expr="//field[@name='recipient_partner_ids']" position="after">
+                <div
+          class="oe_inline"
+          attrs="{'invisible': [('channel','!=','bookai_whatsapp')]}"
+        >
+                    <span class="text-muted">
+                        WhatsApp will be sent as one request per partner (one log per partner).
+                    </span>
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

@@ -110,6 +110,12 @@ class PmsNotificationMixin(models.AbstractModel):
                 if not rule._record_matches_event_domain(rec):
                     continue
 
+                if (
+                    rec._name == "pms.folio"
+                    and not rule.template_id._is_applicable_to_folio(rec)
+                ):
+                    continue
+
                 # Max sends per record (per rule)
                 if not rule._is_under_max_sends(rec):
                     continue

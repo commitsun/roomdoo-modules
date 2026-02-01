@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <!-- BookAI: base endpoint (default) -->
+    <record id="pms_bookai_icp_api_endpoint" model="ir.config_parameter">
+        <field name="key">pms_bookai.api_endpoint</field>
+        <field name="value">https://bookai.predev.roomdoo.com</field>
+    </record>
+
+    <!-- BookAI: bearer token (NO default). Leave empty; must be configured in Settings -->
+    <record id="pms_bookai_icp_api_token" model="ir.config_parameter">
+        <field name="key">pms_bookai.api_token</field>
+        <field name="value" />
+    </record>
+
+    <!-- BookAI: optional instance_id override (empty => fallback to web.base.url) -->
+    <record id="pms_bookai_icp_instance_id" model="ir.config_parameter">
+        <field name="key">pms_bookai.instance_id</field>
+        <field name="value" />
+    </record>
+
+</odoo>

@@ -9,8 +9,10 @@ Functional notification template:
 A template can be used by multiple rules (each rule chooses a single channel).
 """
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.osv import expression
+from odoo.tools.safe_eval import safe_eval
 
 
 class PmsNotificationTemplate(models.Model):
@@ -59,6 +61,22 @@ class PmsNotificationTemplate(models.Model):
         string="Notification Rules",
         help="Notification rules associated with this template.",
     )
+    pms_property_ids = fields.Many2many(
+        "pms.property",
+        string="Allowed Properties",
+        help=(
+            "If empty, template is available for all properties. "
+            "If not empty, template is only available for selected properties."
+        ),
+    )
+    apply_domain = fields.Char(
+        string="Apply Domain",
+        default="[]",
+        help=(
+            "Optional Odoo domain evaluated on pms.folio to decide if this template "
+            "applies. Empty or [] means it always applies."
+        ),
+    )
 
     _sql_constraints = [
         ("code_unique", "unique (code)", "Template code must be unique."),
@@ -79,3 +97,55 @@ class PmsNotificationTemplate(models.Model):
                     f"Notification template '{template.name}' has email rules "
                     f"but no mail template configured."
                 )
+
+    @api.constrains("apply_domain")
+    def _check_apply_domain(self):
+        for template in self:
+            template._get_apply_domain()
+
+    @api.model
+    def _property_availability_domain(self, property_id):
+        return [
+            "|",
+            ("pms_property_ids", "=", False),
+            ("pms_property_ids", "in", [property_id]),
+        ]
+
+    def _is_available_for_property(self, pms_property):
+        self.ensure_one()
+        return not self.pms_property_ids or pms_property in self.pms_property_ids
+
+    def _get_apply_domain(self):
+        self.ensure_one()
+        domain_expr = (self.apply_domain or "").strip() or "[]"
+        try:
+            domain = safe_eval(domain_expr, {})
+        except Exception as err:
+            raise ValidationError(
+                _("Invalid apply domain on template '%s'.") % self.display_name
+            ) from err
+
+        if not isinstance(domain, list | tuple):
+            raise ValidationError(
+                _("Apply domain on template '%s' must evaluate to a list or tuple.")
+                % self.display_name
+            )
+        try:
+            expression.normalize_domain(domain)
+        except Exception as err:
+            raise ValidationError(
+                _("Invalid apply domain structure on template '%s'.")
+                % self.display_name
+            ) from err
+        return list(domain)
+
+    def _is_applicable_to_folio(self, folio):
+        self.ensure_one()
+        if not folio:
+            return True
+        if folio._name != "pms.folio":
+            return True
+        domain = self._get_apply_domain()
+        if not domain:
+            return True
+        return bool(folio.filtered_domain(domain))
