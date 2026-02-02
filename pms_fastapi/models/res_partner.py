@@ -44,7 +44,9 @@ class ResPartner(models.Model):
             ]
         for partner in self:
             checkin_partner = self.env["pms.checkin.partner"].search_read(
-                property_domain + [("partner_id", "=", partner.id)], ["reservation_id"]
+                property_domain
+                + [("partner_id", "=", partner.id), ("reservation_id", "!=", None)],
+                ["reservation_id"],
             )
             current_guest = (
                 self.env["pms.checkin.partner"].search_count(
