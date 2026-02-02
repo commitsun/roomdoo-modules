@@ -45,4 +45,4 @@ msgstr "El NIF %s ya existe en otro contacto."
 #: code:addons/parnter_identification_unique/models/res_partner_id_number.py:0
 #, python-format
 msgid "The identification number %s already exists in another partner."
-msgstr "El número de identificadion ya existe en otro contacto."
+msgstr "El número de identificadion %s ya existe en otro contacto."
