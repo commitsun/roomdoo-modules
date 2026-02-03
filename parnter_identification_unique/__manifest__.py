@@ -3,7 +3,7 @@
     "author": "Commitsun, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-spain",
     "category": "Generic Modules/Property Management System",
-    "version": "16.0.1.1.0",
+    "version": "16.0.2.0.0",
     "license": "AGPL-3",
     "depends": [
         "pms_partner_identification",

@@ -42,6 +42,8 @@ class ResPartnerIdNumber(models.Model):
 
     @api.constrains("name", "category_id", "partner_id")
     def _check_id_number_unique(self):
+        if self._context.get("partner_merge_in_progress"):
+            return
         for record in self:
             if not record.name:
                 continue

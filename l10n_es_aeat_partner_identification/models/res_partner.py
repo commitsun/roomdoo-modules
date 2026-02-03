@@ -48,6 +48,8 @@ class ResPartner(models.Model):
 
     @api.constrains("aeat_identification", "aeat_identification_type", "parent_id")
     def _check_aeat_identification_unique(self):
+        if self._context.get("partner_merge_in_progress"):
+            return
         for record in self:
             if record.parent_id or not record.aeat_identification:
                 continue
