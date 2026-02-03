@@ -86,6 +86,8 @@ class ResPartner(models.Model):
 
     @api.constrains("vat", "parent_id")
     def _check_vat_unique(self):
+        if self._context.get("partner_merge_in_progress"):
+            return
         for record in self:
             if record.parent_id or not record.vat:
                 continue
@@ -154,3 +156,10 @@ class ResPartner(models.Model):
                     )
                     % record.vat
                 )
+
+    def write(self, vals):
+        if vals.get("active") and not vals["active"]:
+            self.env["res.partner.id_number"].search(
+                [("partner_id", "in", self.ids)]
+            ).write({"active": False})
+        return super().write(vals)
