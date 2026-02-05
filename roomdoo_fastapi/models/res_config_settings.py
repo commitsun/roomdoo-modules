@@ -63,8 +63,6 @@ class ResConfigSettings(models.TransientModel):
                         {
                             "name": "roomdoo_fastapi_image",
                             "datas": self.roomdoo_fastapi_image,
-                            "res_model": "res.config.settings",
-                            "res_id": self.id,
                         }
                     )
                 )
