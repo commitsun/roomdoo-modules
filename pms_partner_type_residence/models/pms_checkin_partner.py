@@ -25,6 +25,12 @@ class PMSCheckinPartner(models.Model):
                 field: self[field].id if hasattr(self[field], "id") else self[field]
                 for field in address_fields
             }
+        else:
+            residence_vals = {
+                field: residence_vals[field]
+                for field in address_fields
+                if field in residence_vals
+            }
 
         if not any(residence_vals.values()):
             return
@@ -66,3 +72,6 @@ class PMSCheckinPartner(models.Model):
                 }
             )
             self.env["res.partner"].create(partner_address)
+            self.partner_id.invalidate_recordset(
+                fnames=["residence_partner_id", "child_ids"]
+            )
