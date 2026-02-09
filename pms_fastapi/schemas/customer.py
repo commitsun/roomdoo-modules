@@ -7,10 +7,11 @@ from pydantic import Field
 
 from odoo import api
 from odoo.osv import expression
-from odoo.tools.float_utils import float_round
 
 from odoo.addons.pms_fastapi.schemas.base import BaseSearch
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
+
+from .base import CurrencyAmount
 
 
 class CustomerOrderField(str, Enum):
@@ -29,15 +30,17 @@ CUSTOMER_ORDER_MAPPING = {
 class CustomerSummary(ContactBase):
     email: str = ""
     vat: str
-    totalInvoiced: float = Field(description="Total invoiced in the last 12 months")
+    totalInvoiced: CurrencyAmount = Field(
+        description="Total invoiced in the last 12 months"
+    )
 
     @classmethod
     def from_res_partner(cls, partner):
-        precision = partner.currency_id.decimal_places
         data = cls.parse_common_fields(partner)
         data["email"] = partner.email or ""
         data["vat"] = partner.vat or ""
-        data["totalInvoiced"] = float_round(partner.fastapi_total_invoiced, precision)
+        data["totalInvoiced"] = partner.fastapi_total_invoiced
+        data["_decimal_places"] = partner.currency_id.decimal_places
         return cls(**data)
 
 

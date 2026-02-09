@@ -48,7 +48,6 @@ class ProfilerMiddleware:
 
         profiler.stop()
 
-        # Guardar archivo
         timestamp = int(time.time())
         path = request.url.path.replace("/", "_")
         filename = f"{self.output_dir}/profile{path}_{timestamp}.html"
@@ -77,29 +76,30 @@ class FastapiEndpoint(models.Model):
 
     def _get_app(self):
         app = super()._get_app()
-        # modify temporarily CORS middleware for PMS FastAPI app until
-        # pms_api_rest is removed.
-        # app_url = (
-        #     self.env["ir.config_parameter"]
-        #     .sudo()
-        #     .get_param("roomdoo_app_url", default="*")
-        # )
-        # app.add_middleware(
-        #     CORSMiddleware,
-        #     allow_origins=[app_url],
-        #     allow_credentials=True,
-        #     allow_methods=["*"],
-        #     allow_headers=["*"],
-        #     expose_headers=["set-cookie"],
-        # )
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-        app.add_middleware(ProfilerMiddleware)
-
+        if self.app == APP_NAME:
+            # modify temporarily CORS middleware for PMS FastAPI app until
+            # pms_api_rest is removed.
+            # app_url = (
+            #     self.env["ir.config_parameter"]
+            #     .sudo()
+            #     .get_param("roomdoo_app_url", default="*")
+            # )
+            # app.add_middleware(
+            #     CORSMiddleware,
+            #     allow_origins=[app_url],
+            #     allow_credentials=True,
+            #     allow_methods=["*"],
+            #     allow_headers=["*"],
+            #     expose_headers=["set-cookie"],
+            # )
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            if os.getenv("ENABLE_PROFILER", "0") == "1":
+                app.add_middleware(ProfilerMiddleware)
         return app
 
     def _prepare_fastapi_app_params(self):  # noqa: D102
