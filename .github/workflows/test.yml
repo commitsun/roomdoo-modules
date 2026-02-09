@@ -86,7 +86,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip setuptools wheel coverage
+          pip install --upgrade pip "setuptools<81" wheel coverage
 
           # gevent / greenlet fixes for Python 3.10
           sed -i -E "s/(gevent==)21\.8\.0/\122.10.2/" odoo/requirements.txt
