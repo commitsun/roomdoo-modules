@@ -18,3 +18,6 @@ from . import customer
 from . import supplier
 from . import guest
 from . import pms_reservation
+from . import pms_folio
+from . import pms_service
+from . import pms_room

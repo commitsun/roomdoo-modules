@@ -16,6 +16,9 @@
         "pms_l10n_es",  # temporal
         "parnter_identification_unique",
     ],
+    "external_dependencies": {
+        "python": ["pyinstrument"],
+    },
     "data": [
         "security/pms_fastapi_groups.xml",
         "data/res_users.xml",

@@ -10,9 +10,9 @@ class PmsBaseModel(StrictExtendableBaseModel):
 
     @staticmethod
     def url_image_pms_api_rest(env, model, record_id, field):
-        PmsBaseModel.pms_api_check_access(
-            user=env.user, records=env[model].sudo().browse(record_id)
-        )
+        # PmsBaseModel.pms_api_check_access(
+        #     user=env.user, records=env[model].sudo().browse(record_id)
+        # )
         rt_image_attach = (
             env["ir.attachment"]
             .sudo()
@@ -96,6 +96,22 @@ class PmsBaseModel(StrictExtendableBaseModel):
                         _("You are not allowed to access this properties. %s")
                         % properties_not_allowed.mapped("pms_property_ids.name")
                     )
+
+    @classmethod
+    def _get_odoo_read_fields(cls, odoo_object) -> list[str]:
+        odoo_available_fields = set(odoo_object._fields.keys())
+        pydantic_fields = []
+        for field_name in cls.model_fields.keys():
+            pydantic_fields.append(field_name)
+        valid_fields = [f for f in pydantic_fields if f in odoo_available_fields]
+        return valid_fields
+
+    @classmethod
+    def _read_odoo_record(cls, odoo_object):
+        fields_to_read = cls._get_odoo_read_fields(odoo_object)
+        record = odoo_object.read(fields_to_read)[0]
+        model_fields = cls.model_fields.keys()
+        return {k: v for k, v in record.items() if v and k in model_fields}
 
 
 class BaseSearch:

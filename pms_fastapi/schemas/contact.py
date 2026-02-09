@@ -85,8 +85,33 @@ class ContactId(PmsBaseModel):
     name: str | None = None
 
     @classmethod
+    def parse_common_fields(cls, partner) -> dict:
+        return {
+            "id": partner.id,
+            "name": partner.display_name,
+        }
+
+    @classmethod
     def from_res_partner(cls, partner):
-        return cls(id=partner.id, name=partner.name)
+        return cls(**cls.parse_common_fields(partner))
+
+
+class ContactIdImage(ContactId):
+    image: AnyHttpUrl | None = None
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        record_dict = cls.parse_common_fields(partner)
+        if partner.image_128:
+            image_url = cls.url_image_pms_api_rest(
+                partner.env,
+                "res.partner",
+                partner.id,
+                "image_128",
+            )
+            if image_url:
+                record_dict["image"] = image_url
+        return cls(**record_dict)
 
 
 class ContactBase(PmsBaseModel):
@@ -172,9 +197,7 @@ class ContactDetail(PmsBaseModel):
 
     @classmethod
     def from_res_partner(cls, partner):
-        record = partner.read()[0]
-        model_fields = cls.model_fields.keys()
-        filtered_data = {k: v for k, v in record.items() if v and k in model_fields}
+        filtered_data = cls._read_odoo_record(partner)
         contact_type = partner.company_type
         filtered_data["contactType"] = contact_type
         if partner.nationality_id:
