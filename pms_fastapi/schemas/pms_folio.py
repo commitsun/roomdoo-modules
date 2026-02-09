@@ -8,7 +8,7 @@ from pydantic import Field, field_validator
 
 from odoo import api
 
-from .base import BaseSearch, PmsBaseModel
+from .base import BaseSearch, CurrencyAmount, PmsBaseModel
 from .contact import ContactIdImage
 from .country import CountryId
 from .currency import CurrencySummary
@@ -19,7 +19,7 @@ from .pms_service import ServiceId
 
 class reservationStateEnum(str, Enum):
     ARRIVAL = "arrival"
-    IN_HOUSE = "in_house"
+    IN_HOUSE = "inHouse"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     OVERBOOKING = "overbooking"
@@ -49,7 +49,7 @@ class reservationSummary(PmsBaseModel):
     saleChannelId: SaleChannelId | None = None
     agencyId: ContactIdImage | None = None
     state: reservationStateEnum
-    price_room_services_set: float = Field(0.0, alias="totalAmount")
+    price_room_services_set: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
 
     @classmethod
@@ -63,6 +63,7 @@ class reservationSummary(PmsBaseModel):
             ServiceId.from_pms_service(service) for service in reservation.service_ids
         ]
         if reservation.currency_id:
+            filtered_data["_decimal_places"] = reservation.currency_id.decimal_places
             filtered_data["currency"] = CurrencySummary.from_res_currency(
                 reservation.currency_id
             )
@@ -93,7 +94,7 @@ class FolioSummary(PmsBaseModel):
     name: str = Field(alias="name")
     external_reference: str = Field("", alias="externalReference")
     nationality: CountryId | None = None
-    amount_total: float = Field(0.0, alias="totalAmount")
+    amount_total: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
     create_date: date = Field(alias="creationDate")
     reservations: list[reservationSummary]
@@ -118,6 +119,7 @@ class FolioSummary(PmsBaseModel):
                 folio.partner_id.nationality_id
             )
         if folio.currency_id:
+            filtered_data["_decimal_places"] = folio.currency_id.decimal_places
             filtered_data["currency"] = CurrencySummary.from_res_currency(
                 folio.currency_id
             )
@@ -292,7 +294,7 @@ class FolioSearch(BaseSearch):
                 ("reservation_ids.state", "in", ["confirm", "arrival_delayed"])
             ],
             reservationStateEnum.IN_HOUSE: [
-                ("reservation_ids.state", "in", ["in_house", "departure_delayed"])
+                ("reservation_ids.state", "in", ["onboard", "departure_delayed"])
             ],
             reservationStateEnum.COMPLETED: [
                 ("reservation_ids.state", "=", "completed")

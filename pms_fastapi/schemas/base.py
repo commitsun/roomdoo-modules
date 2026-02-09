@@ -1,8 +1,18 @@
+from typing import Annotated
+
 from extendable_pydantic import StrictExtendableBaseModel
-from pydantic import ConfigDict
+from pydantic import ConfigDict, model_validator
 
 from odoo import _, api
 from odoo.exceptions import AccessDenied
+from odoo.tools.float_utils import json_float_round
+
+
+class _CurrencyMarker:
+    pass
+
+
+CurrencyAmount = Annotated[float, _CurrencyMarker()]
 
 
 class PmsBaseModel(StrictExtendableBaseModel):
@@ -112,6 +122,16 @@ class PmsBaseModel(StrictExtendableBaseModel):
         record = odoo_object.read(fields_to_read)[0]
         model_fields = cls.model_fields.keys()
         return {k: v for k, v in record.items() if v and k in model_fields}
+
+    @model_validator(mode="before")
+    @classmethod
+    def _round_currency_fields(cls, data):
+        precision = data.pop("_decimal_places", 2)
+        for name, field in cls.model_fields.items():
+            if any(isinstance(m, _CurrencyMarker) for m in field.metadata):
+                if name in data and data[name] is not None:
+                    data[name] = json_float_round(data[name], precision)
+        return data
 
 
 class BaseSearch:
