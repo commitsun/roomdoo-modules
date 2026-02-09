@@ -1,9 +1,64 @@
-from fastapi import APIRouter
+import os
+import time
+from pathlib import Path
+
+from fastapi import APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pyinstrument import Profiler
 
 from odoo import api, fields, models
 
 APP_NAME = "pms_api"
+
+
+class ProfilerMiddleware:
+    def __init__(self, app, enable_by_param: bool = True):
+        self.app = app
+        self.enable_by_param = enable_by_param
+        self.output_dir = os.getenv("PROFILE_OUTPUT_DIR", "/tmp/profiles")
+        try:
+            Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Cannot create profile directory {self.output_dir}: {e}")
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        request = Request(scope, receive)
+
+        should_profile = (
+            self.enable_by_param and request.query_params.get("__profile__") == "1"
+        )
+
+        if not should_profile:
+            return await self.app(scope, receive, send)
+
+        profiler = Profiler(interval=0.0001)
+        profiler.start()
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                headers = message.get("headers", [])
+                headers.append((b"x-profiled", b"true"))
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+        profiler.stop()
+
+        # Guardar archivo
+        timestamp = int(time.time())
+        path = request.url.path.replace("/", "_")
+        filename = f"{self.output_dir}/profile{path}_{timestamp}.html"
+
+        try:
+            with open(filename, "w") as f:
+                f.write(profiler.output_html())
+            print(f"Profile saved: {filename}")
+        except Exception as e:
+            print(f"Error saving profile: {e}")
 
 
 class FastapiEndpoint(models.Model):
@@ -43,6 +98,7 @@ class FastapiEndpoint(models.Model):
             allow_methods=["*"],
             allow_headers=["*"],
         )
+        app.add_middleware(ProfilerMiddleware)
 
         return app
 

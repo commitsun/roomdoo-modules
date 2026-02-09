@@ -60,7 +60,7 @@ class FilteredModelAdapter(Generic[T]):
         return self._model.sudo().with_context(**context).search_count(domain)
 
     def search_with_count(
-        self, domain: list, limit, offset, order, context=None
+        self, domain: list, limit, offset, order=None, context=None
     ) -> tuple[int, T]:
         if not context:
             context = {}

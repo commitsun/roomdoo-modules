@@ -3,6 +3,7 @@ geopy
 jose
 jwt
 marshmallow
+pyinstrument
 simplejson
 thefuzz
 xlsxwriter
