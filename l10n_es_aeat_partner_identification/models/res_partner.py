@@ -51,7 +51,11 @@ class ResPartner(models.Model):
         if self._context.get("partner_merge_in_progress"):
             return
         for record in self:
-            if record.parent_id or not record.aeat_identification:
+            if (
+                record.parent_id
+                or not record.aeat_identification
+                or not record.aeat_identification_type
+            ):
                 continue
             identification_types_aeat = self.env["res.partner.id_category"].search(
                 [
