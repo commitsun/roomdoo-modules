@@ -122,3 +122,11 @@
   merges:
     - oca 16.0
   target: oca 16.0
+
+./deps/account-invoicing:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/account-invoicing.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
