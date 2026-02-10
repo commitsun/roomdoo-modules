@@ -10,7 +10,7 @@ from odoo import api
 
 from .base import BaseSearch, CurrencyAmount, PmsBaseModel
 from .contact import ContactIdImage
-from .country import CountryId
+from .country import CountrySummary
 from .currency import CurrencySummary
 from .pms_room import RoomId
 from .pms_sale_channel import SaleChannelId
@@ -44,10 +44,10 @@ class reservationSummary(PmsBaseModel):
     children: int = Field(0)
     nights: int = Field(0)
     to_assign: bool = Field(False, alias="toAssign")
-    roomIds: list[RoomId]
-    serviceIds: list[ServiceId]
-    saleChannelId: SaleChannelId | None = None
-    agencyId: ContactIdImage | None = None
+    rooms: list[RoomId]
+    services: list[ServiceId]
+    saleChannel: SaleChannelId | None = None
+    agency: ContactIdImage | None = None
     state: reservationStateEnum
     price_room_services_set: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
@@ -55,11 +55,11 @@ class reservationSummary(PmsBaseModel):
     @classmethod
     def from_pms_reservation(cls, reservation):
         filtered_data = cls._read_odoo_record(reservation)
-        filtered_data["roomIds"] = [
+        filtered_data["rooms"] = [
             RoomId.from_pms_room(room)
             for room in reservation.reservation_line_ids.mapped("room_id")
         ]
-        filtered_data["serviceIds"] = [
+        filtered_data["services"] = [
             ServiceId.from_pms_service(service) for service in reservation.service_ids
         ]
         if reservation.currency_id:
@@ -68,11 +68,11 @@ class reservationSummary(PmsBaseModel):
                 reservation.currency_id
             )
         if reservation.sale_channel_origin_id:
-            filtered_data["saleChannelId"] = SaleChannelId.from_pms_sale_channel(
+            filtered_data["saleChannel"] = SaleChannelId.from_pms_sale_channel(
                 reservation.sale_channel_origin_id
             )
         if reservation.agency_id:
-            filtered_data["agencyId"] = ContactIdImage.from_res_partner(
+            filtered_data["agency"] = ContactIdImage.from_res_partner(
                 reservation.agency_id
             )
         if reservation.overbooking and reservation.state != "cancel":
@@ -83,7 +83,7 @@ class reservationSummary(PmsBaseModel):
             filtered_data["state"] = reservationStateEnum.ARRIVAL
         elif reservation.state in ("onboard", "departure_delayed"):
             filtered_data["state"] = reservationStateEnum.IN_HOUSE
-        elif reservation.state == "completed":
+        elif reservation.state == "done":
             filtered_data["state"] = reservationStateEnum.COMPLETED
         return cls(**filtered_data)
 
@@ -93,7 +93,7 @@ class FolioSummary(PmsBaseModel):
     partner_name: str = Field("", alias="customerName")
     name: str = Field(alias="name")
     external_reference: str = Field("", alias="externalReference")
-    nationality: CountryId | None = None
+    nationality: CountrySummary | None = None
     amount_total: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
     create_date: date = Field(alias="creationDate")
@@ -115,7 +115,7 @@ class FolioSummary(PmsBaseModel):
             for res in folio.reservation_ids
         ]
         if folio.partner_id.nationality_id:
-            filtered_data["nationality"] = CountryId.from_res_country(
+            filtered_data["nationality"] = CountrySummary.from_res_country(
                 folio.partner_id.nationality_id
             )
         if folio.currency_id:
@@ -140,7 +140,7 @@ class FolioSummary(PmsBaseModel):
 class FolioSearch(BaseSearch):
     def __init__(
         self,
-        pmsPropertyId: Annotated[
+        pmsProperty: Annotated[
             int | None,
             Query(
                 description="Filter folios of the given property.",
@@ -223,10 +223,10 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
     ):
-        if not isinstance(pmsPropertyId, QueryType):
-            self.pmsPropertyId = pmsPropertyId
+        if not isinstance(pmsProperty, QueryType):
+            self.pmsProperty = pmsProperty
         else:
-            self.pmsPropertyId = None
+            self.pmsProperty = None
         self.name = name
         self.creationDate = creationDate
         self.paymentState = paymentState
@@ -243,13 +243,13 @@ class FolioSearch(BaseSearch):
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
         simple_filters = [
-            (self.pmsPropertyId, "property_id", "="),
+            (self.pmsProperty, "pms_property_id", "="),
             (self.name, "name", "ilike"),
             (self.creationDate, "create_date", "="),
             (self.room, "reservation_ids.reservation_line_ids.room_id", "ilike"),
-            (self.nights, "reservation_ids.number_of_nights", "="),
-            (self.checkin, "reservation_ids.checkin_date", "="),
-            (self.checkout, "reservation_ids.checkout_date", "="),
+            (self.nights, "reservation_ids.nights", "="),
+            (self.checkin, "reservation_ids.checkin", "="),
+            (self.checkout, "reservation_ids.checkout", "="),
             (self.saleChannel, "reservation_ids.sale_channel_origin_id", "ilike"),
             (self.agency, "reservation_ids.agency_id", "ilike"),
         ]
@@ -266,20 +266,17 @@ class FolioSearch(BaseSearch):
 
         # Período de estancia
         if self.stayPeriodStart and self.stayPeriodEnd:
-            domain.extend(
-                [
-                    (
-                        "reservation_ids.reservation_line_ids.date",
-                        ">=",
-                        self.stayPeriodStart,
-                    ),
-                    (
-                        "reservation_ids.reservation_line_ids.date",
-                        "<=",
-                        self.stayPeriodEnd,
-                    ),
-                ]
+            env.cr.execute(
+                """
+                SELECT DISTINCT r.folio_id
+                FROM pms_reservation_line rl
+                JOIN pms_reservation r ON r.id = rl.reservation_id
+                WHERE rl.date >= %s AND rl.date <= %s
+                """,
+                (self.stayPeriodStart, self.stayPeriodEnd),
             )
+            folio_ids = [r[0] for r in env.cr.fetchall()]
+            domain.append(("id", "in", folio_ids))
 
         return domain
 
@@ -296,9 +293,7 @@ class FolioSearch(BaseSearch):
             reservationStateEnum.IN_HOUSE: [
                 ("reservation_ids.state", "in", ["onboard", "departure_delayed"])
             ],
-            reservationStateEnum.COMPLETED: [
-                ("reservation_ids.state", "=", "completed")
-            ],
+            reservationStateEnum.COMPLETED: [("reservation_ids.state", "=", "done")],
         }
         return state_mapping.get(self.reservationState, [])
 
@@ -317,7 +312,7 @@ class FolioSearch(BaseSearch):
         return state_mapping.get(self.paymentState, [])
 
     def to_odoo_context(self, env: api.Environment) -> dict:
-        if self.pmsPropertyId:
-            return {"pms_property_ids": [self.pmsPropertyId]}
+        if self.pmsProperty:
+            return {"pms_property_ids": [self.pmsProperty]}
         else:
             return {"pms_property_ids": env.user.pms_property_ids.ids}

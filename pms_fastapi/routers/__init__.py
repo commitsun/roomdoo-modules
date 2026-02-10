@@ -17,3 +17,5 @@ from . import supplier
 from . import guest
 from . import pms_folio
 from . import invoice
+from . import journal
+from . import payment_method

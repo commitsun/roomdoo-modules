@@ -1,7 +1,7 @@
 # generated from manifests external_dependencies
 geopy
 jose
-jwt
+PyJWT
 marshmallow
 pyinstrument
 simplejson

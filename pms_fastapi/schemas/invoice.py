@@ -11,6 +11,7 @@ from odoo.osv import expression
 from .base import BaseSearch, PmsBaseModel
 from .contact import ContactId
 from .currency import CurrencySummary
+from .journal import JournalSummary
 from .payment_method import PaymentMethodSummary
 
 
@@ -26,27 +27,47 @@ INVOICE_ORDER_MAPPING = {
 
 
 class InvoiceTypeEnum(str, Enum):
-    out_invoice = "out_invoice"
-    out_refund = "out_refund"
+    outInvoice = "outInvoice"
+    outRefund = "outRefund"
+
+
+ODOO_INVOICE_TYPE_MAP = {
+    InvoiceTypeEnum.outInvoice: "out_invoice",
+    InvoiceTypeEnum.outRefund: "out_refund",
+}
+
+ODOO_INVOICE_TYPE_REVERSE_MAP = {v: k for k, v in ODOO_INVOICE_TYPE_MAP.items()}
 
 
 class InvoiceStateEnum(str, Enum):
     draft = "draft"
     posted = "posted"
-    cancelled = "cancelled"
+    cancelled = "cancel"
 
 
 class InvoicePaymentStateEnum(str, Enum):
-    not_paid = "not_paid"
+    not_paid = "notPaid"
     partial = "partial"
     paid = "paid"
     overdue = "overdue"
+    reversed = "reversed"
+
+
+ODOO_PAYMENT_STATE_MAP = {
+    "not_paid": InvoicePaymentStateEnum.not_paid,
+    "in_payment": InvoicePaymentStateEnum.not_paid,
+    "paid": InvoicePaymentStateEnum.paid,
+    "partial": InvoicePaymentStateEnum.partial,
+    "reversed": InvoicePaymentStateEnum.reversed,
+    "invoicing_legacy": InvoicePaymentStateEnum.not_paid,
+}
 
 
 class InvoicePayment(PmsBaseModel):
     # The field is called date in account.payment, so we can map it accordingly.
     paymentDate: date
     paymentMethod: PaymentMethodSummary | None = None
+    journal: JournalSummary | None = None
     amount: float = Field(0.0, alias="amount")
     currency_id: CurrencySummary = Field(alias="currency")
     ref: str
@@ -67,6 +88,10 @@ class InvoicePayment(PmsBaseModel):
             ] = PaymentMethodSummary.from_account_payment_method_line(
                 account_payment.payment_method_line_id
             )
+        if account_payment.journal_id:
+            data["journal"] = JournalSummary.from_account_journal(
+                account_payment.journal_id
+            )
         return cls(**data)
 
 
@@ -74,7 +99,7 @@ class InvoiceSummary(PmsBaseModel):
     id: int
     name: str = Field(alias="name")
     move_type: InvoiceTypeEnum | None = Field(None, alias="invoiceType")
-    partner_id: ContactId | None = Field(None, alias="partnerId")
+    partner_id: ContactId | None = Field(None, alias="partner")
     invoice_date: date | None = Field(None, alias="invoiceDate")
     ref: str | None = Field(None, alias="reference")
     amount_total_signed: float = Field(0.0, alias="totalAmount")
@@ -86,9 +111,8 @@ class InvoiceSummary(PmsBaseModel):
 
     @classmethod
     def from_account_move(cls, account_move):
-        record = account_move.read()[0]
-        model_fields = cls.model_fields.keys()
-        data = {k: v for k, v in record.items() if v and k in model_fields}
+        data = cls._read_odoo_record(account_move)
+        data["move_type"] = ODOO_INVOICE_TYPE_REVERSE_MAP.get(account_move.move_type)
         if account_move.partner_id:
             data["partner_id"] = ContactId.from_res_partner(account_move.partner_id)
         if account_move.currency_id:
@@ -107,10 +131,10 @@ class InvoiceSummary(PmsBaseModel):
             ]
         if account_move.has_overdue_payments:
             data["paymentState"] = InvoicePaymentStateEnum.overdue
-        elif account_move.payment_state == "in_payment":
-            data["paymentState"] = InvoicePaymentStateEnum.not_paid
         else:
-            data["paymentState"] = InvoicePaymentStateEnum(account_move.payment_state)
+            data["paymentState"] = ODOO_PAYMENT_STATE_MAP.get(
+                account_move.payment_state, InvoicePaymentStateEnum.not_paid
+            )
         return cls(**data)
 
 
@@ -170,6 +194,14 @@ class InvoiceSearch(BaseSearch):
                 "(only works if invoiceDateFrom is also setted)."
             ),
         ] = None,
+        journal: int | None = Query(
+            default=None,
+            description="Filter by journal id.",
+        ),
+        paymentMethod: int | None = Query(
+            default=None,
+            description="Filter by payment method id.",
+        ),
     ):
         self.pmsProperty = pmsProperty
         self.globalSearch = globalSearch
@@ -181,6 +213,8 @@ class InvoiceSearch(BaseSearch):
         self.state = state
         self.invoiceDateFrom = invoiceDateFrom
         self.invoiceDateTo = invoiceDateTo
+        self.journal = journal
+        self.paymentMethod = paymentMethod
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -202,7 +236,7 @@ class InvoiceSearch(BaseSearch):
             domain = expression.AND(
                 [
                     domain,
-                    [("move_type", "=", self.invoiceType.value)],
+                    [("move_type", "=", ODOO_INVOICE_TYPE_MAP[self.invoiceType])],
                 ]
             )
         if self.globalSearch:
@@ -263,4 +297,6 @@ class InvoiceSearch(BaseSearch):
                     ],
                 ]
             )
+        if self.journal:
+            domain = expression.AND([domain, [("journal_id", "=", self.journal)]])
         return domain
