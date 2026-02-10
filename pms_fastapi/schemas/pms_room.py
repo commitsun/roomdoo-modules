@@ -29,7 +29,7 @@ class RoomTypeId(PmsBaseModel):
 class RoomId(PmsBaseModel):
     id: int
     name: str
-    typeId: RoomTypeId
+    roomType: RoomTypeId
 
     @classmethod
     def from_pms_room(cls, room):
@@ -38,5 +38,5 @@ class RoomId(PmsBaseModel):
             "name": room.name,
         }
         if room.room_type_id:
-            data["typeId"] = RoomTypeId.from_pms_room_type(room.room_type_id)
+            data["roomType"] = RoomTypeId.from_pms_room_type(room.room_type_id)
         return cls(**data)
