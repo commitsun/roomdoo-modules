@@ -1,6 +1,8 @@
 import json
+import warnings
 from functools import partial
 
+import jwt
 from fastapi import status
 from requests import Response
 
@@ -12,6 +14,8 @@ class CommonTestPmsApi(FastAPITransactionCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        warnings.filterwarnings("ignore", category=jwt.InsecureKeyLengthWarning)
+
         jwt_validator = cls.env["auth.jwt.validator"].search([("name", "=", "api_pms")])
         jwt_validator.cookie_secure = False
         cls.pms_fastapi_app = cls.env["fastapi.endpoint"].create(
@@ -60,6 +64,7 @@ class CommonTestPmsApi(FastAPITransactionCase):
                 "user_ids": [(6, 0, [cls.test_user.id])],
             }
         )
+        cls.test_user.write({"company_ids": [(4, cls.test_company.id)]})
 
     def _login(self, test_client, password="supersecret"):
         response: Response = test_client.post(
