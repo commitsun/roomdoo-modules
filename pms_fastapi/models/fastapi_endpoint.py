@@ -4,7 +4,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pyinstrument import Profiler
 
 from odoo import api, fields, models
 
@@ -33,6 +32,8 @@ class ProfilerMiddleware:
 
         if not should_profile:
             return await self.app(scope, receive, send)
+
+        from pyinstrument import Profiler
 
         profiler = Profiler(interval=0.0001)
         profiler.start()
