@@ -1,7 +1,7 @@
 from odoo import api, models
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiL10nEsContactRouterHelper(models.AbstractModel):
     _inherit = "pms_api_contact.contact_router.helper"
 
     @api.model

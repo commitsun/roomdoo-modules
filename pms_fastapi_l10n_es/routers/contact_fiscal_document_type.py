@@ -5,7 +5,7 @@ from odoo.addons.l10n_es_aeat_partner_identification.models.res_partner import (
 )
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiL10nEsFiscalDocumentTypeRouterHelper(models.AbstractModel):
     _inherit = "pms_api_contact.contact_fiscal_document_type_router.helper"
 
     def get_fiscal_document_types(self) -> list[str]:

@@ -14,6 +14,7 @@ from odoo.addons.roomdoo_fastapi.schemas.instance import Instance
 async def get_instance_info(env: Annotated[Environment, Depends(odoo_env)]) -> Instance:
     """
     Get instance name and image URL.
+    Public endpoint (no auth required) - used on the login screen.
     """
     instance_name = (
         env["ir.config_parameter"]

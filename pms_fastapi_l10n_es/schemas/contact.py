@@ -6,7 +6,7 @@ from odoo.addons.l10n_es_aeat_partner_identification.models.res_partner import (
 from odoo.addons.pms_fastapi.schemas import contact
 
 
-class contactDetailFiscalDocument(contact.ContactDetail, extends=True):
+class ContactDetailFiscalDocument(contact.ContactDetail, extends=True):
     comercial: str = Field("", alias="comercial")
 
     @classmethod

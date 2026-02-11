@@ -24,7 +24,7 @@ async def count_contacts(
     return env["pms_api_contact.contact_router.helper"].new().count()
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class RoomdooContactRouterHelper(models.AbstractModel):
     _inherit = "pms_api_contact.contact_router.helper"
 
     def create_contact(self, data: ContactInsert):
