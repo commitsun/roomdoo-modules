@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from fastapi.responses import Response
+from fastapi import Depends, HTTPException, Response, status
 
 from odoo import models
 from odoo.api import Environment
@@ -30,7 +29,7 @@ async def get_duplicate_id_numbers(
     category: int,
     number: str,
     country: int,
-) -> ContactId:
+) -> ContactId | Response:
     """
     Get duplicate contact by identification number. Should be called before
     creating or updating a contact id number.
@@ -62,7 +61,7 @@ async def get_duplicate_fiscal_number(
     type: str,
     number: str,
     country: int | None = None,
-) -> ContactId:
+) -> ContactId | Response:
     """
     Get duplicate contact by fiscal number. Should be called before
     creating or updating a contact fiscal number.
@@ -122,6 +121,7 @@ async def contact_id_numbers(
 @pms_api_router.post(
     "/contacts/{contact_id}/id-numbers",
     response_model=ContactIdNumberSummary,
+    status_code=201,
     tags=["contact_id_number"],
 )
 async def create_contact_id_number(
@@ -150,7 +150,7 @@ async def update_contact_id_number(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"The id number {idNumber_id} does not belog "
+                f"The id number {idNumber_id} does not belong "
                 f"to the contact {contact_id}"
             ),
         )
@@ -174,7 +174,7 @@ async def set_fiscal_number_contact_id_number(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"The id number {idNumber_id} does not belog "
+                f"The id number {idNumber_id} does not belong "
                 f"to the contact {contact_id}"
             ),
         )
@@ -197,7 +197,7 @@ async def delete_contact_id_number(
         raise HTTPException(
             status_code=400,
             detail=(
-                f"The id number {idNumber_id} does not belog "
+                f"The id number {idNumber_id} does not belong "
                 f"to the contact {contact_id}"
             ),
         )

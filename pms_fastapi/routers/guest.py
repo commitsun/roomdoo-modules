@@ -45,7 +45,7 @@ async def list_guests(
     )
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiGuestRouterHelper(models.AbstractModel):
     _name = "pms_api_guest.guest_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
     _description = "Pms api guest Service Helper"

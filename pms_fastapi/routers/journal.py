@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, Query
 
+from odoo import models
 from odoo.api import Environment
 from odoo.osv import expression
 
@@ -36,32 +37,50 @@ async def list_journals(
     ] = None,
 ) -> list[JournalSummary]:
     """List journals, optionally filtered by type and property."""
-    domain = []
-    if journalType:
-        domain.append(("type", "=", journalType.value))
-    if pmsProperty:
-        domain = expression.AND(
-            [
-                domain,
-                expression.OR(
-                    [
-                        [("pms_property_ids", "in", [pmsProperty])],
-                        [("pms_property_ids", "=", False)],
-                    ]
-                ),
-            ]
-        )
-    else:
-        domain = expression.AND(
-            [
-                domain,
-                expression.OR(
-                    [
-                        [("pms_property_ids", "in", env.user.pms_property_ids.ids)],
-                        [("pms_property_ids", "=", False)],
-                    ]
-                ),
-            ]
-        )
-    journals = env["account.journal"].sudo().search(domain)
+    helper = env["pms_api_journal.journal_router.helper"].new()
+    journals = helper.search_journals(
+        pms_property_id=pmsProperty,
+        journal_type=journalType.value if journalType else None,
+    )
     return [JournalSummary.from_account_journal(journal) for journal in journals]
+
+
+class PmsApiJournalRouterHelper(models.AbstractModel):
+    _name = "pms_api_journal.journal_router.helper"
+    _description = "PMS API Journal Router Helper"
+
+    def search_journals(self, pms_property_id=None, journal_type=None):
+        domain = []
+        if journal_type:
+            domain.append(("type", "=", journal_type))
+        if pms_property_id:
+            domain = expression.AND(
+                [
+                    domain,
+                    expression.OR(
+                        [
+                            [("pms_property_ids", "in", [pms_property_id])],
+                            [("pms_property_ids", "=", False)],
+                        ]
+                    ),
+                ]
+            )
+        else:
+            domain = expression.AND(
+                [
+                    domain,
+                    expression.OR(
+                        [
+                            [
+                                (
+                                    "pms_property_ids",
+                                    "in",
+                                    self.env.user.pms_property_ids.ids,
+                                )
+                            ],
+                            [("pms_property_ids", "=", False)],
+                        ]
+                    ),
+                ]
+            )
+        return self.env["account.journal"].sudo().search(domain)

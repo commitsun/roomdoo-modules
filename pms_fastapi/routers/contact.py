@@ -89,6 +89,7 @@ async def contactDetail(
 @pms_api_router.post(
     "/contacts",
     response_model=ContactDetail,
+    status_code=201,
     tags=["contact"],
 )
 async def create_contact(
@@ -111,14 +112,14 @@ async def update_contact(
     contactData: ContactUpdate,
 ) -> ContactDetail:
     helper = env["pms_api_contact.contact_router.helper"].new()
-    helper.update_contact(contactData, contact_id)
-    contact = env["res.partner"].sudo().search([("id", "=", contact_id)])
-    if not contact:
+    try:
+        contact = helper.get(contact_id)
+    except MissingError as err:
         raise HTTPException(
             status_code=404,
             detail="contact not found",
-        )
-    ContactDetail.pms_api_check_access(env.user, contact)
+        ) from err
+    helper.update_contact(contactData, contact_id)
     return ContactDetail.from_res_partner(contact)
 
 
