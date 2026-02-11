@@ -243,7 +243,6 @@ class FolioSearch(BaseSearch):
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
         simple_filters = [
-            (self.pmsProperty, "pms_property_id", "="),
             (self.name, "name", "ilike"),
             (self.creationDate, "create_date", "="),
             (self.room, "reservation_ids.reservation_line_ids.room_id", "ilike"),
@@ -253,6 +252,16 @@ class FolioSearch(BaseSearch):
             (self.saleChannel, "reservation_ids.sale_channel_origin_id", "ilike"),
             (self.agency, "reservation_ids.agency_id", "ilike"),
         ]
+        if self.pmsProperty:
+            domain += [("pms_property_id", "=", self.pmsProperty)]
+        else:
+            domain += [
+                (
+                    "pms_property_id",
+                    "in",
+                    env.user.pms_property_ids.ids,
+                )
+            ]
 
         for value, field, operator in simple_filters:
             if value:
