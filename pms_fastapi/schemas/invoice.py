@@ -8,7 +8,7 @@ from pydantic import Field
 from odoo import api
 from odoo.osv import expression
 
-from .base import BaseSearch, PmsBaseModel
+from .base import BaseSearch, CurrencyAmount, PmsBaseModel
 from .contact import ContactId
 from .currency import CurrencySummary
 from .journal import JournalSummary
@@ -102,7 +102,7 @@ class InvoiceSummary(PmsBaseModel):
     partner_id: ContactId | None = Field(None, alias="partner")
     invoice_date: date | None = Field(None, alias="invoiceDate")
     ref: str | None = Field(None, alias="reference")
-    amount_total_signed: float = Field(0.0, alias="totalAmount")
+    amount_total_signed: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency_id: CurrencySummary = Field(alias="currency")
     state: InvoiceStateEnum
     paymentState: InvoicePaymentStateEnum
@@ -116,6 +116,7 @@ class InvoiceSummary(PmsBaseModel):
         if account_move.partner_id:
             data["partner_id"] = ContactId.from_res_partner(account_move.partner_id)
         if account_move.currency_id:
+            data["_decimal_places"] = account_move.currency_id.decimal_places
             data["currency_id"] = CurrencySummary.from_res_currency(
                 account_move.currency_id
             )

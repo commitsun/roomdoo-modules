@@ -47,7 +47,7 @@ async def list_agencies(
     )
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiAgencyRouterHelper(models.AbstractModel):
     _name = "pms_api_agency.agency_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
     _description = "Pms api agency Service Helper"

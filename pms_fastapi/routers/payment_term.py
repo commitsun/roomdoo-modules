@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from odoo.api import Environment
 
-from odoo.addons.fastapi.dependencies import odoo_env
+from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.payment_term import PaymentTermId
 
@@ -13,7 +13,7 @@ from odoo.addons.pms_fastapi.schemas.payment_term import PaymentTermId
     "/payment-terms", response_model=list[PaymentTermId], tags=["account"]
 )
 async def get_payment_terms(
-    env: Annotated[Environment, Depends(odoo_env)]
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))]
 ) -> list[PaymentTermId]:
     """
     Get payment terms configured in the instance.

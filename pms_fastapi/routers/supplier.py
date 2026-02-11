@@ -47,7 +47,7 @@ async def list_suppliers(
     )
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiSupplierRouterHelper(models.AbstractModel):
     _name = "pms_api_supplier.supplier_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
     _description = "Pms api supplier Service Helper"

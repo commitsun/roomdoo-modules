@@ -5,7 +5,7 @@ from fastapi import Depends
 from odoo import models
 from odoo.api import Environment
 
-from odoo.addons.fastapi.dependencies import odoo_env
+from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import ContactFiscalDocumentType
 
@@ -16,10 +16,10 @@ from odoo.addons.pms_fastapi.schemas.contact import ContactFiscalDocumentType
     tags=["db_info"],
 )
 async def get_fiscal_document_types(
-    env: Annotated[Environment, Depends(odoo_env)],
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
 ) -> list[ContactFiscalDocumentType]:
     """
-    Get country states configured in the instance.
+    Get fiscal document types configured in the instance.
     """
     fiscal_document_types = (
         env["pms_api_contact.contact_fiscal_document_type_router.helper"]
@@ -32,8 +32,9 @@ async def get_fiscal_document_types(
     ]
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiFiscalDocumentTypeRouterHelper(models.AbstractModel):
     _name = "pms_api_contact.contact_fiscal_document_type_router.helper"
+    _description = "PMS API Fiscal Document Type Router Helper"
 
     def get_fiscal_document_types(self) -> list[str]:
         return ["vat"]

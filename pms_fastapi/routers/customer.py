@@ -47,7 +47,7 @@ async def list_customers(
     )
 
 
-class PmsApiContactRouterHelper(models.AbstractModel):
+class PmsApiCustomerRouterHelper(models.AbstractModel):
     _name = "pms_api_customer.customer_router.helper"
     _inherit = "pms_api_contact.contact_router.helper"
     _description = "Pms api customer Service Helper"
