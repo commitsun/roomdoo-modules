@@ -5,7 +5,7 @@ from odoo.addons.pms_fastapi.schemas.country import CountryId
 from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 
 
-class contactDetailResidenceAddress(contact.ContactDetail, extends=True):
+class ContactDetailResidenceAddress(contact.ContactDetail, extends=True):
     """Schema for contact detail with residence address."""
 
     residenceStreet: str = Field("", description="Residence street address")

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.responses import Response
 
-from odoo import _, fields
+from odoo import _, fields, models
 from odoo.api import Environment
 from odoo.exceptions import MissingError
 
@@ -25,24 +25,14 @@ async def kelly_report(
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
-    report_wizard = (
-        env["kellysreport"]
-        .sudo()
-        .create(
-            {
-                "date_start": dateFrom,
-                "pms_property_id": pmsPropertyId,
-            }
-        )
-    )
-    report_wizard.calculate_report()
-    result = report_wizard._excel_export()
-    file_name = result["xls_filename"]
-    base64EncodedStr = result["xls_binary"]
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_kelly_report(pmsPropertyId, dateFrom)
     return Response(
-        content=base64.b64decode(base64EncodedStr),
+        content=base64.b64decode(result["xls_binary"]),
         media_type="application/vnd.ms-excel",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{result["xls_filename"]}"'
+        },
     )
 
 
@@ -58,28 +48,13 @@ async def ine_report(
     dateFrom: date,
     dateTo: date,
 ) -> Response:
-    PmsBaseModel.pms_api_check_access(
-        env.user,
-        env["pms.property"].sudo().browse(pmsPropertyId),
-    )
-    report_wizard = (
-        env["pms.ine.wizard"]
-        .sudo()
-        .create(
-            {
-                "start_date": dateFrom,
-                "end_date": dateTo,
-                "pms_property_id": pmsPropertyId,
-            }
-        )
-    )
-    report_wizard.ine_generate_xml()
-    # file_name is INE_<date_from_MONTH>_<date_from_YEAR>.xml
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_ine_report(pmsPropertyId, dateFrom, dateTo)
     file_name = (
         "INE_" + dateFrom.strftime("%m") + "_" + dateFrom.strftime("%Y") + ".xml"
     )
     return Response(
-        content=base64.b64decode(report_wizard.txt_binary),
+        content=base64.b64decode(result),
         media_type="application/xml",
         headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
     )
@@ -97,29 +72,14 @@ async def transactions_report(
     dateFrom: date,
     dateTo: date,
 ) -> Response:
-    PmsBaseModel.pms_api_check_access(
-        env.user,
-        env["pms.property"].sudo().browse(pmsPropertyId),
-    )
-
-    report_wizard = (
-        env["cash.daily.report.wizard"]
-        .sudo()
-        .create(
-            {
-                "date_start": dateFrom,
-                "date_end": dateTo,
-                "pms_property_id": pmsPropertyId,
-            }
-        )
-    )
-    result = report_wizard._export(pmsPropertyId)
-    file_name = result["xls_filename"]
-    base64EncodedStr = result["xls_binary"]
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_transactions_report(pmsPropertyId, dateFrom, dateTo)
     return Response(
-        content=base64.b64decode(base64EncodedStr),
+        content=base64.b64decode(result["xls_binary"]),
         media_type="application/vnd.ms-excel",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{result["xls_filename"]}"'
+        },
     )
 
 
@@ -135,32 +95,19 @@ async def services_report(
     dateFrom: date,
     dateTo: date,
 ) -> Response:
-    PmsBaseModel.pms_api_check_access(
-        env.user,
-        env["pms.property"].sudo().browse(pmsPropertyId),
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_sql_report(
+        "pms_api_rest.sql_export_services",
+        pmsPropertyId,
+        date_from=dateFrom,
+        date_to=dateTo,
     )
-    query = env.ref("pms_api_rest.sql_export_services").sudo()
-    if not query:
-        raise MissingError(_("SQL query not found"))
-    report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    charge_params = {
-        "x_date_from": fields.Date.to_string(dateFrom),
-        "x_date_to": fields.Date.to_string(dateTo),
-        "x_pms_property_id": pmsPropertyId,
-    }
-    vals = []
-    for item in report_wizard.query_properties:
-        if item["string"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
-
-    report_wizard.write({"query_properties": vals})
-    report_wizard.export_sql()
-    file_name = report_wizard.file_name
-    base64EncodedStr = report_wizard.binary_file
     return Response(
-        content=base64.b64decode(base64EncodedStr),
+        content=base64.b64decode(result["binary"]),
         media_type="application/vnd.ms-excel",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{result["file_name"]}"'
+        },
     )
 
 
@@ -175,31 +122,18 @@ async def departures_report(
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
-    PmsBaseModel.pms_api_check_access(
-        env.user,
-        env["pms.property"].sudo().browse(pmsPropertyId),
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_sql_report(
+        "pms_api_rest.sql_export_departures",
+        pmsPropertyId,
+        date_from=dateFrom,
     )
-    query = env.ref("pms_api_rest.sql_export_departures").sudo()
-    if not query:
-        raise MissingError(_("SQL query not found"))
-    report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    charge_params = {
-        "x_date_from": fields.Date.to_string(dateFrom),
-        "x_pms_property_id": pmsPropertyId,
-    }
-    vals = []
-    for item in report_wizard.query_properties:
-        if item["string"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
-
-    report_wizard.write({"query_properties": vals})
-    report_wizard.export_sql()
-    file_name = report_wizard.file_name
-    base64EncodedStr = report_wizard.binary_file
     return Response(
-        content=base64.b64decode(base64EncodedStr),
+        content=base64.b64decode(result["binary"]),
         media_type="application/vnd.ms-excel",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{result["file_name"]}"'
+        },
     )
 
 
@@ -214,29 +148,105 @@ async def arrivals_report(
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
-    PmsBaseModel.pms_api_check_access(
-        env.user,
-        env["pms.property"].sudo().browse(pmsPropertyId),
+    helper = env["roomdoo.report_router.helper"].new()
+    result = helper.generate_sql_report(
+        "pms_api_rest.sql_export_arrivals",
+        pmsPropertyId,
+        date_from=dateFrom,
     )
-    query = env.ref("pms_api_rest.sql_export_arrivals").sudo()
-    if not query:
-        raise MissingError(_("SQL query not found"))
-    report_wizard = env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
-    charge_params = {
-        "x_date_from": fields.Date.to_string(dateFrom),
-        "x_pms_property_id": pmsPropertyId,
-    }
-    vals = []
-    for item in report_wizard.query_properties:
-        if item["string"] in charge_params:
-            vals.append({"name": item["name"], "value": charge_params[item["string"]]})
-
-    report_wizard.write({"query_properties": vals})
-    report_wizard.export_sql()
-    file_name = report_wizard.file_name
-    base64EncodedStr = report_wizard.binary_file
     return Response(
-        content=base64.b64decode(base64EncodedStr),
+        content=base64.b64decode(result["binary"]),
         media_type="application/vnd.ms-excel",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{result["file_name"]}"'
+        },
     )
+
+
+# ============== BUSINESS LOGIC HELPER ==============
+
+
+class RoomdooReportRouterHelper(models.AbstractModel):
+    _name = "roomdoo.report_router.helper"
+    _description = "Roomdoo Report Router Helper"
+
+    def _check_property_access(self, pms_property_id):
+        PmsBaseModel.pms_api_check_access(
+            self.env.user,
+            self.env["pms.property"].sudo().browse(pms_property_id),
+        )
+
+    def generate_kelly_report(self, pms_property_id, date_from):
+        self._check_property_access(pms_property_id)
+        report_wizard = (
+            self.env["kellysreport"]
+            .sudo()
+            .create(
+                {
+                    "date_start": date_from,
+                    "pms_property_id": pms_property_id,
+                }
+            )
+        )
+        report_wizard.calculate_report()
+        return report_wizard._excel_export()
+
+    def generate_ine_report(self, pms_property_id, date_from, date_to):
+        self._check_property_access(pms_property_id)
+        report_wizard = (
+            self.env["pms.ine.wizard"]
+            .sudo()
+            .create(
+                {
+                    "start_date": date_from,
+                    "end_date": date_to,
+                    "pms_property_id": pms_property_id,
+                }
+            )
+        )
+        report_wizard.ine_generate_xml()
+        return report_wizard.txt_binary
+
+    def generate_transactions_report(self, pms_property_id, date_from, date_to):
+        self._check_property_access(pms_property_id)
+        report_wizard = (
+            self.env["cash.daily.report.wizard"]
+            .sudo()
+            .create(
+                {
+                    "date_start": date_from,
+                    "date_end": date_to,
+                    "pms_property_id": pms_property_id,
+                }
+            )
+        )
+        return report_wizard._export(pms_property_id)
+
+    def generate_sql_report(self, xml_id, pms_property_id, date_from, date_to=None):
+        """Generate a report using sql.file.wizard with the given xml_id reference.
+
+        Shared logic for services, departures, and arrivals reports.
+        """
+        self._check_property_access(pms_property_id)
+        query = self.env.ref(xml_id).sudo()
+        if not query:
+            raise MissingError(_("SQL query not found"))
+        report_wizard = (
+            self.env["sql.file.wizard"].sudo().create({"sql_export_id": query.id})
+        )
+        params = {
+            "x_date_from": fields.Date.to_string(date_from),
+            "x_pms_property_id": pms_property_id,
+        }
+        if date_to:
+            params["x_date_to"] = fields.Date.to_string(date_to)
+        vals = []
+        for item in report_wizard.query_properties:
+            if item["string"] in params:
+                vals.append({"name": item["name"], "value": params[item["string"]]})
+        report_wizard.write({"query_properties": vals})
+        report_wizard.export_sql()
+        return {
+            "file_name": report_wizard.file_name,
+            "binary": report_wizard.binary_file,
+        }

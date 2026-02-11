@@ -12,10 +12,6 @@ from odoo.addons.roomdoo_fastapi.schemas.property_link import PropertyLink
 
 @pms_api_router.get(
     "/pms-properties/{property_id}/links",
-    status_code=200,
-    responses={
-        200: {"model": None},
-    },
     response_model=list[PropertyLink],
     tags=["property"],
 )
@@ -40,7 +36,6 @@ async def get_property_links(
 
 @pms_api_router.get(
     "/pms-properties/{property_id}/links/{link_id}",
-    status_code=200,
     responses={
         404: {
             "description": "Resource not found",
@@ -48,7 +43,6 @@ async def get_property_links(
                 "application/json": {"example": {"detail": "property not found"}}
             },
         },
-        200: {"model": None},
     },
     response_model=AnyHttpUrl,
     tags=["property"],

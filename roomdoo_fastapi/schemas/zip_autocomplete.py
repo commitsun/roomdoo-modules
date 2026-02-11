@@ -3,7 +3,7 @@ from odoo.addons.pms_fastapi.schemas.country import CountryId
 from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 
 
-class zipSummary(PmsBaseModel):
+class ZipSummary(PmsBaseModel):
     zip: str
     city: str | None = None
     state: CountryStateId | None = None
@@ -11,7 +11,7 @@ class zipSummary(PmsBaseModel):
 
     @classmethod
     def from_res_city_zip(cls, res_city_zip_record):
-        return zipSummary(
+        return ZipSummary(
             zip=res_city_zip_record.name,
             city=res_city_zip_record.city_id.name
             if res_city_zip_record.city_id

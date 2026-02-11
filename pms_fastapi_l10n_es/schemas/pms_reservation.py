@@ -3,7 +3,7 @@ from pydantic import Field
 from odoo.addons.pms_fastapi.schemas import pms_folio
 
 
-class reservationSummarySES(pms_folio.reservationSummary, extends=True):
+class ReservationSummarySES(pms_folio.reservationSummary, extends=True):
     sesState: str = Field("")
     sesError: str = Field("")
 

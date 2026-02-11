@@ -13,6 +13,7 @@
         "cash_daily_report",
     ],
     "data": [
+        "security/ir.model.access.csv",
         "views/res_config_settings.xml",
         "views/auth_jwt_validator.xml",
         "views/res_partner_id_category.xml",
