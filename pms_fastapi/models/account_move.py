@@ -33,6 +33,7 @@ class AccountMove(models.Model):
                     lambda line: line.account_id.account_type
                     in ["asset_receivable", "liability_payable"]
                     and not line.reconciled
+                    and line.date_maturity
                 )
             )
 
