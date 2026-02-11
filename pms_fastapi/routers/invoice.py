@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from odoo import models
+from odoo import api, models
 from odoo.api import Environment
 from odoo.osv import expression
 
@@ -51,6 +51,15 @@ async def list_invoices(
     )
 
 
+@pms_api_router.get(
+    "/invoices/extra-features", response_model=list[str], tags=["invoice"]
+)
+async def invoice_extra_features(
+    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+) -> list[str]:
+    return env["pms_api_invoice.invoice_router.helper"].extra_features()
+
+
 class PmsApiInvoiceRouterHelper(models.AbstractModel):
     _name = "pms_api_invoice.invoice_router.helper"
     _description = "PMS API Invoice Router Helper"
@@ -86,3 +95,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         else:
             domain = []
         return self.model_adapter.count(domain)
+
+    @api.model
+    def extra_features(self):
+        return []
