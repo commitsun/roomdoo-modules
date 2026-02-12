@@ -40,7 +40,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 "/contacts",
                 json=create_data,
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             contact_id = response.json().get("id")
 
             self.env.invalidate_all()
@@ -75,7 +75,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 "/contacts",
                 json=create_data,
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             contact_id = response.json().get("id")
 
             self.env.invalidate_all()

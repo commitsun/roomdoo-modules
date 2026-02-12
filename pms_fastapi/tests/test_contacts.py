@@ -121,7 +121,9 @@ class TestContactsEndpoints(CommonTestPmsApi):
                     "tags": [self.tag1.id, self.tag2.id],
                 },
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(
+                response.status_code, status.HTTP_201_CREATED, response.text
+            )
             self.assertIn("id", response.json())
             self.assertEqual(response.json()["lastname"], "doe")
             self.assertEqual(response.json()["firstname"], "john")
