@@ -3,15 +3,16 @@ from typing import Annotated
 from fastapi import Depends
 
 from odoo import models
-from odoo.api import Environment
 from odoo.osv import expression
 
 from odoo.addons.fastapi.dependencies import (
     paging,
 )
 from odoo.addons.fastapi.schemas import PagedCollection, Paging
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
-from odoo.addons.pms_fastapi.dependencies import create_order_dependency
+from odoo.addons.pms_fastapi.dependencies import (
+    AuthenticatedEnv,
+    create_order_dependency,
+)
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.agency import (
     AGENCY_ORDER_MAPPING,
@@ -29,7 +30,7 @@ ContactOrderDependency = create_order_dependency(
     "/agencies", response_model=PagedCollection[AgencySummary], tags=["contact"]
 )
 async def list_agencies(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     filters: Annotated[AgencySearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],

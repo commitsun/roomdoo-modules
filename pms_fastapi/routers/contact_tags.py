@@ -1,10 +1,4 @@
-from typing import Annotated
-
-from fastapi import Depends
-
-from odoo.api import Environment
-
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact_tag import ContactTagId
 
@@ -13,7 +7,7 @@ from odoo.addons.pms_fastapi.schemas.contact_tag import ContactTagId
     "/contact-tags", response_model=list[ContactTagId], tags=["db_info"]
 )
 async def get_contact_tags(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[ContactTagId]:
     """
     Get contact tags configured in the instance.

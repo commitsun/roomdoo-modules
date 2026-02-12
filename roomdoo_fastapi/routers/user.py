@@ -1,13 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import HTTPException, Response, status
 
-from odoo.api import Environment
 from odoo.exceptions import AccessDenied, UserError
 
-from odoo.addons.fastapi.dependencies import odoo_env
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv, PublicEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.roomdoo_fastapi.schemas.user import (
     AvailabilityRuleField,
@@ -23,7 +20,7 @@ from odoo.addons.roomdoo_fastapi.schemas.user import (
     tags=["user"],
 )
 async def get_availability_rule_fields(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))]
+    env: AuthenticatedEnv,
 ) -> list[AvailabilityRuleField]:
     """
     Get user availability rules fields for user interface.
@@ -48,7 +45,7 @@ async def get_availability_rule_fields(
 )
 async def change_password(
     password_item: ChangePasswordInput,
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ):
     user = env.user
     old_password = password_item.oldPassword.get_secret_value()
@@ -70,9 +67,7 @@ async def change_password(
     },
     tags=["user"],
 )
-async def send_mail_reset_password(
-    userEmail: UserEmailInput, env: Annotated[Environment, Depends(odoo_env)]
-):
+async def send_mail_reset_password(userEmail: UserEmailInput, env: PublicEnv):
     user = env["res.users"].sudo().search([("email", "=", userEmail.email)])
     if user:
         template_id = env.ref("pms_api_rest.pms_reset_password_email").id
@@ -96,9 +91,7 @@ async def send_mail_reset_password(
     },
     tags=["user"],
 )
-async def reset_password(
-    reset_pass_input: ResetPasswordInput, env: Annotated[Environment, Depends(odoo_env)]
-):
+async def reset_password(reset_pass_input: ResetPasswordInput, env: PublicEnv):
     password = reset_pass_input.newPassword.get_secret_value()
     reset_token = reset_pass_input.resetToken.get_secret_value()
     values = {

@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import Depends
 
 from odoo import api, models
-from odoo.api import Environment
 from odoo.osv import expression
 
 from odoo.addons.account.models.account_move import AccountMove
@@ -12,8 +11,10 @@ from odoo.addons.fastapi.dependencies import (
     paging,
 )
 from odoo.addons.fastapi.schemas import Paging
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
-from odoo.addons.pms_fastapi.dependencies import create_order_dependency
+from odoo.addons.pms_fastapi.dependencies import (
+    AuthenticatedEnv,
+    create_order_dependency,
+)
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.invoice import (
     INVOICE_ORDER_MAPPING,
@@ -34,7 +35,7 @@ InvoiceOrderDependency = create_order_dependency(
     tags=["invoice"],
 )
 async def list_invoices(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     filters: Annotated[InvoiceSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(InvoiceOrderDependency)],
@@ -55,7 +56,7 @@ async def list_invoices(
     "/invoices/extra-features", response_model=list[str], tags=["invoice"]
 )
 async def invoice_extra_features(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[str]:
     return env["pms_api_invoice.invoice_router.helper"].extra_features()
 

@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 
 from odoo import api, models
-from odoo.api import Environment
 from odoo.exceptions import MissingError
 from odoo.osv import expression
 
@@ -13,8 +12,10 @@ from odoo.addons.fastapi.dependencies import (
     paging,
 )
 from odoo.addons.fastapi.schemas import Paging
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
-from odoo.addons.pms_fastapi.dependencies import create_order_dependency
+from odoo.addons.pms_fastapi.dependencies import (
+    AuthenticatedEnv,
+    create_order_dependency,
+)
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import (
     CONTACT_ORDER_MAPPING,
@@ -38,7 +39,7 @@ ContactOrderDependency = create_order_dependency(
     tags=["contact"],
 )
 async def list_contacts(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     filters: Annotated[ContactSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
@@ -60,7 +61,7 @@ async def list_contacts(
     "/contacts/extra-features", response_model=list[str], tags=["contact"]
 )
 async def contact_extra_features(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[str]:
     return env["pms_api_contact.contact_router.helper"].extra_features()
 
@@ -71,7 +72,7 @@ async def contact_extra_features(
     tags=["contact"],
 )
 async def contactDetail(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
 ) -> ContactDetail:
     """Get detail info of a contact"""
@@ -93,7 +94,7 @@ async def contactDetail(
     tags=["contact"],
 )
 async def create_contact(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contactData: ContactInsert,
 ) -> ContactDetail:
     helper = env["pms_api_contact.contact_router.helper"].new()
@@ -107,7 +108,7 @@ async def create_contact(
     tags=["contact"],
 )
 async def update_contact(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
     contactData: ContactUpdate,
 ) -> ContactDetail:

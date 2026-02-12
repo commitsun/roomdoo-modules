@@ -1,12 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import HTTPException, Response, status
 
 from odoo import models
-from odoo.api import Environment
 from odoo.exceptions import AccessDenied
 
-from odoo.addons.fastapi.dependencies import odoo_env
+from odoo.addons.pms_fastapi.dependencies import PublicEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.pms_login import PmsLoginInput
 
@@ -23,7 +20,7 @@ from odoo.addons.pms_fastapi.schemas.pms_login import PmsLoginInput
     },
     tags=["login"],
 )
-async def login(user: PmsLoginInput, env: Annotated[Environment, Depends(odoo_env)]):
+async def login(user: PmsLoginInput, env: PublicEnv):
     """
     If the login is correct, sets the authorization cookies.
     """

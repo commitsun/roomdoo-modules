@@ -1,15 +1,12 @@
 import base64
 from datetime import date
-from typing import Annotated
 
-from fastapi import Depends
 from fastapi.responses import Response
 
 from odoo import _, fields, models
-from odoo.api import Environment
 from odoo.exceptions import MissingError
 
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
 
@@ -21,7 +18,7 @@ from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
     response_class=Response,
 )
 async def kelly_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
@@ -43,7 +40,7 @@ async def kelly_report(
     response_class=Response,
 )
 async def ine_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
     dateTo: date,
@@ -67,7 +64,7 @@ async def ine_report(
     response_class=Response,
 )
 async def transactions_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
     dateTo: date,
@@ -90,7 +87,7 @@ async def transactions_report(
     response_class=Response,
 )
 async def services_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
     dateTo: date,
@@ -118,7 +115,7 @@ async def services_report(
     response_class=Response,
 )
 async def departures_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
@@ -144,7 +141,7 @@ async def departures_report(
     response_class=Response,
 )
 async def arrivals_report(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsPropertyId: int,
     dateFrom: date,
 ) -> Response:
