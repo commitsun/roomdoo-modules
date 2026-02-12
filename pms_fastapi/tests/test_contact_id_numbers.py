@@ -128,7 +128,9 @@ class TestContactIdNumberEndpoints(CommonTestPmsApi):
                 f"/contacts/{self.test_partner.id}/id-numbers",
                 json=payload,
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(
+                response.status_code, status.HTTP_201_CREATED, response.text
+            )
             data = response.json()
             self.assertIn("id", data)
             self.assertEqual(data.get("name"), "ES-XYZ-777")
@@ -191,4 +193,4 @@ class TestContactIdNumberEndpoints(CommonTestPmsApi):
                 response.status_code, status.HTTP_400_BAD_REQUEST, response.text
             )
             # Keep the exact detail from the router for robustness
-            self.assertIn("does not belog", response.json().get("detail", ""))
+            self.assertIn("does not belong", response.json().get("detail", ""))
