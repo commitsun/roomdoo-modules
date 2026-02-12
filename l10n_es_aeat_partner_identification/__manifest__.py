@@ -13,7 +13,7 @@
         "l10n_es_aeat",
         "pms_l10n_es",
         "partner_identification_map_partner_field",
-        "parnter_identification_unique",
+        "partner_identification_unique",
     ],
     "data": ["data/res_partner_id_category.xml"],
     "installable": True,

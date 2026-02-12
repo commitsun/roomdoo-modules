@@ -14,7 +14,7 @@
         "account_payment_partner",
         "pms_api_rest",  # temporal
         "pms_l10n_es",  # temporal
-        "parnter_identification_unique",
+        "partner_identification_unique",
     ],
     "external_dependencies": {
         "python": ["pyinstrument"],
