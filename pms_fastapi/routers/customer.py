@@ -34,7 +34,7 @@ async def list_customers(
     filters: Annotated[CustomerSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[CustomerSummary]:
+) -> PagedCollection[CustomerSummary]:
     """Get the list of the customers"""
     count, customers = (
         env["pms_api_customer.customer_router.helper"]

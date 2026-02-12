@@ -34,7 +34,7 @@ async def list_suppliers(
     filters: Annotated[SupplierSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[SupplierSummary]:
+) -> PagedCollection[SupplierSummary]:
     """Get the list of the suppliers"""
     count, suppliers = (
         env["pms_api_supplier.supplier_router.helper"]

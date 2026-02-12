@@ -34,7 +34,7 @@ async def list_agencies(
     filters: Annotated[AgencySearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[AgencySummary]:
+) -> PagedCollection[AgencySummary]:
     """Get the list of the agencies"""
     count, agencies = (
         env["pms_api_agency.agency_router.helper"]

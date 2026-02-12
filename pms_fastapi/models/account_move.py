@@ -21,6 +21,7 @@ class AccountMove(models.Model):
                     lambda line: line.account_id.account_type
                     in ["asset_receivable", "liability_payable"]
                     and not line.reconciled
+                    and line.date_maturity
                 )
             ]
             move.min_overdue_date = min(overdue_dates) if overdue_dates else False

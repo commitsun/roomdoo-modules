@@ -91,14 +91,14 @@ class GuestSearch(BaseSearch):
             date | None,
             Query(
                 description="Search contacts with a checkin between dates "
-                "(only works if checkinDateTo is also setted)"
+                "(only works if checkinDateTo is also set)"
             ),
         ] = None,
         checkinDateTo: Annotated[
             date | None,
             Query(
                 description="Search contacts with a checkin between dates "
-                "(only works if checkinDateFrom is also setted)"
+                "(only works if checkinDateFrom is also set)"
             ),
         ] = None,
     ):

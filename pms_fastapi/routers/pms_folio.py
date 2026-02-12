@@ -29,7 +29,7 @@ async def list_folios(
     env: AuthenticatedEnv,
     filters: Annotated[FolioSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
-) -> list[FolioSummary]:
+) -> PagedCollection[FolioSummary]:
     """Get the list of the folios"""
     count, folios = (
         env["pms_api_folio.folio_router.helper"].new()._search(paging, filters)
