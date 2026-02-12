@@ -185,14 +185,14 @@ class InvoiceSearch(BaseSearch):
             date | None,
             Query(
                 description="Filter between invoice dates "
-                "(only works if invoiceDateTo is also setted). "
+                "(only works if invoiceDateTo is also set). "
             ),
         ] = None,
         invoiceDateTo: Annotated[
             date | None,
             Query(
                 description="Filter between invoice dates "
-                "(only works if invoiceDateFrom is also setted)."
+                "(only works if invoiceDateFrom is also set)."
             ),
         ] = None,
         journal: int | None = Query(

@@ -43,7 +43,7 @@ async def list_contacts(
     filters: Annotated[ContactSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[ContactSummary]:
+) -> PagedCollection[ContactSummary]:
     """Get the list of the contacts without differentiating type"""
     count, contacts = (
         env["pms_api_contact.contact_router.helper"]

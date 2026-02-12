@@ -160,7 +160,7 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         paymentState: Annotated[
-            str | None,
+            folioPaymentStateEnum | None,
             Query(
                 description="Search for folios whose payment state is " "this value.",
             ),
@@ -202,7 +202,7 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         reservationState: Annotated[
-            str | None,
+            reservationStateEnum | None,
             Query(
                 description="Search for folios whose reservation state is "
                 "this value.",

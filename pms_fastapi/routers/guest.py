@@ -34,7 +34,7 @@ async def list_guests(
     filters: Annotated[GuestSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
     orderBy: Annotated[str, Depends(ContactOrderDependency)],
-) -> list[GuestSummary]:
+) -> PagedCollection[GuestSummary]:
     """Get the list of the guests"""
     count, guests = (
         env["pms_api_guest.guest_router.helper"].new()._search(paging, filters, orderBy)
