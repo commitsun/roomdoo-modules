@@ -1,11 +1,7 @@
-from typing import Annotated
-
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from pydantic import AnyHttpUrl
 
-from odoo.api import Environment
-
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.roomdoo_fastapi.schemas.property_link import PropertyLink
 
@@ -17,7 +13,7 @@ from odoo.addons.roomdoo_fastapi.schemas.property_link import PropertyLink
 )
 async def get_property_links(
     property_id: int,
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[PropertyLink]:
     """
     Returns a list of links of the property
@@ -50,7 +46,7 @@ async def get_property_links(
 async def get_property_link_url(
     property_id: int,
     link_id: int,
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> AnyHttpUrl:
     """
     returns the final url for the given link id

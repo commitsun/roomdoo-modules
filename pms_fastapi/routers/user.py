@@ -1,20 +1,17 @@
 import base64
 from typing import Annotated
 
-from fastapi import Depends, File, HTTPException, UploadFile
+from fastapi import File, HTTPException, UploadFile
 
 from odoo import api, models
-from odoo.api import Environment
 
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.user import User, UserUpdate
 
 
 @pms_api_router.get("/user", response_model=User, tags=["user"])
-async def get_user_info(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))]
-) -> User:
+async def get_user_info(env: AuthenticatedEnv) -> User:
     """
     Get current user basic information.
     """
@@ -28,7 +25,7 @@ async def get_user_info(
     tags=["user"],
 )
 async def update_user(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     userData: UserUpdate,
 ) -> User:
     """
@@ -41,7 +38,7 @@ async def update_user(
 
 @pms_api_router.put("/user/image", response_model=User, tags=["user"])
 async def update_user_image(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     image: Annotated[UploadFile, File(description="User image")],
 ):
     contents = await image.read()
@@ -57,7 +54,7 @@ async def update_user_image(
 
 @pms_api_router.delete("/user/image", response_model=User, tags=["user"])
 async def delete_user_image(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ):
     helper = env["pms_api.user_router.helper"].new()
     helper.update_user_image(env.user.id, False)
@@ -66,7 +63,7 @@ async def delete_user_image(
 
 @pms_api_router.get("/user/extra-features", response_model=list[str], tags=["user"])
 async def user_extra_features(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[str]:
     return env["pms_api.user_router.helper"].extra_features()
 

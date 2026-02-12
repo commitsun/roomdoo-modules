@@ -1,7 +1,17 @@
 from enum import Enum
 from typing import Annotated
 
-from fastapi import HTTPException, Query
+from fastapi import Depends, HTTPException, Query
+
+from odoo.api import Environment
+
+from odoo.addons.fastapi.dependencies import odoo_env
+from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+
+PublicEnv = Annotated[Environment, Depends(odoo_env)]
+AuthenticatedEnv = Annotated[
+    Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))
+]
 
 
 def create_order_dependency(

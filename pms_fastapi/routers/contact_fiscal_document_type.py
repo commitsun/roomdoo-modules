@@ -1,11 +1,6 @@
-from typing import Annotated
-
-from fastapi import Depends
-
 from odoo import models
-from odoo.api import Environment
 
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import ContactFiscalDocumentType
 
@@ -16,7 +11,7 @@ from odoo.addons.pms_fastapi.schemas.contact import ContactFiscalDocumentType
     tags=["db_info"],
 )
 async def get_fiscal_document_types(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> list[ContactFiscalDocumentType]:
     """
     Get fiscal document types configured in the instance.

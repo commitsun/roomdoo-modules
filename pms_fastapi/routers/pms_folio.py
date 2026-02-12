@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import Depends
 
 from odoo import api, models
-from odoo.api import Environment
 from odoo.osv import expression
 
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -11,8 +10,8 @@ from odoo.addons.fastapi.dependencies import (
     paging,
 )
 from odoo.addons.fastapi.schemas import Paging
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms.models.pms_folio import PmsFolio
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FolioSearch,
@@ -27,7 +26,7 @@ from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
     tags=["folio"],
 )
 async def list_folios(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     filters: Annotated[FolioSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
 ) -> list[FolioSummary]:

@@ -1,10 +1,4 @@
-from typing import Annotated
-
-from fastapi import Depends
-
-from odoo.api import Environment
-
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 
 
@@ -14,6 +8,6 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
     tags=["contact"],
 )
 async def count_suppliers(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
 ) -> int:
     return env["pms_api_supplier.supplier_router.helper"].new().count()

@@ -1,13 +1,12 @@
 from enum import Enum
 from typing import Annotated
 
-from fastapi import Depends, Query
+from fastapi import Query
 
 from odoo import models
-from odoo.api import Environment
 from odoo.osv import expression
 
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.journal import JournalSummary
 
@@ -26,7 +25,7 @@ class JournalType(str, Enum):
     tags=["account"],
 )
 async def list_journals(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     pmsProperty: Annotated[
         int | None,
         Query(description="Filter journals of the given property."),

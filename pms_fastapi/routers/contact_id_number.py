@@ -1,11 +1,8 @@
-from typing import Annotated
-
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import HTTPException, Response, status
 
 from odoo import models
-from odoo.api import Environment
 
-from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
+from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.contact import ContactId
 from odoo.addons.pms_fastapi.schemas.contact_id_number import (
@@ -25,7 +22,7 @@ from odoo.addons.pms_fastapi.schemas.contact_id_number import (
     tags=["utilities"],
 )
 async def get_duplicate_id_numbers(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     category: int,
     number: str,
     country: int,
@@ -57,7 +54,7 @@ async def get_duplicate_id_numbers(
     tags=["utilities"],
 )
 async def get_duplicate_fiscal_number(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     type: str,
     number: str,
     country: int | None = None,
@@ -79,7 +76,7 @@ async def get_duplicate_fiscal_number(
     tags=["contact_id_number"],
 )
 async def list_id_number_categories(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     country: int | None = None,
 ) -> list[ContactIdNumberCategorySummary]:
     category_search_domain = []
@@ -102,7 +99,7 @@ async def list_id_number_categories(
     tags=["contact_id_number"],
 )
 async def contact_id_numbers(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
 ) -> list[ContactIdNumberSummary]:
     """Get identification numbers of a contact"""
@@ -125,7 +122,7 @@ async def contact_id_numbers(
     tags=["contact_id_number"],
 )
 async def create_contact_id_number(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
     idNumberData: ContactIdNumberInsert,
 ) -> ContactIdNumberSummary:
@@ -140,7 +137,7 @@ async def create_contact_id_number(
     tags=["contact_id_number"],
 )
 async def update_contact_id_number(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
     idNumber_id: int,
     idNumberData: ContactIdNumberUpdate,
@@ -165,7 +162,7 @@ async def update_contact_id_number(
     tags=["contact_id_number"],
 )
 async def set_fiscal_number_contact_id_number(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
     idNumber_id: int,
 ) -> ContactIdNumberSummary:
@@ -188,7 +185,7 @@ async def set_fiscal_number_contact_id_number(
     tags=["contact_id_number"],
 )
 async def delete_contact_id_number(
-    env: Annotated[Environment, Depends(AuthJwtOdooEnv(validator_name="api_pms"))],
+    env: AuthenticatedEnv,
     contact_id: int,
     idNumber_id: int,
 ):
