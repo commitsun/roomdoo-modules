@@ -19,7 +19,7 @@
         "pms_partner_type_residence",
     ],
     "external_dependencies": {
-        "python": ["jwt", "simplejson", "marshmallow", "jose"],
+        "python": ["simplejson", "marshmallow", "jose"],
     },
     "data": [
         "security/ir.model.access.csv",
