@@ -45,6 +45,16 @@ pip install -r requirements.txt
 
 This approach allows us to work with cutting-edge features and bugfixes while maintaining a clear record of all dependencies for reproducible installations.
 
+## AI Coding Assistants
+
+This repository includes coding conventions and patterns for AI assistants in `.claude/skills/`. These documents help AI tools understand the project's architecture and generate code that follows our standards.
+
+To make a skill available globally (outside the repo context), create a symlink:
+
+```bash
+ln -s /path/to/roomdoo-modules/.claude/skills/roomdoo-fastapi-conventions ~/.claude/skills/roomdoo-fastapi-conventions
+```
+
 ## License
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
