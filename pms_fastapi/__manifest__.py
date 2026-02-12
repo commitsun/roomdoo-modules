@@ -7,6 +7,7 @@
     "category": "Generic Modules/Property Management System",
     "license": "AGPL-3",
     "depends": [
+        "fastapi_auth_jwt",
         "extendable_fastapi",
         "auth_jwt_login",
         "partner_firstname",
