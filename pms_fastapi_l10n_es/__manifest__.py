@@ -7,6 +7,11 @@
     "maintainer": "",
     "website": "",
     "license": "AGPL-3",
-    "depends": ["pms_fastapi", "pms_l10n_es", "l10n_es_partner"],
+    "depends": [
+        "pms_fastapi",
+        "pms_l10n_es",
+        "l10n_es_partner",
+        "l10n_es_aeat_partner_identification",
+    ],
     "auto_install": True,
 }
