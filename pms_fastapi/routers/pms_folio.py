@@ -74,6 +74,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             limit=paging.limit,
             offset=paging.offset,
             context=params.to_odoo_context(self.env),
+            order="create_date desc",
         )
 
     def count(self, params=None) -> int:
