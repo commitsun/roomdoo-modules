@@ -1,3 +1,5 @@
+from pydantic import AnyHttpUrl
+
 from .base import PmsBaseModel
 
 
@@ -25,3 +27,21 @@ class SaleChannelId(PmsBaseModel):
             id=channel.id,
             name=channel.name,
         )
+
+
+class SaleChannelDetail(SaleChannelId):
+    image: AnyHttpUrl | None = None
+
+    @classmethod
+    def from_pms_sale_channel(cls, channel):
+        res = super().from_pms_sale_channel(channel)
+        if channel.icon:
+            image_url = cls.url_image_pms_api_rest(
+                channel.env,
+                "pms.sale.channel",
+                channel.id,
+                "icon",
+            )
+            if image_url:
+                res.image = image_url
+        return res

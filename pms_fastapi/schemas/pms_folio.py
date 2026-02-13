@@ -7,13 +7,14 @@ from fastapi.params import Query as QueryType
 from pydantic import Field, field_validator
 
 from odoo import api
+from odoo.osv import expression
 
 from .base import BaseSearch, CurrencyAmount, PmsBaseModel
 from .contact import ContactIdImage
 from .country import CountrySummary
 from .currency import CurrencySummary
 from .pms_room import RoomId
-from .pms_sale_channel import SaleChannelId
+from .pms_sale_channel import SaleChannelDetail
 from .pms_service import ServiceId
 
 
@@ -46,7 +47,7 @@ class reservationSummary(PmsBaseModel):
     to_assign: bool = Field(False, alias="toAssign")
     rooms: list[RoomId]
     services: list[ServiceId]
-    saleChannel: SaleChannelId | None = None
+    saleChannel: SaleChannelDetail | None = None
     agency: ContactIdImage | None = None
     state: reservationStateEnum
     price_room_services_set: CurrencyAmount = Field(0.0, alias="totalAmount")
@@ -68,7 +69,7 @@ class reservationSummary(PmsBaseModel):
                 reservation.currency_id
             )
         if reservation.sale_channel_origin_id:
-            filtered_data["saleChannel"] = SaleChannelId.from_pms_sale_channel(
+            filtered_data["saleChannel"] = SaleChannelDetail.from_pms_sale_channel(
                 reservation.sale_channel_origin_id
             )
         if reservation.agency_id:
@@ -190,13 +191,13 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         saleChannel: Annotated[
-            int | None,
+            str | None,
             Query(
                 description="Search for folios whose sale channel is " "this value.",
             ),
         ] = None,
         agency: Annotated[
-            int | None,
+            str | None,
             Query(
                 description="Search for folios whose agency is " "this value.",
             ),
@@ -222,6 +223,12 @@ class FolioSearch(BaseSearch):
                 "this value.",
             ),
         ] = None,
+        origin: Annotated[
+            str | None,
+            Query(
+                description="Combined search of channel and agency.",
+            ),
+        ] = None,
     ):
         if not isinstance(pmsProperty, QueryType):
             self.pmsProperty = pmsProperty
@@ -239,6 +246,7 @@ class FolioSearch(BaseSearch):
         self.reservationState = reservationState
         self.stayPeriodStart = stayPeriodStart
         self.stayPeriodEnd = stayPeriodEnd
+        self.origin = origin
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -266,7 +274,6 @@ class FolioSearch(BaseSearch):
         for value, field, operator in simple_filters:
             if value:
                 domain.append((field, operator, value))
-
         if self.reservationState:
             domain.extend(self._get_reservation_state_domain())
 
@@ -286,7 +293,24 @@ class FolioSearch(BaseSearch):
             )
             folio_ids = [r[0] for r in env.cr.fetchall()]
             domain.append(("id", "in", folio_ids))
-
+        if self.origin:
+            domain = expression.AND(
+                [
+                    domain,
+                    expression.OR(
+                        [
+                            [
+                                (
+                                    "reservation_ids.sale_channel_origin_id",
+                                    "ilike",
+                                    self.origin,
+                                )
+                            ],
+                            [("reservation_ids.agency_id", "ilike", self.origin)],
+                        ]
+                    ),
+                ]
+            )
         return domain
 
     def _get_reservation_state_domain(self) -> list:
