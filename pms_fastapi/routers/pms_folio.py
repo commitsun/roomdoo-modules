@@ -46,7 +46,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     _description = "Pms api folio Service Helper"
 
     def _get_domain_adapter(self):
-        return [("reservation_type", "!=", "out"), ("state", "!=", "draft")]
+        return [("reservation_type", "!=", "out")]
 
     def _get_multicompany_rule(self):
         allowed_company_ids = self.env.user.company_ids.ids

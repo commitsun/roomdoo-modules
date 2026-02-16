@@ -26,7 +26,7 @@ class JournalType(str, Enum):
 )
 async def list_journals(
     env: AuthenticatedEnv,
-    pmsProperty: Annotated[
+    pmsPropertyId: Annotated[
         int | None,
         Query(description="Filter journals of the given property."),
     ] = None,
@@ -38,7 +38,7 @@ async def list_journals(
     """List journals, optionally filtered by type and property."""
     helper = env["pms_api_journal.journal_router.helper"].new()
     journals = helper.search_journals(
-        pms_property_id=pmsProperty,
+        pms_property_id=pmsPropertyId,
         journal_type=journalType.value if journalType else None,
     )
     return [JournalSummary.from_account_journal(journal) for journal in journals]

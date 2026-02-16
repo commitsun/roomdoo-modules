@@ -142,7 +142,7 @@ class InvoiceSummary(PmsBaseModel):
 class InvoiceSearch(BaseSearch):
     def __init__(
         self,
-        pmsProperty: int | None = Query(
+        pmsPropertyId: int | None = Query(
             default=None,
             description="Filter guests of the given property.",
         ),
@@ -203,8 +203,12 @@ class InvoiceSearch(BaseSearch):
             default=None,
             description="Filter by payment method id.",
         ),
+        partner: str | None = Query(
+            default=None,
+            description="Filter by partner name.",
+        ),
     ):
-        self.pmsProperty = pmsProperty
+        self.pmsProperty = pmsPropertyId
         self.globalSearch = globalSearch
         self.name = name
         self.invoiceType = invoiceType
@@ -216,6 +220,7 @@ class InvoiceSearch(BaseSearch):
         self.invoiceDateTo = invoiceDateTo
         self.journal = journal
         self.paymentMethod = paymentMethod
+        self.partner = partner
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -300,4 +305,8 @@ class InvoiceSearch(BaseSearch):
             )
         if self.journal:
             domain = expression.AND([domain, [("journal_id", "=", self.journal)]])
+        if self.partner:
+            domain = expression.AND(
+                [domain, [("partner_id", "child_of", self.partner)]]
+            )
         return domain
