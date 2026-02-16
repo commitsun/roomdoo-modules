@@ -19,6 +19,7 @@ from .pms_service import ServiceId
 
 
 class reservationStateEnum(str, Enum):
+    DRAFT = "draft"
     ARRIVAL = "arrival"
     IN_HOUSE = "inHouse"
     COMPLETED = "completed"
@@ -78,6 +79,8 @@ class reservationSummary(PmsBaseModel):
             )
         if reservation.overbooking and reservation.state != "cancel":
             filtered_data["state"] = reservationStateEnum.OVERBOOKING
+        elif reservation.state == "draft":
+            filtered_data["state"] = reservationStateEnum.DRAFT
         elif reservation.state == "cancel":
             filtered_data["state"] = reservationStateEnum.CANCELLED
         elif reservation.state in ("confirm", "arrival_delayed"):
@@ -114,6 +117,7 @@ class FolioSummary(PmsBaseModel):
         filtered_data["reservations"] = [
             reservationSummary.from_pms_reservation(res)
             for res in folio.reservation_ids
+            if res.cancelled_reason != "modified"
         ]
         if folio.partner_id.nationality_id:
             filtered_data["nationality"] = CountrySummary.from_res_country(
@@ -141,7 +145,7 @@ class FolioSummary(PmsBaseModel):
 class FolioSearch(BaseSearch):
     def __init__(
         self,
-        pmsProperty: Annotated[
+        pmsPropertyId: Annotated[
             int | None,
             Query(
                 description="Filter folios of the given property.",
@@ -237,8 +241,8 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
     ):
-        if not isinstance(pmsProperty, QueryType):
-            self.pmsProperty = pmsProperty
+        if not isinstance(pmsPropertyId, QueryType):
+            self.pmsProperty = pmsPropertyId
         else:
             self.pmsProperty = None
         self.globalSearch = globalSearch
@@ -348,6 +352,7 @@ class FolioSearch(BaseSearch):
                 ("reservation_ids.state", "in", ["onboard", "departure_delayed"])
             ],
             reservationStateEnum.COMPLETED: [("reservation_ids.state", "=", "done")],
+            reservationStateEnum.DRAFT: [("reservation_ids.state", "=", "draft")],
         }
         return state_mapping.get(self.reservationState, [])
 
