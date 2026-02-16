@@ -147,6 +147,13 @@ class FolioSearch(BaseSearch):
                 description="Filter folios of the given property.",
             ),
         ] = None,
+        globalSearch: Annotated[
+            str | None,
+            Query(
+                description="Search across folio name, external reference, "
+                "and customer name.",
+            ),
+        ] = None,
         name: Annotated[
             str | None,
             Query(
@@ -234,6 +241,7 @@ class FolioSearch(BaseSearch):
             self.pmsProperty = pmsProperty
         else:
             self.pmsProperty = None
+        self.globalSearch = globalSearch
         self.name = name
         self.creationDate = creationDate
         self.paymentState = paymentState
@@ -271,6 +279,19 @@ class FolioSearch(BaseSearch):
                 )
             ]
 
+        if self.globalSearch:
+            domain = expression.AND(
+                [
+                    domain,
+                    [
+                        "|",
+                        "|",
+                        ("name", "ilike", self.globalSearch),
+                        ("external_reference", "ilike", self.globalSearch),
+                        ("partner_id", "child_of", self.globalSearch),
+                    ],
+                ]
+            )
         for value, field, operator in simple_filters:
             if value:
                 domain.append((field, operator, value))
