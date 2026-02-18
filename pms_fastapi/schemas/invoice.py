@@ -170,15 +170,17 @@ class InvoiceSearch(BaseSearch):
             description="Filter by total amount.",
         ),
         paymentState: Annotated[
-            InvoicePaymentStateEnum | None,
+            list[InvoicePaymentStateEnum] | None,
             Query(
-                description="Filter by payment state.",
+                description="Filter by payment state. Use repeated query parameters, "
+                "e.g., ?paymentState=paid&paymentState=notPaid",
             ),
         ] = None,
         state: Annotated[
-            InvoiceStateEnum | None,
+            list[InvoiceStateEnum] | None,
             Query(
-                description="Filter by invoice state.",
+                description="Filter by invoice state. Use repeated query parameters, "
+                "e.g., ?state=draft&state=posted",
             ),
         ] = None,
         invoiceDateFrom: Annotated[
@@ -195,14 +197,20 @@ class InvoiceSearch(BaseSearch):
                 "(only works if invoiceDateFrom is also set)."
             ),
         ] = None,
-        journal: int | None = Query(
-            default=None,
-            description="Filter by journal id.",
-        ),
-        paymentMethod: int | None = Query(
-            default=None,
-            description="Filter by payment method id.",
-        ),
+        journal: Annotated[
+            list[int] | None,
+            Query(
+                description="Filter by journal id. Use repeated query parameters, "
+                "e.g., ?journal=1&journal=2",
+            ),
+        ] = None,
+        paymentMethod: Annotated[
+            list[int] | None,
+            Query(
+                description="Filter by payment method id. Use repeated query "
+                "parameters, e.g., ?paymentMethod=1&paymentMethod=2",
+            ),
+        ] = None,
         partner: str | None = Query(
             default=None,
             description="Filter by partner name.",
@@ -269,12 +277,12 @@ class InvoiceSearch(BaseSearch):
         if self.priceTotal:
             domain = expression.AND([domain, [("amount_total", "=", self.priceTotal)]])
         if self.paymentState:
-            if self.paymentState == InvoicePaymentStateEnum.overdue:
-                domain = expression.AND([domain, [("has_overdue_payments", "=", True)]])
-            elif self.paymentState == InvoicePaymentStateEnum.not_paid:
-                domain = expression.AND(
-                    [
-                        domain,
+            state_domains = []
+            for ps in self.paymentState:
+                if ps == InvoicePaymentStateEnum.overdue:
+                    state_domains.append([("has_overdue_payments", "=", True)])
+                elif ps == InvoicePaymentStateEnum.not_paid:
+                    state_domains.append(
                         expression.AND(
                             [
                                 [("has_overdue_payments", "=", False)],
@@ -284,15 +292,15 @@ class InvoiceSearch(BaseSearch):
                                     ("payment_state", "=", "not_paid"),
                                 ],
                             ]
-                        ),
-                    ]
-                )
-            else:
-                domain = expression.AND(
-                    [domain, [("payment_state", "=", self.paymentState.value)]]
-                )
+                        )
+                    )
+                else:
+                    state_domains.append([("payment_state", "=", ps.value)])
+            domain = expression.AND([domain, expression.OR(state_domains)])
         if self.state:
-            domain = expression.AND([domain, [("state", "=", self.state)]])
+            domain = expression.AND(
+                [domain, [("state", "in", [s.value for s in self.state])]]
+            )
         if self.invoiceDateFrom and self.invoiceDateTo:
             domain = expression.AND(
                 [
@@ -304,7 +312,11 @@ class InvoiceSearch(BaseSearch):
                 ]
             )
         if self.journal:
-            domain = expression.AND([domain, [("journal_id", "=", self.journal)]])
+            domain = expression.AND([domain, [("journal_id", "in", self.journal)]])
+        if self.paymentMethod:
+            domain = expression.AND(
+                [domain, [("payment_method_line_id", "in", self.paymentMethod)]]
+            )
         if self.partner:
             domain = expression.AND(
                 [domain, [("partner_id", "child_of", self.partner)]]
