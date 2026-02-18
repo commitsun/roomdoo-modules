@@ -230,6 +230,63 @@ class InvoiceSearch(BaseSearch):
         self.paymentMethod = paymentMethod
         self.partner = partner
 
+    @staticmethod
+    def _payment_state_domain(payment_states: list) -> list:
+        overdue_selected = InvoicePaymentStateEnum.overdue in payment_states
+        not_paid_selected = InvoicePaymentStateEnum.not_paid in payment_states
+        if overdue_selected and not_paid_selected:
+            # Optimization: avoid OR(subquery, payment_state_condition).
+            # _search_has_overdue_payments returns a subquery on
+            # account_move_line; when ORed with a payment_state condition,
+            # PostgreSQL cannot use the payment_state index and falls back
+            # to a seq scan.
+            #
+            # Overdue invoices only have payment_state 'not_paid' or 'partial'.
+            # notPaid already covers 'not_paid' and 'in_payment', so we only
+            # need the subquery for 'partial' invoices. Using AND(partial,
+            # subquery) lets PostgreSQL filter by payment_state first (index)
+            # and run the subquery on a much smaller set.
+            state_domains = [
+                [
+                    "|",
+                    ("payment_state", "=", "in_payment"),
+                    ("payment_state", "=", "not_paid"),
+                ],
+                expression.AND(
+                    [
+                        [("payment_state", "=", "partial")],
+                        [("has_overdue_payments", "=", True)],
+                    ]
+                ),
+            ]
+            for ps in payment_states:
+                if ps not in (
+                    InvoicePaymentStateEnum.overdue,
+                    InvoicePaymentStateEnum.not_paid,
+                ):
+                    state_domains.append([("payment_state", "=", ps.value)])
+        else:
+            state_domains = []
+            for ps in payment_states:
+                if ps == InvoicePaymentStateEnum.overdue:
+                    state_domains.append([("has_overdue_payments", "=", True)])
+                elif ps == InvoicePaymentStateEnum.not_paid:
+                    state_domains.append(
+                        expression.AND(
+                            [
+                                [("has_overdue_payments", "=", False)],
+                                [
+                                    "|",
+                                    ("payment_state", "=", "in_payment"),
+                                    ("payment_state", "=", "not_paid"),
+                                ],
+                            ]
+                        )
+                    )
+                else:
+                    state_domains.append([("payment_state", "=", ps.value)])
+        return expression.OR(state_domains)
+
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
         if self.pmsProperty:
@@ -277,26 +334,9 @@ class InvoiceSearch(BaseSearch):
         if self.priceTotal:
             domain = expression.AND([domain, [("amount_total", "=", self.priceTotal)]])
         if self.paymentState:
-            state_domains = []
-            for ps in self.paymentState:
-                if ps == InvoicePaymentStateEnum.overdue:
-                    state_domains.append([("has_overdue_payments", "=", True)])
-                elif ps == InvoicePaymentStateEnum.not_paid:
-                    state_domains.append(
-                        expression.AND(
-                            [
-                                [("has_overdue_payments", "=", False)],
-                                [
-                                    "|",
-                                    ("payment_state", "=", "in_payment"),
-                                    ("payment_state", "=", "not_paid"),
-                                ],
-                            ]
-                        )
-                    )
-                else:
-                    state_domains.append([("payment_state", "=", ps.value)])
-            domain = expression.AND([domain, expression.OR(state_domains)])
+            domain = expression.AND(
+                [domain, self._payment_state_domain(self.paymentState)]
+            )
         if self.state:
             domain = expression.AND(
                 [domain, [("state", "in", [s.value for s in self.state])]]
