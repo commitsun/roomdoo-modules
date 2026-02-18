@@ -290,9 +290,11 @@ class FolioSearch(BaseSearch):
                     [
                         "|",
                         "|",
+                        "|",
                         ("name", "ilike", self.globalSearch),
                         ("external_reference", "ilike", self.globalSearch),
                         ("partner_id", "child_of", self.globalSearch),
+                        ("partner_name", "ilike", self.globalSearch),
                     ],
                 ]
             )
