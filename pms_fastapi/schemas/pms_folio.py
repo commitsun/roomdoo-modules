@@ -240,6 +240,27 @@ class FolioSearch(BaseSearch):
                 description="Combined search of channel and agency.",
             ),
         ] = None,
+        totalAmountGt: Annotated[
+            float | None,
+            Query(
+                description="Filter folios whose total amount is greater than "
+                "this value.",
+            ),
+        ] = None,
+        totalAmountLt: Annotated[
+            float | None,
+            Query(
+                description="Filter folios whose total amount is less than "
+                "this value.",
+            ),
+        ] = None,
+        totalAmountEq: Annotated[
+            float | None,
+            Query(
+                description="Filter folios whose total amount is equal to "
+                "this value.",
+            ),
+        ] = None,
     ):
         if not isinstance(pmsPropertyId, QueryType):
             self.pmsProperty = pmsPropertyId
@@ -259,6 +280,9 @@ class FolioSearch(BaseSearch):
         self.stayPeriodStart = stayPeriodStart
         self.stayPeriodEnd = stayPeriodEnd
         self.origin = origin
+        self.totalAmountGt = totalAmountGt
+        self.totalAmountLt = totalAmountLt
+        self.totalAmountEq = totalAmountEq
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -337,6 +361,19 @@ class FolioSearch(BaseSearch):
                         ]
                     ),
                 ]
+            )
+        total_amount_field = "reservation_ids.price_room_services_set"
+        if self.totalAmountGt is not None:
+            domain = expression.AND(
+                [domain, [(total_amount_field, ">", self.totalAmountGt)]]
+            )
+        if self.totalAmountLt is not None:
+            domain = expression.AND(
+                [domain, [(total_amount_field, "<", self.totalAmountLt)]]
+            )
+        if self.totalAmountEq is not None:
+            domain = expression.AND(
+                [domain, [(total_amount_field, "=", self.totalAmountEq)]]
             )
         return domain
 

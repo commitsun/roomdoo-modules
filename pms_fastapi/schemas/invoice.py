@@ -165,10 +165,27 @@ class InvoiceSearch(BaseSearch):
             default=None,
             description="Filter by invoice reference.",
         ),
-        priceTotal: float | None = Query(
-            default=None,
-            description="Filter by total amount.",
-        ),
+        totalAmountGt: Annotated[
+            float | None,
+            Query(
+                description="Filter invoices whose total amount is greater than "
+                "this value.",
+            ),
+        ] = None,
+        totalAmountLt: Annotated[
+            float | None,
+            Query(
+                description="Filter invoices whose total amount is less than "
+                "this value.",
+            ),
+        ] = None,
+        totalAmountEq: Annotated[
+            float | None,
+            Query(
+                description="Filter invoices whose total amount is equal to "
+                "this value.",
+            ),
+        ] = None,
         paymentState: Annotated[
             list[InvoicePaymentStateEnum] | None,
             Query(
@@ -221,7 +238,9 @@ class InvoiceSearch(BaseSearch):
         self.name = name
         self.invoiceType = invoiceType
         self.reference = reference
-        self.priceTotal = priceTotal
+        self.totalAmountGt = totalAmountGt
+        self.totalAmountLt = totalAmountLt
+        self.totalAmountEq = totalAmountEq
         self.paymentState = paymentState
         self.state = state
         self.invoiceDateFrom = invoiceDateFrom
@@ -331,8 +350,18 @@ class InvoiceSearch(BaseSearch):
             domain = expression.AND([domain, [("name", "ilike", self.name)]])
         if self.reference:
             domain = expression.AND([domain, [("ref", "ilike", self.reference)]])
-        if self.priceTotal:
-            domain = expression.AND([domain, [("amount_total", "=", self.priceTotal)]])
+        if self.totalAmountGt is not None:
+            domain = expression.AND(
+                [domain, [("amount_total_signed", ">", self.totalAmountGt)]]
+            )
+        if self.totalAmountLt is not None:
+            domain = expression.AND(
+                [domain, [("amount_total_signed", "<", self.totalAmountLt)]]
+            )
+        if self.totalAmountEq is not None:
+            domain = expression.AND(
+                [domain, [("amount_total_signed", "=", self.totalAmountEq)]]
+            )
         if self.paymentState:
             domain = expression.AND(
                 [domain, self._payment_state_domain(self.paymentState)]
