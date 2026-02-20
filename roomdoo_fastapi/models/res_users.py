@@ -9,6 +9,14 @@ class ResUsers(models.Model):
 
     fastapi_refresh_token_ids = fields.One2many("fastapi.user.refresh.token", "user_id")
 
+    feature_flag_ids = fields.Many2many(
+        "feature.flag",
+        "feature_flag_res_users_rel",
+        "user_id",
+        "flag_id",
+        string="Feature Flags",
+    )
+
     def _add_refresh_token(self, token, expire):
         self.ensure_one()
         expire_datetime = fields.Datetime.now() + timedelta(seconds=expire)

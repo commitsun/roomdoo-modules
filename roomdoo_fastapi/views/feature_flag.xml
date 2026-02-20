@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_feature_flag_tree" model="ir.ui.view">
+        <field name="name">feature.flag.tree</field>
+        <field name="model">feature.flag</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="description" />
+                <field name="is_active_instance" />
+                <field name="user_ids" widget="many2many_tags" />
+                <field name="active" optional="hide" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_feature_flag_form" model="ir.ui.view">
+        <field name="name">feature.flag.form</field>
+        <field name="model">feature.flag</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <group>
+                        <field name="name" />
+                        <field name="description" />
+                        <field name="active" invisible="1" />
+                    </group>
+                    <group string="Activation">
+                        <field name="is_active_instance" />
+                        <field
+              name="user_ids"
+              widget="many2many_tags"
+              attrs="{'invisible': [('is_active_instance', '=', True)]}"
+            />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_feature_flag_search" model="ir.ui.view">
+        <field name="name">feature.flag.search</field>
+        <field name="model">feature.flag</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="description" />
+                <field name="user_ids" />
+                <filter
+          string="Active for entire instance"
+          name="filter_active_instance"
+          domain="[('is_active_instance', '=', True)]"
+        />
+                <filter
+          string="Archived"
+          name="filter_archived"
+          domain="[('active', '=', False)]"
+        />
+            </search>
+        </field>
+    </record>
+
+    <record id="action_feature_flag" model="ir.actions.act_window">
+        <field name="name">Feature Flags</field>
+        <field name="res_model">feature.flag</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    id="menu_feature_flags_settings"
+    name="Feature Flags"
+    parent="base.menu_users"
+    action="action_feature_flag"
+    groups="base.group_system"
+    sequence="99"
+  />
+    <menuitem
+    id="menu_feature_flags_fastapi"
+    name="Feature Flags"
+    parent="fastapi.menu_fastapi_root"
+    action="action_feature_flag"
+    groups="base.group_system"
+    sequence="99"
+  />
+
+</odoo>

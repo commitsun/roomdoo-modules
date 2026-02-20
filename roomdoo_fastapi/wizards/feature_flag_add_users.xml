@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_feature_flag_add_users_wizard_form" model="ir.ui.view">
+        <field name="name">feature.flag.add.users.wizard.form</field>
+        <field name="model">feature.flag.add.users.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add Feature Flag">
+                <group>
+                    <field name="feature_flag_id" />
+                    <field name="user_ids" widget="many2many_tags" />
+                </group>
+                <footer>
+                    <button
+            name="action_add_flag"
+            string="Add Flag"
+            type="object"
+            class="btn-primary"
+          />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_add_feature_flag_to_users" model="ir.actions.act_window">
+        <field name="name">Add Feature Flag</field>
+        <field name="res_model">feature.flag.add.users.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_users" />
+        <field name="binding_view_types">list</field>
+        <field name="context">{"default_user_ids": active_ids}</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]" />
+    </record>
+
+</odoo>

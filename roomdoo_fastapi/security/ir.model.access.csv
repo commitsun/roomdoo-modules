@@ -1,2 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_fastapi_user_refresh_token_system,fastapi.user.refresh.token system,model_fastapi_user_refresh_token,base.group_system,1,1,1,1
+access_feature_flag_user,feature.flag user,model_feature_flag,base.group_user,1,0,0,0
+access_feature_flag_system,feature.flag system,model_feature_flag,base.group_system,1,1,1,1
+access_feature_flag_add_users_wizard_system,feature.flag.add.users.wizard system,model_feature_flag_add_users_wizard,base.group_system,1,1,1,1
