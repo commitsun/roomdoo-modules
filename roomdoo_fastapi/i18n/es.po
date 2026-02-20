@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-18 11:29+0000\n"
-"PO-Revision-Date: 2025-11-18 11:29+0000\n"
+"POT-Creation-Date: 2026-02-20 13:21+0000\n"
+"PO-Revision-Date: 2026-02-20 13:21+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,54 +16,146 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_res_partner_id_category__short_code
+msgid "A short code for the ID category"
+msgstr "Código corto para la categoría de identificación"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_feature_flag_form
+msgid "Activation"
+msgstr "Activación"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__is_active_instance
+msgid "Active for entire instance"
+msgstr "Activo para toda la instancia"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__user_ids
+msgid "Active for users"
+msgstr "Activo para usuarios"
+
+#. module: roomdoo_fastapi
+#: model:ir.actions.act_window,name:roomdoo_fastapi.action_add_feature_flag_to_users
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_feature_flag_add_users_wizard_form
+msgid "Add Feature Flag"
+msgstr "Añadir Feature Flag"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_feature_flag_add_users_wizard
+msgid "Add Feature Flag to Users"
+msgstr "Añadir Feature Flag a usuarios"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_feature_flag_add_users_wizard_form
+msgid "Add Flag"
+msgstr "Añadir indicador"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_feature_flag_form
+msgid "Archived"
+msgstr "Archivado"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_feature_flag_add_users_wizard_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_res_config_settings
 msgid "Config Settings"
 msgstr "Ajustes de configuración"
 
 #. module: roomdoo_fastapi
-#: model:ir.model,name:roomdoo_fastapi.model_res_partner
-msgid "Contact"
-msgstr "Contacto"
-
-#. module: roomdoo_fastapi
 #: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_auth_jwt_validator_form
 msgid "Cookie"
-msgstr ""
+msgstr "Cookie"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__create_uid
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__create_uid
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__create_uid
 msgid "Created by"
-msgstr ""
+msgstr "Creado por"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__create_date
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__create_date
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__create_date
 msgid "Created on"
-msgstr ""
+msgstr "Creado el"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__description
+msgid "Description"
+msgstr "Descripción"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__display_name
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__display_name
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__display_name
 msgid "Display Name"
-msgstr ""
+msgstr "Nombre mostrado"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__expire
 msgid "Expire"
-msgstr ""
+msgstr "Vencimiento"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__fastapi_refresh_token_ids
 msgid "Fastapi Refresh Token"
-msgstr ""
+msgstr "Token de refresco Fastapi"
 
 #. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_fastapi_user_refresh_token
 msgid "Fastapi refresh tokens"
+msgstr "Tokens de refresco Fastapi"
+
+#. module: roomdoo_fastapi
+#: model:ir.model,name:roomdoo_fastapi.model_feature_flag
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__feature_flag_id
+msgid "Feature Flag"
+msgstr "Feature Flag"
+
+#. module: roomdoo_fastapi
+#: model:ir.actions.act_window,name:roomdoo_fastapi.action_feature_flag
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__feature_flag_ids
+#: model:ir.ui.menu,name:roomdoo_fastapi.menu_feature_flags_fastapi
+#: model:ir.ui.menu,name:roomdoo_fastapi.menu_feature_flags_settings
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_users_form_feature_flags
+msgid "Feature Flags"
+msgstr "Feature Flags"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_feature_flag__name
+msgid "Feature flag identifier used in the front-end application."
+msgstr "Identificador del feature flag utilizado en la aplicación front-end."
+
+#. module: roomdoo_fastapi
+#: model:ir.model.constraint,message:roomdoo_fastapi.constraint_feature_flag_unique_name
+msgid "Feature flag key must be unique!"
+msgstr "¡La clave del feature flag debe ser única!"
+
+#. module: roomdoo_fastapi
+#: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.view_users_form_feature_flags
+msgid ""
+"Feature flags active for this user. Flags active for the entire instance are"
+" applied automatically."
 msgstr ""
+"Feature flags activos para este usuario. Los flags activos para toda la instancia se aplican automáticamente."
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__id
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__id
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__id
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,help:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_image
@@ -71,38 +163,35 @@ msgid "Image of the Roomdoo FastAPI instance"
 msgstr "Imágen de la instancia"
 
 #. module: roomdoo_fastapi
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__in_house
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__in_house
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__in_house
-msgid "In House"
-msgstr ""
-
-#. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_auth_jwt_validator
 msgid "JWT Validator Configuration"
 msgstr "Configuración del validador JWT"
 
 #. module: roomdoo_fastapi
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token____last_update
-msgid "Last Modified on"
-msgstr ""
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__name
+msgid "Key"
+msgstr "Clave"
 
 #. module: roomdoo_fastapi
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__last_reservation_id
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__last_reservation_id
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__last_reservation_id
-msgid "Last Reservation"
-msgstr "Última reserva"
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token____last_update
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag____last_update
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard____last_update
+msgid "Last Modified on"
+msgstr "Última modificación"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__write_uid
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__write_uid
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "Última actualización por"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__write_date
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag__write_date
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "Última actualización"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,help:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_instance_name
@@ -110,54 +199,39 @@ msgid "Name of the Roomdoo FastAPI instance"
 msgstr "Nombre de la instancia"
 
 #. module: roomdoo_fastapi
-#: model:ir.model,name:roomdoo_fastapi.model_pms_api_agency_agency_router_helper
-msgid "Pms api agency Service Helper"
-msgstr ""
+#: model:ir.model,name:roomdoo_fastapi.model_res_partner_id_category
+msgid "Partner ID Category"
+msgstr "Categoría Empresa"
 
 #. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_pms_api_contact_contact_router_helper
 msgid "Pms api contact Service Helper"
-msgstr ""
-
-#. module: roomdoo_fastapi
-#: model:ir.model,name:roomdoo_fastapi.model_pms_api_customer_customer_router_helper
-msgid "Pms api customer Service Helper"
-msgstr ""
-
-#. module: roomdoo_fastapi
-#: model:ir.model,name:roomdoo_fastapi.model_pms_api_guest_guest_router_helper
-msgid "Pms api guest Service Helper"
-msgstr ""
-
-#. module: roomdoo_fastapi
-#: model:ir.model,name:roomdoo_fastapi.model_pms_api_supplier_supplier_router_helper
-msgid "Pms api supplier Service Helper"
-msgstr ""
+msgstr "Ayudante de servicio de contacto API PMS"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_cookie_max_age
 msgid "Refresh Cookie Max Age"
-msgstr ""
+msgstr "Tiempo máximo del cookie de refresco"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_cookie_name
 msgid "Refresh Cookie Name"
-msgstr ""
+msgstr "Nombre del cookie de refresco"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_token_path
 msgid "Refresh Token Path"
-msgstr ""
+msgstr "Ruta del token de refresco"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_auth_jwt_validator__refresh_token_secret
 msgid "Refresh Token Secret"
-msgstr ""
+msgstr "Secreto del token de refresco"
 
 #. module: roomdoo_fastapi
 #: model_terms:ir.ui.view,arch_db:roomdoo_fastapi.res_config_settings_view_form
 msgid "Roomdoo"
-msgstr ""
+msgstr "Roomdoo"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_config_settings__roomdoo_fastapi_image
@@ -172,39 +246,31 @@ msgid "Roomdoo FastAPI Instance Name"
 msgstr "Nombre de la instancia Roomdoo"
 
 #. module: roomdoo_fastapi
-#. odoo-python
-#: code:addons/roomdoo_fastapi/routers/reports.py:0
-#: code:addons/roomdoo_fastapi/routers/reports.py:0
-#: code:addons/roomdoo_fastapi/routers/reports.py:0
-#, python-format
-msgid "SQL query not found"
-msgstr ""
+#: model:ir.model,name:roomdoo_fastapi.model_roomdoo_report_router_helper
+msgid "Roomdoo Report Router Helper"
+msgstr "Ayudante de rutas de informes Roomdoo"
 
 #. module: roomdoo_fastapi
 #. odoo-python
 #: code:addons/roomdoo_fastapi/routers/reports.py:0
-#: code:addons/roomdoo_fastapi/routers/reports.py:0
-#: code:addons/roomdoo_fastapi/routers/reports.py:0
 #, python-format
-msgid "The Query params was modifieds, please contact the administrator"
-msgstr ""
+msgid "SQL query not found"
+msgstr "Consulta SQL no encontrada"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner_id_category__short_code
+msgid "Short Code"
+msgstr "Código corto"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.constraint,message:roomdoo_fastapi.constraint_fastapi_user_refresh_token_unique_token
 msgid "The token must be unique!"
-msgstr ""
+msgstr "¡El token debe ser único!"
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,field_description:roomdoo_fastapi.field_fastapi_user_refresh_token__token
 msgid "Token"
-msgstr ""
-
-#. module: roomdoo_fastapi
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_pms_property__total_invoiced_last_year
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_partner__total_invoiced_last_year
-#: model:ir.model.fields,field_description:roomdoo_fastapi.field_res_users__total_invoiced_last_year
-msgid "Total Invoiced Last Year"
-msgstr "Total facturado último año"
+msgstr "Token"
 
 #. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_res_users
@@ -213,6 +279,24 @@ msgid "User"
 msgstr "Usuario"
 
 #. module: roomdoo_fastapi
+#: model:ir.model.fields,field_description:roomdoo_fastapi.field_feature_flag_add_users_wizard__user_ids
+msgid "Users"
+msgstr "Usuarios"
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_feature_flag__user_ids
+msgid ""
+"Users for whom this flag is active (ignored when active for entire "
+"instance)."
+msgstr ""
+"Usuarios para los que este indicador está activo (ignorado cuando está activo para toda la instancia)."
+
+#. module: roomdoo_fastapi
+#: model:ir.model.fields,help:roomdoo_fastapi.field_feature_flag__is_active_instance
+msgid "When enabled, this flag is active for all users."
+msgstr "Cuando está habilitado, este indicador está activo para todos los usuarios."
+
+#. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_pms_fastapi_login_endpoint
 msgid "login endpoint helper"
-msgstr ""
+msgstr "Ayudante del endpoint de inicio de sesión"
