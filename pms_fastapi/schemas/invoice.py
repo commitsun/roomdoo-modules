@@ -384,7 +384,7 @@ class InvoiceSearch(BaseSearch):
             domain = expression.AND([domain, [("journal_id", "in", self.journal)]])
         if self.paymentMethod:
             domain = expression.AND(
-                [domain, [("payment_method_line_id", "in", self.paymentMethod)]]
+                [domain, [("payment_method_ids", "in", self.paymentMethod)]]
             )
         if self.partner:
             domain = expression.AND(
