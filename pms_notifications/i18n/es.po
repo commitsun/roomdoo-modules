@@ -2268,7 +2268,7 @@ msgstr "Plantilla de notificación PMS"
 #. module: pms_notifications
 #: model:ir.ui.menu,name:pms_notifications.menu_pms_notifications_root
 msgid "PMS Notifications"
-msgstr "Notificaciones del síndrome premenstrual"
+msgstr "Notificaciones del PMS"
 
 #. module: pms_notifications
 #: model:ir.model,name:pms_notifications.model_pms_notification_manual_send_wizard
