@@ -33,7 +33,7 @@ async def list_available_bookai_templates(
         folio_id=folio_id,
     )
 
-    user_lang = env.user.lang or "en_US"
+    user_lang = helper._get_active_lang_code()
     user_tz = env.user.tz or "UTC"
     template_rows = templates.sudo().with_context(lang=user_lang, tz=user_tz)
     folio_ctx = (
@@ -59,6 +59,27 @@ async def list_available_bookai_templates(
 class PmsApiBookaiTemplateRouterHelper(models.AbstractModel):
     _name = "pms_api_bookai.template_router.helper"
     _description = "PMS API BookAI Template Helper"
+
+    def _get_active_lang_code(self):
+        Lang = self.env["res.lang"].sudo()
+
+        for candidate in (self.env.context.get("lang"), self.env.user.lang):
+            if not candidate:
+                continue
+            lang_rec = Lang.search(
+                [
+                    ("active", "=", True),
+                    "|",
+                    ("code", "=", candidate),
+                    ("iso_code", "=", candidate),
+                ],
+                limit=1,
+            )
+            if lang_rec:
+                return lang_rec.code or ""
+
+        fallback_lang = Lang.search([("active", "=", True)], limit=1)
+        return fallback_lang.code or ""
 
     def _get_allowed_property(self, property_id: int):
         pms_property = (

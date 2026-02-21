@@ -77,8 +77,8 @@
     />
         <field name="sequence">30</field>
         <field name="key">checkin_date</field>
-        <field name="value_type">inline</field>
-        <field name="value_inline_tmpl">{{ object.first_checkin or '' }}</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
     </record>
 
     <record
@@ -91,8 +91,8 @@
     />
         <field name="sequence">40</field>
         <field name="key">checkout_date</field>
-        <field name="value_type">inline</field>
-        <field name="value_inline_tmpl">{{ object.last_checkout or '' }}</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__last_checkout" />
     </record>
 
     <record
@@ -220,8 +220,8 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
     />
         <field name="sequence">40</field>
         <field name="key">checkin_date</field>
-        <field name="value_type">inline</field>
-        <field name="value_inline_tmpl">{{ object.first_checkin or '' }}</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
     </record>
 
     <record
@@ -234,8 +234,8 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
     />
         <field name="sequence">50</field>
         <field name="key">checkout_date</field>
-        <field name="value_type">inline</field>
-        <field name="value_inline_tmpl">{{ object.last_checkout or '' }}</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__last_checkout" />
     </record>
 
     <record

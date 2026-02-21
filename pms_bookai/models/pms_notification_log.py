@@ -3,10 +3,13 @@ import logging
 import re
 from datetime import date, datetime
 
+import phonenumbers
 import requests
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+
+from odoo.addons.phone_validation.tools import phone_validation
 
 _logger = logging.getLogger(__name__)
 
@@ -15,31 +18,6 @@ ICP_ENDPOINT_KEY = "pms_bookai.api_endpoint"
 ICP_TOKEN_KEY = "pms_bookai.api_token"
 ICP_VERIFY_SSL_KEY = "pms_bookai.verify_ssl"
 ICP_TIMEOUT_KEY = "pms_bookai.timeout"
-
-# Calling-code -> ISO2 (longest prefix match)
-_CALLING_CODE_TO_ISO2 = [
-    ("971", "AE"),
-    ("351", "PT"),
-    ("353", "IE"),
-    ("52", "MX"),
-    ("54", "AR"),
-    ("55", "BR"),
-    ("61", "AU"),
-    ("81", "JP"),
-    ("49", "DE"),
-    ("44", "GB"),
-    ("41", "CH"),
-    ("43", "AT"),
-    ("40", "RO"),
-    ("39", "IT"),
-    ("34", "ES"),
-    ("33", "FR"),
-    ("32", "BE"),
-    ("31", "NL"),
-    ("1", "US"),
-]
-_CALLING_CODE_TO_ISO2.sort(key=lambda x: len(x[0]), reverse=True)
-_ISO2_TO_CALLING = {iso: code for code, iso in _CALLING_CODE_TO_ISO2}
 
 
 class PmsNotificationLog(models.Model):
@@ -236,7 +214,13 @@ class PmsNotificationLog(models.Model):
                 partners = log.recipient_partner_ids
                 partner = partners[0] if len(partners) == 1 else False
 
-                phone, name, lang, fallback_country = log._bookai_resolve_recipient(
+                (
+                    phone,
+                    name,
+                    template_lang,
+                    fallback_country,
+                    render_lang,
+                ) = log._bookai_resolve_recipient(
                     template=template,
                     record=record,
                     partner=partner,
@@ -245,8 +229,9 @@ class PmsNotificationLog(models.Model):
                 phone = log._bookai_normalize_phone(
                     phone, default_country=fallback_country
                 )
-                country = (
-                    log._bookai_guess_country_from_phone(phone) or fallback_country
+                country = log._bookai_guess_country_from_phone(
+                    phone,
+                    fallback_country=fallback_country,
                 )
                 if not country:
                     raise ValidationError(
@@ -258,14 +243,16 @@ class PmsNotificationLog(models.Model):
                 )
 
                 tz = (log.property_id.tz or "").strip() or (log.env.user.tz or "UTC")
-                params = template._bookai_build_parameters(record, lang=lang, tz=tz)
+                params = template._bookai_build_parameters(
+                    record, lang=render_lang, tz=tz
+                )
 
                 log.write(
                     {
                         "whatsapp_phone": phone,
                         "whatsapp_country": country,
                         "whatsapp_recipient_name": name or "",
-                        "whatsapp_language": lang or "",
+                        "whatsapp_language": template_lang or "",
                         "bookai_origin_folio_id": folio.id,
                         "whatsapp_template_parameters": json.dumps(
                             params, ensure_ascii=False
@@ -283,28 +270,32 @@ class PmsNotificationLog(models.Model):
 
     def _bookai_resolve_recipient(self, template, record, partner=False):
         """
-        (phone, display_name, lang, fallback_country_iso2)
+        (phone, display_name, template_lang, fallback_country_iso2, render_lang)
 
         - If log has partner (manual wizard / split): use partner
         - Otherwise: render from template bookai_*_tmpl against origin record
         """
         self.ensure_one()
-        user_lang = self.env.user.lang or self.env["res.lang"].search([], limit=1).code
+        user_lang = self._bookai_get_active_lang_code()
         if partner:
             phone = (partner.mobile or partner.phone or "").strip()
             display_name = (partner.name or partner.display_name or "").strip()
 
-            lang = (partner.lang or "").strip()
+            lang = partner.lang
             if not lang and "lang" in record._fields:
-                lang = (record.lang or "").strip()
+                lang = record.lang
             if not lang:
                 lang = user_lang
 
-            fallback_country = (
-                (partner.country_id.code or "").upper() if partner.country_id else ""
+            fallback_country = self._bookai_get_fallback_country_iso2(
+                record=record,
+                partner=partner,
             )
-            code_lang = self.env["res.lang"]._lang_get(lang).iso_code
-            return phone, display_name, code_lang, fallback_country
+            template_lang, render_lang = self._bookai_normalize_lang_codes(
+                lang,
+                default_lang=user_lang,
+            )
+            return phone, display_name, template_lang, fallback_country, render_lang
 
         phone = template._bookai_render_inline(
             template.bookai_recipient_phone_tmpl, record
@@ -316,28 +307,151 @@ class PmsNotificationLog(models.Model):
             template.bookai_recipient_name_tmpl, record
         ).strip()
         lang = (
-            template._bookai_render_inline(
-                template.bookai_language_tmpl, record
-            ).strip()
+            template._bookai_render_inline(template.bookai_language_tmpl, record)
             or user_lang
         )
 
-        fallback_country = ""
+        fallback_country = self._bookai_get_fallback_country_iso2(record=record)
+        template_lang, render_lang = self._bookai_normalize_lang_codes(
+            lang,
+            default_lang=user_lang,
+        )
+        return phone, display_name, template_lang, fallback_country, render_lang
+
+    def _bookai_get_active_lang(self, *candidates):
+        self.ensure_one()
+        Lang = self.env["res.lang"]
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+            lang_rec = Lang.search(
+                [
+                    ("active", "=", True),
+                    "|",
+                    ("code", "=", candidate),
+                    ("iso_code", "=", candidate),
+                ],
+                limit=1,
+            )
+            if lang_rec:
+                return lang_rec
+
+        return Lang.search([("active", "=", True)], limit=1)
+
+    def _bookai_get_active_lang_code(self):
+        self.ensure_one()
+        lang_rec = self._bookai_get_active_lang(
+            self.env.context.get("lang"),
+            self.env.user.lang,
+        )
+        return lang_rec.code or ""
+
+    def _bookai_normalize_lang_codes(self, lang, default_lang=None):
+        """
+        Return (template_lang_iso2, render_lang_code).
+        - template_lang_iso2: language for BookAI payload.
+        - render_lang_code: Odoo language code used for rendering.
+
+        Resolution uses direct matches on res.lang.code / res.lang.iso_code.
+        Final fallback is any active language in the instance.
+        """
+        self.ensure_one()
+
+        lang_rec = self._bookai_get_active_lang(
+            lang,
+            default_lang,
+            self.env.context.get("lang"),
+            self.env.user.lang,
+        )
+
+        if not lang_rec:
+            return "", ""
+
+        render_lang = lang_rec.code or ""
+        template_lang = lang_rec.iso_code or render_lang
+        return template_lang, render_lang
+
+    def _bookai_get_fallback_country_iso2(self, record=False, partner=False):
+        """
+        Return best-effort ISO2 fallback country for phone parsing/normalization.
+        Priority:
+        1) explicit recipient partner
+        2) record.partner_id
+        3) record.pms_property_id / record.property_id
+        4) log.property_id
+        5) current company
+        """
+        self.ensure_one()
+
+        candidates = []
+
+        if partner and partner.country_id:
+            candidates.append(partner.country_id)
+
+        if record and "partner_id" in record._fields and record.partner_id.country_id:
+            candidates.append(record.partner_id.country_id)
+
         if (
-            "partner_id" in record._fields
-            and record.partner_id
-            and record.partner_id.country_id
+            record
+            and "pms_property_id" in record._fields
+            and record.pms_property_id.country_id
         ):
-            fallback_country = (record.partner_id.country_id.code or "").upper()
-        code_lang = self.env["res.lang"]._lang_get(lang).iso_code
-        return phone, display_name, code_lang, fallback_country
+            candidates.append(record.pms_property_id.country_id)
+
+        if record and "property_id" in record._fields and record.property_id.country_id:
+            candidates.append(record.property_id.country_id)
+
+        if self.property_id and self.property_id.country_id:
+            candidates.append(self.property_id.country_id)
+
+        if self.env.company.country_id:
+            candidates.append(self.env.company.country_id)
+
+        for country in candidates:
+            code = (country.code or "").upper()
+            if code:
+                return code
+        return ""
+
+    def _bookai_get_country_context(self, country_iso2):
+        self.ensure_one()
+        iso2 = (country_iso2 or "").upper()
+        if not iso2:
+            return None, None
+
+        country = self.env["res.country"].search([("code", "=", iso2)], limit=1)
+        if not country:
+            return iso2, None
+        return (country.code or iso2).upper(), (country.phone_code or None)
+
+    def _bookai_parse_phone_with_phonenumbers(self, phone, default_country=None):
+        """
+        Strict parse using python-phonenumbers.
+        Returns parsed phone object or False.
+        """
+        self.ensure_one()
+
+        try:
+            parsed = phonenumbers.parse(phone, region=(default_country or None))
+        except phonenumbers.phonenumberutil.NumberParseException:
+            return False
+
+        if not phonenumbers.is_possible_number(parsed):
+            return False
+        if not phonenumbers.is_valid_number(parsed):
+            return False
+        return parsed
+
+    def _bookai_is_e164(self, phone):
+        self.ensure_one()
+        return bool(re.fullmatch(r"\+[1-9]\d{4,14}", (phone or "").strip()))
 
     def _bookai_normalize_phone(self, phone, default_country=None):
         """
-        Normalize:
-        - removes separators
-        - 00... -> +...
-        - if there is no + and there is a default_country -> prepend calling code
+        Normalize recipient phone to E164 using Odoo phone_validation.
+        Falls back to phonenumbers direct parse.
+        Last resort keeps legacy cleanup and country.phone_code prefixing.
         """
         self.ensure_one()
 
@@ -345,32 +459,80 @@ class PmsNotificationLog(models.Model):
         if not p:
             raise ValidationError(_("Recipient phone is missing."))
 
+        country_code, country_phone_code = self._bookai_get_country_context(
+            default_country
+        )
+
+        sanitize_res = phone_validation.phone_sanitize_numbers(
+            [p],
+            country_code,
+            country_phone_code,
+            force_format="E164",
+        )
+        sanitized = sanitize_res.get(p, {}).get("sanitized")
+        if sanitized and self._bookai_is_e164(sanitized):
+            return sanitized
+
+        parsed = self._bookai_parse_phone_with_phonenumbers(p, default_country)
+        if parsed:
+            return phonenumbers.format_number(
+                parsed, phonenumbers.PhoneNumberFormat.E164
+            )
+
+        # Last-resort normalization for already-digit numbers that still fail parse.
         p = re.sub(r"[ \t\r\n\-\(\)\.]", "", p)
         if p.startswith("00"):
             p = "+" + p[2:]
 
-        if not p.startswith("+") and default_country:
-            cc = _ISO2_TO_CALLING.get((default_country or "").upper())
-            if cc:
-                p = "+" + cc + p.lstrip("0")
+        if not p.startswith("+") and country_phone_code:
+            p = "+" + str(country_phone_code) + p.lstrip("0")
 
-        if not p.startswith("+"):
+        if p.startswith("+"):
+            sanitize_res = phone_validation.phone_sanitize_numbers(
+                [p],
+                country_code,
+                country_phone_code,
+                force_format="E164",
+            )
+            sanitized = sanitize_res.get(p, {}).get("sanitized")
+            if sanitized and self._bookai_is_e164(sanitized):
+                return sanitized
+
+        if not self._bookai_is_e164(p):
             raise ValidationError(
                 _("Phone must be in international format (e.g. +346...). Got: %s") % p
             )
 
         return p
 
-    def _bookai_guess_country_from_phone(self, phone):
+    def _bookai_guess_country_from_phone(self, phone, fallback_country=None):
         self.ensure_one()
         p = (phone or "").strip()
-        if not p.startswith("+"):
-            return ""
-        digits = re.sub(r"\D", "", p)
-        for code, iso in _CALLING_CODE_TO_ISO2:
-            if digits.startswith(code):
-                return iso
-        return ""
+        if not p:
+            return (fallback_country or "").upper()
+
+        default_country = (fallback_country or "").upper() or None
+        country = ""
+
+        try:
+            parsed = phone_validation.phone_parse(p, default_country)
+        except UserError:
+            parsed = False
+
+        if parsed:
+            country = phonenumbers.phonenumberutil.region_code_for_number(parsed) or ""
+
+        if not country:
+            parsed = self._bookai_parse_phone_with_phonenumbers(p, default_country)
+            if parsed:
+                country = (
+                    phonenumbers.phonenumberutil.region_code_for_number(parsed) or ""
+                )
+
+        if not country and default_country:
+            country = default_country
+
+        return (country or "").upper()
 
     def _bookai_resolve_origin_folio(self, template, record):
         """
@@ -453,7 +615,9 @@ class PmsNotificationLog(models.Model):
                     phone=log.whatsapp_phone,
                     country=log.whatsapp_country,
                     template_code=template.bookai_template_code,
-                    template_language=log.whatsapp_language or "en",
+                    template_language=log._bookai_normalize_lang_codes(
+                        log.whatsapp_language
+                    )[0],
                     display_name=log.whatsapp_recipient_name or "",
                     parameters=params,
                 )
