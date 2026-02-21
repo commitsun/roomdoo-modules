@@ -289,8 +289,7 @@ class PmsNotificationLog(models.Model):
         - Otherwise: render from template bookai_*_tmpl against origin record
         """
         self.ensure_one()
-        user_lang = self.env.user.lang or "en_US"
-
+        user_lang = self.env.user.lang or self.env["res.lang"].search([], limit=1).code
         if partner:
             phone = (partner.mobile or partner.phone or "").strip()
             display_name = (partner.name or partner.display_name or "").strip()
@@ -304,7 +303,8 @@ class PmsNotificationLog(models.Model):
             fallback_country = (
                 (partner.country_id.code or "").upper() if partner.country_id else ""
             )
-            return phone, display_name, lang, fallback_country
+            code_lang = self.env["res.lang"]._lang_get(lang).iso_code
+            return phone, display_name, code_lang, fallback_country
 
         phone = template._bookai_render_inline(
             template.bookai_recipient_phone_tmpl, record
@@ -329,8 +329,8 @@ class PmsNotificationLog(models.Model):
             and record.partner_id.country_id
         ):
             fallback_country = (record.partner_id.country_id.code or "").upper()
-
-        return phone, display_name, lang, fallback_country
+        code_lang = self.env["res.lang"]._lang_get(lang).iso_code
+        return phone, display_name, code_lang, fallback_country
 
     def _bookai_normalize_phone(self, phone, default_country=None):
         """

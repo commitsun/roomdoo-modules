@@ -92,7 +92,6 @@ class PmsNotificationTemplate(models.Model):
             ctx["lang"] = lang
         if extra_context:
             ctx.update(extra_context)
-
         rendered = (
             self.env["mail.template"]
             .with_context(ctx)
