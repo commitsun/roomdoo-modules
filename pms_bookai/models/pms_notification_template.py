@@ -107,9 +107,31 @@ class PmsNotificationTemplate(models.Model):
             params[param.key] = param.get_value_for_record(record, lang=lang, tz=tz)
         return params
 
+    def _bookai_get_active_lang_code(self):
+        self.ensure_one()
+        Lang = self.env["res.lang"]
+
+        for candidate in (self.env.context.get("lang"), self.env.user.lang):
+            if not candidate:
+                continue
+            lang_rec = Lang.search(
+                [
+                    ("active", "=", True),
+                    "|",
+                    ("code", "=", candidate),
+                    ("iso_code", "=", candidate),
+                ],
+                limit=1,
+            )
+            if lang_rec:
+                return lang_rec.code or ""
+
+        fallback_lang = Lang.search([("active", "=", True)], limit=1)
+        return fallback_lang.code or ""
+
     def _bookai_render_body(self, record):
         self.ensure_one()
-        lang = (self.env.context.get("lang") or self.env.user.lang or "en_US").strip()
+        lang = self._bookai_get_active_lang_code()
         tz = (self.env.context.get("tz") or self.env.user.tz or "UTC").strip()
         params = self._bookai_build_parameters(record, lang=lang, tz=tz)
         body_rendered = self._render_body_with_params(params)

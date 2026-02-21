@@ -12,7 +12,9 @@
         "pms_notifications",
         "pms",
         "pms_fastapi",
+        "phone_validation",
     ],
+    "external_dependencies": {"python": ["phonenumbers"]},
     "data": [
         "views/pms_notification_template_views.xml",
         "views/pms_notification_log_views.xml",
