@@ -23,6 +23,7 @@ class PmsNotificationTemplate(models.Model):
     code = fields.Char(
         required=True,
         index=True,
+        copy=False,
         help="Functional unique code, e.g. 'booking_confirmation_email_v1'.",
     )
 
@@ -142,9 +143,9 @@ class PmsNotificationTemplate(models.Model):
     def _is_applicable_to_folio(self, folio):
         self.ensure_one()
         if not folio:
-            return True
+            raise ValueError("folio is required to check template applicability")
         if folio._name != "pms.folio":
-            return True
+            return False
         domain = self._get_apply_domain()
         if not domain:
             return True

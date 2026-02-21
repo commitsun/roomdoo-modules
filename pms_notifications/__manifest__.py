@@ -28,7 +28,6 @@
         "views/pms_reservation_views.xml",
         "data/pms_notification_cron.xml",
         "data/mail_templates_pms.xml",
-        "data/mail_templates_base.xml",
         "data/pms_property_notification_templates.xml",
         "data/pms_property_notification_rules.xml",
         "wizards/pms_notification_manual_send_wizard_views.xml",
