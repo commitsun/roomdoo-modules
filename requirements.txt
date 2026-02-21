@@ -3,6 +3,7 @@ geopy
 jose
 jwt
 marshmallow
+phonenumbers
 simplejson
 thefuzz
 xlsxwriter
