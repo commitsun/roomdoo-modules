@@ -13,9 +13,18 @@ class PmsFolio(models.Model):
         return folios
 
     def write(self, vals):
+        changed_fields = set(vals)
+        pre_domain_matches = self._pms_notification_prepare_pre_domain_matches(
+            event_type="on_write",
+            changed_fields=changed_fields,
+        )
         res = super().write(vals)
         # Run event-based rules on write
-        self._pms_notification_run_event_rules(event_type="on_write")
+        self._pms_notification_run_event_rules(
+            event_type="on_write",
+            changed_fields=changed_fields,
+            pre_domain_matches=pre_domain_matches,
+        )
         return res
 
     def action_open_send_notification_wizard(self):

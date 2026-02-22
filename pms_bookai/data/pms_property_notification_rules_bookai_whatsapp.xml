@@ -56,7 +56,7 @@
             <field name="event_pre_domain">[('state', '=', 'confirm')]</field>
             <field
         name="event_domain"
-      >[('state', '=', 'confirm'), ('last_checkout', '>', (datetime.date.today().isoformat()))]</field>
+      >[('state', '=', 'confirm'), ('days_to_checkout', '&gt;', 0)]</field>
             <field
         name="on_write_field_ids"
         eval="[(6, 0, [ref('pms.field_pms_folio__first_checkin'), ref('pms.field_pms_folio__last_checkout'), ref('pms.field_pms_folio__reservation_ids')])]"
@@ -84,7 +84,7 @@
             <field name="event_pre_domain">[('state', '!=', 'cancel')]</field>
             <field
         name="event_domain"
-      >[('state', '=', 'cancel'), ('last_checkout', '>', (datetime.date.today().isoformat()))]</field>
+      >[('state', '=', 'cancel'), ('days_to_checkout', '&gt;', 0)]</field>
             <field
         name="on_write_field_ids"
         eval="[(6, 0, [ref('pms.field_pms_folio__state')])]"

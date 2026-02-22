@@ -105,6 +105,28 @@ class PmsPropertyNotificationRule(models.Model):
             "Only records matching this domain will generate notifications."
         ),
     )
+    event_pre_domain = fields.Char(
+        string="Event Pre-Domain",
+        default="[]",
+        help=(
+            "Optional domain (string) evaluated BEFORE write operations. "
+            "Only records matching this pre-domain before the change are "
+            "eligible to trigger the rule."
+        ),
+    )
+
+    on_write_field_ids = fields.Many2many(
+        "ir.model.fields",
+        "pms_notification_rule_on_write_field_rel",
+        "rule_id",
+        "field_id",
+        string="On Write Fields",
+        domain="[('model', '=', target_model_name)]",
+        help=(
+            "Optional list of fields that must be present in vals for on_write "
+            "rules to trigger. Empty = trigger on any write."
+        ),
+    )
 
     # -------------------------------------------------------------------------
     # Scheduled rules (cron + time + domain)
@@ -136,6 +158,31 @@ class PmsPropertyNotificationRule(models.Model):
         help=(
             "Size of the time window used by the cron to decide "
             "which records should be processed now."
+        ),
+    )
+
+    scheduled_timing_mode = fields.Selection(
+        [
+            ("window", "Window"),
+            ("date_local_hour", "Date + Local Hour"),
+        ],
+        string="Scheduled Timing Mode",
+        required=True,
+        default="window",
+        help=(
+            "Window: legacy datetime window logic using offset days/hours. "
+            "Date + Local Hour: for date fields, triggers when "
+            "(time_field + offset_days) equals today in property timezone and "
+            "local time is inside the configured hour window."
+        ),
+    )
+
+    scheduled_run_hour = fields.Integer(
+        string="Scheduled Local Hour",
+        default=20,
+        help=(
+            "Used only in 'Date + Local Hour' mode. "
+            "Hour in property local timezone (0-23)."
         ),
     )
 
@@ -207,7 +254,13 @@ class PmsPropertyNotificationRule(models.Model):
                         }
                     )
 
-    @api.constrains("rule_type", "event_type", "event_domain")
+    @api.constrains(
+        "rule_type",
+        "event_type",
+        "event_domain",
+        "event_pre_domain",
+        "on_write_field_ids",
+    )
     def _check_event_rule_requirements(self):
         """Event rules must have event_type and a parsable event_domain."""
         for rule in self:
@@ -223,8 +276,41 @@ class PmsPropertyNotificationRule(models.Model):
                 raise ValidationError(
                     _("Invalid Event Domain on rule '%s'.") % rule.name
                 ) from err
+            try:
+                safe_eval(rule.event_pre_domain or "[]")
+            except Exception as err:
+                raise ValidationError(
+                    _("Invalid Event Pre-Domain on rule '%s'.") % rule.name
+                ) from err
+            if rule.event_type != "on_write" and rule.on_write_field_ids:
+                raise ValidationError(
+                    _(
+                        "On Write Fields can only be configured when Event Type "
+                        "is 'On Write' (rule '%s')."
+                    )
+                    % rule.name
+                )
+            if (
+                rule.event_type != "on_write"
+                and (rule.event_pre_domain or "").strip()
+                and (rule.event_pre_domain or "").strip() != "[]"
+            ):
+                raise ValidationError(
+                    _(
+                        "Event Pre-Domain can only be configured when Event Type "
+                        "is 'On Write' (rule '%s')."
+                    )
+                    % rule.name
+                )
 
-    @api.constrains("rule_type", "time_field_name", "scheduled_domain")
+    @api.constrains(
+        "rule_type",
+        "time_field_name",
+        "scheduled_domain",
+        "scheduled_timing_mode",
+        "scheduled_run_hour",
+        "offset_hours",
+    )
     def _check_scheduled_rule_requirements(self):
         """Scheduled rules must have time_field_name and a parsable scheduled_domain."""
         for rule in self:
@@ -238,6 +324,49 @@ class PmsPropertyNotificationRule(models.Model):
                 raise ValidationError(
                     _("Invalid Scheduled Domain on rule '%s'.") % rule.name
                 ) from err
+            if rule.scheduled_timing_mode == "date_local_hour" and not (
+                0 <= int(rule.scheduled_run_hour or 0) <= 23
+            ):
+                raise ValidationError(
+                    _("Scheduled Local Hour must be between 0 and 23 " "(rule '%s').")
+                    % rule.name
+                )
+            if (
+                rule.scheduled_timing_mode == "date_local_hour"
+                and (rule.offset_hours or 0) != 0
+            ):
+                raise ValidationError(
+                    _(
+                        "Offset Hours is not supported in 'Date + Local Hour' mode "
+                        "(rule '%s'). Use Offset Days instead."
+                    )
+                    % rule.name
+                )
+
+    @api.constrains(
+        "rule_type", "target_model_name", "time_field_name", "scheduled_timing_mode"
+    )
+    def _check_scheduled_time_field_type(self):
+        for rule in self:
+            if rule.rule_type != "scheduled" or not rule.time_field_name:
+                continue
+            field_def = rule._scheduled_get_time_field_def()
+            if not field_def:
+                raise ValidationError(
+                    _("Time Field Name '%s' does not exist on target model.")
+                    % rule.time_field_name
+                )
+            if (
+                rule.scheduled_timing_mode == "date_local_hour"
+                and field_def.type not in ("date", "datetime")
+            ):
+                raise ValidationError(
+                    _(
+                        "Date + Local Hour mode requires a Date/Datetime field "
+                        "(rule '%s')."
+                    )
+                    % rule.name
+                )
 
     @api.constrains("channel", "template_id")
     def _check_email_channel_requires_mail_template(self):
@@ -268,6 +397,47 @@ class PmsPropertyNotificationRule(models.Model):
             return False
         # Evaluate on current record only
         return bool(rec.search_count([("id", "=", rec.id)] + list(dom)))
+
+    def _get_event_pre_domain(self):
+        self.ensure_one()
+        if not self.event_pre_domain:
+            return []
+        try:
+            dom = safe_eval(self.event_pre_domain) or []
+            if not isinstance(dom, list | tuple):
+                return []
+        except Exception:
+            return []
+        return list(dom)
+
+    def _has_event_pre_domain(self):
+        self.ensure_one()
+        return bool(self._get_event_pre_domain())
+
+    def _record_matches_event_pre_domain(self, rec):
+        """Return True if rec matches this rule's event_pre_domain."""
+        self.ensure_one()
+        dom = self._get_event_pre_domain()
+        if not dom:
+            return True
+        return bool(rec.search_count([("id", "=", rec.id)] + dom))
+
+    def _event_matches_changed_fields(self, changed_fields):
+        """
+        Return True if rule should trigger for changed_fields in on_write.
+
+        - If rule has no on_write_field_ids: always True.
+        - If changed_fields is empty/unknown: True (keep backward compatibility).
+        """
+        self.ensure_one()
+        if self.event_type != "on_write":
+            return True
+        if not self.on_write_field_ids:
+            return True
+        if not changed_fields:
+            return True
+        watched = set(self.on_write_field_ids.mapped("name"))
+        return bool(watched & set(changed_fields))
 
     def _is_under_max_sends(self, rec):
         """Check max_sends_per_record for a given origin record."""
@@ -322,6 +492,10 @@ class PmsPropertyNotificationRule(models.Model):
         if not records:
             return
 
+        records = self._scheduled_filter_by_timing(now, records, prop_map)
+        if not records:
+            return
+
         records = self._scheduled_filter_by_max_sends(records)
         if not records:
             return
@@ -351,12 +525,18 @@ class PmsPropertyNotificationRule(models.Model):
             return []
 
     def _scheduled_get_time_domain(self, now):
+        if self.scheduled_timing_mode == "date_local_hour":
+            return self._scheduled_get_date_local_hour_domain()
+
         lower_bound, upper_bound = self._scheduled_compute_time_bounds(now)
         time_field = self.time_field_name
         return [
             (time_field, ">=", fields.Datetime.to_string(lower_bound)),
             (time_field, "<", fields.Datetime.to_string(upper_bound)),
         ]
+
+    def _scheduled_get_date_local_hour_domain(self):
+        return [(self.time_field_name, "!=", False)]
 
     def _scheduled_compute_time_bounds(self, now):
         window_minutes = self.time_window_minutes or 60
@@ -369,6 +549,80 @@ class PmsPropertyNotificationRule(models.Model):
         lower_bound = window_start - offset_delta
         upper_bound = window_end - offset_delta
         return lower_bound, upper_bound
+
+    def _scheduled_get_time_field_def(self):
+        self.ensure_one()
+        if not self.target_model_name or not self.time_field_name:
+            return False
+        model = self.env[self.target_model_name]
+        return model._fields.get(self.time_field_name)
+
+    def _scheduled_filter_by_timing(self, now, records, prop_map):
+        self.ensure_one()
+        if self.scheduled_timing_mode != "date_local_hour":
+            return records
+
+        return records.filtered(
+            lambda rec: self._scheduled_matches_date_local_hour(
+                rec,
+                now,
+                prop_map.get(rec.id),
+            )
+        )
+
+    def _scheduled_matches_date_local_hour(self, rec, now_utc, prop):
+        self.ensure_one()
+        tz_name = ((prop and prop.tz) or self.env.user.tz or "UTC").strip() or "UTC"
+        local_now = fields.Datetime.context_timestamp(
+            rec.with_context(tz=tz_name),
+            now_utc,
+        )
+
+        if not self._scheduled_is_inside_local_window(local_now):
+            return False
+
+        ref_local_date = self._scheduled_get_reference_local_date(rec, tz_name)
+        if not ref_local_date:
+            return False
+
+        trigger_date = ref_local_date + timedelta(days=self.offset_days or 0)
+        return trigger_date == local_now.date()
+
+    def _scheduled_is_inside_local_window(self, local_now):
+        self.ensure_one()
+        window_minutes = max(1, int(self.time_window_minutes or 60))
+        start_minutes = int(self.scheduled_run_hour or 0) * 60
+        now_minutes = local_now.hour * 60 + local_now.minute
+
+        if window_minutes >= 24 * 60:
+            return True
+
+        end_minutes = start_minutes + window_minutes
+        if end_minutes < 24 * 60:
+            return start_minutes <= now_minutes < end_minutes
+
+        # Rare case: window crosses midnight.
+        wrapped_end = end_minutes - (24 * 60)
+        return now_minutes >= start_minutes or now_minutes < wrapped_end
+
+    def _scheduled_get_reference_local_date(self, rec, tz_name):
+        self.ensure_one()
+        field_def = rec._fields.get(self.time_field_name)
+        if not field_def:
+            return False
+
+        value = rec[self.time_field_name]
+        if not value:
+            return False
+
+        if field_def.type == "date":
+            return value
+        if field_def.type == "datetime":
+            return fields.Datetime.context_timestamp(
+                rec.with_context(tz=tz_name),
+                value,
+            ).date()
+        return False
 
     # ------------------------------------------------------------
     # Property filtering
