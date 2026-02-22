@@ -27,6 +27,7 @@
         <field name="arch" type="xml">
             <form string="Notification Rule">
                 <sheet>
+                    <field name="target_model_name" invisible="1" />
                     <group>
                         <group>
                             <field name="name" />
@@ -59,8 +60,19 @@
                             <group>
                                 <field name="event_type" />
                                 <field
+                  name="event_pre_domain"
+                  attrs="{'invisible': [('event_type','!=','on_write')]}"
+                  placeholder="[('state','=','draft')]"
+                />
+                                <field
                   name="event_domain"
                   placeholder="[('state','=','confirm')]"
+                />
+                                <field
+                  name="on_write_field_ids"
+                  widget="many2many_tags"
+                  options="{'no_create': True}"
+                  attrs="{'invisible': [('event_type','!=','on_write')]}"
                 />
                             </group>
                         </page>
@@ -73,7 +85,15 @@
                             <group>
                                 <field name="time_field_name" placeholder="checkin" />
                                 <field name="offset_days" />
-                                <field name="offset_hours" />
+                                <field
+                  name="offset_hours"
+                  attrs="{'invisible': [('scheduled_timing_mode','=','date_local_hour')]}"
+                />
+                                <field name="scheduled_timing_mode" />
+                                <field
+                  name="scheduled_run_hour"
+                  attrs="{'invisible': [('scheduled_timing_mode','!=','date_local_hour')]}"
+                />
                                 <field name="time_window_minutes" />
                             </group>
                             <group>
