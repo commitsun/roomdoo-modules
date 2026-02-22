@@ -14,11 +14,14 @@
         "pms_fastapi",
         "phone_validation",
     ],
-    "external_dependencies": {"python": ["phonenumbers"]},
+    "external_dependencies": {
+        "python": ["phonenumbers", "whatsapp_formatter"],
+    },
     "data": [
         "views/pms_notification_template_views.xml",
         "views/pms_notification_log_views.xml",
         "views/pms_property_views.xml",
+        "views/res_partner_views.xml",
         "data/config_data.xml",
         "data/pms_notification_template_bookai_whatsapp.xml",
         "data/pms_property_notification_rules_bookai_whatsapp.xml",
