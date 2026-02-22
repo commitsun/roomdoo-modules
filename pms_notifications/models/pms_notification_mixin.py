@@ -72,7 +72,12 @@ class PmsNotificationMixin(models.AbstractModel):
     # -------------------------------------------------------------------------
     # Event rules runner
     # -------------------------------------------------------------------------
-    def _pms_notification_run_event_rules(self, event_type):
+    def _pms_notification_run_event_rules(
+        self,
+        event_type,
+        changed_fields=None,
+        pre_domain_matches=None,
+    ):
         """
         Run all matching event rules for current records.
         Called by create/write overrides on business models.
@@ -105,6 +110,17 @@ class PmsNotificationMixin(models.AbstractModel):
                     not prop or prop.id not in rule.pms_property_ids.ids
                 ):
                     continue
+
+                if event_type == "on_write" and not rule._event_matches_changed_fields(
+                    changed_fields
+                ):
+                    continue
+
+                if event_type == "on_write" and rule._has_event_pre_domain():
+                    if pre_domain_matches is not None:
+                        matched_ids = pre_domain_matches.get(rule.id, set())
+                        if rec.id not in matched_ids:
+                            continue
 
                 # Evaluate event domain against the *record after* create/write
                 if not rule._record_matches_event_domain(rec):
@@ -149,6 +165,42 @@ class PmsNotificationMixin(models.AbstractModel):
                     log.action_send_by_channel()
 
         return True
+
+    def _pms_notification_prepare_pre_domain_matches(
+        self,
+        event_type,
+        changed_fields=None,
+    ):
+        """
+        Prepare rule->record ids map for event pre-domains before write.
+
+        This must be called before the write when event_type='on_write'.
+        """
+        if not self or event_type != "on_write":
+            return {}
+
+        Rule = self.env["pms.property.notification.rule"].sudo()
+        rules = Rule.search(
+            [
+                ("active", "=", True),
+                ("rule_type", "=", "event"),
+                ("event_type", "=", event_type),
+                ("target_model_name", "=", self._name),
+            ]
+        )
+        if not rules:
+            return {}
+
+        matches = {}
+        for rule in rules:
+            if not rule._has_event_pre_domain():
+                continue
+            if not rule._event_matches_changed_fields(changed_fields):
+                continue
+            matched = self.filtered_domain(rule._get_event_pre_domain())
+            matches[rule.id] = set(matched.ids)
+
+        return matches
 
     # -------------------------------------------------------------------------
     # Manual sending API (called by wizard)

@@ -12,3 +12,4 @@ simplejson
 thefuzz
 whatsapp_formatter
 xlsxwriter
+phonenumbers

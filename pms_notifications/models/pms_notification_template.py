@@ -149,4 +149,6 @@ class PmsNotificationTemplate(models.Model):
         domain = self._get_apply_domain()
         if not domain:
             return True
-        return bool(folio.filtered_domain(domain))
+        return bool(
+            self.env["pms.folio"].search_count([("id", "=", folio.id)] + domain)
+        )
