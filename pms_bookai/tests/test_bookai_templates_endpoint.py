@@ -165,3 +165,58 @@ class TestBookaiTemplatesEndpoint(TestPms):
         )
         confirm_templates = {item.code: item for item in confirm_payload}
         self.assertIn("test_bookai_confirm_only", confirm_templates)
+
+    def test_templates_render_qweb_body_and_qweb_param(self):
+        template = self.env["pms.notification.template"].create(
+            {
+                "name": "Template test_bookai_qweb_body",
+                "code": "test_bookai_qweb_body",
+                "model_id": self.folio_model.id,
+                "bookai_template_code": "test_bookai_qweb_body_bookai",
+                "apply_domain": "[]",
+                "pms_property_ids": [(6, 0, [self.pms_property1.id])],
+            }
+        )
+        self.env["pms.notification.template.bookai.param"].create(
+            {
+                "template_id": template.id,
+                "key": "buyer_name",
+                "value_type": "literal",
+                "value_literal": "Dario",
+            }
+        )
+        self.env["pms.notification.template.bookai.param"].create(
+            {
+                "template_id": template.id,
+                "key": "reservation_title",
+                "value_type": "qweb",
+                "value_inline_tmpl": "<t t-out=\"object.name or ''\"/>",
+            }
+        )
+        template.write(
+            {
+                "body": (
+                    '<t t-if="object.id">'
+                    "*Hello {{ buyer_name }}*\n"
+                    "Reference: {{ reservation_title }}"
+                    "</t>"
+                )
+            }
+        )
+
+        payload = self._call_available_endpoint(
+            self.pms_property1.id,
+            self.folio_draft.id,
+        )
+        template_data = next(item for item in payload if item.code == template.code)
+        params_by_key = {param.key: param.value for param in template_data.params}
+
+        self.assertEqual(params_by_key["buyer_name"], "Dario")
+        self.assertEqual(
+            params_by_key["reservation_title"], self.folio_draft.name or ""
+        )
+        self.assertIn("Hello Dario", template_data.body_rendered)
+        self.assertIn(
+            f"Reference: {params_by_key['reservation_title']}",
+            template_data.body_rendered,
+        )

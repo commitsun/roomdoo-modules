@@ -10,4 +10,5 @@ git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-t
 phonenumbers
 simplejson
 thefuzz
+whatsapp_formatter
 xlsxwriter

@@ -42,6 +42,7 @@ class PmsNotificationTemplateBookaiParam(models.Model):
             ("literal", "Literal"),
             ("field", "Field"),
             ("inline", "Inline Template"),
+            ("qweb", "QWeb Template"),
         ],
         string="Value Type",
         required=True,
@@ -51,6 +52,7 @@ class PmsNotificationTemplateBookaiParam(models.Model):
 
     value_literal = fields.Text(
         string="Literal Value",
+        translate=True,
         help="Used when Value Type = Literal.",
     )
 
@@ -64,7 +66,10 @@ class PmsNotificationTemplateBookaiParam(models.Model):
 
     value_inline_tmpl = fields.Text(
         string="Inline Template",
-        help="Inline template using {{ ... }} with 'object' available.\n"
+        translate=True,
+        help="Template source used when Value Type is Inline or QWeb.\n"
+        "Inline mode supports {{ ... }} expressions.\n"
+        "QWeb mode supports <t t-out>, t-if, t-foreach, etc.\n"
         "Example: {{ object.partner_name or "
         "(object.partner_id and object.partner_id.name) or '' }}",
     )
@@ -89,9 +94,12 @@ class PmsNotificationTemplateBookaiParam(models.Model):
                 raise ValidationError(
                     _("BookAI param '%s': field is required.") % rec.key
                 )
-            if rec.value_type == "inline" and not (rec.value_inline_tmpl or "").strip():
+            if (
+                rec.value_type in ("inline", "qweb")
+                and not (rec.value_inline_tmpl or "").strip()
+            ):
                 raise ValidationError(
-                    _("BookAI param '%s': inline template is required.") % rec.key
+                    _("BookAI param '%s': template source is required.") % rec.key
                 )
             if rec.value_type == "literal" and not (rec.value_literal or "").strip():
                 raise ValidationError(
@@ -106,6 +114,7 @@ class PmsNotificationTemplateBookaiParam(models.Model):
         the rest of the BookAI template fields.
         """
         self.ensure_one()
+        param = self
 
         # Apply locale context (lang + tz) so date/datetime formatting is localized
         if lang or tz:
@@ -114,36 +123,50 @@ class PmsNotificationTemplateBookaiParam(models.Model):
                 ctx["lang"] = lang
             if tz:
                 ctx["tz"] = tz
+            param = self.with_context(ctx)
             record = record.with_context(ctx)
 
-        if self.value_type == "literal":
-            return (self.value_literal or "").strip()
+        if param.value_type == "literal":
+            return (param.value_literal or "").strip()
 
-        if self.value_type == "field":
-            if not self.field_id:
+        if param.value_type == "field":
+            if not param.field_id:
                 return ""
-            val = record[self.field_id.name]
+            val = record[param.field_id.name]
             if val is False or val is None:
                 return ""
 
-            if self.field_id.ttype == "many2one":
+            if param.field_id.ttype == "many2one":
                 return val.display_name or ""
 
             # ✅ Localized date/datetime (uses record.env + context lang/tz)
-            if self.field_id.ttype == "date":
+            if param.field_id.ttype == "date":
                 from odoo.tools.misc import format_date
 
                 return format_date(record.env, val) or ""
-            if self.field_id.ttype == "datetime":
+            if param.field_id.ttype == "datetime":
                 from odoo.tools.misc import format_datetime
 
                 return format_datetime(record.env, val) or ""
 
             return str(val)
 
+        if param.value_type == "qweb":
+            extra_ctx = {}
+            if tz:
+                extra_ctx["tz"] = tz
+            if lang:
+                extra_ctx["bookai_lang"] = lang
+            return param.template_id._bookai_render_qweb_to_whatsapp(
+                param.value_inline_tmpl,
+                record,
+                lang=lang,
+                extra_context=extra_ctx or None,
+            ).strip()
+
         # inline (rendered through mail engine, will also use lang/tz via context)
-        return self.template_id._bookai_render_inline(
-            self.value_inline_tmpl,
+        return param.template_id._bookai_render_inline(
+            param.value_inline_tmpl,
             record,
             lang=lang,
             extra_context={"tz": tz} if tz else None,

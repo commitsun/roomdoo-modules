@@ -1,11 +1,20 @@
 import logging
 import re
+from html import unescape
+
+try:
+    from whatsapp_formatter import convert_html_to_whatsapp
+except ImportError:  # pragma: no cover - fallback when dependency is not installed
+    convert_html_to_whatsapp = None
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 BODY_PLACEHOLDER_REGEX = re.compile(r"{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}")
+HTML_BR_REGEX = re.compile(r"<br\s*/?>", flags=re.IGNORECASE)
+HTML_P_CLOSE_REGEX = re.compile(r"</p\s*>", flags=re.IGNORECASE)
+HTML_TAG_REGEX = re.compile(r"<[^>]+>")
 
 
 class PmsNotificationTemplate(models.Model):
@@ -58,8 +67,8 @@ class PmsNotificationTemplate(models.Model):
         string="Body",
         translate=True,
         help=(
-            "WhatsApp message body. Use placeholders like {{ buyer_name }} and "
-            "define each key in BookAI Parameters."
+            "WhatsApp message body. Supports QWeb tags (t-if, t-foreach, ...) and "
+            "placeholder keys like {{ buyer_name }} defined in BookAI Parameters."
         ),
     )
 
@@ -80,8 +89,7 @@ class PmsNotificationTemplate(models.Model):
         Render an inline template string using Odoo's mail rendering engine.
 
         Supports the same syntax as mail templates:
-        - {{ object.field }} expressions
-        - if/for blocks (when the engine supports it)
+        - {{ expression }} inline expressions
         """
         self.ensure_one()
         if not template_src:
@@ -98,6 +106,74 @@ class PmsNotificationTemplate(models.Model):
             ._render_template(template_src, record._name, [record.id])
         )
         return (rendered or {}).get(record.id, "") or ""
+
+    def _bookai_render_qweb(self, template_src, record, lang=None, extra_context=None):
+        """Render raw QWeb source against a record."""
+        self.ensure_one()
+        if not template_src:
+            return ""
+
+        ctx = dict(self.env.context)
+        if lang:
+            ctx["lang"] = lang
+        if extra_context and extra_context.get("tz"):
+            ctx["tz"] = extra_context.get("tz")
+
+        rendered = (
+            self.env["mail.template"]
+            .with_context(ctx)
+            ._render_template(
+                template_src,
+                record._name,
+                [record.id],
+                engine="qweb",
+                add_context=extra_context or {},
+            )
+        )
+        return (rendered or {}).get(record.id, "") or ""
+
+    def _bookai_to_whatsapp_text(self, content):
+        """
+        Convert rendered HTML/QWeb output into WhatsApp-safe text.
+
+        Uses py-whatsapp-formatter when available. Falls back to a basic
+        HTML-to-text conversion for non-container executions.
+        """
+        self.ensure_one()
+        text = content or ""
+        if not text:
+            return ""
+
+        if convert_html_to_whatsapp:
+            try:
+                text = convert_html_to_whatsapp(text)
+            except Exception:
+                _logger.exception(
+                    "whatsapp_formatter failed. Falling back to basic HTML stripping."
+                )
+                text = HTML_TAG_REGEX.sub(
+                    "",
+                    HTML_P_CLOSE_REGEX.sub("\n\n", HTML_BR_REGEX.sub("\n", text)),
+                )
+        else:
+            text = HTML_TAG_REGEX.sub(
+                "",
+                HTML_P_CLOSE_REGEX.sub("\n\n", HTML_BR_REGEX.sub("\n", text)),
+            )
+
+        text = unescape(text)
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
+
+    def _bookai_render_qweb_to_whatsapp(
+        self, template_src, record, lang=None, extra_context=None
+    ):
+        self.ensure_one()
+        rendered = self._bookai_render_qweb(
+            template_src, record, lang=lang, extra_context=extra_context
+        )
+        return self._bookai_to_whatsapp_text(rendered)
 
     def _bookai_build_parameters(self, record, lang=None, tz=None):
         """Return a dict of parameters for BookAI from bookai_param_ids."""
@@ -134,25 +210,42 @@ class PmsNotificationTemplate(models.Model):
         lang = self._bookai_get_active_lang_code()
         tz = (self.env.context.get("tz") or self.env.user.tz or "UTC").strip()
         params = self._bookai_build_parameters(record, lang=lang, tz=tz)
-        body_rendered = self._render_body_with_params(params)
+        body_rendered = self._render_body_with_params(
+            record,
+            params,
+            lang=lang,
+            tz=tz,
+        )
         return body_rendered, params, lang, tz
 
-    def _render_body_with_params(self, params):
+    def _render_body_with_params(self, record, params, lang=None, tz=None):
         self.ensure_one()
         body_template = (self.body or "").strip()
         if not body_template:
             return ""
 
-        values = {
+        param_values = {
             str(key): "" if value is False or value is None else str(value)
             for key, value in (params or {}).items()
         }
 
-        def _replace(match):
+        def _replace_placeholder(match):
             key = match.group(1)
-            return values.get(key, "")
+            return f"<t t-out=\"bookai_params.get('{key}', '')\"/>"
 
-        return BODY_PLACEHOLDER_REGEX.sub(_replace, body_template).strip()
+        body_qweb = BODY_PLACEHOLDER_REGEX.sub(_replace_placeholder, body_template)
+        render_ctx = {"bookai_params": param_values}
+        if lang:
+            render_ctx["bookai_lang"] = lang
+        if tz:
+            render_ctx["tz"] = tz
+
+        return self._bookai_render_qweb_to_whatsapp(
+            body_qweb,
+            record,
+            lang=lang,
+            extra_context=render_ctx,
+        )
 
     # ---------------------------------------------------------------------
     # Constraints

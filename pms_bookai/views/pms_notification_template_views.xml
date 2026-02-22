@@ -24,7 +24,7 @@
 
                 <field
           name="value_inline_tmpl"
-          attrs="{'invisible':[('value_type','!=','inline')], 'required':[('value_type','=','inline')]}"
+          attrs="{'invisible':[('value_type','not in',('inline','qweb'))], 'required':[('value_type','in',('inline','qweb'))]}"
         />
 
                 <field
@@ -100,14 +100,16 @@
                             </field>
                         </group>
 
-                        <!-- Tip for 'block' params like room_links_block -->
+                        <!-- Tip for dynamic blocks and rich text formatting -->
                         <group>
                             <separator string="Tip" />
                             <div>
                                 <p>
-                                    For dynamic blocks (loops/conditionals), define a Python helper on the target model
-                                    and call it from an inline template, e.g.:
-                                    <code>{{ object._bookai_room_links_block() }}</code>
+                                    Use <strong
+                  >QWeb Template</strong> params for loops/conditionals (t-if, t-foreach),
+                                    and keep body placeholders as <code
+                  >{{ parameter_key }}</code>. The final rendered
+                                    output is converted to WhatsApp-safe text formatting.
                                 </p>
                             </div>
                         </group>

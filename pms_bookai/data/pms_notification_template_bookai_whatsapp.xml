@@ -1,15 +1,33 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="0">
 
+    <!-- Cleanup of obsolete legacy params/templates -->
+    <delete
+    model="pms.notification.template.bookai.param"
+    search="[('template_id.code', '=', 'folio_booking_confirmation_bookai_whatsapp_v1'), ('key', 'in', ['checkin_date', 'checkout_date', 'reservation_details_url'])]"
+  />
+    <delete
+    model="pms.notification.template.bookai.param"
+    search="[('template_id.code', '=', 'folio_booking_modification_bookai_whatsapp_v1'), ('key', 'in', ['checkin_date', 'checkout_date', 'reservation_details_url'])]"
+  />
+    <delete
+    model="pms.property.notification.rule"
+    search="[('template_id.code', '=', 'folio_request_eta_bookai_whatsapp_v1')]"
+  />
+    <delete
+    model="pms.notification.template"
+    search="[('code', '=', 'folio_request_eta_bookai_whatsapp_v1')]"
+  />
+
     <!-- =========================================================
-         COMMON INLINE TEMPLATES (by convention, repeated per record)
+         COMMON CORE FIELDS (repeated by template)
          - phone: required
          - lang: required
          - origin folio: required (folio id)
          - display name: optional
          ========================================================= -->
 
-    <!-- 1) Booking confirmation (simple) -->
+    <!-- 1) booking_confirmation_v1 -->
     <record
     id="pms_notification_template_folio_booking_confirmation_whatsapp"
     model="pms.notification.template"
@@ -19,12 +37,10 @@
         <field name="model_id" ref="pms.model_pms_folio" />
         <field
       name="description"
-    >WhatsApp confirmation sent when a reservation (folio) is confirmed/created.</field>
+    >WhatsApp sent when a reservation (folio) is confirmed.</field>
         <field name="active" eval="True" />
-
+        <field name="apply_domain">[('state', '=', 'confirm')]</field>
         <field name="bookai_template_code">booking_confirmation_v1</field>
-
-        <!-- Core BookAI fields (rendered using mail engine) -->
         <field
       name="bookai_recipient_phone_tmpl"
     >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
@@ -68,7 +84,7 @@
     </record>
 
     <record
-    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_checkin_date"
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_rooms_block_info"
     model="pms.notification.template.bookai.param"
   >
         <field
@@ -76,23 +92,11 @@
       ref="pms_notification_template_folio_booking_confirmation_whatsapp"
     />
         <field name="sequence">30</field>
-        <field name="key">checkin_date</field>
-        <field name="value_type">field</field>
-        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
-    </record>
-
-    <record
-    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_checkout_date"
-    model="pms.notification.template.bookai.param"
-  >
+        <field name="key">rooms_block_info</field>
+        <field name="value_type">qweb</field>
         <field
-      name="template_id"
-      ref="pms_notification_template_folio_booking_confirmation_whatsapp"
-    />
-        <field name="sequence">40</field>
-        <field name="key">checkout_date</field>
-        <field name="value_type">field</field>
-        <field name="field_id" ref="pms.field_pms_folio__last_checkout" />
+      name="value_inline_tmpl"
+    ><![CDATA[<t t-set="reservations" t-value="object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])"/><t t-set="chunks" t-value="[]"/><t t-foreach="reservations" t-as="reservation"><t t-set="prefix" t-value="(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '"/><t t-set="room_name" t-value="reservation.room_type_id and reservation.room_type_id.name or ''"/><t t-set="checkin_txt" t-value="reservation.checkin and reservation.checkin.strftime('%d/%m') or ''"/><t t-set="checkout_txt" t-value="reservation.checkout and reservation.checkout.strftime('%d/%m') or ''"/><t t-set="chunks" t-value="chunks + [(prefix + room_name + ' → ' + checkin_txt + ' to ' + checkout_txt).strip()]"/></t><t t-out="' | '.join(chunks)"/>]]></field>
     </record>
 
     <record
@@ -103,26 +107,26 @@
       name="template_id"
       ref="pms_notification_template_folio_booking_confirmation_whatsapp"
     />
-        <field name="sequence">50</field>
+        <field name="sequence">40</field>
         <field name="key">reservation_locator</field>
         <field name="value_type">inline</field>
         <field name="value_inline_tmpl">{{ object.name or '' }}</field>
     </record>
 
     <record
-    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_reservation_details_url"
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_button_1"
     model="pms.notification.template.bookai.param"
   >
         <field
       name="template_id"
       ref="pms_notification_template_folio_booking_confirmation_whatsapp"
     />
-        <field name="sequence">60</field>
-        <field name="key">reservation_details_url</field>
+        <field name="sequence">50</field>
+        <field name="key">folio_details_url</field>
         <field name="value_type">inline</field>
         <field
       name="value_inline_tmpl"
-    ><![CDATA[{{ ((((object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip()).rstrip('/') + '/' + str(object.id) + '/precheckin/' + (object.access_token or '') + '/' + ((object.env.context.get('lang') or user.lang or 'es_ES').split('_')[0])) if (object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip() else '') }}]]></field>
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
     </record>
 
     <record
@@ -131,15 +135,18 @@
   >
         <field
       name="body"
-    ><![CDATA[Hello {{ buyer_name }}, your reservation at {{ hotel_name }} has been confirmed.
-Check-in: {{ checkin_date }}
-Check-out: {{ checkout_date }}
-Locator: {{ reservation_locator }}
-You can manage your reservation (payment, pre-check-in, details, etc.) here:
-{{ reservation_details_url }}]]></field>
+    ><![CDATA[Hello, {{buyer_name}}. Your reservation in {{hotel_name}} has been confirmed.
+
+{{rooms_block_info}}
+
+Booking reference: {{reservation_locator}}
+
+Check the details and register your information.
+
+Once completed, we'll send you the arrival information]]></field>
     </record>
 
-    <!-- 3) Booking modification -->
+    <!-- 2) booking_modification_v1 -->
     <record
     id="pms_notification_template_folio_booking_modification_whatsapp"
     model="pms.notification.template"
@@ -151,9 +158,8 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
       name="description"
     >WhatsApp sent when a reservation (folio) is modified.</field>
         <field name="active" eval="True" />
-
+        <field name="apply_domain">[('state', '=', 'confirm')]</field>
         <field name="bookai_template_code">booking_modification_v1</field>
-
         <field
       name="bookai_recipient_phone_tmpl"
     >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
@@ -211,7 +217,7 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
     </record>
 
     <record
-    id="pms_notification_template_folio_booking_modification_whatsapp_param_checkin_date"
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_rooms_block_info"
     model="pms.notification.template.bookai.param"
   >
         <field
@@ -219,13 +225,15 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
       ref="pms_notification_template_folio_booking_modification_whatsapp"
     />
         <field name="sequence">40</field>
-        <field name="key">checkin_date</field>
-        <field name="value_type">field</field>
-        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
+        <field name="key">rooms_block_info</field>
+        <field name="value_type">qweb</field>
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[<t t-set="reservations" t-value="object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])"/><t t-set="chunks" t-value="[]"/><t t-foreach="reservations" t-as="reservation"><t t-set="prefix" t-value="(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '"/><t t-set="room_name" t-value="reservation.room_type_id and reservation.room_type_id.name or ''"/><t t-set="checkin_txt" t-value="reservation.checkin and reservation.checkin.strftime('%d/%m') or ''"/><t t-set="checkout_txt" t-value="reservation.checkout and reservation.checkout.strftime('%d/%m') or ''"/><t t-set="chunks" t-value="chunks + [(prefix + room_name + ' → ' + checkin_txt + ' to ' + checkout_txt).strip()]"/></t><t t-out="' | '.join(chunks)"/>]]></field>
     </record>
 
     <record
-    id="pms_notification_template_folio_booking_modification_whatsapp_param_checkout_date"
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_button_1"
     model="pms.notification.template.bookai.param"
   >
         <field
@@ -233,25 +241,11 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
       ref="pms_notification_template_folio_booking_modification_whatsapp"
     />
         <field name="sequence">50</field>
-        <field name="key">checkout_date</field>
-        <field name="value_type">field</field>
-        <field name="field_id" ref="pms.field_pms_folio__last_checkout" />
-    </record>
-
-    <record
-    id="pms_notification_template_folio_booking_modification_whatsapp_param_reservation_details_url"
-    model="pms.notification.template.bookai.param"
-  >
-        <field
-      name="template_id"
-      ref="pms_notification_template_folio_booking_modification_whatsapp"
-    />
-        <field name="sequence">60</field>
-        <field name="key">reservation_details_url</field>
+        <field name="key">folio_details_url</field>
         <field name="value_type">inline</field>
         <field
       name="value_inline_tmpl"
-    ><![CDATA[{{ ((((object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip()).rstrip('/') + '/' + str(object.id) + '/precheckin/' + (object.access_token or '') + '/' + ((object.env.context.get('lang') or user.lang or 'es_ES').split('_')[0])) if (object.env['ir.config_parameter'].sudo().get_param('roomdoo_app_url') or '').strip() else '') }}]]></field>
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
     </record>
 
     <record
@@ -260,15 +254,14 @@ You can manage your reservation (payment, pre-check-in, details, etc.) here:
   >
         <field
       name="body"
-    ><![CDATA[Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been updated.
-New check-in: {{ checkin_date }}
-New check-out: {{ checkout_date }}
-You can review the changes here:
-{{ reservation_details_url }}]]></field>
+    ><![CDATA[Hello, {{ buyer_name }}. Your reservation {{ reservation_locator }} at {{ hotel_name }} has been modified.
+
+{{ rooms_block_info }}
+
+Check your reservation details.]]></field>
     </record>
 
-
-    <!-- 4) Booking cancellation -->
+    <!-- 3) booking_cancellation_v1 -->
     <record
     id="pms_notification_template_folio_booking_cancellation_whatsapp"
     model="pms.notification.template"
@@ -278,11 +271,10 @@ You can review the changes here:
         <field name="model_id" ref="pms.model_pms_folio" />
         <field
       name="description"
-    >WhatsApp sent when a reservation (folio) is canceled.</field>
+    >WhatsApp sent when a reservation (folio) is cancelled.</field>
         <field name="active" eval="True" />
-
+        <field name="apply_domain">[('state', '=', 'cancel')]</field>
         <field name="bookai_template_code">booking_cancellation_v1</field>
-
         <field
       name="bookai_recipient_phone_tmpl"
     >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
@@ -345,26 +337,33 @@ You can review the changes here:
   >
         <field
       name="body"
-    ><![CDATA[Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at {{ hotel_name }} has been successfully canceled.
-If you need help making a new reservation, we are available.]]></field>
+    ><![CDATA[Hello, {{ buyer_name }}. Your reservation {{ reservation_locator }} at {{ hotel_name }} has been cancelled.
+
+If you need anything else, please let us know.]]></field>
     </record>
 
-
-    <!-- 10) Request ETA -->
+    <!-- 4) precheckin_payment_reminder_initial_v1 -->
     <record
-    id="pms_notification_template_folio_request_eta_whatsapp"
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
     model="pms.notification.template"
   >
-        <field name="name">Request ETA (BookAI WhatsApp)</field>
-        <field name="code">folio_request_eta_bookai_whatsapp_v1</field>
+        <field
+      name="name"
+    >Precheck-in + payment reminder initial (BookAI WhatsApp)</field>
+        <field
+      name="code"
+    >folio_precheckin_payment_reminder_initial_bookai_whatsapp_v1</field>
         <field name="model_id" ref="pms.model_pms_folio" />
         <field
       name="description"
-    >Ask the guest for the estimated arrival time (ETA).</field>
+    >Initial reminder for online check-in and pending payment.</field>
         <field name="active" eval="True" />
-
-        <field name="bookai_template_code">request_eta_v1</field>
-
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&gt;', 0), '|', ('agency_id', '=', False), ('agency_id.bookai_exclude_payment_reminders', '=', False)]</field>
+        <field
+      name="bookai_template_code"
+    >precheckin_payment_reminder_initial_v1</field>
         <field
       name="bookai_recipient_phone_tmpl"
     >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
@@ -378,12 +377,12 @@ If you need help making a new reservation, we are available.]]></field>
     </record>
 
     <record
-    id="pms_notification_template_folio_request_eta_whatsapp_param_buyer_name"
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp_param_buyer_name"
     model="pms.notification.template.bookai.param"
   >
         <field
       name="template_id"
-      ref="pms_notification_template_folio_request_eta_whatsapp"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
     />
         <field name="sequence">10</field>
         <field name="key">buyer_name</field>
@@ -394,12 +393,12 @@ If you need help making a new reservation, we are available.]]></field>
     </record>
 
     <record
-    id="pms_notification_template_folio_request_eta_whatsapp_param_hotel_name"
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp_param_hotel_name"
     model="pms.notification.template.bookai.param"
   >
         <field
       name="template_id"
-      ref="pms_notification_template_folio_request_eta_whatsapp"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
     />
         <field name="sequence">20</field>
         <field name="key">hotel_name</field>
@@ -408,17 +407,711 @@ If you need help making a new reservation, we are available.]]></field>
     </record>
 
     <record
-    id="pms_notification_template_folio_request_eta_whatsapp"
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp_param_checkin_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">checkin_date</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
     model="pms.notification.template"
   >
         <field
       name="body"
-    ><![CDATA[Hello {{ buyer_name }}, to prepare your arrival at {{ hotel_name }}, could you please tell us your approximate arrival time?
-You can reply directly to this message.]]></field>
+    ><![CDATA[Hello, {{ buyer_name }}. Your arrival at {{ hotel_name }} is on {{ checkin_date }}.
+
+Complete your online check-in and pending payment to receive your arrival information.]]></field>
     </record>
 
+    <!-- 5) precheckin_payment_reminder_urgent_v1 -->
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="name"
+    >Precheck-in + payment reminder urgent (BookAI WhatsApp)</field>
+        <field
+      name="code"
+    >folio_precheckin_payment_reminder_urgent_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Urgent reminder for online check-in and pending payment.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&gt;', 0), '|', ('agency_id', '=', False), ('agency_id.bookai_exclude_payment_reminders', '=', False)]</field>
+        <field name="bookai_template_code">precheckin_payment_reminder_urgent_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
 
-    <!-- 11) Reactivate critical chat -->
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at {{ hotel_name }}.
+
+To prepare for your arrival, we need you to complete your online check-in and the pending payment to send you all the necessary information.]]></field>
+    </record>
+
+    <!-- 6) precheckin_reminder_initial_v1 -->
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Precheck-in reminder initial (BookAI WhatsApp)</field>
+        <field name="code">folio_precheckin_reminder_initial_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field name="description">Initial reminder for online check-in.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), '|', ('agency_id.bookai_exclude_payment_reminders', '=', True), '&amp;', ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&lt;=', 0)]</field>
+        <field name="bookai_template_code">precheckin_reminder_initial_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp_param_checkin_date"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">checkin_date</field>
+        <field name="value_type">field</field>
+        <field name="field_id" ref="pms.field_pms_folio__first_checkin" />
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. Your arrival at {{ hotel_name }} is on {{ checkin_date }}.
+
+Please complete your online check-in so we can send you all the necessary information.]]></field>
+    </record>
+
+    <!-- 7) precheckin_reminder_urgent_v1 -->
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Precheck-in reminder urgent (BookAI WhatsApp)</field>
+        <field name="code">folio_precheckin_reminder_urgent_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field name="description">Urgent reminder for online check-in.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), '|', ('agency_id.bookai_exclude_payment_reminders', '=', True), '&amp;', ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&lt;=', 0)]</field>
+        <field name="bookai_template_code">precheckin_reminder_urgent_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at {{ hotel_name }}.
+
+Please complete your online check-in before arrival.]]></field>
+    </record>
+
+    <!-- 8) payment_reminder_initial_v1 -->
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Payment reminder initial (BookAI WhatsApp)</field>
+        <field name="code">folio_payment_reminder_initial_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Initial reminder for pending reservation payment.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), ('checkin_partner_ids.state', 'in', ['precheckin', 'onboard', 'done']), '!', ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&gt;', 0), '|', ('agency_id', '=', False), ('agency_id.bookai_exclude_payment_reminders', '=', False)]</field>
+        <field name="bookai_template_code">payment_reminder_initial_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_amount_due"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">amount_due</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[{{ (format_amount(object.pending_amount or 0.0, object.currency_id).replace((object.currency_id and (object.currency_id.symbol or '')) or '', '').replace((object.currency_id and (object.currency_id.name or '')) or '', '').replace('\xa0', ' ').strip()) if object.currency_id else ('%.2f' % (object.pending_amount or 0.0)) }}]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_currency"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">50</field>
+        <field name="key">currency</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ (object.currency_id and (object.currency_id.name or object.currency_id.symbol) or '') }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    />
+        <field name="sequence">60</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. Please complete the pending payment for your reservation {{ reservation_locator }} at {{ hotel_name }}.
+
+Amount due: {{ amount_due }} {{ currency }}
+
+Thank you very much.]]></field>
+    </record>
+
+    <!-- 9) payment_reminder_urgent_v1 -->
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Payment reminder urgent (BookAI WhatsApp)</field>
+        <field name="code">folio_payment_reminder_urgent_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Urgent reminder for pending reservation payment.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), ('checkin_partner_ids.state', 'in', ['precheckin', 'onboard', 'done']), '!', ('checkin_partner_ids.state', 'in', ['dummy', 'draft']), ('pending_amount', '&gt;', 0), '|', ('agency_id', '=', False), ('agency_id.bookai_exclude_payment_reminders', '=', False)]</field>
+        <field name="bookai_template_code">payment_reminder_urgent_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_reservation_locator"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">reservation_locator</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_amount_due"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">amount_due</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[{{ (format_amount(object.pending_amount or 0.0, object.currency_id).replace((object.currency_id and (object.currency_id.symbol or '')) or '', '').replace((object.currency_id and (object.currency_id.name or '')) or '', '').replace('\xa0', ' ').strip()) if object.currency_id else ('%.2f' % (object.pending_amount or 0.0)) }}]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_currency"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">50</field>
+        <field name="key">currency</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ (object.currency_id and (object.currency_id.name or object.currency_id.symbol) or '') }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    />
+        <field name="sequence">60</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at {{ hotel_name }}.
+
+Before your arrival, we need you to complete the outstanding payment for reservation {{ reservation_locator }} so we can send you all the information.
+
+Amount due: {{ amount_due }} {{ currency }}
+
+Thank you very much.]]></field>
+    </record>
+
+    <!-- 10) prearrival_info_v1 -->
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Pre-arrival info (BookAI WhatsApp)</field>
+        <field name="code">folio_prearrival_info_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >Pre-arrival information once check-in/payment status allows sending.</field>
+        <field name="active" eval="True" />
+        <field
+      name="apply_domain"
+    >[('state', '=', 'confirm'), ('checkin_partner_ids.state', 'in', ['precheckin', 'onboard', 'done']), '|', ('agency_id.bookai_exclude_payment_reminders', '=', True), ('pending_amount', '&lt;=', 0)]</field>
+        <field name="bookai_template_code">prearrival_info_v1</field>
+        <field
+      name="bookai_recipient_phone_tmpl"
+    >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
+        <field
+      name="bookai_language_tmpl"
+    >{{ (object.partner_id.lang or object.lang or user.lang) }}</field>
+        <field
+      name="bookai_recipient_name_tmpl"
+    >{{ (object.partner_id.name or object.partner_name or '') }}</field>
+        <field name="bookai_origin_folio_id_tmpl">{{ object.id }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp_param_buyer_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_prearrival_info_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">buyer_name</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object.partner_name or (object.partner_id and object.partner_id.name) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_prearrival_info_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ object.pms_property_id.name or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp_param_main_door_property"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_prearrival_info_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">main_door_property</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ (object.pms_property_id.main_door_property if 'main_door_property' in object.pms_property_id._fields else False) or (object.pms_property_id.property_access_code if 'property_access_code' in object.pms_property_id._fields else False) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp_param_custom_info_arrival"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_prearrival_info_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">custom_info_arrival</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ (object.custom_info_arrival if 'custom_info_arrival' in object._fields else False) or (object.custom_info_arrival_block if 'custom_info_arrival_block' in object._fields else False) or (object.pms_property_id.custom_info_arrival if 'custom_info_arrival' in object.pms_property_id._fields else False) or (object.pms_property_id.custom_info_arrival_block if 'custom_info_arrival_block' in object.pms_property_id._fields else False) or '' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp_param_button_1"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_prearrival_info_whatsapp"
+    />
+        <field name="sequence">50</field>
+        <field name="key">folio_details_url</field>
+        <field name="value_type">inline</field>
+        <field
+      name="value_inline_tmpl"
+    >{{ object._bookai_get_precheckin_button_param() }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hello, {{ buyer_name }}. Everything is ready for your arrival at {{ hotel_name }}.
+
+📍 Directions: https://maps.app.goo.gl/ojESiJH7pWAPbFci9
+
+⏰ Check-in from 14:00. Front desk open until 22:00.
+
+If you arrive outside these hours, you can access via virtual reception.
+
+🚪 Number to open the main entrance door: {{ main_door_property }}
+
+{{ custom_info_arrival }}
+
+If you need anything, such as parking information, we'll be happy to help.]]></field>
+    </record>
+
+    <!-- 11) reactivate_chat_critical_v1 -->
     <record
     id="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
     model="pms.notification.template"
@@ -428,11 +1121,9 @@ You can reply directly to this message.]]></field>
         <field name="model_id" ref="pms.model_pms_folio" />
         <field
       name="description"
-    >Critical follow-up requesting guest confirmation to continue.</field>
+    >Critical reactivation asking the guest for confirmation and context.</field>
         <field name="active" eval="True" />
-
         <field name="bookai_template_code">reactivate_chat_critical_v1</field>
-
         <field
       name="bookai_recipient_phone_tmpl"
     >{{ (object.partner_id.mobile or object.partner_id.phone or object.mobile or '').strip() }}</field>
@@ -490,14 +1181,212 @@ You can reply directly to this message.]]></field>
     </record>
 
     <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp_param_custom_query"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">custom_query</field>
+        <field
+      name="description"
+    >Custom question/context to be injected before manual send.</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ '' }}</field>
+    </record>
+
+    <record
     id="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
     model="pms.notification.template"
   >
         <field
       name="body"
-    ><![CDATA[Hello {{ buyer_name }}, we have an important pending action for your reservation {{ reservation_locator }} at {{ hotel_name }}.
-To continue, we need your confirmation.
-Reply "yes" now and we will continue.]]></field>
+    ><![CDATA[Hello, {{ buyer_name }}. We need to discuss a detail regarding your reservation {{ reservation_locator }} at {{ hotel_name }}.
+
+{{ custom_query }}
+
+Could you confirm here, please?]]></field>
+    </record>
+
+    <!-- Force es_ES values on update (existing DBs keep old translated jsonb otherwise) -->
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp_param_rooms_block_info"
+    model="pms.notification.template.bookai.param"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[<t t-set="reservations" t-value="object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])"/><t t-set="chunks" t-value="[]"/><t t-foreach="reservations" t-as="reservation"><t t-set="prefix" t-value="(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '"/><t t-set="room_name" t-value="reservation.room_type_id and reservation.room_type_id.name or ''"/><t t-set="checkin_txt" t-value="reservation.checkin and reservation.checkin.strftime('%d/%m') or ''"/><t t-set="checkout_txt" t-value="reservation.checkout and reservation.checkout.strftime('%d/%m') or ''"/><t t-set="chunks" t-value="chunks + [(prefix + room_name + ' → ' + checkin_txt + ' al ' + checkout_txt).strip()]"/></t><t t-out="' | '.join(chunks)"/>]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp_param_rooms_block_info"
+    model="pms.notification.template.bookai.param"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="value_inline_tmpl"
+    ><![CDATA[<t t-set="reservations" t-value="object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])"/><t t-set="chunks" t-value="[]"/><t t-foreach="reservations" t-as="reservation"><t t-set="prefix" t-value="(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '"/><t t-set="room_name" t-value="reservation.room_type_id and reservation.room_type_id.name or ''"/><t t-set="checkin_txt" t-value="reservation.checkin and reservation.checkin.strftime('%d/%m') or ''"/><t t-set="checkout_txt" t-value="reservation.checkout and reservation.checkout.strftime('%d/%m') or ''"/><t t-set="chunks" t-value="chunks + [(prefix + room_name + ' → ' + checkin_txt + ' al ' + checkout_txt).strip()]"/></t><t t-out="' | '.join(chunks)"/>]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_confirmation_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{buyer_name}}. Tu reserva en {{hotel_name}} ha sido confirmada.
+
+{{rooms_block_info}}
+
+Localizador: {{reservation_locator}}
+
+Consulta los detalles y registra tus datos.
+
+Al completarlo, te enviaremos la información de llegada.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_modification_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Tu reserva {{ reservation_locator }} en {{ hotel_name }} ha sido modificada.
+
+{{ rooms_block_info }}
+
+Consulta los detalles de tu reserva.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_booking_cancellation_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Tu reserva {{ reservation_locator }} en {{ hotel_name }} ha sido cancelada.
+
+Quedamos a tu disposición si necesitas algo más.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Te esperamos en {{ hotel_name }} el {{ checkin_date }}.
+
+Completa el check-in online y el pago pendiente para recibir la información de llegada.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.
+
+Para tu llegada, necesitamos que completes el check-in online y el pago pendiente de la reserva. Así podremos enviarte toda la información.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_initial_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Tu llegada a {{ hotel_name }} es el {{ checkin_date }}.
+
+Por favor, completa el check-in online para que podamos enviarte toda la información necesaria.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_precheckin_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.
+
+Para tu llegada, necesitamos que completes el check-in online. Así podremos enviarte toda la información.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_initial_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Por favor, completa el pago pendiente de tu reserva {{ reservation_locator }} en {{ hotel_name }}.
+
+Importe pendiente: {{ amount_due }} {{ currency }}
+
+Muchas gracias.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_payment_reminder_urgent_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.
+
+Antes de tu llegada, necesitamos que completes el pago pendiente de la reserva {{ reservation_locator }} para enviarte toda la información.
+
+Importe pendiente: {{ amount_due }} {{ currency }}
+
+Muchas gracias.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_prearrival_info_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Todo está listo para tu llegada a {{ hotel_name }}.
+
+📍 Cómo llegar: https://maps.app.goo.gl/ojESiJH7pWAPbFci9
+
+⏰ Check-in desde las 14:00 h. Recepción presencial hasta las 22:00 h.
+
+Si llegas fuera de este horario, podrás acceder mediante recepción virtual.
+
+🚪 Número para abrir la puerta principal: {{ main_door_property }}
+
+{{ custom_info_arrival }}
+
+Si necesitas algo, como información de parking, estaremos encantados de ayudarte.]]></field>
+    </record>
+
+    <record
+    id="pms_notification_template_folio_reactivate_chat_critical_whatsapp"
+    model="pms.notification.template"
+    context="{'lang': 'es_ES'}"
+  >
+        <field
+      name="body"
+    ><![CDATA[Hola, {{ buyer_name }}. Necesitamos comentarte un detalle sobre tu reserva {{ reservation_locator }} en {{ hotel_name }}.
+
+{{ custom_query }}
+
+¿Nos confirmas por aquí, por favor?]]></field>
     </record>
 
 </odoo>

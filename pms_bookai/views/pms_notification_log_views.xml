@@ -17,6 +17,7 @@
                     <field name="whatsapp_phone" />
                     <field name="whatsapp_country" />
                     <field name="whatsapp_template_parameters" widget="ace" />
+                    <field name="whatsapp_body_preview" widget="text" readonly="1" />
                 </group>
             </xpath>
             <xpath expr="//notebook" position="inside">
