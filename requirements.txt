@@ -6,4 +6,5 @@ marshmallow
 phonenumbers
 simplejson
 thefuzz
+whatsapp_formatter
 xlsxwriter

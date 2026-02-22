@@ -40,6 +40,13 @@ class PmsNotificationLog(models.Model):
         string="WhatsApp Template Parameters (JSON)",
         help="Resolved JSON parameters sent to BookAI.",
     )
+    whatsapp_body_preview = fields.Text(
+        string="WhatsApp Body Preview",
+        help=(
+            "Rendered WhatsApp body preview for this log "
+            "(using resolved parameters and language)."
+        ),
+    )
     # Debug: last HTTP interaction with BookAI (stored for troubleshooting)
     bookai_last_http_status = fields.Integer(
         string="BookAI HTTP Status",
@@ -246,6 +253,12 @@ class PmsNotificationLog(models.Model):
                 params = template._bookai_build_parameters(
                     record, lang=render_lang, tz=tz
                 )
+                body_preview = template._render_body_with_params(
+                    record=record,
+                    params=params,
+                    lang=render_lang,
+                    tz=tz,
+                )
 
                 log.write(
                     {
@@ -257,6 +270,7 @@ class PmsNotificationLog(models.Model):
                         "whatsapp_template_parameters": json.dumps(
                             params, ensure_ascii=False
                         ),
+                        "whatsapp_body_preview": body_preview or "",
                         "error_message": False,
                     }
                 )

@@ -101,6 +101,11 @@ msgid "BookAI Response Body"
 msgstr "Cuerpo de respuesta de BookAI"
 
 #. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_log__whatsapp_body_preview
+msgid "WhatsApp Body Preview"
+msgstr "Previsualización del cuerpo de WhatsApp"
+
+#. module: pms_bookai
 #. odoo-python
 #: code:addons/pms_bookai/models/pms_notification_template.py:0
 #: model:ir.model.fields,field_description:pms_bookai.field_pms_notification_template__bookai_template_code
@@ -156,8 +161,8 @@ msgstr "Parámetro BookAI '%s': el campo es obligatorio."
 #. odoo-python
 #: code:addons/pms_bookai/models/pms_notification_template_bookai_param.py:0
 #, python-format
-msgid "BookAI param '%s': inline template is required."
-msgstr "Parámetro BookAI '%s': se requiere plantilla en línea."
+msgid "BookAI param '%s': template source is required."
+msgstr "Parámetro BookAI '%s': se requiere la fuente de la plantilla."
 
 #. module: pms_bookai
 #. odoo-python
@@ -346,75 +351,213 @@ msgstr ""
 "enmascarada)."
 
 #. module: pms_bookai
-#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_request_eta_whatsapp
-msgid ""
-"Hello {{ buyer_name }}, to prepare your arrival at {{ hotel_name }}, could "
-"you please tell us your approximate arrival time?\n"
-"You can reply directly to this message."
-msgstr ""
-"Hola {{ buyer_name }}, para preparar tu llegada a {{ hotel_name }}, ¿podrías "
-"indicarnos tu hora aproximada de llegada?\n"
-"Puedes responder directamente a este mensaje."
-
-#. module: pms_bookai
 #: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_reactivate_chat_critical_whatsapp
 msgid ""
-"Hello {{ buyer_name }}, we have an important pending action for your "
+"Hello, {{ buyer_name }}. We need to discuss a detail regarding your "
 "reservation {{ reservation_locator }} at {{ hotel_name }}.\n"
-"To continue, we need your confirmation.\n"
-"Reply \"yes\" now and we will continue."
+"\n"
+"{{ custom_query }}\n"
+"\n"
+"Could you confirm here, please?"
 msgstr ""
-"Hola {{ buyer_name }}, tenemos pendiente una gestión importante de tu "
-"reserva {{ reservation_locator }} en {{ hotel_name }}.\n"
-"Para poder continuar necesitamos tu confirmación.\n"
-"Respóndenos \"si\" ahora y seguimos."
+"Hola, {{ buyer_name }}. Necesitamos comentarte un detalle sobre tu reserva "
+"{{ reservation_locator }} en {{ hotel_name }}.\n"
+"\n"
+"{{ custom_query }}\n"
+"\n"
+"¿Nos confirmas por aquí, por favor?"
 
 #. module: pms_bookai
 #: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_confirmation_whatsapp
 msgid ""
-"Hello {{ buyer_name }}, your reservation at {{ hotel_name }} has been "
+"Hello, {{buyer_name}}. Your reservation in {{hotel_name}} has been "
 "confirmed.\n"
-"Check-in: {{ checkin_date }}\n"
-"Check-out: {{ checkout_date }}\n"
-"Locator: {{ reservation_locator }}\n"
-"You can manage your reservation (payment, pre-check-in, details, etc.) "
-"here:\n"
-"{{ reservation_details_url }}"
+"\n"
+"{{rooms_block_info}}\n"
+"\n"
+"Booking reference: {{reservation_locator}}\n"
+"\n"
+"Check the details and register your information.\n"
+"\n"
+"Once completed, we'll send you the arrival information"
 msgstr ""
-"Hola {{ buyer_name }}, tu reserva en {{ hotel_name }} ha sido confirmada.\n"
-"Entrada: {{ checkin_date }}\n"
-"Salida: {{ checkout_date }}\n"
-"Localizador: {{ reservation_locator }}\n"
-"Puedes gestionar tu reserva (pago, pre-check-in, datos, etc.) aquí:\n"
-"{{ reservation_details_url }}"
+"Hola, {{buyer_name}}. Tu reserva en {{hotel_name}} ha sido confirmada.\n"
+"\n"
+"{{rooms_block_info}}\n"
+"\n"
+"Localizador: {{reservation_locator}}\n"
+"\n"
+"Consulta los detalles y registra tus datos.\n"
+"\n"
+"Al completarlo, te enviaremos la información de llegada."
+
+#. module: pms_bookai
+#: model:pms.notification.template.bookai.param,value_inline_tmpl:pms_bookai.pms_notification_template_folio_booking_confirmation_whatsapp_param_rooms_block_info
+#: model:pms.notification.template.bookai.param,value_inline_tmpl:pms_bookai.pms_notification_template_folio_booking_modification_whatsapp_param_rooms_block_info
+msgid ""
+"<t t-set=\"reservations\" t-value=\"object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])\"/><t t-set=\"chunks\" t-value=\"[]\"/><t t-foreach=\"reservations\" t-as=\"reservation\"><t t-set=\"prefix\" t-value=\"(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '\"/><t t-set=\"room_name\" t-value=\"reservation.room_type_id and reservation.room_type_id.name or ''\"/><t t-set=\"checkin_txt\" t-value=\"reservation.checkin and reservation.checkin.strftime('%d/%m') or ''\"/><t t-set=\"checkout_txt\" t-value=\"reservation.checkout and reservation.checkout.strftime('%d/%m') or ''\"/><t t-set=\"chunks\" t-value=\"chunks + [(prefix + room_name + ' → ' + checkin_txt + ' to ' + checkout_txt).strip()]\"/></t><t t-out=\"' | '.join(chunks)\"/>"
+msgstr ""
+"<t t-set=\"reservations\" t-value=\"object.reservation_ids.filtered_domain([('state', '!=', 'cancel')])\"/><t t-set=\"chunks\" t-value=\"[]\"/><t t-foreach=\"reservations\" t-as=\"reservation\"><t t-set=\"prefix\" t-value=\"(str(reservation_index + 1) + '▪️ ') if len(reservations) > 1 else '▪️ '\"/><t t-set=\"room_name\" t-value=\"reservation.room_type_id and reservation.room_type_id.name or ''\"/><t t-set=\"checkin_txt\" t-value=\"reservation.checkin and reservation.checkin.strftime('%d/%m') or ''\"/><t t-set=\"checkout_txt\" t-value=\"reservation.checkout and reservation.checkout.strftime('%d/%m') or ''\"/><t t-set=\"chunks\" t-value=\"chunks + [(prefix + room_name + ' → ' + checkin_txt + ' al ' + checkout_txt).strip()]\"/></t><t t-out=\"' | '.join(chunks)\"/>"
 
 #. module: pms_bookai
 #: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_cancellation_whatsapp
 msgid ""
-"Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at "
-"{{ hotel_name }} has been successfully canceled.\n"
-"If you need help making a new reservation, we are available."
+"Hello, {{ buyer_name }}. Your reservation {{ reservation_locator }} at "
+"{{ hotel_name }} has been cancelled.\n"
+"\n"
+"If you need anything else, please let us know."
 msgstr ""
-"Hola {{ buyer_name }}, tu reserva {{ reservation_locator }} en "
-"{{ hotel_name }} ha sido cancelada correctamente.\n"
-"Si necesitas ayuda para hacer una nueva reserva, estamos disponibles."
+"Hola, {{ buyer_name }}. Tu reserva {{ reservation_locator }} en "
+"{{ hotel_name }} ha sido cancelada.\n"
+"\n"
+"Quedamos a tu disposición si necesitas algo más."
 
 #. module: pms_bookai
 #: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_booking_modification_whatsapp
 msgid ""
-"Hello {{ buyer_name }}, your reservation {{ reservation_locator }} at "
-"{{ hotel_name }} has been updated.\n"
-"New check-in: {{ checkin_date }}\n"
-"New check-out: {{ checkout_date }}\n"
-"You can review the changes here:\n"
-"{{ reservation_details_url }}"
+"Hello, {{ buyer_name }}. Your reservation {{ reservation_locator }} at "
+"{{ hotel_name }} has been modified.\n"
+"\n"
+"{{ rooms_block_info }}\n"
+"\n"
+"Check your reservation details."
 msgstr ""
-"Hola {{ buyer_name }}, tu reserva {{ reservation_locator }} en "
+"Hola, {{ buyer_name }}. Tu reserva {{ reservation_locator }} en "
 "{{ hotel_name }} ha sido modificada.\n"
-"Nueva entrada: {{ checkin_date }}\n"
-"Nueva salida: {{ checkout_date }}\n"
-"Puedes revisar los cambios aquí:\n"
-"{{ reservation_details_url }}"
+"\n"
+"{{ rooms_block_info }}\n"
+"\n"
+"Consulta los detalles de tu reserva."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_precheckin_payment_reminder_initial_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. Your arrival at {{ hotel_name }} is on "
+"{{ checkin_date }}.\n"
+"\n"
+"Complete your online check-in and pending payment to receive your arrival "
+"information."
+msgstr ""
+"Hola, {{ buyer_name }}. Te esperamos en {{ hotel_name }} el "
+"{{ checkin_date }}.\n"
+"\n"
+"Completa el check-in online y el pago pendiente para recibir la información "
+"de llegada."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_precheckin_payment_reminder_urgent_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at "
+"{{ hotel_name }}.\n"
+"\n"
+"To prepare for your arrival, we need you to complete your online check-in "
+"and the pending payment to send you all the necessary information."
+msgstr ""
+"Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.\n"
+"\n"
+"Para tu llegada, necesitamos que completes el check-in online y el pago "
+"pendiente de la reserva. Así podremos enviarte toda la información."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_precheckin_reminder_initial_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. Your arrival at {{ hotel_name }} is on "
+"{{ checkin_date }}.\n"
+"\n"
+"Please complete your online check-in so we can send you all the necessary "
+"information."
+msgstr ""
+"Hola, {{ buyer_name }}. Tu llegada a {{ hotel_name }} es el "
+"{{ checkin_date }}.\n"
+"\n"
+"Por favor, completa el check-in online para que podamos enviarte toda la "
+"información necesaria."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_precheckin_reminder_urgent_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at "
+"{{ hotel_name }}.\n"
+"\n"
+"Please complete your online check-in before arrival."
+msgstr ""
+"Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.\n"
+"\n"
+"Para tu llegada, necesitamos que completes el check-in online. Así podremos "
+"enviarte toda la información."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_payment_reminder_initial_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. Please complete the pending payment for your "
+"reservation {{ reservation_locator }} at {{ hotel_name }}.\n"
+"\n"
+"Amount due: {{ amount_due }} {{ currency }}\n"
+"\n"
+"Thank you very much."
+msgstr ""
+"Hola, {{ buyer_name }}. Por favor, completa el pago pendiente de tu reserva "
+"{{ reservation_locator }} en {{ hotel_name }}.\n"
+"\n"
+"Importe pendiente: {{ amount_due }} {{ currency }}\n"
+"\n"
+"Muchas gracias."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_payment_reminder_urgent_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. We look forward to welcoming you tomorrow at "
+"{{ hotel_name }}.\n"
+"\n"
+"Before your arrival, we need you to complete the outstanding payment for "
+"reservation {{ reservation_locator }} so we can send you all the "
+"information.\n"
+"\n"
+"Amount due: {{ amount_due }} {{ currency }}\n"
+"\n"
+"Thank you very much."
+msgstr ""
+"Hola, {{ buyer_name }}. Mañana te esperamos en {{ hotel_name }}.\n"
+"\n"
+"Antes de tu llegada, necesitamos que completes el pago pendiente de la "
+"reserva {{ reservation_locator }} para enviarte toda la información.\n"
+"\n"
+"Importe pendiente: {{ amount_due }} {{ currency }}\n"
+"\n"
+"Muchas gracias."
+
+#. module: pms_bookai
+#: model:pms.notification.template,body:pms_bookai.pms_notification_template_folio_prearrival_info_whatsapp
+msgid ""
+"Hello, {{ buyer_name }}. Everything is ready for your arrival at "
+"{{ hotel_name }}.\n"
+"\n"
+"📍 Directions: https://maps.app.goo.gl/ojESiJH7pWAPbFci9\n"
+"\n"
+"⏰ Check-in from 14:00. Front desk open until 22:00.\n"
+"\n"
+"If you arrive outside these hours, you can access via virtual reception.\n"
+"\n"
+"🚪 Number to open the main entrance door: {{ main_door_property }}\n"
+"\n"
+"{{ custom_info_arrival }}\n"
+"\n"
+"If you need anything, such as parking information, we'll be happy to help."
+msgstr ""
+"Hola, {{ buyer_name }}. Todo está listo para tu llegada a {{ hotel_name }}.\n"
+"\n"
+"📍 Cómo llegar: https://maps.app.goo.gl/ojESiJH7pWAPbFci9\n"
+"\n"
+"⏰ Check-in desde las 14:00 h. Recepción presencial hasta las 22:00 h.\n"
+"\n"
+"Si llegas fuera de este horario, podrás acceder mediante recepción virtual.\n"
+"\n"
+"🚪 Número para abrir la puerta principal: {{ main_door_property }}\n"
+"\n"
+"{{ custom_info_arrival }}\n"
+"\n"
+"Si necesitas algo, como información de parking, estaremos encantados de "
+"ayudarte."
 
 #. module: pms_bookai
 #: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
@@ -438,13 +581,22 @@ msgid "Inline Template"
 msgstr "Plantilla en línea"
 
 #. module: pms_bookai
+#: model:ir.model.fields.selection,name:pms_bookai.selection__pms_notification_template_bookai_param__value_type__qweb
+msgid "QWeb Template"
+msgstr "Plantilla QWeb"
+
+#. module: pms_bookai
 #: model:ir.model.fields,help:pms_bookai.field_pms_notification_template_bookai_param__value_inline_tmpl
 msgid ""
-"Inline template using {{ ... }} with 'object' available.\n"
+"Template source used when Value Type is Inline or QWeb.\n"
+"Inline mode supports {{ ... }} expressions.\n"
+"QWeb mode supports <t t-out>, t-if, t-foreach, etc.\n"
 "Example: {{ object.partner_name or (object.partner_id and object.partner_id."
 "name) or '' }}"
 msgstr ""
-"Plantilla en línea que usa {{ ... }} con 'objeto' disponible.\n"
+"Fuente de plantilla usada cuando el tipo de valor es en línea o QWeb.\n"
+"El modo en línea soporta expresiones {{ ... }}.\n"
+"El modo QWeb soporta <t t-out>, t-if, t-foreach, etc.\n"
 "Ejemplo: {{ object.partner_name o (object.partner_id y object.partner_id."
 "name) o '' }}"
 
