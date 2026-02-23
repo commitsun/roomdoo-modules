@@ -7,6 +7,7 @@ class AccountMove(models.Model):
     payment_method_ids = fields.Many2many(
         comodel_name="account.payment.method",
         string="Payment Methods",
+        compute="_compute_payment_method_ids",
         search="_search_payment_method_ids",
     )
     has_overdue_payments = fields.Boolean(
@@ -18,6 +19,16 @@ class AccountMove(models.Model):
         string="Minimum Overdue Payment Date", compute="_compute_min_overdue_date"
     )
 
+    def _compute_payment_method_ids(self):
+        for move in self:
+            receivable_lines = move.line_ids.filtered(
+                lambda line: line.account_id.account_type
+                in ("asset_receivable", "liability_payable")
+            )
+            debit_methods = receivable_lines.matched_debit_ids.credit_move_id.payment_id.payment_method_line_id.payment_method_id
+            credit_methods = receivable_lines.matched_credit_ids.debit_move_id.payment_id.payment_method_line_id.payment_method_id
+            move.payment_method_ids = debit_methods | credit_methods
+
     def _search_payment_method_ids(self, operator, value):
         if operator == "=":
             value = [value]
@@ -25,23 +36,33 @@ class AccountMove(models.Model):
             raise NotImplementedError(
                 f"Operator '{operator}' is not supported for payment_method_ids search."
             )
-        payment_amls = self.env["account.move.line"].search(
-            [("payment_id.payment_method_line_id.payment_method_id", "in", value)]
+        # Use raw SQL to avoid full scans on account.move.line.
+        # Start from account.partial.reconcile (much smaller) and join through
+        # indexed FK columns to resolve payment method → invoice move directly.
+        self.env.cr.execute(
+            """
+            SELECT DISTINCT aml_inv.move_id
+            FROM account_partial_reconcile apr
+            JOIN account_move_line aml_pay ON aml_pay.id = apr.credit_move_id
+            JOIN account_payment ap ON ap.id = aml_pay.payment_id
+            JOIN account_payment_method_line apml ON apml.id = ap.payment_method_line_id
+            JOIN account_move_line aml_inv ON aml_inv.id = apr.debit_move_id
+            WHERE apml.payment_method_id = ANY(%s)
+            UNION
+            SELECT DISTINCT aml_inv.move_id
+            FROM account_partial_reconcile apr
+            JOIN account_move_line aml_pay ON aml_pay.id = apr.debit_move_id
+            JOIN account_payment ap ON ap.id = aml_pay.payment_id
+            JOIN account_payment_method_line apml ON apml.id = ap.payment_method_line_id
+            JOIN account_move_line aml_inv ON aml_inv.id = apr.credit_move_id
+            WHERE apml.payment_method_id = ANY(%s)
+            """,
+            (value, value),
         )
-        if not payment_amls:
+        move_ids = [row[0] for row in self.env.cr.fetchall()]
+        if not move_ids:
             return [("id", "=", False)]
-        partials = self.env["account.partial.reconcile"].search(
-            [
-                "|",
-                ("credit_move_id", "in", payment_amls.ids),
-                ("debit_move_id", "in", payment_amls.ids),
-            ]
-        )
-        invoice_aml_ids = list(
-            (set(partials.debit_move_id.ids) | set(partials.credit_move_id.ids))
-            - set(payment_amls.ids)
-        )
-        return [("line_ids", "in", invoice_aml_ids)]
+        return [("id", "in", move_ids)]
 
     def _compute_min_overdue_date(self):
         for move in self:
