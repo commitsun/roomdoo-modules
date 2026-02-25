@@ -289,12 +289,6 @@ class FolioSearch(BaseSearch):
         simple_filters = [
             (self.name, "name", "ilike"),
             (self.creationDate, "create_date", "="),
-            (self.room, "reservation_ids.reservation_line_ids.room_id", "ilike"),
-            (self.nights, "reservation_ids.nights", "="),
-            (self.checkin, "reservation_ids.checkin", "="),
-            (self.checkout, "reservation_ids.checkout", "="),
-            (self.saleChannel, "reservation_ids.sale_channel_origin_id", "ilike"),
-            (self.agency, "reservation_ids.agency_id", "ilike"),
         ]
         if self.pmsProperty:
             domain += [("pms_property_id", "=", self.pmsProperty)]
@@ -325,73 +319,90 @@ class FolioSearch(BaseSearch):
         for value, field, operator in simple_filters:
             if value:
                 domain.append((field, operator, value))
-        if self.reservationState:
-            domain.extend(self._get_reservation_state_domain())
 
         if self.paymentState:
             domain.extend(self._get_payment_state_domain())
 
-        # Período de estancia
-        if self.stayPeriodStart and self.stayPeriodEnd:
-            env.cr.execute(
-                """
-                SELECT DISTINCT r.folio_id
-                FROM pms_reservation_line rl
-                JOIN pms_reservation r ON r.id = rl.reservation_id
-                WHERE rl.date >= %s AND rl.date <= %s
-                """,
-                (self.stayPeriodStart, self.stayPeriodEnd),
-            )
-            folio_ids = [r[0] for r in env.cr.fetchall()]
-            domain.append(("id", "in", folio_ids))
+        reservation_folio_ids = self._get_reservation_folio_ids(env)
+        if reservation_folio_ids is not None:
+            domain.append(("id", "in", reservation_folio_ids))
+
+        return domain
+
+    def _get_reservation_folio_ids(self, env: api.Environment) -> list | None:
+        """Search folios through reservation fields, excluding reservations
+        cancelled due to modification (cancelled_reason = 'modified').
+        Returns a list of folio IDs, or None if no reservation filters are active.
+        """
+        domain = self._build_reservation_domain(env)
+        if not domain:
+            return None
+        groups = env["pms.reservation"].read_group(domain, [], ["folio_id"])
+        return [g["folio_id"][0] for g in groups]
+
+    def _build_reservation_domain(self, env: api.Environment) -> list:
+        domain = []
+        simple_filters = [
+            (self.nights, "nights", "="),
+            (self.checkin, "checkin", "="),
+            (self.checkout, "checkout", "="),
+            (self.room, "reservation_line_ids.room_id", "ilike"),
+            (self.saleChannel, "sale_channel_origin_id", "ilike"),
+            (self.agency, "agency_id", "ilike"),
+        ]
+        for value, field, operator in simple_filters:
+            if value:
+                domain.append((field, operator, value))
         if self.origin:
             domain = expression.AND(
                 [
                     domain,
                     expression.OR(
                         [
-                            [
-                                (
-                                    "reservation_ids.sale_channel_origin_id",
-                                    "ilike",
-                                    self.origin,
-                                )
-                            ],
-                            [("reservation_ids.agency_id", "ilike", self.origin)],
+                            [("sale_channel_origin_id", "ilike", self.origin)],
+                            [("agency_id", "ilike", self.origin)],
                         ]
                     ),
                 ]
             )
-        total_amount_field = "reservation_ids.price_room_services_set"
+        if self.reservationState:
+            domain.extend(self._get_reservation_state_domain())
+        if self.stayPeriodStart and self.stayPeriodEnd:
+            domain.extend(
+                [
+                    ("reservation_line_ids.date", ">=", self.stayPeriodStart),
+                    ("reservation_line_ids.date", "<=", self.stayPeriodEnd),
+                ]
+            )
         if self.totalAmountGt is not None:
-            domain = expression.AND(
-                [domain, [(total_amount_field, ">", self.totalAmountGt)]]
-            )
+            domain.append(("price_room_services_set", ">", self.totalAmountGt))
         if self.totalAmountLt is not None:
-            domain = expression.AND(
-                [domain, [(total_amount_field, "<", self.totalAmountLt)]]
-            )
+            domain.append(("price_room_services_set", "<", self.totalAmountLt))
         if self.totalAmountEq is not None:
-            domain = expression.AND(
-                [domain, [(total_amount_field, "=", self.totalAmountEq)]]
-            )
+            domain.append(("price_room_services_set", "=", self.totalAmountEq))
+        if domain:
+            domain.append(("cancelled_reason", "!=", "modified"))
+            if self.pmsProperty:
+                domain.append(("pms_property_id", "=", self.pmsProperty))
+            else:
+                domain.append(("pms_property_id", "in", env.user.pms_property_ids.ids))
         return domain
 
     def _get_reservation_state_domain(self) -> list:
         state_mapping = {
             reservationStateEnum.OVERBOOKING: [
-                ("reservation_ids.overbooking", "=", True),
-                ("reservation_ids.state", "!=", "cancel"),
+                ("overbooking", "=", True),
+                ("state", "!=", "cancel"),
             ],
-            reservationStateEnum.CANCELLED: [("reservation_ids.state", "=", "cancel")],
+            reservationStateEnum.CANCELLED: [("state", "=", "cancel")],
             reservationStateEnum.ARRIVAL: [
-                ("reservation_ids.state", "in", ["confirm", "arrival_delayed"])
+                ("state", "in", ["confirm", "arrival_delayed"])
             ],
             reservationStateEnum.IN_HOUSE: [
-                ("reservation_ids.state", "in", ["onboard", "departure_delayed"])
+                ("state", "in", ["onboard", "departure_delayed"])
             ],
-            reservationStateEnum.COMPLETED: [("reservation_ids.state", "=", "done")],
-            reservationStateEnum.DRAFT: [("reservation_ids.state", "=", "draft")],
+            reservationStateEnum.COMPLETED: [("state", "=", "done")],
+            reservationStateEnum.DRAFT: [("state", "=", "draft")],
         }
         return state_mapping.get(self.reservationState, [])
 
