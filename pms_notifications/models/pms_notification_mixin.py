@@ -105,64 +105,95 @@ class PmsNotificationMixin(models.AbstractModel):
             prop = rec._pms_notification_get_property()
 
             for rule in rules:
-                # Property filtering: empty = applies to all
-                if rule.pms_property_ids and (
-                    not prop or prop.id not in rule.pms_property_ids.ids
-                ):
+                try:
+                    # Property filtering: empty = applies to all
+                    if rule.pms_property_ids and (
+                        not prop or prop.id not in rule.pms_property_ids.ids
+                    ):
+                        continue
+
+                    if (
+                        event_type == "on_write"
+                        and not rule._event_matches_changed_fields(changed_fields)
+                    ):
+                        continue
+
+                    if event_type == "on_write" and rule._has_event_pre_domain():
+                        if pre_domain_matches is not None:
+                            matched_ids = pre_domain_matches.get(rule.id, set())
+                            if rec.id not in matched_ids:
+                                continue
+
+                    # Evaluate event domain against the *record after* create/write
+                    if not rule._record_matches_event_domain(rec):
+                        continue
+
+                    if (
+                        rec._name == "pms.folio"
+                        and not rule.template_id._is_applicable_to_folio(rec)
+                    ):
+                        continue
+
+                    # Max sends per record (per rule)
+                    if not rule._is_under_max_sends(rec):
+                        continue
+
+                    recipients = rec._pms_notification_get_default_recipient_partners()
+                    recipient_mode = "partners" if recipients else "template"
+
+                    vals = {
+                        "name": rule._build_log_name(rec),
+                        "state": "pending",
+                        "property_id": prop.id if prop else False,
+                        "template_id": rule.template_id.id,
+                        "rule_id": rule.id,
+                        "channel": rule.channel,
+                        "scheduled_date": False,
+                        "context_json": json.dumps(
+                            rec._pms_notification_get_context_dict()
+                        ),
+                        "origin_model": rec._name,
+                        "origin_res_id": rec.id,
+                        "recipient_mode": recipient_mode,
+                        "recipient_partner_ids": [(6, 0, recipients.ids)]
+                        if recipients
+                        else [(6, 0, [])],
+                        "recipient_emails": False,
+                    }
+
+                    with self.env.cr.savepoint():
+                        log = Log.create(vals)
+
+                    if rule.send_immediately:
+                        try:
+                            with self.env.cr.savepoint():
+                                log.action_send_by_channel()
+                        except Exception as err:
+                            _logger.exception(
+                                "Immediate notification send failed "
+                                "(rule=%s, model=%s, id=%s, log=%s)",
+                                rule.id,
+                                rec._name,
+                                rec.id,
+                                log.id,
+                            )
+                            with self.env.cr.savepoint():
+                                log.write(
+                                    {
+                                        "state": "error",
+                                        "error_message": str(err),
+                                    }
+                                )
+
+                except Exception:
+                    _logger.exception(
+                        "Notification rule processing failed "
+                        "(rule=%s, model=%s, id=%s)",
+                        rule.id,
+                        rec._name,
+                        rec.id,
+                    )
                     continue
-
-                if event_type == "on_write" and not rule._event_matches_changed_fields(
-                    changed_fields
-                ):
-                    continue
-
-                if event_type == "on_write" and rule._has_event_pre_domain():
-                    if pre_domain_matches is not None:
-                        matched_ids = pre_domain_matches.get(rule.id, set())
-                        if rec.id not in matched_ids:
-                            continue
-
-                # Evaluate event domain against the *record after* create/write
-                if not rule._record_matches_event_domain(rec):
-                    continue
-
-                if (
-                    rec._name == "pms.folio"
-                    and not rule.template_id._is_applicable_to_folio(rec)
-                ):
-                    continue
-
-                # Max sends per record (per rule)
-                if not rule._is_under_max_sends(rec):
-                    continue
-
-                recipients = rec._pms_notification_get_default_recipient_partners()
-                recipient_mode = "partners" if recipients else "template"
-
-                vals = {
-                    "name": rule._build_log_name(rec),
-                    "state": "pending",
-                    "property_id": prop.id if prop else False,
-                    "template_id": rule.template_id.id,
-                    "rule_id": rule.id,
-                    "channel": rule.channel,
-                    "scheduled_date": False,
-                    "context_json": json.dumps(
-                        rec._pms_notification_get_context_dict()
-                    ),
-                    "origin_model": rec._name,
-                    "origin_res_id": rec.id,
-                    "recipient_mode": recipient_mode,
-                    "recipient_partner_ids": [(6, 0, recipients.ids)]
-                    if recipients
-                    else [(6, 0, [])],
-                    "recipient_emails": False,
-                }
-
-                log = Log.create(vals)
-
-                if rule.send_immediately:
-                    log.action_send_by_channel()
 
         return True
 
