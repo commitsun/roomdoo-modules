@@ -334,13 +334,13 @@ class FolioSearch(BaseSearch):
         cancelled due to modification (cancelled_reason = 'modified').
         Returns a list of folio IDs, or None if no reservation filters are active.
         """
-        domain = self._build_reservation_domain(env)
+        domain = self._build_reservation_domain()
         if not domain:
             return None
         groups = env["pms.reservation"].read_group(domain, [], ["folio_id"])
         return [g["folio_id"][0] for g in groups]
 
-    def _build_reservation_domain(self, env: api.Environment) -> list:
+    def _build_reservation_domain(self) -> list:
         domain = []
         simple_filters = [
             (self.nights, "nights", "="),
@@ -382,10 +382,6 @@ class FolioSearch(BaseSearch):
             domain.append(("price_room_services_set", "=", self.totalAmountEq))
         if domain:
             domain.append(("cancelled_reason", "!=", "modified"))
-            if self.pmsProperty:
-                domain.append(("pms_property_id", "=", self.pmsProperty))
-            else:
-                domain.append(("pms_property_id", "in", env.user.pms_property_ids.ids))
         return domain
 
     def _get_reservation_state_domain(self) -> list:
