@@ -77,7 +77,12 @@ class PmsNotificationLog(models.Model):
     def create(self, vals_list):
         if self.env.context.get("bookai_no_split"):
             logs = super().create(vals_list)
-            logs._bookai_prepare_logs_on_create()
+            try:
+                logs._bookai_prepare_logs_on_create()
+            except Exception:
+                _logger.exception(
+                    "BookAI on-create preparation crashed for logs %s", logs.ids
+                )
             return logs
 
         expanded = []
@@ -104,7 +109,12 @@ class PmsNotificationLog(models.Model):
         logs = super(
             PmsNotificationLog, self.with_context(bookai_no_split=True)
         ).create(expanded)
-        logs._bookai_prepare_logs_on_create()
+        try:
+            logs._bookai_prepare_logs_on_create()
+        except Exception:
+            _logger.exception(
+                "BookAI on-create preparation crashed for logs %s", logs.ids
+            )
         return logs
 
     def _extract_m2m_ids(self, commands):
@@ -127,7 +137,12 @@ class PmsNotificationLog(models.Model):
     def _bookai_prepare_logs_on_create(self):
         logs = self.filtered(lambda log: log.channel == "bookai_whatsapp")
         if logs:
-            logs._bookai_prepare_payload_fields()
+            try:
+                logs._bookai_prepare_payload_fields()
+            except Exception:
+                _logger.exception(
+                    "BookAI payload preparation crashed for logs %s", logs.ids
+                )
         return True
 
     # -------------------------------------------------------------------------
@@ -159,7 +174,9 @@ class PmsNotificationLog(models.Model):
             return 30
 
     def _bookai_get_instance_url(self):
-        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        base_url = (
+            self.env["ir.config_parameter"].sudo().get_param("pms_bookai.instance_id")
+        )
         return base_url or "https://odoo-instance"
 
     # -------------------------------------------------------------------------
@@ -189,8 +206,8 @@ class PmsNotificationLog(models.Model):
     # -------------------------------------------------------------------------
     def _bookai_prepare_payload_fields(self):
         """
-        Does not swallow exceptions: if something fails, create/write should fail.
-        The caller handles persistence through the regular error path.
+        Best-effort payload preparation.
+        Failures are stored on each log, but never raised to callers.
         """
         for log in self:
             if log.state in ("sent", "cancelled"):
@@ -277,8 +294,8 @@ class PmsNotificationLog(models.Model):
 
             except Exception as err:
                 _logger.exception("BookAI prepare failed for log %s", log.id)
-                log.write({"state": "error", "error_message": str(err)})
-                raise err
+                with self.env.cr.savepoint():
+                    log.write({"state": "error", "error_message": str(err)})
 
         return True
 
