@@ -116,15 +116,21 @@ class PmsNotificationLog(models.Model):
         """
         Send pending/scheduled notifications in batch.
         - Keep it small to avoid long transactions.
-        - Each log handles its own channel dispatch.
+        - Isolate each log so one failure never stops the whole batch.
         """
         logs = self.search(
             [("state", "in", ("pending", "scheduled"))],
             order="id asc",
             limit=limit,
         )
-        if logs:
-            logs.action_send_by_channel()
+        for log in logs:
+            try:
+                with self.env.cr.savepoint():
+                    log.action_send_by_channel()
+            except Exception as err:
+                _logger.exception("Notification batch send failed for log %s", log.id)
+                with self.env.cr.savepoint():
+                    log.write({"state": "error", "error_message": str(err)})
         return True
 
     # -------------------------------------------------------------------------
