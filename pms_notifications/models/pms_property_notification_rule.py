@@ -17,11 +17,14 @@ Recipients:
 """
 
 import json
+import logging
 from datetime import timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools.safe_eval import safe_eval
+
+_logger = logging.getLogger(__name__)
 
 
 class PmsPropertyNotificationRule(models.Model):
@@ -474,7 +477,14 @@ class PmsPropertyNotificationRule(models.Model):
         now = fields.Datetime.now()
         rules = self.search([("rule_type", "=", "scheduled"), ("active", "=", True)])
         for rule in rules:
-            rule._run_one_scheduled_rule(now)
+            try:
+                with self.env.cr.savepoint():
+                    rule._run_one_scheduled_rule(now)
+            except Exception:
+                _logger.exception(
+                    "Scheduled notification rule failed (rule=%s)", rule.id
+                )
+                continue
 
     def _run_one_scheduled_rule(self, now):
         """Process a single scheduled rule at the given time."""
@@ -695,17 +705,48 @@ class PmsPropertyNotificationRule(models.Model):
         Log = self.env["pms.notification.log"].sudo()
 
         for rec in records:
-            if (
-                rec._name == "pms.folio"
-                and not self.template_id._is_applicable_to_folio(rec)
-            ):
-                continue
-            prop = prop_map.get(rec.id)
-            vals_log = self._scheduled_build_log_vals(now, rec, prop)
-            log = Log.create(vals_log)
+            try:
+                if (
+                    rec._name == "pms.folio"
+                    and not self.template_id._is_applicable_to_folio(rec)
+                ):
+                    continue
 
-            if self.send_immediately:
-                log.action_send_by_channel()
+                prop = prop_map.get(rec.id)
+                vals_log = self._scheduled_build_log_vals(now, rec, prop)
+                with self.env.cr.savepoint():
+                    log = Log.create(vals_log)
+
+                if self.send_immediately:
+                    try:
+                        with self.env.cr.savepoint():
+                            log.action_send_by_channel()
+                    except Exception as err:
+                        _logger.exception(
+                            "Scheduled notification immediate send failed "
+                            "(rule=%s, model=%s, id=%s, log=%s)",
+                            self.id,
+                            rec._name,
+                            rec.id,
+                            log.id,
+                        )
+                        with self.env.cr.savepoint():
+                            log.write(
+                                {
+                                    "state": "error",
+                                    "error_message": str(err),
+                                }
+                            )
+
+            except Exception:
+                _logger.exception(
+                    "Scheduled notification log creation failed "
+                    "(rule=%s, model=%s, id=%s)",
+                    self.id,
+                    rec._name,
+                    rec.id,
+                )
+                continue
 
     def _scheduled_build_log_vals(self, now, rec, prop):
         ctx_json = self._scheduled_get_context_json(rec)
