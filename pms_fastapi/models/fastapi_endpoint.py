@@ -127,6 +127,7 @@ class FastapiEndpoint(models.Model):
             )
 
             params["openapi_tags"] = tags_metadata
+            params["strict_content_type"] = False
         return params
 
 

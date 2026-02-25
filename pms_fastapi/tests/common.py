@@ -1,4 +1,3 @@
-import json
 import warnings
 from functools import partial
 
@@ -69,12 +68,10 @@ class CommonTestPmsApi(FastAPITransactionCase):
     def _login(self, test_client, password="supersecret"):
         response: Response = test_client.post(
             "/login",
-            content=json.dumps(
-                {
-                    "username": "test_pms_api",
-                    "password": password,
-                }
-            ),
+            json={
+                "username": "test_pms_api",
+                "password": password,
+            },
         )
         self.assertEqual(
             response.status_code, status.HTTP_204_NO_CONTENT, response.text
