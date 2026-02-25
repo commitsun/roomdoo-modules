@@ -288,7 +288,8 @@ class FolioSearch(BaseSearch):
         domain = []
         simple_filters = [
             (self.name, "name", "ilike"),
-            (self.creationDate, "create_date", "="),
+            (self.creationDate, "create_date", ">="),
+            (self.creationDate, "create_date", "<="),
         ]
         if self.pmsProperty:
             domain += [("pms_property_id", "=", self.pmsProperty)]
@@ -337,7 +338,7 @@ class FolioSearch(BaseSearch):
         domain = self._build_reservation_domain()
         if not domain:
             return None
-        groups = env["pms.reservation"].read_group(domain, [], ["folio_id"])
+        groups = env["pms.reservation"].sudo().read_group(domain, [], ["folio_id"])
         return [g["folio_id"][0] for g in groups]
 
     def _build_reservation_domain(self) -> list:
