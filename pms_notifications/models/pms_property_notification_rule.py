@@ -442,6 +442,30 @@ class PmsPropertyNotificationRule(models.Model):
         watched = set(self.on_write_field_ids.mapped("name"))
         return bool(watched & set(changed_fields))
 
+    def _is_origin_record_eligible(self, rec):
+        """
+        Extra guardrails before creating logs.
+
+        Current business rule:
+        - Skip folios marked as Out of Service.
+        - For other folios, create notifications only when at least one linked
+          reservation is an overnight room.
+        """
+        self.ensure_one()
+        if rec._name != "pms.folio":
+            return True
+
+        if rec.reservation_type == "out":
+            return False
+
+        reservations = rec.reservation_ids
+        if not reservations:
+            return False
+
+        return bool(
+            reservations.filtered(lambda reservation: reservation.overnight_room)
+        )
+
     def _is_under_max_sends(self, rec):
         """Check max_sends_per_record for a given origin record."""
         self.ensure_one()
@@ -706,6 +730,9 @@ class PmsPropertyNotificationRule(models.Model):
 
         for rec in records:
             try:
+                if not self._is_origin_record_eligible(rec):
+                    continue
+
                 if (
                     rec._name == "pms.folio"
                     and not self.template_id._is_applicable_to_folio(rec)
