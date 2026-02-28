@@ -1,3 +1,6 @@
+from datetime import date, datetime
+
+import pytz
 from werkzeug.exceptions import BadRequest
 
 from odoo import _, fields, models
@@ -15,6 +18,45 @@ class PmsFolio(models.Model):
         column1="folio_ids",
         column2="pms_api_log_ids",
     )
+
+    def _normalize_service_line_date(self, value):
+        """Returns datetime.date (without time) in context/user timezone."""
+        if not value:
+            return False
+
+        # Already a pure date
+        if isinstance(value, date) and not isinstance(value, datetime):
+            return value
+
+        dt = None
+
+        # If it comes as a datetime
+        if isinstance(value, datetime):
+            dt = value
+        # If it comes as ISO string (e.g.: 2026-03-01T23:00:00.000Z)
+        elif isinstance(value, str):
+            s = value
+            # Supports Z suffix
+            if s.endswith("Z"):
+                s = s[:-1] + "+00:00"
+            dt = datetime.fromisoformat(s)
+        else:
+            # Last resort: try Odoo parsing (in case it comes as "YYYY-MM-DD HH:MM:SS")
+            try:
+                dt = fields.Datetime.to_datetime(value)
+            except Exception:
+                return fields.Date.to_date(value)
+
+        # Ensure UTC-naive (Odoo usually works with naive datetime in UTC internally)
+        if dt.tzinfo:
+            dt_utc = dt.astimezone(pytz.UTC).replace(tzinfo=None)
+        else:
+            # if naive, assume it is already in UTC
+            dt_utc = dt
+
+        # Convert to context/user timezone and extract date
+        dt_local = fields.Datetime.context_timestamp(self, dt_utc)
+        return dt_local.date()
 
     def _compare_simple_field(self, record, field, new_value, transform=str):
         if not record:
@@ -128,8 +170,8 @@ class PmsFolio(models.Model):
         existing_reservation_ids = []
 
         for reservation in pms_folio_info.reservations:
-            reservation_record = folio_record.reservation_ids.filtered(
-                lambda x: x.id == reservation.id
+            reservation_record = folio_record.reservation_ids.filtered_domain(
+                [("id", "=", reservation.id)]
             )
             if reservation_record:
                 existing_reservation_ids.append(reservation_record.id)
@@ -217,69 +259,70 @@ class PmsFolio(models.Model):
     def build_service_lines_cmds(self, service_record, service_lines):
         cmds = []
         existing_service_line_ids = []
+
         for service_line in service_lines:
             service_line_record = False
-            if service_record:
-                # search for existing service line
+
+            normalized_date = self._normalize_service_line_date(service_line.date)
+
+            if service_record and normalized_date:
                 service_line_record = (
                     self.env["pms.service.line"]
                     .sudo()
                     .search(
                         [
-                            ("date", "=", service_line.date),
+                            ("date", "=", normalized_date),
                             ("service_id", "=", service_record.id),
-                        ]
+                        ],
+                        limit=1,
                     )
                 )
-            # if service line exists add to existing services lines
+
             if service_line_record:
                 existing_service_line_ids.append(service_line_record.id)
 
-            # initialize vals
             service_line_vals = {}
 
             # date
-            if service_line.date is not None:
-                if not service_line_record or service_line.date != str(
-                    service_line_record.date
+            if normalized_date is not None:
+                if (not service_line_record) or (
+                    normalized_date != service_line_record.date
                 ):
-                    service_line_vals.update({"date": service_line.date})
+                    service_line_vals["date"] = normalized_date
 
             # priceUnit
             if service_line.priceUnit is not None:
-                if not service_line_record or round(service_line.priceUnit, 2) != round(
-                    service_line_record.price_unit, 2
-                ):
-                    service_line_vals.update({"price_unit": service_line.priceUnit})
+                if (not service_line_record) or round(
+                    service_line.priceUnit, 2
+                ) != round(service_line_record.price_unit, 2):
+                    service_line_vals["price_unit"] = service_line.priceUnit
 
             # discount
             if service_line.discount is not None:
-                if not service_line_record or round(service_line.discount, 2) != round(
-                    service_line_record.discount, 2
-                ):
-                    service_line_vals.update({"discount": service_line.discount})
+                if (not service_line_record) or round(
+                    service_line.discount, 2
+                ) != round(service_line_record.discount, 2):
+                    service_line_vals["discount"] = service_line.discount
 
             # quantity
             if service_line.quantity is not None:
                 if (
                     not service_line_record
-                    or service_line.quantity != service_line_record.day_qty
-                ):
-                    service_line_vals.update({"day_qty": service_line.quantity})
+                ) or service_line.quantity != service_line_record.day_qty:
+                    service_line_vals["day_qty"] = service_line.quantity
 
-            # add service line to modify/create cmds
             if service_line_vals:
                 if not service_line_record:
                     cmds.append((0, 0, service_line_vals))
                 else:
                     cmds.append((1, service_line_record.id, service_line_vals))
 
-        # iterate existing service lines to remove the ones not in the request
         if service_record:
             for service_line_to_remove in service_record.service_line_ids.filtered(
                 lambda x: x.id not in existing_service_line_ids
             ):
                 cmds.append((2, service_line_to_remove.id))
+
         return cmds
 
     def create_folio_vals(self, folio_record, pms_folio_info):
