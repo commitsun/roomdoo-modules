@@ -252,6 +252,7 @@ class CashDailyReportWizard(models.TransientModel):
                 ("pms_property_ids", "in", self.pms_property_id.id),
                 ("type", "=", "cash"),
                 ("code", "!=", "CJACT"),
+                ("allowed_pms_payments", "=", True),
             ]
         )
         for journal in journal_cash_ids:
