@@ -25,7 +25,7 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
 InvoiceOrderDependency = create_order_dependency(
-    InvoiceOrderField, INVOICE_ORDER_MAPPING, ["name"]
+    InvoiceOrderField, INVOICE_ORDER_MAPPING, ["-invoice_date,-name"]
 )
 
 
