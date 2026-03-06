@@ -25,8 +25,8 @@ class AccountMove(models.Model):
                 lambda line: line.account_id.account_type
                 in ("asset_receivable", "liability_payable")
             )
-            debit_methods = receivable_lines.matched_debit_ids.credit_move_id.payment_id.payment_method_line_id.payment_method_id
-            credit_methods = receivable_lines.matched_credit_ids.debit_move_id.payment_id.payment_method_line_id.payment_method_id
+            debit_methods = receivable_lines.matched_debit_ids.credit_move_id.payment_id.payment_method_line_id.payment_method_id  # noqa: E501
+            credit_methods = receivable_lines.matched_credit_ids.debit_move_id.payment_id.payment_method_line_id.payment_method_id  # noqa: E501
             move.payment_method_ids = debit_methods | credit_methods
 
     def _search_payment_method_ids(self, operator, value):
@@ -66,36 +66,20 @@ class AccountMove(models.Model):
 
     def _compute_min_overdue_date(self):
         for move in self:
-            overdue_dates = [
-                payment.date_maturity
-                for payment in move.line_ids.filtered(
-                    lambda line: line.account_id.account_type
-                    in ["asset_receivable", "liability_payable"]
-                    and not line.reconciled
-                    and line.date_maturity
-                )
-            ]
-            move.min_overdue_date = min(overdue_dates) if overdue_dates else False
+            overdue_lines = move.line_ids.filtered("is_overdue")
+            move.min_overdue_date = (
+                min(overdue_lines.mapped("date_maturity")) if overdue_lines else False
+            )
 
     def _compute_has_overdue_payments(self):
         for move in self:
-            move.has_overdue_payments = any(
-                payment.date_maturity < fields.Date.today()
-                for payment in move.line_ids.filtered(
-                    lambda line: line.account_id.account_type
-                    in ["asset_receivable", "liability_payable"]
-                    and not line.reconciled
-                    and line.date_maturity
-                )
-            )
+            move.has_overdue_payments = any(line.is_overdue for line in move.line_ids)
 
     def _search_has_overdue_payments(self, operator, value):
         if operator != "=":
             raise NotImplementedError(
                 "Only '=' operator is supported for has_overdue_payments search."
             )
-        today = fields.Date.today()
-        domain = []
         if value:
-            domain = [("line_ids.date_maturity", "<", today)]
-        return domain
+            return [("line_ids.is_overdue", "=", True)]
+        return []

@@ -59,7 +59,7 @@ ODOO_PAYMENT_STATE_MAP = {
     "paid": InvoicePaymentStateEnum.paid,
     "partial": InvoicePaymentStateEnum.partial,
     "reversed": InvoicePaymentStateEnum.reversed,
-    "invoicing_legacy": InvoicePaymentStateEnum.not_paid,
+    "invoicing_legacy": InvoicePaymentStateEnum.paid,
 }
 
 
@@ -283,7 +283,16 @@ class InvoiceSearch(BaseSearch):
                     InvoicePaymentStateEnum.overdue,
                     InvoicePaymentStateEnum.not_paid,
                 ):
-                    state_domains.append([("payment_state", "=", ps.value)])
+                    if ps == InvoicePaymentStateEnum.paid:
+                        state_domains.append(
+                            [
+                                "|",
+                                ("payment_state", "=", "paid"),
+                                ("payment_state", "=", "invoicing_legacy"),
+                            ]
+                        )
+                    else:
+                        state_domains.append([("payment_state", "=", ps.value)])
         else:
             state_domains = []
             for ps in payment_states:
@@ -301,6 +310,14 @@ class InvoiceSearch(BaseSearch):
                                 ],
                             ]
                         )
+                    )
+                elif ps == InvoicePaymentStateEnum.paid:
+                    state_domains.append(
+                        [
+                            "|",
+                            ("payment_state", "=", "paid"),
+                            ("payment_state", "=", "invoicing_legacy"),
+                        ]
                     )
                 else:
                     state_domains.append([("payment_state", "=", ps.value)])
