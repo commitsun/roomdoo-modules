@@ -2,5 +2,6 @@ from . import fastapi_endpoint
 from . import res_partner
 from . import id_number_category
 from . import account_move
+from . import account_move_line
 from . import account_partial_reconcile
 from . import account_payment_method_line
