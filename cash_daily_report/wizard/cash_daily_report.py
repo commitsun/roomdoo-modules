@@ -103,7 +103,7 @@ class CashDailyReportWizard(models.TransientModel):
                 ("date", ">=", self.date_start),
                 ("date", "<=", self.date_end),
                 ("state", "=", "posted"),
-                ("journal_id.allowed_pms_payments", "=", True),
+                ("payment_method_line_id.allowed_on_pms", "=", True),
             ]
         )
         offset = 1
@@ -252,7 +252,7 @@ class CashDailyReportWizard(models.TransientModel):
                 ("pms_property_ids", "in", self.pms_property_id.id),
                 ("type", "=", "cash"),
                 ("code", "!=", "CJACT"),
-                ("allowed_pms_payments", "=", True),
+                ("inbound_payment_method_line_ids.allowed_on_pms", "=", True),
             ]
         )
         for journal in journal_cash_ids:

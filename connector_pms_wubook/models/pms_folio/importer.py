@@ -77,12 +77,15 @@ class ChannelWubookPmsFolioImporter(Component):
                 folio.sale_channel_origin_id
                 == binding.backend_id.backend_type_id.child_id.direct_channel_type_id
             ):
-                journal = binding.backend_id.wubook_journal_id
+                payment_method_line = binding.backend_id.wubook_payment_method_line_id
             # Other OTAs Pre payment
             else:
-                journal = binding.backend_id.backend_journal_ota_ids.filtered(
-                    lambda x: x.agency_id.id == folio.agency_id.id
-                ).journal_id
+                payment_method_line = (
+                    binding.backend_id.backend_journal_ota_ids.filtered(
+                        lambda x: x.agency_id.id == folio.agency_id.id
+                    ).payment_method_line_id
+                )
+                journal = payment_method_line.journal_id
                 # auto update OTAs payment on modified/cancelled reservations
                 ota_payments = folio.payment_ids.filtered(
                     lambda x: x.journal_id.id == journal.id
@@ -123,7 +126,7 @@ class ChannelWubookPmsFolioImporter(Component):
             if (
                 not folio.payment_ids.filtered(lambda p: p.state == "posted")
                 and folio.amount_total > 0
-                and journal
+                and payment_method_line
             ):
                 payment_amount = (
                     binding.payment_gateway_fee
@@ -131,8 +134,7 @@ class ChannelWubookPmsFolioImporter(Component):
                     else folio.amount_total
                 )
                 folio.do_payment(
-                    journal,
-                    journal.suspense_account_id,
+                    payment_method_line,
                     self.env.user,
                     payment_amount,
                     folio,

@@ -50,12 +50,23 @@ class ChannelWubookBackend(models.Model):
         inverse_name="backend_id",
     )
     wubook_journal_id = fields.Many2one(
-        string="Wubook Journal",
+        string="Wubook Payment Journal",
         comodel_name="account.journal",
-        required=True,
-        domain="[('type', '=', 'bank')]",
+        domain="[('type', 'in', ('bank', 'cash'))]",
         check_pms_properties=True,
     )
+    wubook_payment_method_line_id = fields.Many2one(
+        string="Wubook Payment Method",
+        comodel_name="account.payment.method.line",
+        required=True,
+        domain="[('journal_id', '=', wubook_journal_id)]",
+        check_pms_properties=True,
+    )
+
+    @api.onchange("wubook_journal_id")
+    def _onchange_wubook_journal_id(self):
+        if self.wubook_payment_method_line_id.journal_id != self.wubook_journal_id:
+            self.wubook_payment_method_line_id = False
 
     # push
     def generate_security_key(self):
