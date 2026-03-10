@@ -36,22 +36,30 @@ class PmsAccountJournalService(Component):
         )
         PmsAccountJournalInfo = self.env.datamodels["pms.account.journal.info"]
         result_account_journals = []
-        if not pms_property:
-            pass
-        else:
-            for payment_method in pms_property._get_payment_methods(
+        if pms_property:
+            method_lines = pms_property._get_payment_methods(
                 automatic_included=True,
                 room_ids=account_journal_search_param.roomIds or False,
-            ):
+            )
+            # Group by journal to avoid duplicates
+            seen_journals = {}
+            for method_line in method_lines:
+                journal = method_line.journal_id
                 # REVIEW: avoid send to app generic company journals
-                if not payment_method.pms_property_ids:
+                if not journal.pms_property_ids:
                     continue
+                if journal.id in seen_journals:
+                    seen_journals[journal.id] |= method_line.allowed_on_pms
+                else:
+                    seen_journals[journal.id] = method_line.allowed_on_pms
+            for journal_id, allowed in seen_journals.items():
+                journal = self.env["account.journal"].browse(journal_id)
                 result_account_journals.append(
                     PmsAccountJournalInfo(
-                        id=payment_method.id,
-                        name=payment_method.name,
-                        type=payment_method.type,
-                        allowedPayments=payment_method.allowed_pms_payments,
+                        id=journal.id,
+                        name=journal.name,
+                        type=journal.type,
+                        allowedPayments=allowed,
                     )
                 )
 

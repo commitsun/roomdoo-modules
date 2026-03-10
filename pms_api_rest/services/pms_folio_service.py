@@ -37,6 +37,11 @@ class PmsFolioService(Component):
     _usage = "folios"
     _collection = "pms.services"
 
+    def _get_pms_payment_method_line(self, journal):
+        """Return the preferred inbound payment method line for PMS payments."""
+        lines = journal.inbound_payment_method_line_ids
+        return lines.filtered("allowed_on_pms")[:1] or lines[:1]
+
     @restapi.method(
         [
             (
@@ -632,9 +637,9 @@ class PmsFolioService(Component):
                     journal_id=journal.id,
                     force=False,
                 )
+        payment_method_line = self._get_pms_payment_method_line(journal)
         self.env["pms.folio"].sudo().do_payment(
-            journal,
-            journal.suspense_account_id,
+            payment_method_line,
             self.env.user,
             pms_account_payment_info.amount,
             folio,
@@ -1239,9 +1244,9 @@ class PmsFolioService(Component):
                     proposed_transaction.action_post()
                 else:
                     if transaction.transactionType == "inbound":
+                        payment_method_line = self._get_pms_payment_method_line(journal)
                         folio.sudo().do_payment(
-                            journal,
-                            journal.suspense_account_id,
+                            payment_method_line,
                             self.env.user,
                             transaction.amount,
                             folio,

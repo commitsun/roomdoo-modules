@@ -34,9 +34,20 @@ class WubookBackendJournalOTA(models.Model):
     journal_id = fields.Many2one(
         string="Payment Journal",
         comodel_name="account.journal",
-        domain="[('type', '=', 'bank')]",
+        domain="[('type', 'in', ('bank', 'cash'))]",
         check_pms_properties=True,
     )
+    payment_method_line_id = fields.Many2one(
+        string="Payment Method",
+        comodel_name="account.payment.method.line",
+        domain="[('journal_id', '=', journal_id)]",
+        check_pms_properties=True,
+    )
+
+    @api.onchange("journal_id")
+    def _onchange_journal_id(self):
+        if self.payment_method_line_id.journal_id != self.journal_id:
+            self.payment_method_line_id = False
 
     allowed_agency_ids = fields.Many2many(
         string="Allowed Agencies",
