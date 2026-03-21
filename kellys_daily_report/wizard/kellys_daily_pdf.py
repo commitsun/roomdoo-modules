@@ -166,7 +166,9 @@ class KellysWizard(models.TransientModel):
                             "habitacionid": room.id,
                             "tipo": tipos,
                             "notas": " / ".join(
-                                str(p) for p in reservations.mapped("partner_name") if p
+                                f"(🧑 {r.adults}{f' / 👶 {r.children}' if r.children else ''}) {r.partner_name}"
+                                for r in reservations
+                                if r.partner_name
                             ),
                             "checkin": checkinhour,
                             # 'checkin': rooms[0].checkin[:10],
@@ -226,7 +228,7 @@ class KellysWizard(models.TransientModel):
 
         worksheet.set_column("A:A", 10)
         worksheet.set_column("B:B", 10)
-        worksheet.set_column("C:C", 20)
+        worksheet.set_column("C:C", 40)
         worksheet.set_column("D:D", 15)
         worksheet.set_column("E:E", 15)
         worksheet.set_column("F:F", 10)
