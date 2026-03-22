@@ -2525,41 +2525,56 @@ class PmsFolioService(Component):
                 # The service price is included in day price when it is a board service (external api)
                 board_day_price = 0
                 if external_app:
-                    board = (
-                        self.env["pms.board.service.room.type"]
-                        .sudo()
-                        .browse(
-                            self.get_board_service_room_type_id(
-                                room_type_id=info_reservation.roomTypeId,
-                                pms_property_id=folio.pms_property_id.id,
-                                board_service_id=info_reservation.boardServiceId,
-                                pricelist_id=info_reservation.pricelistId,
-                            )
+                    # if proposed reservation and not board_service_room_id in vals,
+                    # get board_day_price from board services of proposed reservation
+                    if proposed_reservation and not vals.get("board_service_room_id"):
+                        board_day_price = sum(
+                            proposed_reservation.service_ids.filtered(
+                                lambda s: s.is_board_service
+                            ).mapped("price_total")
+                        ) / (
+                            (
+                                proposed_reservation.checkout
+                                - proposed_reservation.checkin
+                            ).days
+                            or 1
                         )
-                    )
-                    pms_api_check_access(user=self.env.user, records=board)
-                    if info_reservation.adults:
-                        board_day_price += (
-                            sum(
-                                board.board_service_line_ids.with_context(
-                                    property=folio.pms_property_id.id
+                    else:
+                        board = (
+                            self.env["pms.board.service.room.type"]
+                            .sudo()
+                            .browse(
+                                self.get_board_service_room_type_id(
+                                    room_type_id=info_reservation.roomTypeId,
+                                    pms_property_id=folio.pms_property_id.id,
+                                    board_service_id=info_reservation.boardServiceId,
+                                    pricelist_id=info_reservation.pricelistId,
                                 )
-                                .filtered(lambda l: l.adults)
-                                .mapped("amount")
                             )
-                            * info_reservation.adults
                         )
-                    if info_reservation.children:
-                        board_day_price += (
-                            sum(
-                                board.board_service_line_ids.with_context(
-                                    property=folio.pms_property_id.id
+                        pms_api_check_access(user=self.env.user, records=board)
+                        if info_reservation.adults:
+                            board_day_price += (
+                                sum(
+                                    board.board_service_line_ids.with_context(
+                                        property=folio.pms_property_id.id
+                                    )
+                                    .filtered(lambda l: l.adults)
+                                    .mapped("amount")
                                 )
-                                .filtered(lambda l: l.children)
-                                .mapped("amount")
+                                * info_reservation.adults
                             )
-                            * info_reservation.children
-                        )
+                        if info_reservation.children:
+                            board_day_price += (
+                                sum(
+                                    board.board_service_line_ids.with_context(
+                                        property=folio.pms_property_id.id
+                                    )
+                                    .filtered(lambda l: l.children)
+                                    .mapped("amount")
+                                )
+                                * info_reservation.children
+                            )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
                     board_day_price=board_day_price,
