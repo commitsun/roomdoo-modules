@@ -81,6 +81,8 @@ class KellysWizard(models.TransientModel):
                     ("checkin", "<=", fechalimpieza),
                     ("checkout", ">=", fechalimpieza),
                     ("state", "!=", "cancel"),
+                    ("is_reselling", "=", False),
+                    ("overbooking", "=", False),
                 ],
                 order="checkin ASC",
             )
@@ -166,7 +168,11 @@ class KellysWizard(models.TransientModel):
                             "habitacionid": room.id,
                             "tipo": tipos,
                             "notas": " / ".join(
-                                f"(🧑 {r.adults}{f' / 👶 {r.children}' if r.children else ''}) {r.partner_name}"
+                                (
+                                    f"(🧑 {r.adults}"
+                                    f"{f' / 👶 {r.children}' if r.children else ''}) "
+                                    f"{r.partner_name}"
+                                )
                                 for r in reservations
                                 if r.partner_name
                             ),
