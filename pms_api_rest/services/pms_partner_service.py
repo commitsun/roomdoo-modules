@@ -2,7 +2,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from odoo import _
-from odoo.exceptions import MissingError, ValidationError
+from odoo.exceptions import MissingError, UserError, ValidationError
 from odoo.osv import expression
 
 from odoo.addons.base_rest import restapi
@@ -403,8 +403,21 @@ class PmsPartnerService(Component):
         auth="jwt_api_pms",
     )
     def write_partner(self, partner_id, partner_info):
-        partner = self.env["res.partner"].sudo().browse(partner_id)
+        partner = self.env["res.partner"].sudo().browse(partner_id).exists()
         pms_api_check_access(user=self.env.user, records=partner)
+
+        anonymous_partner = self.env.ref(
+            "pms.various_pms_partner", raise_if_not_found=False
+        )
+        if anonymous_partner and partner == anonymous_partner:
+            raise UserError(
+                _(
+                    "Cannot modify the anonymous customer. "
+                    "Edit the contact on the invoice to select "
+                    "or create a different one."
+                )
+            )
+
         if partner:
             partner.write(self.mapping_partner_values(partner_info))
 
