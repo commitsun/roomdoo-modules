@@ -18,6 +18,19 @@ from .pms_sale_channel import SaleChannelDetail
 from .pms_service import ServiceId
 
 
+class FolioOrderField(str, Enum):
+    CREATION_DATE = "creationDate"
+    CHECKIN = "checkin"
+    STATE = "state"
+
+
+FOLIO_ORDER_MAPPING = {
+    "creationDate": "create_date",
+    "checkin": "first_checkin",
+    "state": "state",
+}
+
+
 class reservationStateEnum(str, Enum):
     DRAFT = "draft"
     ARRIVAL = "arrival"
@@ -35,13 +48,24 @@ class folioPaymentStateEnum(str, Enum):
     OVERPAID = "overpaid"
 
 
+class preCheckinStateEnum(str, Enum):
+    PENDING = "pending"
+    PARTIAL = "partial"
+    COMPLETE = "complete"
+
+
+class invoiceStateEnum(str, Enum):
+    TO_INVOICE = "toInvoice"
+    INVOICED = "invoiced"
+
+
 class reservationSummary(PmsBaseModel):
     id: int
     name: str
     splitted: bool = Field(False, alias="isSplitted")
     partner_internal_comment: str = Field("", alias="notes")
-    checkin: date = Field(alias="checkinDate")
-    checkout: date = Field(alias="checkoutDate")
+    checkin_datetime: datetime | None = Field(None, alias="checkinDate")
+    checkout_datetime: datetime | None = Field(None, alias="checkoutDate")
     adults: int = Field(0)
     children: int = Field(0)
     nights: int = Field(0)
@@ -53,6 +77,8 @@ class reservationSummary(PmsBaseModel):
     state: reservationStateEnum
     price_room_services_set: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
+    incompleteCheckinsCount: int = Field(0)
+    completeCheckinsCount: int = Field(0)
 
     @classmethod
     def from_pms_reservation(cls, reservation):
@@ -89,6 +115,16 @@ class reservationSummary(PmsBaseModel):
             filtered_data["state"] = reservationStateEnum.IN_HOUSE
         elif reservation.state == "done":
             filtered_data["state"] = reservationStateEnum.COMPLETED
+
+        checkin_partners = reservation.checkin_partner_ids
+        filtered_data["incompleteCheckinsCount"] = len(
+            checkin_partners.filtered(lambda c: c.state in ("dummy", "draft"))
+        )
+        filtered_data["completeCheckinsCount"] = len(
+            checkin_partners.filtered(
+                lambda c: c.state in ("precheckin", "onboard", "done")
+            )
+        )
         return cls(**filtered_data)
 
 
@@ -103,6 +139,11 @@ class FolioSummary(PmsBaseModel):
     create_date: date = Field(alias="creationDate")
     reservations: list[reservationSummary]
     paymentState: folioPaymentStateEnum
+    inHouseGuestsCount: int = Field(0)
+    pendingGuestsCount: int = Field(0)
+    doneGuestsCount: int = Field(0)
+    invoiceState: invoiceStateEnum
+    payers: list[ContactIdImage] = Field(default_factory=list)
 
     @field_validator("create_date", mode="before")
     @classmethod
@@ -139,6 +180,37 @@ class FolioSummary(PmsBaseModel):
             filtered_data["paymentState"] = folioPaymentStateEnum.PARTIALLY_PAID
         elif folio.payment_state == "overpayment":
             filtered_data["paymentState"] = folioPaymentStateEnum.OVERPAID
+
+        # Guest counts from checkin_partner_ids across all reservations
+        all_checkin_partners = folio.reservation_ids.filtered(
+            lambda r: r.cancelled_reason != "modified"
+        ).mapped("checkin_partner_ids")
+        filtered_data["pendingGuestsCount"] = len(
+            all_checkin_partners.filtered(
+                lambda c: c.state in ("dummy", "draft", "precheckin")
+            )
+        )
+        filtered_data["inHouseGuestsCount"] = len(
+            all_checkin_partners.filtered(lambda c: c.state == "onboard")
+        )
+        filtered_data["doneGuestsCount"] = len(
+            all_checkin_partners.filtered(lambda c: c.state == "done")
+        )
+
+        # Invoice state
+        if folio.invoice_status in ("to_invoice", "to_confirm"):
+            filtered_data["invoiceState"] = invoiceStateEnum.TO_INVOICE
+        else:
+            filtered_data["invoiceState"] = invoiceStateEnum.INVOICED
+
+        # Payers from sale_line_ids default_invoice_to
+        payer_partners = folio.sale_line_ids.mapped("default_invoice_to").filtered(
+            lambda p: p.id
+        )
+        filtered_data["payers"] = [
+            ContactIdImage.from_res_partner(partner) for partner in payer_partners
+        ]
+
         return cls(**filtered_data)
 
 
@@ -261,6 +333,54 @@ class FolioSearch(BaseSearch):
                 "this value.",
             ),
         ] = None,
+        checkinFrom: Annotated[
+            date | None,
+            Query(
+                description="Checkin period range start. "
+                "Only works if checkinTo is also set.",
+            ),
+        ] = None,
+        checkinTo: Annotated[
+            date | None,
+            Query(
+                description="Checkin period range end. "
+                "Only works if checkinFrom is also set.",
+            ),
+        ] = None,
+        checkoutFrom: Annotated[
+            date | None,
+            Query(
+                description="Checkout period range start. "
+                "Only works if checkoutTo is also set.",
+            ),
+        ] = None,
+        checkoutTo: Annotated[
+            date | None,
+            Query(
+                description="Checkout period range end. "
+                "Only works if checkoutFrom is also set.",
+            ),
+        ] = None,
+        preCheckinState: Annotated[
+            preCheckinStateEnum | None,
+            Query(
+                description="Filter folios with at least one guest "
+                "in this pre-checkin state.",
+            ),
+        ] = None,
+        services: Annotated[
+            list[int] | None,
+            Query(
+                description="Filter by service IDs. "
+                "Repeated query param, e.g. ?services=1&services=5",
+            ),
+        ] = None,
+        invoiceState: Annotated[
+            invoiceStateEnum | None,
+            Query(
+                description="Filter by invoice state.",
+            ),
+        ] = None,
     ):
         if not isinstance(pmsPropertyId, QueryType):
             self.pmsProperty = pmsPropertyId
@@ -283,6 +403,13 @@ class FolioSearch(BaseSearch):
         self.totalAmountGt = totalAmountGt
         self.totalAmountLt = totalAmountLt
         self.totalAmountEq = totalAmountEq
+        self.checkinFrom = checkinFrom
+        self.checkinTo = checkinTo
+        self.checkoutFrom = checkoutFrom
+        self.checkoutTo = checkoutTo
+        self.preCheckinState = preCheckinState
+        self.services = services
+        self.invoiceState = invoiceState
 
     def to_odoo_domain(self, env: api.Environment) -> list:
         domain = []
@@ -323,6 +450,9 @@ class FolioSearch(BaseSearch):
 
         if self.paymentState:
             domain.extend(self._get_payment_state_domain())
+
+        if self.invoiceState:
+            domain.extend(self._get_invoice_state_domain())
 
         reservation_folio_ids = self._get_reservation_folio_ids(env)
         if reservation_folio_ids is not None:
@@ -375,12 +505,30 @@ class FolioSearch(BaseSearch):
                     ("reservation_line_ids.date", "<=", self.stayPeriodEnd),
                 ]
             )
+        if self.checkinFrom and self.checkinTo:
+            domain.extend(
+                [
+                    ("checkin", ">=", self.checkinFrom),
+                    ("checkin", "<=", self.checkinTo),
+                ]
+            )
+        if self.checkoutFrom and self.checkoutTo:
+            domain.extend(
+                [
+                    ("checkout", ">=", self.checkoutFrom),
+                    ("checkout", "<=", self.checkoutTo),
+                ]
+            )
         if self.totalAmountGt is not None:
             domain.append(("price_room_services_set", ">", self.totalAmountGt))
         if self.totalAmountLt is not None:
             domain.append(("price_room_services_set", "<", self.totalAmountLt))
         if self.totalAmountEq is not None:
             domain.append(("price_room_services_set", "=", self.totalAmountEq))
+        if self.preCheckinState:
+            domain.extend(self._get_precheckin_state_domain())
+        if self.services:
+            domain.append(("service_ids", "in", self.services))
         if domain:
             domain.append(("cancelled_reason", "!=", "modified"))
         return domain
@@ -416,6 +564,25 @@ class FolioSearch(BaseSearch):
             folioPaymentStateEnum.OVERPAID: [("payment_state", "=", "overpayment")],
         }
         return state_mapping.get(self.paymentState, [])
+
+    def _get_invoice_state_domain(self) -> list:
+        state_mapping = {
+            invoiceStateEnum.TO_INVOICE: [
+                ("invoice_status", "in", ["to_invoice", "to_confirm"])
+            ],
+            invoiceStateEnum.INVOICED: [("invoice_status", "in", ["invoiced", "no"])],
+        }
+        return state_mapping.get(self.invoiceState, [])
+
+    def _get_precheckin_state_domain(self) -> list:
+        state_mapping = {
+            preCheckinStateEnum.PENDING: [("checkin_partner_ids.state", "=", "dummy")],
+            preCheckinStateEnum.PARTIAL: [("checkin_partner_ids.state", "=", "draft")],
+            preCheckinStateEnum.COMPLETE: [
+                ("checkin_partner_ids.state", "in", ["precheckin", "onboard", "done"])
+            ],
+        }
+        return state_mapping.get(self.preCheckinState, [])
 
     def to_odoo_context(self, env: api.Environment) -> dict:
         if self.pmsProperty:

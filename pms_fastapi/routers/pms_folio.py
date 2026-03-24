@@ -11,13 +11,22 @@ from odoo.addons.fastapi.dependencies import (
 )
 from odoo.addons.fastapi.schemas import Paging
 from odoo.addons.pms.models.pms_folio import PmsFolio
-from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
+from odoo.addons.pms_fastapi.dependencies import (
+    AuthenticatedEnv,
+    create_order_dependency,
+)
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
+    FOLIO_ORDER_MAPPING,
+    FolioOrderField,
     FolioSearch,
     FolioSummary,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+
+folio_order = create_order_dependency(
+    FolioOrderField, FOLIO_ORDER_MAPPING, ["-creationDate"]
+)
 
 
 @pms_api_router.get(
@@ -29,10 +38,13 @@ async def list_folios(
     env: AuthenticatedEnv,
     filters: Annotated[FolioSearch, Depends()],
     paging: Annotated[Paging, Depends(paging)],
+    order: Annotated[str, Depends(folio_order)],
 ) -> PagedCollection[FolioSummary]:
     """Get the list of the folios"""
     count, folios = (
-        env["pms_api_folio.folio_router.helper"].new()._search(paging, filters)
+        env["pms_api_folio.folio_router.helper"]
+        .new()
+        ._search(paging, filters, order=order)
     )
 
     return PagedCollection[FolioSummary](
@@ -68,13 +80,13 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def get(self, record_id) -> PmsFolio:
         return self.model_adapter.get(record_id)
 
-    def _search(self, paging, params) -> tuple[int, PmsFolio]:
+    def _search(self, paging, params, order=None) -> tuple[int, PmsFolio]:
         return self.model_adapter.search_with_count(
             params.to_odoo_domain(self.env),
             limit=paging.limit,
             offset=paging.offset,
             context=params.to_odoo_context(self.env),
-            order="create_date desc",
+            order=order or "create_date desc",
         )
 
     def count(self, params=None) -> int:
