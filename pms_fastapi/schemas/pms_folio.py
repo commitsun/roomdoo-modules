@@ -16,6 +16,7 @@ from .currency import CurrencySummary
 from .pms_room import RoomId
 from .pms_sale_channel import SaleChannelDetail
 from .pms_service import ServiceId
+from .reservation_guest import CheckinStateEnum
 
 
 class FolioOrderField(str, Enum):
@@ -48,10 +49,8 @@ class folioPaymentStateEnum(str, Enum):
     OVERPAID = "overpaid"
 
 
-class preCheckinStateEnum(str, Enum):
-    PENDING = "pending"
-    PARTIAL = "partial"
-    COMPLETE = "complete"
+# Reused from reservation_guest module
+preCheckinStateEnum = CheckinStateEnum
 
 
 class invoiceStateEnum(str, Enum):
@@ -576,9 +575,9 @@ class FolioSearch(BaseSearch):
 
     def _get_precheckin_state_domain(self) -> list:
         state_mapping = {
-            preCheckinStateEnum.PENDING: [("checkin_partner_ids.state", "=", "dummy")],
-            preCheckinStateEnum.PARTIAL: [("checkin_partner_ids.state", "=", "draft")],
-            preCheckinStateEnum.COMPLETE: [
+            CheckinStateEnum.pending: [("checkin_partner_ids.state", "=", "dummy")],
+            CheckinStateEnum.partial: [("checkin_partner_ids.state", "=", "draft")],
+            CheckinStateEnum.complete: [
                 ("checkin_partner_ids.state", "in", ["precheckin", "onboard", "done"])
             ],
         }

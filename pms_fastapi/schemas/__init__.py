@@ -24,3 +24,4 @@ from . import pms_room
 from . import invoice
 from . import payment_method
 from . import journal
+from . import reservation_guest
