@@ -80,13 +80,13 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def get(self, record_id) -> PmsFolio:
         return self.model_adapter.get(record_id)
 
-    def _search(self, paging, params, order=None) -> tuple[int, PmsFolio]:
+    def _search(self, paging, params, order) -> tuple[int, PmsFolio]:
         return self.model_adapter.search_with_count(
             params.to_odoo_domain(self.env),
             limit=paging.limit,
             offset=paging.offset,
             context=params.to_odoo_context(self.env),
-            order=order or "create_date desc",
+            order=order,
         )
 
     def count(self, params=None) -> int:
