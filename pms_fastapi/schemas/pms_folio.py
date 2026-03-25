@@ -22,13 +22,15 @@ from .reservation_guest import CheckinStateEnum
 class FolioOrderField(str, Enum):
     CREATION_DATE = "creationDate"
     CHECKIN = "checkin"
+    CHECKOUT = "checkout"
     STATE = "state"
 
 
 FOLIO_ORDER_MAPPING = {
     "creationDate": "create_date",
     "checkin": "first_checkin",
-    "state": "state",
+    "checkout": "last_checkout",
+    "state": "fastapi_sort_state",
 }
 
 

@@ -25,7 +25,7 @@ from odoo.addons.pms_fastapi.schemas.pms_folio import (
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
 folio_order = create_order_dependency(
-    FolioOrderField, FOLIO_ORDER_MAPPING, ["-creationDate"]
+    FolioOrderField, FOLIO_ORDER_MAPPING, ["creationDate"]
 )
 
 
