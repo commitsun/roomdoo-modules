@@ -63,8 +63,24 @@ ODOO_PAYMENT_STATE_MAP = {
 }
 
 
+class InvoicePaymentTypeEnum(str, Enum):
+    payment = "payment"
+    invoice = "invoice"
+    entry = "entry"
+    refund = "refund"
+
+
+MOVE_TYPE_TO_PAYMENT_TYPE = {
+    "out_invoice": InvoicePaymentTypeEnum.invoice,
+    "in_invoice": InvoicePaymentTypeEnum.invoice,
+    "out_refund": InvoicePaymentTypeEnum.refund,
+    "in_refund": InvoicePaymentTypeEnum.refund,
+    "entry": InvoicePaymentTypeEnum.entry,
+}
+
+
 class InvoicePayment(PmsBaseModel):
-    # The field is called date in account.payment, so we can map it accordingly.
+    paymentType: InvoicePaymentTypeEnum = Field(alias="paymentType")
     paymentDate: date
     paymentMethod: PaymentMethodSummary | None = None
     journal: JournalSummary | None = None
@@ -73,25 +89,45 @@ class InvoicePayment(PmsBaseModel):
     ref: str
 
     @classmethod
-    def from_account_payment(cls, account_payment):
-        record = account_payment.read()[0]
-        model_fields = cls.model_fields.keys()
-        data = {k: v for k, v in record.items() if v and k in model_fields}
-        data["paymentDate"] = account_payment.date
-        if account_payment.currency_id:
-            data["currency_id"] = CurrencySummary.from_res_currency(
-                account_payment.currency_id
+    def from_widget_item(cls, widget_item, env):
+        """Build from an invoice_payments_widget content item.
+
+        Handles all reconciliation types: payment, refund, invoice, entry.
+        """
+        counterpart_move = env["account.move"].browse(widget_item["move_id"])
+        payment_id = widget_item.get("account_payment_id")
+
+        if payment_id:
+            payment_type = InvoicePaymentTypeEnum.payment
+        else:
+            payment_type = MOVE_TYPE_TO_PAYMENT_TYPE.get(
+                counterpart_move.move_type, InvoicePaymentTypeEnum.entry
             )
-        if account_payment.payment_method_line_id:
-            data[
-                "paymentMethod"
-            ] = PaymentMethodSummary.from_account_payment_method_line(
-                account_payment.payment_method_line_id
-            )
-        if account_payment.journal_id:
+
+        data = {
+            "paymentType": payment_type,
+            "paymentDate": widget_item["date"],
+            "amount": widget_item["amount"],
+            "ref": counterpart_move.name,
+            "currency_id": CurrencySummary.from_res_currency(
+                env["res.currency"].browse(widget_item["currency_id"])
+            ),
+        }
+
+        if counterpart_move.journal_id:
             data["journal"] = JournalSummary.from_account_journal(
-                account_payment.journal_id
+                counterpart_move.journal_id
             )
+
+        if payment_id:
+            payment = env["account.payment"].browse(payment_id)
+            if payment.payment_method_line_id:
+                data[
+                    "paymentMethod"
+                ] = PaymentMethodSummary.from_account_payment_method_line(
+                    payment.payment_method_line_id
+                )
+
         return cls(**data)
 
 
@@ -121,14 +157,9 @@ class InvoiceSummary(PmsBaseModel):
                 account_move.currency_id
             )
         if account_move.invoice_payments_widget:
-            payment_ids = [
-                x["account_payment_id"]
-                for x in account_move.invoice_payments_widget["content"]
-                if x["account_payment_id"]
-            ]
-            payments = account_move.env["account.payment"].browse(payment_ids)
             data["payments"] = [
-                InvoicePayment.from_account_payment(x) for x in payments
+                InvoicePayment.from_widget_item(item, account_move.env)
+                for item in account_move.invoice_payments_widget["content"]
             ]
         if account_move.has_overdue_payments:
             data["paymentState"] = InvoicePaymentStateEnum.overdue
