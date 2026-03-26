@@ -9,12 +9,11 @@ msgstr ""
 "POT-Creation-Date: 2026-03-25 19:32+0000\n"
 "PO-Revision-Date: 2026-03-25 19:32+0000\n"
 "Last-Translator: \n"
-"Language-Team: Spanish\n"
-"Language: es\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -27,108 +26,103 @@ msgid ""
 "                     compañía\n"
 "                    "
 msgstr ""
-"\n"
-"                    Alguno de los hoteles seleccionados no es de esta compañía,\n"
-"                    elimina o modifica los hoteles para seleccionar esta\n"
-"                     compañía\n"
-"                    "
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Amount Due"
-msgstr "Pendiente de cobro"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Base Imponible"
-msgstr "Base imponible"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "COLLECTIONS"
-msgstr "COBROS"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "COLLECTIONS BY PAYMENT METHOD"
-msgstr "COBROS POR MÉTODO DE PAGO"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "CONTROL"
-msgstr "CONTROL"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Cancelled invoices"
-msgstr "Facturas canceladas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Cannot export invoices from multiple companies in a single file."
-msgstr "No se pueden exportar facturas de varias empresas en un solo archivo."
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "City"
-msgstr "Ciudad"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Cliente/Prov."
-msgstr "Cliente/Prov."
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 msgid "Close"
-msgstr "Cerrar"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__company_id
 msgid "Company"
-msgstr "Compañía"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Country"
-msgstr "País"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__create_uid
 msgid "Created by"
-msgstr "Creado por"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__create_date
 msgid "Created on"
-msgstr "Creado en"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Credit notes"
-msgstr "Facturas rectificativas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -136,7 +130,7 @@ msgstr "Facturas rectificativas"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Currency"
-msgstr "Moneda"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -144,139 +138,139 @@ msgstr "Moneda"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Customer"
-msgstr "Cliente"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Diario"
-msgstr "Diario"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Difference (should be 0)"
-msgstr "Diferencia (debería ser 0)"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__display_name
 msgid "Display Name"
-msgstr "Nombre mostrado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Due Date"
-msgstr "Fecha vencimiento"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__date_end
 msgid "End Date"
-msgstr "Fecha fin"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Estado"
-msgstr "Estado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__export_journals
 msgid "Export Account Movements?"
-msgstr "¿Exportar movimientos contables?"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.actions.act_window,name:roomdoo_invoices_exporter.action_open_roomdoo_exporter_invoices
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 msgid "Export Invoices"
-msgstr "Exportar facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__export_invoices
 msgid "Export Invoices?"
-msgstr "¿Exportar facturas?"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Fecha"
-msgstr "Fecha"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Fecha de Factura"
-msgstr "Fecha de factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Fiscal Address"
-msgstr "Dirección fiscal"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Gateway"
-msgstr "Pasarela"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 msgid "Generar XLS"
-msgstr "Generar XLS"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__id
 msgid "ID"
-msgstr "ID"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "INVOICING"
-msgstr "FACTURACIÓN"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Importe"
-msgstr "Importe"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Impuestos"
-msgstr "Impuestos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "In Payment"
-msgstr "En proceso de pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Internal Reference"
-msgstr "Referencia interna"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model,name:roomdoo_invoices_exporter.model_report_roomdoo_invoices_exporter_invoice_payment_report
 msgid "Invoice & Payment XLSX Report"
-msgstr "Informe XLSX de facturas y pagos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -284,7 +278,7 @@ msgstr "Informe XLSX de facturas y pagos"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Invoice Date"
-msgstr "Fecha factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -292,105 +286,105 @@ msgstr "Fecha factura"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Invoice Number"
-msgstr "Nº factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Invoice State"
-msgstr "Estado factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Invoice Total"
-msgstr "Total factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Invoices"
-msgstr "Facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.actions.report,name:roomdoo_invoices_exporter.action_report_invoice_payment_xlsx
 msgid "Invoices & Payments (Excel)"
-msgstr "Facturas y pagos (Excel)"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.ui.menu,name:roomdoo_invoices_exporter.roomdoo_exporter
 msgid "Invoices Exporter"
-msgstr "Exportar facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Invoices export"
-msgstr "Exportar facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Journal"
-msgstr "Diario"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__journal_ids
 msgid "Journals"
-msgstr "Diarios"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,help:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__journal_ids
 msgid "Journals to include in the report"
-msgstr "Diarios a incluir en el informe"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter____last_update
 msgid "Last Modified on"
-msgstr "Última modificación en"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__write_uid
 msgid "Last Updated by"
-msgstr "Última actualización por"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__write_date
 msgid "Last Updated on"
-msgstr "Última actualización en"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Manual"
-msgstr "Manual"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "NIF"
-msgstr "NIF"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "No invoices selected for export."
-msgstr "No se han seleccionado facturas para exportar."
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Not Paid"
-msgstr "No pagada"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -398,49 +392,49 @@ msgstr "No pagada"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Notes"
-msgstr "Observaciones"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Num Factura"
-msgstr "Nº Factura"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Origen"
-msgstr "Origen"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Origin"
-msgstr "Origen"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Other"
-msgstr "Otros"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Overdue"
-msgstr "Atrasada"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Overdue Amount"
-msgstr "Importe atrasado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -448,47 +442,47 @@ msgstr "Importe atrasado"
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 #, python-format
 msgid "Pagos"
-msgstr "Pagos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 msgid "Pagos de facturas"
-msgstr "Pagos de facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Paid"
-msgstr "Pagada"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Partial"
-msgstr "Parcial"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Amount"
-msgstr "Importe pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Date"
-msgstr "Fecha pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Journal"
-msgstr "Diario de pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -496,111 +490,111 @@ msgstr "Diario de pago"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Method"
-msgstr "Método de pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Reference"
-msgstr "Referencia pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payment Status"
-msgstr "Estado de pago"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Payments"
-msgstr "Pagos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Pendiente"
-msgstr "Pendiente"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__property_ids
 msgid "Properties"
-msgstr "Establecimientos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Referencia"
-msgstr "Referencia"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Reversed"
-msgstr "Revertida"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__seat_num
 msgid "Seat Number Start"
-msgstr "Número de asiento inicial"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__date_start
 msgid "Start Date"
-msgstr "Fecha inicio"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Summary"
-msgstr "Resumen"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Taxes"
-msgstr "Impuestos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,help:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__company_id
 msgid "The company"
-msgstr "La compañía"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Tipo"
-msgstr "Tipo"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/wizard/invoices_export_wizard.py:0
 #, python-format
 msgid "Total"
-msgstr "Total"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total Collected"
-msgstr "Total cobrado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total Paid"
-msgstr "Total cobrado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -608,7 +602,7 @@ msgstr "Total cobrado"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total collected"
-msgstr "Total cobrado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -616,21 +610,21 @@ msgstr "Total cobrado"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total invoiced"
-msgstr "Total facturado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total invoices"
-msgstr "Total facturas"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total overdue"
-msgstr "Total importe atrasado"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
@@ -638,66 +632,66 @@ msgstr "Total importe atrasado"
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total pending"
-msgstr "Total pendiente de cobro"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total taxes"
-msgstr "Total impuestos"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Total untaxed amount"
-msgstr "Total base imponible"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Untaxed Amount"
-msgstr "Base imponible"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "User"
-msgstr "Usuario"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "VAT"
-msgstr "NIF / CIF"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__xls_journals_binary
 msgid "Xls Journals Binary"
-msgstr "Binario XLS diarios"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model.fields,field_description:roomdoo_invoices_exporter.field_roomdoo_invoices_exporter__xls_journals_filename
 msgid "Xls Journals Filename"
-msgstr "Nombre fichero XLS diarios"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #. odoo-python
 #: code:addons/roomdoo_invoices_exporter/report/invoice_payment_xlsx.py:0
 #, python-format
 msgid "Zip Code"
-msgstr "Código postal"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model_terms:ir.ui.view,arch_db:roomdoo_invoices_exporter.view_roomdoo_invoices_exporter
 msgid "or"
-msgstr "o"
+msgstr ""
 
 #. module: roomdoo_invoices_exporter
 #: model:ir.model,name:roomdoo_invoices_exporter.model_roomdoo_invoices_exporter
 msgid "roomdoo.invoices.exporter"
-msgstr "roomdoo.invoices.exporter"
+msgstr ""
