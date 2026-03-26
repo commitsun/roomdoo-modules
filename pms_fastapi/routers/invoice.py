@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
+from fastapi.responses import JSONResponse, Response
 
 from odoo import api, models
 from odoo.osv import expression
@@ -21,8 +22,11 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
     InvoiceOrderField,
     InvoiceSearch,
     InvoiceSummary,
+    ReportFormatEnum,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+
+INVOICE_REPORT_MAX_RECORDS = 5000
 
 InvoiceOrderDependency = create_order_dependency(
     InvoiceOrderField, INVOICE_ORDER_MAPPING, ["-invoice_date,-name"]
@@ -59,6 +63,42 @@ async def invoice_extra_features(
     env: AuthenticatedEnv,
 ) -> list[str]:
     return env["pms_api_invoice.invoice_router.helper"].extra_features()
+
+
+@pms_api_router.post(
+    "/invoices/report",
+    tags=["invoice"],
+    responses={
+        200: {
+            "content": {
+                "application/pdf": {},
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
+            }
+        },
+    },
+    response_class=Response,
+)
+async def invoices_report(
+    env: AuthenticatedEnv,
+    report_format: Annotated[
+        ReportFormatEnum,
+        Query(alias="format", description="Output file format."),
+    ],
+    filters: Annotated[InvoiceSearch, Depends()],
+    ids: Annotated[
+        list[int] | None,
+        Query(
+            description="Invoice IDs to include in the report. "
+            "Mutually exclusive with filter parameters.",
+        ),
+    ] = None,
+) -> Response:
+    """Generate and download an invoice report in PDF or Excel format."""
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._generate_report(report_format, filters, ids)
+    )
 
 
 class PmsApiInvoiceRouterHelper(models.AbstractModel):
@@ -100,3 +140,85 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     @api.model
     def extra_features(self):
         return []
+
+    # -- Invoice report helpers --
+
+    @staticmethod
+    def _has_report_filters(filters):
+        return any(v is not None for v in filters.__dict__.values())
+
+    def _generate_report(self, report_format, filters, ids):
+        if ids and self._has_report_filters(filters):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "type": "/errors/mutually-exclusive-params",
+                    "title": "Mutually exclusive parameters",
+                    "status": 400,
+                    "detail": (
+                        "Cannot specify both 'ids' and filter parameters. "
+                        "Use one or the other."
+                    ),
+                },
+                media_type="application/problem+json",
+            )
+        if ids:
+            domain = [("id", "in", ids)]
+            count = self.model_adapter.count(domain)
+        else:
+            domain = filters.to_odoo_domain(self.env)
+            context = filters.to_odoo_context(self.env)
+            count = self.model_adapter.count(domain, context=context)
+        if count > INVOICE_REPORT_MAX_RECORDS:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "type": "/errors/record-limit-exceeded",
+                    "title": "Record limit exceeded",
+                    "status": 400,
+                    "detail": (
+                        f"The export requested {count} records, "
+                        f"but the maximum allowed is {INVOICE_REPORT_MAX_RECORDS}."
+                    ),
+                    "requestedCount": count,
+                    "maxAllowed": INVOICE_REPORT_MAX_RECORDS,
+                },
+                media_type="application/problem+json",
+            )
+        if ids:
+            invoices = self.model_adapter.search(domain)
+        else:
+            invoices = self.model_adapter.search(domain, context=context)
+        if report_format == ReportFormatEnum.xlsx:
+            return self._render_invoice_xlsx(invoices)
+        return self._render_invoice_pdf(invoices)
+
+    def _get_invoice_xlsx_report_name(self):
+        return "roomdoo_invoices_exporter.invoice_payment_report"
+
+    def _render_invoice_xlsx(self, invoices):
+        report_name = self._get_invoice_xlsx_report_name()
+        content, _report_type = (
+            self.env["ir.actions.report"].sudo()._render(report_name, invoices.ids)
+        )
+        return Response(
+            content=content,
+            media_type=(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
+            headers={
+                "Content-Disposition": ('attachment; filename="invoices_report.xlsx"')
+            },
+        )
+
+    def _render_invoice_pdf(self, invoices):
+        return JSONResponse(
+            status_code=501,
+            content={
+                "type": "/errors/not-implemented",
+                "title": "Not implemented",
+                "status": 501,
+                "detail": "PDF report generation is not yet implemented.",
+            },
+            media_type="application/problem+json",
+        )

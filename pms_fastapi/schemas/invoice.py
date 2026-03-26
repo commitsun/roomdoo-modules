@@ -26,6 +26,11 @@ INVOICE_ORDER_MAPPING = {
 }
 
 
+class ReportFormatEnum(str, Enum):
+    pdf = "pdf"
+    xlsx = "xlsx"
+
+
 class InvoiceTypeEnum(str, Enum):
     outInvoice = "outInvoice"
     outRefund = "outRefund"

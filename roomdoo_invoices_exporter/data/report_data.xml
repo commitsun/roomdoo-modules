@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="action_report_invoice_payment_xlsx" model="ir.actions.report">
+        <field name="name">Invoices &amp; Payments (Excel)</field>
+        <field name="model">account.move</field>
+        <field name="report_type">xlsx</field>
+        <field
+      name="report_name"
+    >roomdoo_invoices_exporter.invoice_payment_report</field>
+        <field name="report_file">invoice_payment_report</field>
+        <field name="binding_model_id" ref="account.model_account_move" />
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>
