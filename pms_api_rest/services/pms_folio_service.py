@@ -2670,27 +2670,37 @@ class PmsFolioService(Component):
     def wrapper_reservation_services(self, info_services, services=False):
         cmds = []
         for info_service in info_services:
+            service_id = False
             if services:
-                service_id = services.filtered(
+                matched = services.filtered(
                     lambda s, _is=info_service: s.product_id.id == _is.productId
                 )
-                if service_id:
-                    service_id = service_id[0]
+                if matched:
+                    service_id = matched[0]
                     services -= service_id
-                else:
-                    service_id = False
 
-            cmds.append(
-                (
-                    0,
-                    False,
-                    {
-                        "product_id": info_service.productId,
-                        "product_qty": info_service.quantity,
-                        "discount": info_service.discount or 0,
-                    },
+            if service_id:
+                vals = {}
+                if service_id.product_qty != info_service.quantity:
+                    vals["product_qty"] = info_service.quantity
+                if service_id.discount != (info_service.discount or 0):
+                    vals["discount"] = info_service.discount or 0
+                if vals:
+                    cmds.append((1, service_id.id, vals))
+                else:
+                    cmds.append((4, service_id.id))
+            else:
+                cmds.append(
+                    (
+                        0,
+                        False,
+                        {
+                            "product_id": info_service.productId,
+                            "product_qty": info_service.quantity,
+                            "discount": info_service.discount or 0,
+                        },
+                    )
                 )
-            )
         return cmds
 
     def force_api_update_avail(
