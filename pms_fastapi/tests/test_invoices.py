@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from fastapi import status
 
 from odoo import Command
@@ -81,6 +83,56 @@ class TestInvoicesEndpoints(CommonTestPmsApi):
                 lambda line: line.account_type == "asset_receivable"
             )
         lines.reconcile()
+
+    def _create_draft_invoice(self, amount=100.0):
+        return self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": self.partner.id,
+                "pms_property_id": self.test_property.id,
+                "journal_id": self.journal_sale.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "name": "Test line",
+                            "quantity": 1,
+                            "price_unit": amount,
+                            "tax_ids": [Command.clear()],
+                        }
+                    )
+                ],
+            }
+        )
+
+    def test_validate_invoice(self):
+        """POST /invoices/{id}/validate validates a draft invoice."""
+        invoice = self._create_draft_invoice()
+        self.assertEqual(invoice.state, "draft")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(f"/invoices/{invoice.id}/validate")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        data = response.json()
+        self.assertEqual(data["state"], "posted")
+        self.assertEqual(data["id"], invoice.id)
+
+    def test_validate_invoice_already_posted(self):
+        """POST /invoices/{id}/validate returns 400 for an already posted invoice."""
+        invoice = self._create_invoice()
+        self.assertEqual(invoice.state, "posted")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(f"/invoices/{invoice.id}/validate")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertEqual(data["type"], "/errors/invoice-not-draft")
+
+    def test_validate_invoice_not_found(self):
+        """POST /invoices/{id}/validate returns 404 for a non-existent invoice."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post("/invoices/999999999/validate")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_invoices_get(self):
         with self._create_test_client() as test_client:
@@ -198,6 +250,79 @@ class TestInvoicesEndpoints(CommonTestPmsApi):
             self.assertEqual(pay["amount"], 120.0)
             self.assertEqual(pay["ref"], invoice.name)
             self.assertEqual(pay["paymentDate"], str(invoice.date))
+
+    def test_invoice_share_url_posted(self):
+        """GET /invoices/{id}/share returns portal URL for a posted invoice."""
+        invoice = self._create_invoice()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get(f"/invoices/{invoice.id}/share")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        data = response.json()
+        self.assertIn("url", data)
+        self.assertIn("access_token=", data["url"])
+        self.assertIn("/my/invoices/", data["url"])
+
+    def test_invoice_share_url_draft(self):
+        """GET /invoices/{id}/share returns proforma portal URL for a draft invoice."""
+        invoice = self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": self.partner.id,
+                "pms_property_id": self.test_property.id,
+                "journal_id": self.journal_sale.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "name": "Draft line",
+                            "quantity": 1,
+                            "price_unit": 50.0,
+                            "tax_ids": [Command.clear()],
+                        }
+                    )
+                ],
+            }
+        )
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get(f"/invoices/{invoice.id}/share")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        data = response.json()
+        self.assertIn("url", data)
+        self.assertIn("access_token=", data["url"])
+        self.assertIn("proforma", data["url"])
+
+    def test_invoice_share_url_not_found(self):
+        """GET /invoices/{id}/share returns 404 for a non-existent invoice."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get("/invoices/999999999/share")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_invoice_report_pdf(self):
+        """GET /invoices/{id}/report returns PDF for a posted invoice."""
+        invoice = self._create_invoice()
+        fake_pdf = b"%PDF-1.4 fake"
+        with patch(
+            "odoo.addons.base.models.ir_actions_report.IrActionsReport"
+            "._render_qweb_pdf",
+            return_value=(fake_pdf, "pdf"),
+        ):
+            with self._create_test_client() as test_client:
+                self._login(test_client)
+                response = test_client.get(f"/invoices/{invoice.id}/report")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.headers["content-type"], "application/pdf")
+        self.assertIn("attachment", response.headers["content-disposition"])
+        self.assertIn(".pdf", response.headers["content-disposition"])
+        self.assertEqual(response.content, fake_pdf)
+
+    def test_invoice_report_pdf_not_found(self):
+        """GET /invoices/{id}/report returns 404 for a non-existent invoice."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get("/invoices/999999999/report")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_invoice_mixed_reconciliation(self):
         """Invoice partially paid with a payment and partially with a refund."""
