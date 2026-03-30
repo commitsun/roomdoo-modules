@@ -4,6 +4,7 @@ from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
 from odoo import api, models
+from odoo.exceptions import MissingError, UserError
 from odoo.osv import expression
 
 from odoo.addons.account.models.account_move import AccountMove
@@ -23,6 +24,7 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
     InvoiceSearch,
     InvoiceSummary,
     ReportFormatEnum,
+    ShareUrl,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
@@ -63,6 +65,48 @@ async def invoice_extra_features(
     env: AuthenticatedEnv,
 ) -> list[str]:
     return env["pms_api_invoice.invoice_router.helper"].extra_features()
+
+
+@pms_api_router.post(
+    "/invoices/{id}/validate",
+    response_model=InvoiceSummary,
+    tags=["invoice"],
+)
+async def validate_invoice(
+    env: AuthenticatedEnv,
+    id: int,
+) -> InvoiceSummary:
+    """Validate a draft invoice."""
+    return env["pms_api_invoice.invoice_router.helper"].new()._validate_invoice(id)
+
+
+@pms_api_router.get(
+    "/invoices/{id}/share",
+    response_model=ShareUrl,
+    tags=["invoice"],
+)
+async def get_invoice_share_url(
+    env: AuthenticatedEnv,
+    id: int,
+) -> ShareUrl:
+    """Get a public share URL with token for the given invoice."""
+    return env["pms_api_invoice.invoice_router.helper"].new()._get_invoice_share_url(id)
+
+
+@pms_api_router.get(
+    "/invoices/{id}/report",
+    tags=["invoice"],
+    responses={
+        200: {"content": {"application/pdf": {}}},
+    },
+    response_class=Response,
+)
+async def get_invoice_report(
+    env: AuthenticatedEnv,
+    id: int,
+) -> Response:
+    """Download the PDF report for a specific invoice."""
+    return env["pms_api_invoice.invoice_router.helper"].new()._get_invoice_pdf(id)
 
 
 @pms_api_router.post(
@@ -192,6 +236,98 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         if report_format == ReportFormatEnum.xlsx:
             return self._render_invoice_xlsx(invoices)
         return self._render_invoice_pdf(invoices)
+
+    def _validate_invoice(self, record_id):
+        try:
+            invoice = self.get(record_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        if invoice.state != "draft":
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "type": "/errors/invoice-not-draft",
+                    "title": "Invoice not in draft state",
+                    "status": 400,
+                    "detail": (
+                        f"Invoice {invoice.name} is in state "
+                        f'"{invoice.state}" and cannot be validated.'
+                    ),
+                },
+                media_type="application/problem+json",
+            )
+        try:
+            invoice.action_post()
+        except UserError as e:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "type": "/errors/validation-error",
+                    "title": "Validation error",
+                    "status": 400,
+                    "detail": str(e),
+                },
+                media_type="application/problem+json",
+            )
+        return InvoiceSummary.from_account_move(invoice)
+
+    def _get_invoice_share_url(self, record_id):
+        try:
+            invoice = self.get(record_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        if invoice.state == "draft":
+            relative_url = invoice.get_proforma_portal_url()
+        else:
+            relative_url = invoice.get_portal_url()
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+        return ShareUrl(url=base_url + relative_url)
+
+    def _get_invoice_pdf(self, record_id):
+        try:
+            invoice = self.get(record_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        content, _report_type = (
+            self.env["ir.actions.report"]
+            .sudo()
+            ._render_qweb_pdf("account.account_invoices", [invoice.id])
+        )
+        filename = invoice._get_report_attachment_filename()
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
 
     def _get_invoice_xlsx_report_name(self):
         return "roomdoo_invoices_exporter.invoice_payment_report"

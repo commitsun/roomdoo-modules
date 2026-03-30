@@ -15,6 +15,10 @@ from .journal import JournalSummary
 from .payment_method import PaymentMethodSummary
 
 
+class ShareUrl(PmsBaseModel):
+    url: str
+
+
 class InvoiceOrderField(str, Enum):
     name = "name"
     invoice_date = "invoice_date"
