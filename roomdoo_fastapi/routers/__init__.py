@@ -8,3 +8,4 @@ from . import reports
 from . import customer
 from . import guest
 from . import supplier
+from . import pms_folio
