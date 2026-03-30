@@ -552,7 +552,8 @@ class FolioSearch(BaseSearch):
         }
         return state_mapping.get(self.reservationState, [])
 
-    def _get_payment_state_domain(self) -> list:
+    def _get_payment_state_domain(self, state=None) -> list:
+        state = state if state is not None else self.paymentState
         state_mapping = {
             folioPaymentStateEnum.OVERDUE: [
                 ("move_ids.has_overdue_payments", "=", True)
@@ -564,16 +565,17 @@ class FolioSearch(BaseSearch):
             folioPaymentStateEnum.PARTIALLY_PAID: [("payment_state", "=", "partial")],
             folioPaymentStateEnum.OVERPAID: [("payment_state", "=", "overpayment")],
         }
-        return state_mapping.get(self.paymentState, [])
+        return state_mapping.get(state, [])
 
-    def _get_invoice_state_domain(self) -> list:
+    def _get_invoice_state_domain(self, state=None) -> list:
+        state = state if state is not None else self.invoiceState
         state_mapping = {
             invoiceStateEnum.TO_INVOICE: [
                 ("invoice_status", "in", ["to_invoice", "to_confirm"])
             ],
             invoiceStateEnum.INVOICED: [("invoice_status", "in", ["invoiced", "no"])],
         }
-        return state_mapping.get(self.invoiceState, [])
+        return state_mapping.get(state, [])
 
     def _get_precheckin_state_domain(self) -> list:
         state_mapping = {
