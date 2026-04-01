@@ -131,6 +131,18 @@ class PmsPropertyNotificationRule(models.Model):
         ),
     )
 
+    event_delay_minutes = fields.Integer(
+        string="Delay (minutes)",
+        default=0,
+        help=(
+            "Grace period after the event before sending. "
+            "When > 0, the log is held until scheduled_date is reached, "
+            "then event_domain is re-evaluated against the record's current state. "
+            "If the domain no longer matches, the log is marked as skipped. "
+            "Only applies to event-based rules."
+        ),
+    )
+
     # -------------------------------------------------------------------------
     # Scheduled rules (cron + time + domain)
     # -------------------------------------------------------------------------
@@ -228,6 +240,10 @@ class PmsPropertyNotificationRule(models.Model):
         ),
     )
 
+    def _has_event_delay(self):
+        self.ensure_one()
+        return self.rule_type == "event" and (self.event_delay_minutes or 0) > 0
+
     # -------------------------------------------------------------------------
     # Onchange / constraints
     # -------------------------------------------------------------------------
@@ -263,10 +279,19 @@ class PmsPropertyNotificationRule(models.Model):
         "event_domain",
         "event_pre_domain",
         "on_write_field_ids",
+        "event_delay_minutes",
     )
     def _check_event_rule_requirements(self):
         """Event rules must have event_type and a parsable event_domain."""
         for rule in self:
+            if rule.rule_type != "event" and (rule.event_delay_minutes or 0) != 0:
+                raise ValidationError(
+                    _(
+                        "Delay (minutes) can only be set on event-based rules "
+                        "(rule '%s')."
+                    )
+                    % rule.name
+                )
             if rule.rule_type != "event":
                 continue
             if not rule.event_type:
@@ -304,6 +329,10 @@ class PmsPropertyNotificationRule(models.Model):
                         "is 'On Write' (rule '%s')."
                     )
                     % rule.name
+                )
+            if (rule.event_delay_minutes or 0) < 0:
+                raise ValidationError(
+                    _("Delay (minutes) must be >= 0 (rule '%s').") % rule.name
                 )
 
     @api.constrains(
@@ -478,7 +507,7 @@ class PmsPropertyNotificationRule(models.Model):
                 ("rule_id", "=", self.id),
                 ("origin_model", "=", rec._name),
                 ("origin_res_id", "=", rec.id),
-                ("state", "!=", "cancelled"),
+                ("state", "not in", ("cancelled", "skipped")),
             ]
         )
         return count < self.max_sends_per_record
@@ -707,7 +736,7 @@ class PmsPropertyNotificationRule(models.Model):
             ("rule_id", "=", self.id),
             ("origin_model", "=", records._name),
             ("origin_res_id", "in", records.ids),
-            ("state", "!=", "cancelled"),
+            ("state", "not in", ("cancelled", "skipped")),
         ]
 
         grouped = Log.read_group(domain, ["origin_res_id"], ["origin_res_id"])

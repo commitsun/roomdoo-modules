@@ -18,8 +18,9 @@ Manual sending:
 
 import json
 import logging
+from datetime import timedelta
 
-from odoo import models
+from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -124,6 +125,12 @@ class PmsNotificationMixin(models.AbstractModel):
     def _pms_notification_create_event_log(
         self, rec, rule, prop, recipients, recipient_mode
     ):
+        delay = rule.event_delay_minutes or 0
+        if delay > 0:
+            scheduled_date = fields.Datetime.now() + timedelta(minutes=delay)
+        else:
+            scheduled_date = False
+
         vals = {
             "name": rule._build_log_name(rec),
             "state": "pending",
@@ -131,7 +138,7 @@ class PmsNotificationMixin(models.AbstractModel):
             "template_id": rule.template_id.id,
             "rule_id": rule.id,
             "channel": rule.channel,
-            "scheduled_date": False,
+            "scheduled_date": scheduled_date,
             "context_json": json.dumps(rec._pms_notification_get_context_dict()),
             "origin_model": rec._name,
             "origin_res_id": rec.id,
@@ -193,7 +200,7 @@ class PmsNotificationMixin(models.AbstractModel):
             recipients=recipients,
             recipient_mode=recipient_mode,
         )
-        if rule.send_immediately:
+        if rule.send_immediately and not rule._has_event_delay():
             self._pms_notification_send_event_log_immediately(
                 log=log,
                 rule=rule,
