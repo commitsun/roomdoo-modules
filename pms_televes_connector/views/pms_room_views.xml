@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_room_view_form_televes" model="ir.ui.view">
+        <field name="name">pms.room.form.televes</field>
+        <field name="model">pms.room</field>
+        <field name="inherit_id" ref="pms.pms_room_view_form" />
+        <field name="arch" type="xml">
+            <field name="sequence" position="after">
+                <field name="televes_enabled" invisible="1" />
+                <field
+          name="televes_room_number"
+          attrs="{'invisible': [('televes_enabled', '=', False)]}"
+        />
+            </field>
+        </field>
+    </record>
+</odoo>

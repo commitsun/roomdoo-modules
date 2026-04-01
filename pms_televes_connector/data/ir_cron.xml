@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ir_cron_televes_check_room_changes" model="ir.cron">
+        <field name="name">Televes: Check room changes</field>
+        <field name="model_id" ref="pms.model_pms_property" />
+        <field name="state">code</field>
+        <field name="code">model.televes_cron_check_room_changes()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field
+      name="nextcall"
+      eval="(DateTime.now().replace(hour=12, minute=0, second=0, microsecond=0)).strftime('%Y-%m-%d %H:%M:%S')"
+    />
+    </record>
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_property_views_form_televes" model="ir.ui.view">
+        <field name="name">pms.property.form.televes</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Televes" name="televes">
+                    <group>
+                        <field name="televes_enabled" />
+                    </group>
+                    <group attrs="{'invisible': [('televes_enabled', '=', False)]}">
+                        <group string="Connection">
+                            <field name="televes_url" />
+                            <field name="televes_base_path" />
+                        </group>
+                        <group string="Credentials">
+                            <field name="televes_pms_user" />
+                            <field name="televes_pms_password" password="True" />
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
