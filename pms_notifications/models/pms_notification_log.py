@@ -117,21 +117,68 @@ class PmsNotificationLog(models.Model):
         Send pending/scheduled notifications in batch.
         - Keep it small to avoid long transactions.
         - Isolate each log so one failure never stops the whole batch.
+        - Delayed event logs are held until scheduled_date is reached,
+          then domain is re-checked before sending.
         """
+        now = fields.Datetime.now()
         logs = self.search(
-            [("state", "in", ("pending", "scheduled"))],
+            [
+                ("state", "in", ("pending", "scheduled")),
+                "|",
+                ("scheduled_date", "=", False),
+                ("scheduled_date", "<=", fields.Datetime.to_string(now)),
+            ],
             order="id asc",
             limit=limit,
         )
         for log in logs:
             try:
                 with self.env.cr.savepoint():
+                    if log._should_skip_delayed_log():
+                        log.write({"state": "skipped"})
+                        continue
                     log.action_send_by_channel()
             except Exception as err:
                 _logger.exception("Notification batch send failed for log %s", log.id)
                 with self.env.cr.savepoint():
                     log.write({"state": "error", "error_message": str(err)})
         return True
+
+    def _should_skip_delayed_log(self):
+        """
+        Return True if this delayed event log should be skipped (not sent).
+
+        A log is skipped when:
+        - It comes from an event rule with event_delay_minutes > 0, AND
+        - The origin record no longer exists, OR the record no longer matches
+          the rule's event_domain.
+
+        Non-delayed logs are never skipped here.
+        """
+        self.ensure_one()
+        rule = self.rule_id
+        if not rule or not rule._has_event_delay():
+            return False
+        record = self.env[self.origin_model].browse(self.origin_res_id).exists()
+        if not record:
+            _logger.info(
+                "Delayed log %s skipped: origin record %s(%s) deleted.",
+                self.id,
+                self.origin_model,
+                self.origin_res_id,
+            )
+            return True
+        if not rule._record_matches_event_domain(record):
+            _logger.info(
+                "Delayed log %s skipped: record %s(%s) no longer matches "
+                "event_domain (rule=%s).",
+                self.id,
+                self.origin_model,
+                self.origin_res_id,
+                rule.id,
+            )
+            return True
+        return False
 
     # -------------------------------------------------------------------------
     # Helpers

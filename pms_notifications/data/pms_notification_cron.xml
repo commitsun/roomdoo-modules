@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<odoo noupdate="0">
+<odoo noupdate="1">
 
     <!-- Cron job to process pending/scheduled email notifications -->
     <record id="ir_cron_pms_notifications_sender" model="ir.cron">

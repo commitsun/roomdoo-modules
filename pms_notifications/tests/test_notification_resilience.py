@@ -108,6 +108,10 @@ class TestPmsNotificationResilience(TestPms):
             "PmsPropertyNotificationRule._scheduled_build_log_vals",
             autospec=True,
             side_effect=_raise_for_first_rec,
+        ), patch(
+            "odoo.addons.pms_notifications.models.pms_property_notification_rule."
+            "PmsPropertyNotificationRule._is_origin_record_eligible",
+            return_value=True,
         ):
             rule._scheduled_create_logs_and_send(now, records, prop_map)
 

@@ -68,6 +68,7 @@
                   name="event_domain"
                   placeholder="[('state','=','confirm')]"
                 />
+                                <field name="event_delay_minutes" />
                                 <field
                   name="on_write_field_ids"
                   widget="many2many_tags"
