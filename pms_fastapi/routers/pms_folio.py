@@ -30,6 +30,23 @@ folio_order = create_order_dependency(
 
 
 @pms_api_router.get(
+    "/folios/count",
+    response_model=int,
+    tags=["folio"],
+)
+async def count_folios(
+    env: AuthenticatedEnv,
+    filters: Annotated[FolioSearch, Depends()],
+) -> int:
+    """Get the number of folios matching the given filters"""
+    return (
+        env["pms_api_folio.folio_router.helper"]
+        .new()
+        .count(filters)
+    )
+
+
+@pms_api_router.get(
     "/folios",
     response_model=PagedCollection[FolioSummary],
     tags=["folio"],
@@ -92,9 +109,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def count(self, params=None) -> int:
         if params:
             domain = params.to_odoo_domain(self.env)
+            context = params.to_odoo_context(self.env)
         else:
             domain = []
-        return self.model_adapter.count(domain)
+            context = {}
+        return self.model_adapter.count(domain, context=context)
 
     @api.model
     def extra_features(self):
