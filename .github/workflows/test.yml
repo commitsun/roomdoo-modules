@@ -82,7 +82,9 @@ jobs:
             tk-dev \
             zlib1g-dev \
             openssl \
-            libssl-dev
+            libssl-dev \
+            libreoffice-calc \
+            fonts-liberation
 
       - name: Install Python dependencies
         run: |
