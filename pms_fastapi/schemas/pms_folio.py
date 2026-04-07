@@ -19,6 +19,11 @@ from .pms_service import ServiceId
 from .reservation_guest import CheckinStateEnum
 
 
+class ReportFormatEnum(str, Enum):
+    pdf = "pdf"
+    xlsx = "xlsx"
+
+
 class FolioOrderField(str, Enum):
     CREATION_DATE = "creationDate"
     CHECKIN = "checkin"
