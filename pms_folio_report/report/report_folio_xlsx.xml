@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="action_report_folio_xlsx" model="ir.actions.report">
+        <field name="name">Booking Report (Excel)</field>
+        <field name="model">pms.folio</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">pms_folio_report.folio_report_xlsx</field>
+        <field name="report_file">booking_report</field>
+        <field name="binding_model_id" ref="pms.model_pms_folio" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_folio_summary_pdf" model="ir.actions.report">
+        <field name="name">Booking Summary (PDF)</field>
+        <field name="model">pms.folio</field>
+        <field name="report_type">xlsx_pdf</field>
+        <field name="report_name">pms_folio_report.folio_summary_pdf</field>
+        <field name="report_file">booking_summary</field>
+        <field name="binding_model_id" ref="pms.model_pms_folio" />
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>
