@@ -266,8 +266,8 @@ class PmsReservationService(Component):
             else:
                 reservation_vals.update({"partner_id": False})
         if (
-                reservation_data.partnerRequests is not None
-                and reservation_data.partnerRequests != reservation.partner_requests
+            reservation_data.partnerRequests is not None
+            and reservation_data.partnerRequests != reservation.partner_requests
         ):
             reservation_vals.update(
                 {"partner_requests": reservation_data.partnerRequests}
@@ -1137,7 +1137,10 @@ class PmsReservationService(Component):
             "country_id": pms_checkin_partner_info.countryId,
             "origin_input_data": pms_checkin_partner_info.originInputData,
         }
-        if pms_checkin_partner_info.partnerId and pms_checkin_partner_info.partnerId != partner_id:
+        if (
+            pms_checkin_partner_info.partnerId
+            and pms_checkin_partner_info.partnerId != partner_id
+        ):
             vals.update({"partner_id": pms_checkin_partner_info.partnerId})
         if pms_checkin_partner_info.documentExpeditionDate:
             document_expedition_date = datetime.strptime(
@@ -1999,10 +2002,8 @@ class PmsReservationService(Component):
                             pms_checkin_partner_info.documentLegalRepresentative,
                         ),
                         (
-                            "reservation_id",
                             "folio_id",
                             "=",
-                            pms_checkin_partner_info.reservationId,
                             folio_id,
                         ),
                     ],
