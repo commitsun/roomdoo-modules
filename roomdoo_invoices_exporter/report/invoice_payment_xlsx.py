@@ -61,7 +61,7 @@ class InvoicePaymentXlsx(models.AbstractModel):
     # ------------------------------------------------------------------
 
     def generate_xlsx_report(self, workbook, data, invoices):
-        invoices = invoices.filtered(lambda m: m.move_type != "entry")
+        invoices = invoices.sudo().filtered(lambda m: m.move_type != "entry")
         if not invoices:
             raise UserError(_("No invoices selected for export."))
         companies = invoices.mapped("company_id")
