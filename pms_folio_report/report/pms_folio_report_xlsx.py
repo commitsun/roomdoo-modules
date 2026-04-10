@@ -500,6 +500,7 @@ class PmsFolioReportXlsx(models.AbstractModel):
     # ------------------------------------------------------------------
 
     def generate_xlsx_report(self, workbook, data, folios):
+        folios = folios.sudo()
         fmt = self._add_formats(workbook)
         self._sheet_summary(workbook, fmt, folios)
         self._sheet_reservations(workbook, fmt, folios)
