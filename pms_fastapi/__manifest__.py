@@ -16,7 +16,8 @@
         "pms_api_rest",  # temporal
         "pms_l10n_es",  # temporal
         "partner_identification_unique",
-        "pms_folio_report"
+        "pms_folio_report",
+        "roomdoo_invoices_exporter",
     ],
     "external_dependencies": {
         "python": ["pyinstrument"],
