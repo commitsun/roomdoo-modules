@@ -4,6 +4,7 @@
     "category": "",
     "author": "Commitsun",
     "license": "AGPL-3",
+    "pre_init_hook": "pre_init_hook",
     "depends": [
         "base",
         "pms",
