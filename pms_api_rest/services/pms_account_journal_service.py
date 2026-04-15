@@ -53,7 +53,7 @@ class PmsAccountJournalService(Component):
                 else:
                     seen_journals[journal.id] = method_line.allowed_on_pms
             for journal_id, allowed in seen_journals.items():
-                journal = self.env["account.journal"].browse(journal_id)
+                journal = self.env["account.journal"].sudo().browse(journal_id)
                 result_account_journals.append(
                     PmsAccountJournalInfo(
                         id=journal.id,
