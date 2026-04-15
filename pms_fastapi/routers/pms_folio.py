@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 
 from odoo import api, models
+from odoo.exceptions import MissingError
 from odoo.osv import expression
 
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -17,9 +18,12 @@ from odoo.addons.pms_fastapi.dependencies import (
     create_order_dependency,
 )
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
+from odoo.addons.pms_fastapi.schemas.contact import ContactIdImage
+from odoo.addons.pms_fastapi.schemas.folio_sale_line import FolioSaleLine
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FOLIO_ORDER_MAPPING,
     FolioCountSummary,
+    FolioDetail,
     FolioOrderField,
     FolioSearch,
     FolioSummary,
@@ -113,6 +117,75 @@ async def list_folios(
     )
 
 
+@pms_api_router.get(
+    "/folios/{folio_id}",
+    response_model=FolioDetail,
+    tags=["folio"],
+)
+async def get_folio(
+    env: AuthenticatedEnv,
+    folio_id: int,
+) -> FolioDetail:
+    """Get the billing detail of a folio.
+
+    Includes totals and reservations with sale-line IDs.
+    """
+    helper = env["pms_api_folio.folio_router.helper"].new()
+    try:
+        folio = helper.get(folio_id)
+    except MissingError as err:
+        raise HTTPException(
+            status_code=404,
+            detail="folio not found",
+        ) from err
+    return FolioDetail.from_pms_folio(folio)
+
+
+@pms_api_router.get(
+    "/folios/{folio_id}/sale-lines",
+    response_model=list[FolioSaleLine],
+    tags=["folio"],
+)
+async def get_folio_sale_lines(
+    env: AuthenticatedEnv,
+    folio_id: int,
+) -> list[FolioSaleLine]:
+    """Get the billable sale lines of a folio with invoice state and tax breakdown."""
+    helper = env["pms_api_folio.folio_router.helper"].new()
+    try:
+        folio = helper.get(folio_id)
+    except MissingError as err:
+        raise HTTPException(
+            status_code=404,
+            detail="folio not found",
+        ) from err
+    return helper.get_sale_lines(folio)
+
+
+@pms_api_router.get(
+    "/folios/{folio_id}/contacts",
+    response_model=list[ContactIdImage],
+    tags=["folio"],
+)
+async def get_folio_contacts(
+    env: AuthenticatedEnv,
+    folio_id: int,
+) -> list[ContactIdImage]:
+    """Get all contacts associated with a folio.
+
+    Collects unique contacts from the folio, its reservations, and guests.
+    """
+    helper = env["pms_api_folio.folio_router.helper"].new()
+    try:
+        folio = helper.get(folio_id)
+    except MissingError as err:
+        raise HTTPException(
+            status_code=404,
+            detail="folio not found",
+        ) from err
+    return helper.get_contacts(folio)
+
+
 class PmsApiFolioRouterHelper(models.AbstractModel):
     _name = "pms_api_folio.folio_router.helper"
     _description = "Pms api folio Service Helper"
@@ -180,6 +253,22 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         )
         folios_count, reservations_count = self.env.cr.fetchone()
         return folios_count, reservations_count
+
+    def get_sale_lines(self, folio) -> list[FolioSaleLine]:
+        lines = folio.sale_line_ids.filtered(lambda line: not line.display_type)
+        return [FolioSaleLine.from_folio_sale_line(line) for line in lines]
+
+    def get_contacts(self, folio) -> list[ContactIdImage]:
+        partners = folio.partner_id
+        active_reservations = folio.reservation_ids.filtered(
+            lambda r: r.cancelled_reason != "modified"
+        )
+        partners |= active_reservations.mapped("partner_id").filtered("id")
+        partners |= active_reservations.mapped("agency_id").filtered("id")
+        partners |= active_reservations.mapped(
+            "checkin_partner_ids.partner_id"
+        ).filtered("id")
+        return [ContactIdImage.from_res_partner(p) for p in partners]
 
     @api.model
     def extra_features(self):

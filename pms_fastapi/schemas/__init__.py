@@ -19,6 +19,7 @@ from . import supplier
 from . import guest
 from . import pms_reservation
 from . import pms_folio
+from . import folio_sale_line
 from . import pms_service
 from . import pms_room
 from . import invoice

@@ -11,7 +11,7 @@ from odoo.osv import expression
 
 from .agency import AgencyIdImage
 from .base import BaseSearch, CurrencyAmount, PmsBaseModel
-from .contact import ContactIdImage
+from .contact import ContactId, ContactIdImage
 from .country import CountrySummary
 from .currency import CurrencySummary
 from .pms_room import RoomId
@@ -248,6 +248,117 @@ class FolioSummary(PmsBaseModel):
             ContactIdImage.from_res_partner(partner) for partner in payer_partners
         ]
 
+        return cls(**filtered_data)
+
+
+class FolioReservation(PmsBaseModel):
+    id: int
+    name: str = Field("", alias="name")
+    checkin_datetime: datetime | None = Field(None, alias="checkinDate")
+    checkout_datetime: datetime | None = Field(None, alias="checkoutDate")
+    rooms: list[RoomId] = Field(default_factory=list)
+    state: reservationStateEnum
+    saleLineIds: list[int] = Field(default_factory=list)
+
+    @classmethod
+    def from_pms_reservation(cls, reservation):
+        filtered_data = cls._read_odoo_record(reservation)
+        filtered_data["rooms"] = [
+            RoomId.from_pms_room(room)
+            for room in reservation.reservation_line_ids.mapped("room_id")
+        ]
+        if reservation.overbooking and reservation.state != "cancel":
+            filtered_data["state"] = reservationStateEnum.OVERBOOKING
+        elif reservation.state == "draft":
+            filtered_data["state"] = reservationStateEnum.DRAFT
+        elif reservation.state == "cancel":
+            filtered_data["state"] = reservationStateEnum.CANCELLED
+        elif reservation.state in ("confirm", "arrival_delayed"):
+            filtered_data["state"] = reservationStateEnum.ARRIVAL
+        elif reservation.state in ("onboard", "departure_delayed"):
+            filtered_data["state"] = reservationStateEnum.IN_HOUSE
+        elif reservation.state == "done":
+            filtered_data["state"] = reservationStateEnum.COMPLETED
+        filtered_data["saleLineIds"] = reservation.sale_line_ids.ids
+        return cls(**filtered_data)
+
+
+class FolioDetail(PmsBaseModel):
+    id: int
+    name: str = Field("", alias="name")
+    external_reference: str = Field("", alias="externalReference")
+    create_date: date = Field(alias="creationDate")
+    customer: ContactId | None = None
+    reference: str = Field("", alias="paymentReference")
+    amount_total: CurrencyAmount = Field(0.0, alias="totalAmount")
+    amount_untaxed: CurrencyAmount = Field(0.0, alias="totalBase")
+    amount_tax: CurrencyAmount = Field(0.0, alias="totalTax")
+    totalToInvoice: CurrencyAmount = Field(0.0, alias="totalToInvoice")
+    totalBaseToInvoice: CurrencyAmount = Field(0.0, alias="totalBaseToInvoice")
+    totalTaxToInvoice: CurrencyAmount = Field(0.0, alias="totalTaxToInvoice")
+    currency: CurrencySummary
+    paymentState: folioPaymentStateEnum
+    invoiceState: invoiceStateEnum
+    nationality: CountrySummary | None = None
+    payers: list[ContactIdImage] = Field(default_factory=list)
+    reservations: list[FolioReservation] = Field(default_factory=list)
+
+    @field_validator("create_date", mode="before")
+    @classmethod
+    def convert_datetime_to_date(cls, v):
+        if isinstance(v, datetime):
+            return v.date()
+        return v
+
+    @classmethod
+    def from_pms_folio(cls, folio):
+        filtered_data = cls._read_odoo_record(folio)
+        if folio.partner_id:
+            filtered_data["customer"] = ContactId.from_res_partner(folio.partner_id)
+        if folio.currency_id:
+            filtered_data["_decimal_places"] = folio.currency_id.decimal_places
+            filtered_data["currency"] = CurrencySummary.from_res_currency(
+                folio.currency_id
+            )
+        if folio.partner_id and folio.partner_id.nationality_id:
+            filtered_data["nationality"] = CountrySummary.from_res_country(
+                folio.partner_id.nationality_id
+            )
+        if any(move.has_overdue_payments for move in folio.move_ids):
+            filtered_data["paymentState"] = folioPaymentStateEnum.OVERDUE
+        elif folio.payment_state in ("paid", "nothing_to_pay"):
+            filtered_data["paymentState"] = folioPaymentStateEnum.PAID
+        elif folio.payment_state == "not_paid":
+            filtered_data["paymentState"] = folioPaymentStateEnum.NOT_PAID
+        elif folio.payment_state == "partial":
+            filtered_data["paymentState"] = folioPaymentStateEnum.PARTIALLY_PAID
+        elif folio.payment_state == "overpayment":
+            filtered_data["paymentState"] = folioPaymentStateEnum.OVERPAID
+        if folio.invoice_status in ("to_invoice", "to_confirm"):
+            filtered_data["invoiceState"] = invoiceStateEnum.TO_INVOICE
+        else:
+            filtered_data["invoiceState"] = invoiceStateEnum.INVOICED
+        payer_partners = folio.sale_line_ids.mapped("default_invoice_to").filtered(
+            lambda p: p.id
+        )
+        filtered_data["payers"] = [
+            ContactIdImage.from_res_partner(partner) for partner in payer_partners
+        ]
+        total_base_to_invoice = folio.untaxed_amount_to_invoice
+        tax_to_invoice = sum(
+            line.untaxed_amount_to_invoice * line.price_tax / line.price_subtotal
+            if line.price_subtotal
+            else 0.0
+            for line in folio.sale_line_ids.filtered(lambda sl: not sl.display_type)
+        )
+        filtered_data["totalBaseToInvoice"] = total_base_to_invoice
+        filtered_data["totalTaxToInvoice"] = tax_to_invoice
+        filtered_data["totalToInvoice"] = total_base_to_invoice + tax_to_invoice
+        filtered_data["reservations"] = [
+            FolioReservation.from_pms_reservation(res)
+            for res in folio.reservation_ids
+            if res.cancelled_reason != "modified"
+        ]
         return cls(**filtered_data)
 
 
