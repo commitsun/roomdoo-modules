@@ -68,6 +68,35 @@ async def invoice_extra_features(
     return env["pms_api_invoice.invoice_router.helper"].extra_features()
 
 
+@pms_api_router.get(
+    "/invoices/validate-contact",
+    tags=["invoice"],
+    status_code=204,
+    responses={
+        204: {"description": "Contact meets invoicing requirements."},
+        422: {"description": "Contact does not meet invoicing requirements."},
+    },
+    response_class=Response,
+)
+async def validate_invoice_contact(
+    env: AuthenticatedEnv,
+    pmsPropertyId: Annotated[
+        int,
+        Query(description="ID of the property whose invoicing rules are validated."),
+    ],
+    contactId: Annotated[
+        int,
+        Query(description="ID of the contact to validate as invoicing customer."),
+    ],
+) -> Response:
+    """Validate if a contact meets the invoicing requirements of a property."""
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._validate_contact(pmsPropertyId, contactId)
+    )
+
+
 @pms_api_router.post(
     "/invoices/{id}/validate",
     response_model=InvoiceSummary,
@@ -216,6 +245,73 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
 
     @api.model
     def extra_features(self):
+        return []
+
+    def _validate_contact(self, pms_property_id: int, contact_id: int):
+        partner = self.env["res.partner"].sudo().browse(contact_id)
+        if not partner.exists():
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Contact not found.",
+                },
+                media_type="application/problem+json",
+            )
+        pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
+        if not pms_property.exists():
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Property not found.",
+                },
+                media_type="application/problem+json",
+            )
+        errors = self._get_contact_validation_errors(partner, pms_property)
+        if errors:
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "type": "/errors/invoicing-validation-failed",
+                    "title": "Invoicing validation failed",
+                    "status": 422,
+                    "detail": "Contact does not meet invoicing requirements.",
+                    "errors": errors,
+                },
+                media_type="application/problem+json",
+            )
+        return Response(status_code=204)
+
+    def _get_contact_validation_errors(self, partner, pms_property) -> list[dict]:
+        """Return RFC 9457 ProblemDetailItem dicts for each validation failure.
+
+        Override in localization modules to add country-specific checks.
+        """
+        errors = []
+        errors.extend(self._check_fiscal_id(partner, pms_property))
+        return errors
+
+    def _check_fiscal_id(self, partner, pms_property) -> list[dict]:
+        """Check fiscal identification. Override in localizations.
+
+        Base implementation requires a VAT number.
+        """
+        if not partner.vat:
+            return [
+                {
+                    "type": "/errors/missing-fiscal-id",
+                    "title": "Missing fiscal identification number",
+                    "detail": (
+                        "El contacto no tiene número de identificación"
+                        " fiscal configurado."
+                    ),
+                }
+            ]
         return []
 
     # -- Invoice report helpers --
