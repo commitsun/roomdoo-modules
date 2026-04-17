@@ -145,6 +145,7 @@ class FolioSummary(PmsBaseModel):
     create_date: date = Field(alias="creationDate")
     reservations: list[reservationSummary]
     paymentState: folioPaymentStateEnum
+    overdueDays: int = Field(0)
     inHouseGuestsCount: int = Field(0)
     pendingGuestsCount: int = Field(0)
     doneGuestsCount: int = Field(0)
@@ -176,8 +177,11 @@ class FolioSummary(PmsBaseModel):
                 folio.currency_id
             )
 
-        if any(move.has_overdue_payments for move in folio.move_ids):
+        overdue_moves = [move for move in folio.move_ids if move.has_overdue_payments]
+        if overdue_moves:
             filtered_data["paymentState"] = folioPaymentStateEnum.OVERDUE
+            min_date = min(move.min_overdue_date for move in overdue_moves)
+            filtered_data["overdueDays"] = (date.today() - min_date).days
         elif folio.payment_state in ("paid", "nothing_to_pay"):
             filtered_data["paymentState"] = folioPaymentStateEnum.PAID
         elif folio.payment_state == "not_paid":

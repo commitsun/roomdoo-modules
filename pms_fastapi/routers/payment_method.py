@@ -12,7 +12,12 @@ async def list_payment_methods(
     env: AuthenticatedEnv,
 ) -> list[PaymentMethodSummary]:
     """List all payment methods."""
-    methods = env["account.payment.method"].sudo().search([])
+    methods = (
+        env["account.payment.method.line"]
+        .sudo()
+        .search([("payment_type", "=", "inbound")])
+    )
     return [
-        PaymentMethodSummary.from_account_payment_method(method) for method in methods
+        PaymentMethodSummary.from_account_payment_method_line(method)
+        for method in methods
     ]

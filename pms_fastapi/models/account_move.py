@@ -5,7 +5,7 @@ class AccountMove(models.Model):
     _inherit = "account.move"
 
     payment_method_ids = fields.Many2many(
-        comodel_name="account.payment.method",
+        comodel_name="account.payment.method.line",
         string="Payment Methods",
         compute="_compute_payment_method_ids",
         search="_search_payment_method_ids",
@@ -25,8 +25,8 @@ class AccountMove(models.Model):
                 lambda line: line.account_id.account_type
                 in ("asset_receivable", "liability_payable")
             )
-            debit_methods = receivable_lines.matched_debit_ids.credit_move_id.payment_id.payment_method_line_id.payment_method_id  # noqa: E501
-            credit_methods = receivable_lines.matched_credit_ids.debit_move_id.payment_id.payment_method_line_id.payment_method_id  # noqa: E501
+            debit_methods = receivable_lines.matched_debit_ids.credit_move_id.payment_id.payment_method_line_id  # noqa: E501
+            credit_methods = receivable_lines.matched_credit_ids.debit_move_id.payment_id.payment_method_line_id  # noqa: E501
             move.payment_method_ids = debit_methods | credit_methods
 
     def _search_payment_method_ids(self, operator, value):
@@ -47,7 +47,7 @@ class AccountMove(models.Model):
             JOIN account_payment ap ON ap.id = aml_pay.payment_id
             JOIN account_payment_method_line apml ON apml.id = ap.payment_method_line_id
             JOIN account_move_line aml_inv ON aml_inv.id = apr.debit_move_id
-            WHERE apml.payment_method_id = ANY(%s)
+            WHERE apml.id = ANY(%s)
             UNION
             SELECT DISTINCT aml_inv.move_id
             FROM account_partial_reconcile apr
@@ -55,7 +55,7 @@ class AccountMove(models.Model):
             JOIN account_payment ap ON ap.id = aml_pay.payment_id
             JOIN account_payment_method_line apml ON apml.id = ap.payment_method_line_id
             JOIN account_move_line aml_inv ON aml_inv.id = apr.credit_move_id
-            WHERE apml.payment_method_id = ANY(%s)
+            WHERE apml.id = ANY(%s)
             """,
             (value, value),
         )
