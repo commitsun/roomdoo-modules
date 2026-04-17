@@ -3,6 +3,7 @@ from . import folio_sale_line
 from . import pms_folio
 from . import res_partner
 from . import id_number_category
+from . import account_journal
 from . import account_move
 from . import account_move_line
 from . import account_partial_reconcile
