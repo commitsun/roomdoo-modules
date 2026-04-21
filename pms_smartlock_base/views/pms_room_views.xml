@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="pms_room_view_form" model="ir.ui.view">
+        <field name="name">pms.room.form.smartlock</field>
+        <field name="model">pms.room</field>
+        <field name="inherit_id" ref="pms.pms_room_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="smartlock" string="Smart Lock">
+                    <group>
+                        <field name="lock_vendor_id" />
+                        <field name="lock_device_id" />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
