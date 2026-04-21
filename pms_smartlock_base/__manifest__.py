@@ -1,0 +1,27 @@
+{
+    "name": "PMS Smartlock Base",
+    "version": "16.0.1.0.0",
+    "category": "Hotel/PMS",
+    "author": "Commitsun",
+    "license": "AGPL-3",
+    "website": "https://github.com/roomdoo/roomdoo-modules",
+    "summary": "Base module for smartlock integrations with PMS",
+    "depends": [
+        "pms",
+        "queue_job",
+    ],
+    "external_dependencies": {
+        "python": ["roomdoo_locks_base"],
+    },
+    "data": [
+        "security/ir.model.access.csv",
+        "views/lock_vendor_views.xml",
+        "views/lock_code_views.xml",
+        "views/pms_room_views.xml",
+        "views/pms_reservation_views.xml",
+        "views/menus.xml",
+    ],
+    "installable": True,
+    "application": False,
+    "auto_install": False,
+}

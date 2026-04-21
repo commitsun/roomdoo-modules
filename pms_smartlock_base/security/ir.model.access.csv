@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_lock_vendor_manager,lock.vendor.manager,model_lock_vendor,pms.group_pms_manager,1,1,1,1
+access_lock_vendor_user,lock.vendor.user,model_lock_vendor,pms.group_pms_user,1,0,0,0
+access_lock_code_manager,lock.code.manager,model_lock_code,pms.group_pms_manager,1,1,1,1
+access_lock_code_user,lock.code.user,model_lock_code,pms.group_pms_user,1,1,1,0

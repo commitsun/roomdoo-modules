@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_vendor_view_form" model="ir.ui.view">
+        <field name="name">lock.vendor.form.omnitec</field>
+        <field name="model">lock.vendor</field>
+        <field name="inherit_id" ref="pms_smartlock_base.lock_vendor_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="before">
+                <page
+          name="omnitec_credentials"
+          string="Omnitec Credentials"
+          attrs="{'invisible': [('vendor_type', '!=', 'omnitec')]}"
+        >
+                    <group>
+                        <field
+              name="omnitec_client_id"
+              attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
+            />
+                        <field
+              name="omnitec_client_secret"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
+            />
+                        <field
+              name="omnitec_username"
+              attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
+            />
+                        <field
+              name="omnitec_password"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
+            />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

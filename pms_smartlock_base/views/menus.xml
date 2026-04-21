@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <menuitem
+    id="smartlock_menu"
+    name="Smart Locks"
+    parent="pms.pms_configuration_menu"
+    sequence="60"
+  />
+    <menuitem
+    id="lock_vendor_menu"
+    name="Vendors"
+    parent="smartlock_menu"
+    action="lock_vendor_action"
+    sequence="10"
+  />
+    <menuitem
+    id="lock_code_menu"
+    name="Codes"
+    parent="smartlock_menu"
+    action="lock_code_action"
+    sequence="20"
+  />
+
+</odoo>

@@ -4,6 +4,8 @@ jose
 marshmallow
 pyinstrument
 requests
+roomdoo_locks_base
+roomdoo_locks_omnitec
 simplejson
 thefuzz
 xlsxwriter
