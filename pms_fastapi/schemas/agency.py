@@ -7,7 +7,15 @@ from odoo import api
 from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.schemas.base import BaseSearch
-from odoo.addons.pms_fastapi.schemas.contact import ContactBase
+from odoo.addons.pms_fastapi.schemas.contact import ContactBase, ContactIdImage
+
+
+class AgencyIdImage(ContactIdImage):
+    """Identifier + image for an agency partner.
+
+    Same shape as ContactIdImage. Localization modules may extend the factory
+    to resolve the name via locale-specific fields (e.g. trade name).
+    """
 
 
 class AgencyOrderField(str, Enum):

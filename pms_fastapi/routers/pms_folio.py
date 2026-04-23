@@ -19,6 +19,7 @@ from odoo.addons.pms_fastapi.dependencies import (
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FOLIO_ORDER_MAPPING,
+    FolioCountSummary,
     FolioOrderField,
     FolioSearch,
     FolioSummary,
@@ -71,15 +72,21 @@ async def folios_report(
 
 @pms_api_router.get(
     "/folios/count",
-    response_model=int,
+    response_model=FolioCountSummary,
     tags=["folio"],
 )
 async def count_folios(
     env: AuthenticatedEnv,
     filters: Annotated[FolioSearch, Depends()],
-) -> int:
-    """Get the number of folios matching the given filters"""
-    return env["pms_api_folio.folio_router.helper"].new().count(filters)
+) -> FolioCountSummary:
+    """Get the counts of folios and their reservations matching the given filters"""
+    folios_count, reservations_count = (
+        env["pms_api_folio.folio_router.helper"].new().count(filters)
+    )
+    return FolioCountSummary(
+        foliosCount=folios_count,
+        reservationsCount=reservations_count,
+    )
 
 
 @pms_api_router.get(
@@ -142,14 +149,37 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             order=order,
         )
 
-    def count(self, params=None) -> int:
+    def count(self, params=None) -> tuple[int, int]:
         if params:
             domain = params.to_odoo_domain(self.env)
             context = params.to_odoo_context(self.env)
         else:
             domain = []
             context = {}
-        return self.model_adapter.count(domain, context=context)
+        # Resolve the folio domain once as a materialized CTE and reuse
+        # it for both counts, so the subquery (which may include a large
+        # id IN (...) coming from reservation pre-filtering) runs a
+        # single time.
+        full_folio_domain = expression.AND([self.model_adapter._base_domain, domain])
+        folio_model = self.env["pms.folio"].sudo().with_context(**context)
+        folio_query = folio_model._where_calc(full_folio_domain)
+        folio_model._apply_ir_rules(folio_query, "read")
+        folio_subselect, folio_params = folio_query.subselect()
+        self.env.cr.execute(
+            f"""
+            WITH folio_ids AS MATERIALIZED ({folio_subselect})
+            SELECT
+                (SELECT COUNT(*) FROM folio_ids) AS folios,
+                (SELECT COUNT(*) FROM pms_reservation r
+                 WHERE r.folio_id IN (SELECT id FROM folio_ids)
+                   AND (r.cancelled_reason IS NULL
+                        OR r.cancelled_reason != 'modified')
+                ) AS reservations
+            """,
+            folio_params,
+        )
+        folios_count, reservations_count = self.env.cr.fetchone()
+        return folios_count, reservations_count
 
     @api.model
     def extra_features(self):

@@ -9,6 +9,7 @@ from pydantic import Field, field_validator
 from odoo import api
 from odoo.osv import expression
 
+from .agency import AgencyIdImage
 from .base import BaseSearch, CurrencyAmount, PmsBaseModel
 from .contact import ContactIdImage
 from .country import CountrySummary
@@ -45,6 +46,7 @@ class reservationStateEnum(str, Enum):
     IN_HOUSE = "inHouse"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    NO_SHOW = "noShow"
     OVERBOOKING = "overbooking"
 
 
@@ -79,7 +81,7 @@ class reservationSummary(PmsBaseModel):
     rooms: list[RoomId]
     services: list[ServiceId]
     saleChannel: SaleChannelDetail | None = None
-    agency: ContactIdImage | None = None
+    agency: AgencyIdImage | None = None
     state: reservationStateEnum
     price_room_services_set: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency: CurrencySummary | None = None
@@ -106,7 +108,7 @@ class reservationSummary(PmsBaseModel):
                 reservation.sale_channel_origin_id
             )
         if reservation.agency_id:
-            filtered_data["agency"] = ContactIdImage.from_res_partner(
+            filtered_data["agency"] = AgencyIdImage.from_res_partner(
                 reservation.agency_id
             )
         if reservation.overbooking and reservation.state != "cancel":
@@ -114,7 +116,10 @@ class reservationSummary(PmsBaseModel):
         elif reservation.state == "draft":
             filtered_data["state"] = reservationStateEnum.DRAFT
         elif reservation.state == "cancel":
-            filtered_data["state"] = reservationStateEnum.CANCELLED
+            if reservation.cancelled_reason == "noshow":
+                filtered_data["state"] = reservationStateEnum.NO_SHOW
+            else:
+                filtered_data["state"] = reservationStateEnum.CANCELLED
         elif reservation.state in ("confirm", "arrival_delayed"):
             filtered_data["state"] = reservationStateEnum.ARRIVAL
         elif reservation.state in ("onboard", "departure_delayed"):
@@ -134,6 +139,20 @@ class reservationSummary(PmsBaseModel):
         return cls(**filtered_data)
 
 
+class FolioId(PmsBaseModel):
+    id: int
+    name: str | None = None
+
+    @classmethod
+    def from_pms_folio(cls, folio):
+        return cls(id=folio.id, name=folio.name)
+
+
+class FolioCountSummary(PmsBaseModel):
+    foliosCount: int = Field(0)
+    reservationsCount: int = Field(0)
+
+
 class FolioSummary(PmsBaseModel):
     id: int
     partner_name: str = Field("", alias="customerName")
@@ -141,6 +160,7 @@ class FolioSummary(PmsBaseModel):
     external_reference: str = Field("", alias="externalReference")
     nationality: CountrySummary | None = None
     amount_total: CurrencyAmount = Field(0.0, alias="totalAmount")
+    amount_to_invoice: CurrencyAmount = Field(0.0, alias="pendingAmountToInvoice")
     currency: CurrencySummary | None = None
     create_date: date = Field(alias="creationDate")
     reservations: list[reservationSummary]
@@ -377,7 +397,7 @@ class FolioSearch(BaseSearch):
         services: Annotated[
             list[int] | None,
             Query(
-                description="Filter by service IDs. "
+                description="Filter by service IDs, as returned by GET /services. "
                 "Repeated query param, e.g. ?services=1&services=5",
             ),
         ] = None,
@@ -464,7 +484,27 @@ class FolioSearch(BaseSearch):
         if reservation_folio_ids is not None:
             domain.append(("id", "in", reservation_folio_ids))
 
+        service_folio_ids = self._get_service_folio_ids(env)
+        if service_folio_ids is not None:
+            domain.append(("id", "in", service_folio_ids))
+
         return domain
+
+    def _get_service_folio_ids(self, env: api.Environment) -> list | None:
+        """Search folios through service lines by product_id.
+        Returns a list of folio IDs, or None if no service filter is active.
+        """
+        if not self.services:
+            return None
+        service_domain = [("product_id", "in", self.services)]
+        if self.pmsProperty:
+            service_domain.append(("pms_property_id", "=", self.pmsProperty))
+        else:
+            service_domain.append(
+                ("pms_property_id", "in", env.user.pms_property_ids.ids)
+            )
+        groups = env["pms.service"].sudo().read_group(service_domain, [], ["folio_id"])
+        return [g["folio_id"][0] for g in groups if g["folio_id"]]
 
     def _get_reservation_folio_ids(self, env: api.Environment) -> list | None:
         """Search folios through reservation fields, excluding reservations
@@ -533,8 +573,6 @@ class FolioSearch(BaseSearch):
             domain.append(("price_room_services_set", "=", self.totalAmountEq))
         if self.preCheckinState:
             domain.extend(self._get_precheckin_state_domain())
-        if self.services:
-            domain.append(("service_ids", "in", self.services))
         if domain:
             domain.append(("cancelled_reason", "!=", "modified"))
         return domain
@@ -545,7 +583,14 @@ class FolioSearch(BaseSearch):
                 ("overbooking", "=", True),
                 ("state", "!=", "cancel"),
             ],
-            reservationStateEnum.CANCELLED: [("state", "=", "cancel")],
+            reservationStateEnum.CANCELLED: [
+                ("state", "=", "cancel"),
+                ("cancelled_reason", "!=", "noshow"),
+            ],
+            reservationStateEnum.NO_SHOW: [
+                ("state", "=", "cancel"),
+                ("cancelled_reason", "=", "noshow"),
+            ],
             reservationStateEnum.ARRIVAL: [
                 ("state", "in", ["confirm", "arrival_delayed"])
             ],

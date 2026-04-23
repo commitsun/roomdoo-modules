@@ -33,6 +33,18 @@ class PmsFolio(models.Model):
         store=True,
         index=True,
     )
+    amount_to_invoice = fields.Monetary(
+        help="Remaining amount to invoice on the folio (taxes included)",
+        compute="_compute_amount_to_invoice",
+        compute_sudo=True,
+    )
+
+    @api.depends("sale_line_ids.amount_to_invoice")
+    def _compute_amount_to_invoice(self):
+        for folio in self:
+            folio.amount_to_invoice = sum(
+                folio.sale_line_ids.mapped("amount_to_invoice")
+            )
 
     @api.depends("reservation_ids.state", "reservation_ids.cancelled_reason")
     def _compute_fastapi_sort_state(self):

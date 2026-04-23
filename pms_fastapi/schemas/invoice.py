@@ -13,6 +13,7 @@ from .contact import ContactId
 from .currency import CurrencySummary
 from .journal import JournalSummary
 from .payment_method import PaymentMethodSummary
+from .pms_folio import FolioId
 
 
 class ShareUrl(PmsBaseModel):
@@ -148,11 +149,13 @@ class InvoiceSummary(PmsBaseModel):
     invoice_date: date | None = Field(None, alias="invoiceDate")
     ref: str | None = Field(None, alias="reference")
     amount_total_signed: CurrencyAmount = Field(0.0, alias="totalAmount")
+    amount_residual_signed: CurrencyAmount = Field(0.0, alias="pendingAmount")
     currency_id: CurrencySummary = Field(alias="currency")
     state: InvoiceStateEnum
     paymentState: InvoicePaymentStateEnum
     min_overdue_date: date | None = Field(None, alias="overdueDate")
     payments: list[InvoicePayment] = Field(default_factory=list)
+    folio_ids: list[FolioId] = Field(default_factory=list, alias="folios")
 
     @classmethod
     def from_account_move(cls, account_move):
@@ -170,6 +173,9 @@ class InvoiceSummary(PmsBaseModel):
                 InvoicePayment.from_widget_item(item, account_move.env)
                 for item in account_move.invoice_payments_widget["content"]
             ]
+        data["folio_ids"] = [
+            FolioId.from_pms_folio(folio) for folio in account_move.folio_ids
+        ]
         if account_move.has_overdue_payments:
             data["paymentState"] = InvoicePaymentStateEnum.overdue
         else:
