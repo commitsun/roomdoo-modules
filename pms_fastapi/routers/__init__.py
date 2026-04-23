@@ -11,6 +11,7 @@ from . import contact_tags
 from . import contact_id_number
 from . import contact_fiscal_document_type
 from . import pms_sale_channel
+from . import pms_service
 from . import agency
 from . import customer
 from . import supplier

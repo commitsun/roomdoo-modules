@@ -29,6 +29,7 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
 INVOICE_REPORT_MAX_RECORDS = 5000
+INVOICE_PDF_REPORT_MAX_RECORDS = 100
 
 InvoiceOrderDependency = create_order_dependency(
     InvoiceOrderField, INVOICE_ORDER_MAPPING, ["-invoice_date,-name"]
@@ -113,6 +114,38 @@ async def get_invoice_report(
     "/invoices/report",
     tags=["invoice"],
     responses={
+        200: {"content": {"application/pdf": {}}},
+    },
+    response_class=Response,
+)
+async def get_invoices_report(
+    env: AuthenticatedEnv,
+    filters: Annotated[InvoiceSearch, Depends()],
+    ids: Annotated[
+        list[int] | None,
+        Query(
+            description="Invoice IDs to include in the report. "
+            "Mutually exclusive with filter parameters.",
+        ),
+    ] = None,
+) -> Response:
+    """Download a single PDF with one or more invoices.
+
+    Pass either an explicit list of `ids` or filter parameters.
+    Returns the same PDF format as downloading an individual invoice,
+    concatenating all selected invoices.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._get_invoices_pdf(filters, ids)
+    )
+
+
+@pms_api_router.post(
+    "/invoices/accounting-report",
+    tags=["invoice"],
+    responses={
         200: {
             "content": {
                 "application/pdf": {},
@@ -191,7 +224,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     def _has_report_filters(filters):
         return any(v is not None for v in filters.__dict__.values())
 
-    def _generate_report(self, report_format, filters, ids):
+    def _resolve_report_invoices(
+        self, filters, ids, max_records=INVOICE_REPORT_MAX_RECORDS
+    ):
         if ids and self._has_report_filters(filters):
             return JSONResponse(
                 status_code=400,
@@ -205,15 +240,19 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     ),
                 },
                 media_type="application/problem+json",
-            )
+            ), None
         if ids:
             domain = [("id", "in", ids)]
-            count = self.model_adapter.count(domain)
+            context = None
         else:
             domain = filters.to_odoo_domain(self.env)
             context = filters.to_odoo_context(self.env)
-            count = self.model_adapter.count(domain, context=context)
-        if count > INVOICE_REPORT_MAX_RECORDS:
+        count = (
+            self.model_adapter.count(domain)
+            if context is None
+            else self.model_adapter.count(domain, context=context)
+        )
+        if count > max_records:
             return JSONResponse(
                 status_code=400,
                 content={
@@ -222,17 +261,24 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     "status": 400,
                     "detail": (
                         f"The export requested {count} records, "
-                        f"but the maximum allowed is {INVOICE_REPORT_MAX_RECORDS}."
+                        f"but the maximum allowed is {max_records}."
                     ),
                     "requestedCount": count,
-                    "maxAllowed": INVOICE_REPORT_MAX_RECORDS,
+                    "maxAllowed": max_records,
                 },
                 media_type="application/problem+json",
-            )
-        if ids:
-            invoices = self.model_adapter.search(domain)
-        else:
-            invoices = self.model_adapter.search(domain, context=context)
+            ), None
+        invoices = (
+            self.model_adapter.search(domain)
+            if context is None
+            else self.model_adapter.search(domain, context=context)
+        )
+        return None, invoices
+
+    def _generate_report(self, report_format, filters, ids):
+        error, invoices = self._resolve_report_invoices(filters, ids)
+        if error is not None:
+            return error
         if report_format == ReportFormatEnum.xlsx:
             return self._render_invoice_xlsx(invoices)
         return self._render_invoice_pdf(invoices)
@@ -326,6 +372,25 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+
+    def _get_invoices_pdf(self, filters, ids):
+        error, invoices = self._resolve_report_invoices(
+            filters, ids, max_records=INVOICE_PDF_REPORT_MAX_RECORDS
+        )
+        if error is not None:
+            return error
+        content, _report_type = (
+            self.env["ir.actions.report"]
+            .sudo()
+            ._render_qweb_pdf("account.account_invoices", invoices.ids)
+        )
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="invoices_report.pdf"',
             },
         )
 

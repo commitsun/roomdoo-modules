@@ -1,4 +1,5 @@
 from . import fastapi_endpoint
+from . import folio_sale_line
 from . import pms_folio
 from . import res_partner
 from . import id_number_category
