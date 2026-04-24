@@ -1,0 +1,91 @@
+# Spanish translation for pms_televes_connector
+# Copyright (C) 2024 Commit [Sun]
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_property__televes_enabled
+msgid "Enable Televes Integration"
+msgstr "Activar integración Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_property__televes_url
+msgid "Televes URL"
+msgstr "URL de Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_property__televes_base_path
+msgid "Televes Base Path"
+msgstr "Ruta base de Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_property__televes_pms_user
+msgid "Televes PMS User"
+msgstr "Usuario PMS Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_property__televes_pms_password
+msgid "Televes PMS Password"
+msgstr "Contraseña PMS Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_room__televes_room_number
+msgid "Televes Room Number"
+msgstr "Número de habitación Televes"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_reservation__televes_checkin_sent
+msgid "Televes Check-in Sent"
+msgstr "Check-in Televes enviado"
+
+#. module: pms_televes_connector
+#: model:ir.model.fields,field_description:pms_televes_connector.field_pms_reservation__televes_current_room_id
+msgid "Televes Current Room"
+msgstr "Habitación actual en Televes"
+
+#. module: pms_televes_connector
+#: model:ir.ui.view,arch_db:pms_televes_connector.pms_property_view_form_televes
+msgid "Televes"
+msgstr "Televes"
+
+#. module: pms_televes_connector
+#: model:ir.ui.view,arch_db:pms_televes_connector.pms_property_view_form_televes
+msgid "Connection"
+msgstr "Conexión"
+
+#. module: pms_televes_connector
+#: model:ir.ui.view,arch_db:pms_televes_connector.pms_property_view_form_televes
+msgid "Credentials"
+msgstr "Credenciales"
+
+#. module: pms_televes_connector
+msgid "Televes API error: check-in notification could not be sent."
+msgstr "Error API Televes: no se pudo enviar la notificación de check-in."
+
+#. module: pms_televes_connector
+msgid "Televes API error: change-data notification could not be sent."
+msgstr "Error API Televes: no se pudo enviar la notificación de cambio de datos."
+
+#. module: pms_televes_connector
+msgid "Televes API error: change-room notification could not be sent."
+msgstr "Error API Televes: no se pudo enviar la notificación de cambio de habitación."
+
+#. module: pms_televes_connector
+msgid "Televes API error: check-out notification could not be sent."
+msgstr "Error API Televes: no se pudo enviar la notificación de check-out."
+
+#. module: pms_televes_connector
+#: model:ir.cron,name:pms_televes_connector.ir_cron_televes_check_room_changes
+msgid "Televes: Check room changes"
+msgstr "Televes: Comprobar cambios de habitación"
