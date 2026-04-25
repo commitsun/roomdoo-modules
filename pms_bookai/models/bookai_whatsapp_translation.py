@@ -12,6 +12,12 @@ class BookaiWhatsappTranslation(models.Model):
         ondelete="cascade",
         string="Template",
     )
+    wa_account_id = fields.Many2one(
+        "bookai.wa.account",
+        string="WA Account",
+        ondelete="cascade",
+        help="WABA where this template is registered in Meta.",
+    )
     language = fields.Char(
         required=True,
         default="es",
@@ -37,3 +43,11 @@ class BookaiWhatsappTranslation(models.Model):
         readonly=True,
         default="draft",
     )
+
+    _sql_constraints = [
+        (
+            "template_lang_account_unique",
+            "unique(template_id, language, wa_account_id)",
+            "Translation must be unique per template, language and WA account.",
+        ),
+    ]

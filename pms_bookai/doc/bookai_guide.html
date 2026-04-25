@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>BooKAI - Guia de configuracion y uso</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #333;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #1a1a2e;
+        border-bottom: 3px solid #6c63ff;
+        padding-bottom: 10px;
+      }
+      h2 {
+        color: #2d2d44;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+        margin-top: 40px;
+      }
+      h3 {
+        color: #4a4a6a;
+        margin-top: 25px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+      }
+      th {
+        background: #6c63ff;
+        color: white;
+        padding: 10px 12px;
+        text-align: left;
+      }
+      td {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+      }
+      tr:nth-child(even) {
+        background: #f8f8fc;
+      }
+      code {
+        background: #f4f4f8;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+      pre {
+        background: #1a1a2e;
+        color: #e0e0e0;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+      pre code {
+        background: none;
+        color: inherit;
+      }
+      blockquote {
+        border-left: 4px solid #6c63ff;
+        margin: 15px 0;
+        padding: 10px 20px;
+        background: #f8f8fc;
+        color: #666;
+        font-style: italic;
+      }
+      hr {
+        border: none;
+        border-top: 2px solid #eee;
+        margin: 30px 0;
+      }
+      @media print {
+        body {
+          max-width: 100%;
+          margin: 0;
+        }
+        h1,
+        h2 {
+          page-break-after: avoid;
+        }
+        table {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <hr />
+    <p>
+      title: "BooKAI — Guia de configuracion y uso" subtitle: "Modulo pms_bookai para
+      Odoo 16" date: "Abril 2026" version: "16.0.3.0.0"
+    </p>
+    <hr />
+    <h1 id="bookai-guia-de-configuracion-y-uso">
+      BooKAI — Guia de configuracion y uso
+    </h1>
+    <p>
+      <strong>Modulo pms_bookai para Odoo 16</strong> Version 16.0.3.0.0 — Abril 2026
+    </p>
+    <hr />
+    <h2 id="1-introduccion">1. Introduccion</h2>
+    <h3 id="11-que-es-bookai">1.1 Que es BooKAI</h3>
+    <p>
+      BooKAI es un sistema de agentes conversacionales de IA para el sector hotelero.
+      Permite a los establecimientos ofrecer atencion automatizada a huespedes via
+      WhatsApp, asistir al personal del hotel y automatizar tareas operativas.
+    </p>
+    <p>
+      El modulo <strong>pms_bookai</strong> es el panel de control dentro de Odoo: desde
+      el se configuran los agentes, sus herramientas, bases de conocimiento, plantillas
+      WhatsApp y la conexion con el microservicio BooKAI.
+    </p>
+    <h3 id="12-arquitectura-general">1.2 Arquitectura general</h3>
+    <pre><code class="language-mermaid">graph LR
+    subgraph Odoo
+        A[pms_bookai&lt;br/&gt;Configuracion] --&gt; B[pms_notifications&lt;br/&gt;Plantillas WhatsApp]
+        A --&gt; C[pms.property&lt;br/&gt;Establecimientos]
+    end
+
+    subgraph BooKAI Microservicio
+        D[Motor de agentes]
+        E[Meta Cloud API&lt;br/&gt;WhatsApp]
+    end
+
+    subgraph Proveedores LLM
+        F[OpenAI]
+        G[Anthropic]
+        H[Ollama local]
+    end
+
+    A -- Webhooks --&gt; D
+    D -- JSON-RPC / SDK --&gt; A
+    D --&gt; E
+    D --&gt; F
+    D --&gt; G
+    D --&gt; H
+
+    I((Huesped&lt;br/&gt;WhatsApp)) --&gt; E --&gt; D
+</code></pre>
+    <p>
+      <strong>Flujo resumido:</strong> - Odoo es la <strong>fuente de verdad</strong>:
+      agentes, tools, KB, properties y plantillas se configuran aqui. - Cada cambio en
+      Odoo se notifica automaticamente al microservicio BooKAI via webhooks. - BooKAI
+      ejecuta las conversaciones, invocando agentes y tools, y se comunica con Odoo via
+      JSON-RPC para consultar/modificar datos del PMS.
+    </p>
+    <h3 id="13-flujo-de-una-conversacion">1.3 Flujo de una conversacion</h3>
+    <pre><code class="language-mermaid">sequenceDiagram
+    participant H as Huesped
+    participant WA as WhatsApp / Meta
+    participant BK as BooKAI
+    participant SUP as Supervisor
+    participant WRK as Worker
+    participant ODO as Odoo (SDK)
+
+    H-&gt;&gt;WA: Envia mensaje
+    WA-&gt;&gt;BK: Webhook entrante
+    BK-&gt;&gt;SUP: Evalua mensaje
+    SUP-&gt;&gt;WRK: Delega al worker adecuado
+    WRK-&gt;&gt;ODO: Ejecuta tools (consulta reservas, precios...)
+    ODO--&gt;&gt;WRK: Datos del PMS
+    WRK--&gt;&gt;SUP: Respuesta propuesta
+    SUP--&gt;&gt;BK: Respuesta validada
+    BK-&gt;&gt;WA: Envia respuesta
+    WA-&gt;&gt;H: Mensaje recibido
+</code></pre>
+    <hr />
+    <h2 id="2-configuracion-inicial">2. Configuracion inicial</h2>
+    <h3 id="21-ajustes-generales">2.1 Ajustes generales</h3>
+    <p><strong>Ruta:</strong> Ajustes &gt; General &gt; seccion BooKAI</p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Pagina de ajustes de BooKAI en Settings]</code></p>
+    </blockquote>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BooKAI Base URL</strong></td>
+          <td>
+            URL del servicio BooKAI (ej: <code>https://bookai.tudominio.com</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Odoo Username</strong></td>
+          <td>Usuario de Odoo que BooKAI usara para conectarse via JSON-RPC</td>
+        </tr>
+        <tr>
+          <td><strong>Odoo API Key</strong></td>
+          <td>API Key del usuario (Preferencias &gt; Claves API)</td>
+        </tr>
+        <tr>
+          <td><strong>Bearer Token</strong></td>
+          <td>Token auto-generado tras el registro. No editar manualmente</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="22-registro-de-instancia">2.2 Registro de instancia</h3>
+    <ol>
+      <li>Configura la URL base y las credenciales Odoo</li>
+      <li>Pulsa <strong>"Register Instance"</strong></li>
+      <li>
+        Introduce la <strong>provisioning key</strong> (clave de un solo uso
+        proporcionada por el equipo BooKAI)
+      </li>
+      <li>El sistema genera automaticamente el Bearer Token</li>
+      <li>
+        Pulsa <strong>"Re-sync with BooKAI"</strong> para sincronizar la configuracion
+      </li>
+    </ol>
+    <blockquote>
+      <p><code>[SCREENSHOT: Wizard de registro con campo provisioning key]</code></p>
+    </blockquote>
+    <h3 id="23-cuentas-llm">2.3 Cuentas LLM</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; LLM Accounts</p>
+    <p>Cada cuenta LLM representa una conexion a un proveedor de IA.</p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Listado de cuentas LLM]</code></p>
+    </blockquote>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Proveedor</strong></td>
+          <td>OpenAI, Anthropic, Ollama, LiteLLM, Custom</td>
+        </tr>
+        <tr>
+          <td><strong>API Key</strong></td>
+          <td>Clave de acceso al proveedor</td>
+        </tr>
+        <tr>
+          <td><strong>API Base URL</strong></td>
+          <td>Solo si el proveedor es custom o Ollama (URL local)</td>
+        </tr>
+        <tr>
+          <td><strong>Modelo por defecto</strong></td>
+          <td>
+            Modelo que usaran los agentes si no especifican otro (ej:
+            <code>gpt-4</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Limite mensual tokens</strong></td>
+          <td>0 = sin limite. Permite controlar el gasto</td>
+        </tr>
+        <tr>
+          <td><strong>Tokens usados (mes)</strong></td>
+          <td>Indicador automatico del consumo actual</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Importante:</strong> Si un agente maneja datos sensibles (DNI, tarjetas),
+      usa un proveedor <strong>Ollama</strong> (local) para que los datos no salgan de
+      vuestros servidores.
+    </p>
+    <hr />
+    <h2 id="3-configurar-un-establecimiento">3. Configurar un establecimiento</h2>
+    <p>
+      <strong>Ruta:</strong> PMS &gt; Properties &gt; [Propiedad] &gt; Pestana BooKAI
+    </p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Pestana BooKAI en formulario de property]</code></p>
+    </blockquote>
+    <h3 id="31-modo-bookai">3.1 Modo BooKAI</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Modo</th>
+          <th>Comportamiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Disabled</strong></td>
+          <td>
+            BooKAI desactivado para este hotel. No se envian WhatsApps ni se procesan
+            conversaciones
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Manual</strong></td>
+          <td>
+            Solo se pueden enviar WhatsApps de forma manual (boton en folio). Las reglas
+            automaticas estan desactivadas
+          </td>
+        </tr>
+        <tr>
+          <td><strong>AI</strong></td>
+          <td>Modo completo: reglas automaticas + conversaciones IA activas</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="32-venta-online">3.2 Venta online</h3>
+    <ul>
+      <li>
+        <strong>BooKAI Online Selling</strong>: Activa la venta de reservas a traves de
+        BooKAI
+      </li>
+      <li>
+        <strong>Sale Channel</strong>: Canal de venta PMS que se asignara a las reservas
+        creadas por BooKAI. Obligatorio si la venta online esta activa
+      </li>
+    </ul>
+    <h3 id="33-canal-whatsapp">3.3 Canal WhatsApp</h3>
+    <p>Credenciales de Meta Cloud API para este establecimiento:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WA Phone Number ID</strong></td>
+          <td>ID del numero de telefono en Meta</td>
+        </tr>
+        <tr>
+          <td><strong>WA Access Token</strong></td>
+          <td>Token Bearer de Meta para enviar mensajes</td>
+        </tr>
+        <tr>
+          <td><strong>WA Account ID</strong></td>
+          <td>ID de la cuenta de WhatsApp Business</td>
+        </tr>
+        <tr>
+          <td><strong>WA Verify Token</strong></td>
+          <td>Token para verificacion de webhooks de Meta</td>
+        </tr>
+        <tr>
+          <td><strong>WA Display Number</strong></td>
+          <td>Numero visible (ej: "+34 900 123 456")</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="34-escalacion">3.4 Escalacion</h3>
+    <p>Cuando BooKAI no puede resolver una conversacion, escala a personal humano:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Contactos de escalacion</strong></td>
+          <td>
+            Usuarios que recibiran la alerta WhatsApp. Solo los que tengan telefono
+            movil configurado
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Timeout (min)</strong></td>
+          <td>Minutos sin respuesta antes de enviar la alerta. 0 = desactivado</td>
+        </tr>
+        <tr>
+          <td><strong>Template de escalacion</strong></td>
+          <td>Plantilla WhatsApp para la alerta de escalacion</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="35-app-url">3.5 App URL</h3>
+    <p>
+      URL de la aplicacion del hotel para este property. Si se deja vacio, se usa la URL
+      global configurada en parametros del sistema.
+    </p>
+    <hr />
+    <h2 id="4-agentes">4. Agentes</h2>
+    <p><strong>Ruta:</strong> BooKAI &gt; Agents</p>
+    <h3 id="41-conceptos">4.1 Conceptos</h3>
+    <pre><code class="language-mermaid">graph TD
+    subgraph Supervisores
+        SE[Supervisor Externo&lt;br/&gt;Huespedes]
+        SI[Supervisor Interno&lt;br/&gt;Staff hotel]
+        SR[Supervisor Roomdoo&lt;br/&gt;Equipo tecnico]
+    end
+
+    subgraph Workers Externos
+        PI[Property Info]
+        BA[Booking Assistant]
+        AV[Availability]
+        BO[Booking Agent]
+    end
+
+    subgraph Workers Internos
+        RA[Reception Assistant]
+        FA[Finance Assistant]
+        OA[Operations Assistant]
+    end
+
+    subgraph Workers Roomdoo
+        RG[Roomdoo God]
+        BAdmin[BooKAI Admin]
+        UA[Usage Analyst]
+    end
+
+    SE --&gt; PI
+    SE --&gt; BA
+    SE --&gt; AV
+    SE --&gt; BO
+
+    SI --&gt; RA
+    SI --&gt; FA
+    SI --&gt; OA
+
+    SR --&gt; RG
+    SR --&gt; BAdmin
+    SR --&gt; UA
+</code></pre>
+    <ul>
+      <li>
+        <strong>Supervisores</strong>: Reciben los mensajes, deciden que worker usar,
+        validan respuestas y escalan si es necesario. Son protegidos: no se pueden
+        borrar ni modificar su nombre tecnico.
+      </li>
+      <li>
+        <strong>Workers</strong>: Ejecutan tareas especificas usando tools. Cada worker
+        tiene un ambito concreto (informacion de hotel, reservas, finanzas...).
+      </li>
+    </ul>
+    <h3 id="42-vista-kanban">4.2 Vista kanban</h3>
+    <p>La vista principal de agentes muestra tarjetas con:</p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Vista kanban de agentes]</code></p>
+    </blockquote>
+    <ul>
+      <li><strong>Imagen</strong> del agente</li>
+      <li><strong>Nombre</strong> y nombre tecnico</li>
+      <li>
+        <strong>Contadores</strong>: numero de tools, agentes delegados y documentos KB
+      </li>
+      <li>
+        <strong>Badges</strong>: "GOD MODE" (naranja), "Supervisor" (escudo), "Archived"
+        (rojo)
+      </li>
+      <li>
+        <strong>Rol de ejecucion</strong> y <strong>politica de confirmacion</strong>
+      </li>
+      <li><strong>Modo de identidad</strong> y usuario tecnico asignado</li>
+    </ul>
+    <h3 id="43-crear-un-agente">4.3 Crear un agente</h3>
+    <blockquote>
+      <p><code>[SCREENSHOT: Formulario de agente - pestana general]</code></p>
+    </blockquote>
+    <p><strong>Campos de identidad:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+          <th>Ejemplo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Nombre</strong></td>
+          <td>Nombre visible del agente</td>
+          <td>"Asistente de reservas"</td>
+        </tr>
+        <tr>
+          <td><strong>Nombre tecnico</strong></td>
+          <td>Identificador unico. Solo minusculas, numeros y guiones</td>
+          <td><code>booking-assistant</code></td>
+        </tr>
+        <tr>
+          <td><strong>Caller Type</strong></td>
+          <td>Quien puede invocarlo: Internal, External Guest, System, Any</td>
+          <td><code>external_guest</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Configuracion LLM:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Cuenta LLM</strong></td>
+          <td>Proveedor de IA a usar</td>
+        </tr>
+        <tr>
+          <td><strong>Modelo LLM</strong></td>
+          <td>Modelo especifico (deja vacio para usar el de la cuenta)</td>
+        </tr>
+        <tr>
+          <td><strong>Temperatura</strong></td>
+          <td>0.0 = determinista, 1.0 = creativo. Recomendado: 0.2-0.5</td>
+        </tr>
+        <tr>
+          <td><strong>Max Tokens</strong></td>
+          <td>Limite de longitud de respuesta</td>
+        </tr>
+        <tr>
+          <td><strong>Datos sensibles</strong></td>
+          <td>Si es True, se recomienda usar Ollama (local)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Prompts:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>System Prompt</strong></td>
+          <td>
+            Instrucciones base del agente. Define su personalidad, reglas y
+            comportamiento
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Context Template</strong></td>
+          <td>
+            Plantilla para inyectar contexto de KB. Usa <code>{kb_context}</code> como
+            placeholder
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="44-capas-de-permisos">4.4 Capas de permisos</h3>
+    <pre><code class="language-mermaid">graph TD
+    A[Capa 1&lt;br/&gt;Quien puede invocar?] --&gt; B[Capa 2&lt;br/&gt;Con que identidad opera?]
+    B --&gt; C[Capa 3&lt;br/&gt;Que tools puede usar?]
+
+    A -.- A1[caller_type: internal/external_guest/system/any]
+    A -.- A2[allowed_user_ids: usuarios concretos]
+    A -.- A3[allowed_group_ids: grupos de Odoo]
+    A -.- A4[property_scope_ids: properties permitidas]
+    A -.- A5[allowed_agent_ids: agentes a los que puede delegar]
+
+    B -.- B1[technical_user: usuario tecnico dedicado]
+    B -.- B2[caller_identity: hereda permisos del que llama]
+    B -.- B3[technical_user_scoped: tecnico filtrado al ambito del caller]
+
+    C -.- C1[Tool bindings con override de sensibilidad]
+</code></pre>
+    <p>
+      <strong>Capa 1 — Quien puede invocar:</strong> - <strong>Caller Type</strong>:
+      Define el tipo de usuario que puede usar este agente -
+      <strong>Usuarios/Grupos/Properties</strong>: Restricciones adicionales opcionales
+      (vacio = sin restriccion) - <strong>Agentes delegados</strong>: Otros agentes a
+      los que este puede delegar trabajo
+    </p>
+    <p>
+      <strong>Capa 2 — Con que identidad opera:</strong> -
+      <strong>Technical User</strong>: Usa un usuario de Odoo dedicado (recomendado para
+      la mayoria) - <strong>Caller Identity</strong>: Hereda los permisos del usuario
+      que lo invoca (solo para agentes internos) -
+      <strong>Technical User Scoped</strong>: Usa usuario tecnico pero filtrado al
+      ambito del caller
+    </p>
+    <p>
+      <strong>God Mode</strong>: Acceso completo a Odoo. Todas las escrituras requieren
+      confirmacion y se registran en el Audit Log. Solo para administradores.
+    </p>
+    <h3 id="45-modos-de-ejecucion">4.5 Modos de ejecucion</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Opciones</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Rol de ejecucion</strong></td>
+          <td>Advisor / Assistant / Operator</td>
+          <td>
+            Advisor solo propone, Assistant ejecuta con confirmacion, Operator ejecuta
+            directamente
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Politica de confirmacion</strong></td>
+          <td>Always / Sensitive / Irreversible / Never</td>
+          <td>Cuando pedir confirmacion al usuario antes de ejecutar una accion</td>
+        </tr>
+        <tr>
+          <td><strong>Nivel de log</strong></td>
+          <td>Basic / Full / Debug</td>
+          <td>Cuanto detalle se registra en las ejecuciones</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Combinacion recomendada para agentes de huespedes:</strong> Assistant +
+      Sensitive + Basic
+    </p>
+    <hr />
+    <h2 id="5-tools-y-mcp">5. Tools y MCP</h2>
+    <h3 id="51-catalogo-de-tools">5.1 Catalogo de tools</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; Tools</p>
+    <p>
+      Las tools son las acciones que los agentes pueden ejecutar: consultar reservas,
+      comprobar disponibilidad, crear reservas, etc.
+    </p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Listado de tools con filtro por tipo]</code></p>
+    </blockquote>
+    <p><strong>Tipos de tools:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Descripcion</th>
+          <th>Ejemplo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>SDK</strong></td>
+          <td>Metodo del SDK de Roomdoo ejecutado via JSON-RPC</td>
+          <td><code>reservations.get</code></td>
+        </tr>
+        <tr>
+          <td><strong>MCP</strong></td>
+          <td>Tool descubierta de un servidor MCP</td>
+          <td><code>brave_search</code></td>
+        </tr>
+        <tr>
+          <td><strong>Webhook</strong></td>
+          <td>Llamada HTTP a un servicio externo</td>
+          <td>Notificacion a Slack</td>
+        </tr>
+        <tr>
+          <td><strong>HTTP</strong></td>
+          <td>Peticion HTTP generica</td>
+          <td>API externa</td>
+        </tr>
+        <tr>
+          <td><strong>Odoo Action</strong></td>
+          <td>Metodo de un modelo de Odoo</td>
+          <td><code>pms.reservation.confirm</code></td>
+        </tr>
+        <tr>
+          <td><strong>Function</strong></td>
+          <td>Funcion interna de BooKAI</td>
+          <td>Calculo personalizado</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Sensibilidad de acciones:</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Nivel</th>
+          <th>Descripcion</th>
+          <th>Ejemplo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>None</strong></td>
+          <td>No requiere confirmacion</td>
+          <td>Consultar informacion</td>
+        </tr>
+        <tr>
+          <td><strong>Sensitive</strong></td>
+          <td>Requiere confirmacion segun la politica del agente</td>
+          <td>Modificar reserva</td>
+        </tr>
+        <tr>
+          <td><strong>Irreversible</strong></td>
+          <td>Siempre requiere confirmacion</td>
+          <td>Cancelar reserva, eliminar registro</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="52-bindings-asignar-tools-a-agentes">
+      5.2 Bindings (asignar tools a agentes)
+    </h3>
+    <p>
+      Desde el formulario del agente, pestana <strong>Tools</strong>, se asignan tools
+      con posibilidad de:
+    </p>
+    <ul>
+      <li>
+        <strong>Override de descripcion</strong>: Personalizar como se describe la tool
+        para este agente
+      </li>
+      <li>
+        <strong>Override de sensibilidad</strong>: Cambiar el nivel de sensibilidad para
+        este agente concreto
+      </li>
+    </ul>
+    <h3 id="53-servidores-mcp">5.3 Servidores MCP</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; MCP Servers</p>
+    <p>
+      Los servidores MCP (Model Context Protocol) permiten extender las capacidades de
+      los agentes con herramientas externas (busqueda web, acceso a APIs, etc.).
+    </p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Formulario de servidor MCP con botones de accion]</code></p>
+    </blockquote>
+    <p>
+      <strong>Flujo de trabajo:</strong> 1. <strong>Crear servidor</strong>: Elegir
+      transporte (stdio para local, HTTP para remoto) 2. <strong>Connect</strong>:
+      Establece la conexion con el servidor 3. <strong>Discover Tools</strong>: Descubre
+      automaticamente las tools disponibles y las crea en el catalogo 4.
+      <strong>Check Status</strong>: Verifica que el servidor sigue activo
+    </p>
+    <p>
+      <strong>Transporte stdio</strong> (local): Se ejecuta un proceso en el servidor
+      BooKAI - Command: <code>npx</code>, <code>uvx</code>, <code>python</code>... -
+      Args: nombre del paquete MCP - Env vars: Variables de entorno en JSON (ej:
+      <code>{"BRAVE_API_KEY": "xxx"}</code>)
+    </p>
+    <p>
+      <strong>Transporte HTTP</strong> (remoto): Se conecta a un servidor MCP via HTTP -
+      URL del servidor - Tipo de autenticacion: Bearer token o ninguna - API Key
+    </p>
+    <p>
+      <strong>Health check automatico:</strong> Un cron cada 5 minutos verifica el
+      estado de todos los servidores MCP activos y reconecta los que se hayan
+      desconectado.
+    </p>
+    <hr />
+    <h2 id="6-knowledge-base">6. Knowledge Base</h2>
+    <p><strong>Ruta:</strong> BooKAI &gt; KB Documents</p>
+    <p>
+      Los documentos de KB proporcionan informacion contextual a los agentes. Cuando un
+      agente necesita responder, consulta los documentos que tiene asignados.
+    </p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Listado de documentos KB]</code></p>
+    </blockquote>
+    <h3 id="61-tipos-de-documentos">6.1 Tipos de documentos</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Uso</th>
+          <th>Inyeccion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Markdown</strong></td>
+          <td>Contenido editado directamente en Odoo</td>
+          <td>Se inyecta siempre en el prompt</td>
+        </tr>
+        <tr>
+          <td><strong>PDF</strong></td>
+          <td>Archivo adjunto</td>
+          <td>Se vectoriza para busqueda semantica</td>
+        </tr>
+        <tr>
+          <td><strong>URL</strong></td>
+          <td>Pagina web</td>
+          <td>Se vectoriza para busqueda semantica</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="62-comportamiento">6.2 Comportamiento</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Inject Always</strong></td>
+          <td>
+            El contenido completo se incluye en cada prompt del agente. Ideal para
+            instrucciones cortas y criticas
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Vectorize</strong></td>
+          <td>
+            El contenido se indexa para busqueda semantica. BooKAI busca los fragmentos
+            relevantes segun la pregunta
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Vector Status</strong></td>
+          <td>Estado del procesamiento: Not Needed, Pending, Ready, Error</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Tipos de documento</strong> (clasificacion organizativa): Instruction,
+      Skill, FAQ, Manual, Context
+    </p>
+    <h3 id="63-asignar-a-agentes">6.3 Asignar a agentes</h3>
+    <p>
+      En el formulario del documento, pestana <strong>Agents</strong>, selecciona los
+      agentes que tendran acceso a este documento. Un documento puede estar asignado a
+      multiples agentes.
+    </p>
+    <hr />
+    <h2 id="7-plantillas-whatsapp">7. Plantillas WhatsApp</h2>
+    <p>
+      <strong>Ruta:</strong> PMS &gt; Notification Templates &gt; [Template] &gt;
+      Pestana BookAI WhatsApp
+    </p>
+    <p>
+      Las plantillas definen los mensajes WhatsApp que BooKAI envia (confirmaciones,
+      recordatorios, alertas de escalacion, etc.).
+    </p>
+    <blockquote>
+      <p>
+        <code>[SCREENSHOT: Pestana BookAI WhatsApp en formulario de template]</code>
+      </p>
+    </blockquote>
+    <h3 id="71-configuracion-basica">7.1 Configuracion basica</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BookAI Template Code</strong></td>
+          <td>
+            Identificador unico de la plantilla en BooKAI (ej:
+            <code>booking_confirmation_v1</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Categoria</strong></td>
+          <td>Tipo Meta: Utility, Marketing, Authentication</td>
+        </tr>
+        <tr>
+          <td><strong>Telefono destinatario</strong></td>
+          <td>Expresion que devuelve el telefono del destinatario</td>
+        </tr>
+        <tr>
+          <td><strong>Idioma</strong></td>
+          <td>Expresion que devuelve el idioma del mensaje</td>
+        </tr>
+        <tr>
+          <td><strong>Nombre destinatario</strong></td>
+          <td>Expresion para el nombre visible</td>
+        </tr>
+        <tr>
+          <td><strong>ID Folio origen</strong></td>
+          <td>Expresion que devuelve el ID del folio asociado</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="72-cuerpo-del-mensaje">7.2 Cuerpo del mensaje</h3>
+    <p>El body del mensaje usa <strong>placeholders</strong> con doble llave:</p>
+    <pre><code>Hola {{ buyer_name }}, tu reserva {{ reservation_locator }}
+en {{ hotel_name }} esta confirmada.
+
+Check-in: {{ checkin_date }}
+Check-out: {{ checkout_date }}
+</code></pre>
+    <p>
+      Cada placeholder debe estar definido en los <strong>Parametros</strong> de la
+      plantilla.
+    </p>
+    <h3 id="73-parametros">7.3 Parametros</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Uso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Literal</strong></td>
+          <td>Valor fijo (ej: texto estatico)</td>
+        </tr>
+        <tr>
+          <td><strong>Field</strong></td>
+          <td>Valor de un campo del registro (ej: <code>partner_id.name</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Inline</strong></td>
+          <td>
+            Expresion Odoo renderizada (ej: <code>{{ object.partner_id.mobile }}</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>QWeb</strong></td>
+          <td>
+            Plantilla QWeb con logica condicional (<code>t-if</code>,
+            <code>t-foreach</code>)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="74-traducciones">7.4 Traducciones</h3>
+    <p>Las traducciones se gestionan automaticamente:</p>
+    <ol>
+      <li>
+        Al pulsar <strong>"Sync to BooKAI"</strong>, el sistema detecta todos los
+        idiomas activos en Odoo que tienen body traducido
+      </li>
+      <li>Crea automaticamente registros de traduccion por idioma</li>
+      <li>Cada traduccion tiene:</li>
+      <li>
+        <strong>Meta Template ID</strong>: Si se especifica, BooKAI vincula con una
+        plantilla existente en Meta. Si esta vacio, crea una nueva
+      </li>
+      <li>
+        <strong>Meta Status</strong>: Estado de aprobacion en Meta (Draft, Pending,
+        Approved, Rejected, Error)
+      </li>
+    </ol>
+    <h3 id="75-sincronizacion">7.5 Sincronizacion</h3>
+    <ul>
+      <li>
+        <strong>"Sync to BooKAI"</strong>: Envia la plantilla y todas sus traducciones a
+        BooKAI, que a su vez las registra/actualiza en Meta Cloud API
+      </li>
+      <li>
+        <strong>"Check Status"</strong>: Consulta el estado de aprobacion de Meta para
+        cada traduccion
+      </li>
+    </ul>
+    <hr />
+    <h2 id="8-monitorizacion">8. Monitorizacion</h2>
+    <h3 id="81-usage-consumo">8.1 Usage (Consumo)</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; Usage</p>
+    <p>Registra el consumo de tokens y costes por cada interaccion de los agentes.</p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Vista de usage con agrupacion por agente]</code></p>
+    </blockquote>
+    <p>
+      <strong>Campos principales:</strong> - Tokens de entrada y salida - Coste en USD
+      (LLM + Whisper + Vision) - Agente, propiedad, modelo, conversacion - Estado:
+      success, error, escalated
+    </p>
+    <p>
+      <strong>Filtros utiles:</strong> Agrupar por agente, propiedad o modelo para
+      detectar patrones de consumo.
+    </p>
+    <h3 id="82-executions-ejecuciones">8.2 Executions (Ejecuciones)</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; Executions</p>
+    <p>Traza completa de cada ejecucion de un agente.</p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Formulario de ejecucion con steps]</code></p>
+    </blockquote>
+    <p>
+      <strong>Informacion de la ejecucion:</strong> - Agente raiz, propiedad,
+      conversacion - Tiempo de inicio/fin, duracion - Politicas efectivas aplicadas
+      (rol, confirmacion, log level) - Estado: Running, Completed, Error, Cancelled
+    </p>
+    <p><strong>Steps (pasos):</strong> Cada ejecucion contiene una lista de steps:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo de step</th>
+          <th>Descripcion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>tool_call</strong></td>
+          <td>Invocacion de una herramienta</td>
+        </tr>
+        <tr>
+          <td><strong>delegation</strong></td>
+          <td>Delegacion a otro agente</td>
+        </tr>
+        <tr>
+          <td><strong>confirmation</strong></td>
+          <td>Solicitud de confirmacion al usuario</td>
+        </tr>
+        <tr>
+          <td><strong>escalation</strong></td>
+          <td>Escalacion a operador humano</td>
+        </tr>
+        <tr>
+          <td><strong>decision</strong></td>
+          <td>Decision del agente</td>
+        </tr>
+        <tr>
+          <td><strong>error</strong></td>
+          <td>Error durante la ejecucion</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 id="83-audit-log">8.3 Audit Log</h3>
+    <p><strong>Ruta:</strong> BooKAI &gt; Audit Log</p>
+    <p>
+      Registro de todas las operaciones de escritura realizadas por agentes en Odoo.
+    </p>
+    <blockquote>
+      <p><code>[SCREENSHOT: Audit log con filtro de errores]</code></p>
+    </blockquote>
+    <p>
+      <strong>Campos principales:</strong> - Agente, usuario, propiedad - Operacion:
+      read, create, write, unlink, call - Modelo y metodo afectado - IDs de registros
+      afectados - Confirmado por (quien aprobo la accion) - Estado: pending, confirmed,
+      success, error, rejected
+    </p>
+    <hr />
+    <h2 id="9-permisos-y-seguridad">9. Permisos y seguridad</h2>
+    <h3 id="91-grupos-de-seguridad">9.1 Grupos de seguridad</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th>Descripcion</th>
+          <th>Acceso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BooKAI User</strong></td>
+          <td>Usuarios operativos del hotel</td>
+          <td>Solo lectura de agentes asignados, KB, usage, executions</td>
+        </tr>
+        <tr>
+          <td><strong>BooKAI Admin</strong></td>
+          <td>Administradores de BooKAI</td>
+          <td>CRUD completo sobre todos los modelos BooKAI</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>El grupo Admin hereda automaticamente los permisos de User.</p>
+    <h3 id="92-que-ve-cada-grupo">9.2 Que ve cada grupo</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Entidad</th>
+          <th>User</th>
+          <th>Admin</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Agentes</td>
+          <td>Solo los que tiene asignados</td>
+          <td>Todos</td>
+        </tr>
+        <tr>
+          <td>KB Documents</td>
+          <td>Solo los de sus agentes</td>
+          <td>Todos</td>
+        </tr>
+        <tr>
+          <td>LLM Accounts</td>
+          <td>Solo las de sus agentes</td>
+          <td>Todas</td>
+        </tr>
+        <tr>
+          <td>Usage</td>
+          <td>Solo de sus agentes</td>
+          <td>Todo</td>
+        </tr>
+        <tr>
+          <td>Tools</td>
+          <td>Lectura de todos</td>
+          <td>CRUD completo</td>
+        </tr>
+        <tr>
+          <td>MCP Servers</td>
+          <td>Lectura de todos</td>
+          <td>CRUD completo</td>
+        </tr>
+        <tr>
+          <td>Executions</td>
+          <td>Lectura de todos</td>
+          <td>CRUD completo</td>
+        </tr>
+        <tr>
+          <td>Audit Log</td>
+          <td>Lectura de todos</td>
+          <td>CRUD completo</td>
+        </tr>
+        <tr>
+          <td>Settings BooKAI</td>
+          <td>No acceso</td>
+          <td>Acceso completo</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2 id="anexo-a-referencia-rapida">Anexo A — Referencia rapida</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Menu</th>
+          <th>Funcion</th>
+          <th>Grupo minimo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>BooKAI &gt; Agents</td>
+          <td>Gestionar agentes IA</td>
+          <td>User (lectura) / Admin (CRUD)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; KB Documents</td>
+          <td>Base de conocimiento</td>
+          <td>User (lectura) / Admin (CRUD)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; LLM Accounts</td>
+          <td>Cuentas de proveedores IA</td>
+          <td>User (lectura) / Admin (CRUD)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; MCP Servers</td>
+          <td>Servidores de herramientas externas</td>
+          <td>User (lectura) / Admin (CRUD)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; Tools</td>
+          <td>Catalogo de herramientas</td>
+          <td>User (lectura) / Admin (CRUD)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; Usage</td>
+          <td>Consumo de tokens</td>
+          <td>User (lectura)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; Executions</td>
+          <td>Trazas de ejecucion</td>
+          <td>User (lectura)</td>
+        </tr>
+        <tr>
+          <td>BooKAI &gt; Audit Log</td>
+          <td>Registro de escrituras</td>
+          <td>User (lectura)</td>
+        </tr>
+        <tr>
+          <td>Settings &gt; BooKAI</td>
+          <td>Conexion con BooKAI</td>
+          <td>Admin</td>
+        </tr>
+        <tr>
+          <td>Property &gt; BooKAI tab</td>
+          <td>Config por hotel</td>
+          <td>Admin</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2 id="anexo-b-glosario">Anexo B — Glosario</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Termino</th>
+          <th>Definicion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Agente</strong></td>
+          <td>
+            Entidad de IA configurada con un prompt, cuenta LLM y conjunto de tools
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Supervisor</strong></td>
+          <td>Agente especial que enruta mensajes a workers y valida respuestas</td>
+        </tr>
+        <tr>
+          <td><strong>Worker</strong></td>
+          <td>Agente que ejecuta tareas especificas usando tools</td>
+        </tr>
+        <tr>
+          <td><strong>Tool</strong></td>
+          <td>
+            Accion que un agente puede ejecutar (consultar datos, crear reserva, buscar
+            en web...)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Binding</strong></td>
+          <td>Vinculacion entre un agente y una tool, con configuracion especifica</td>
+        </tr>
+        <tr>
+          <td><strong>KB Document</strong></td>
+          <td>
+            Documento de base de conocimiento que proporciona contexto a los agentes
+          </td>
+        </tr>
+        <tr>
+          <td><strong>MCP</strong></td>
+          <td>
+            Model Context Protocol. Estandar para conectar agentes con servidores de
+            herramientas
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Execution</strong></td>
+          <td>
+            Registro completo de una ejecucion de un agente, incluyendo todos los pasos
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Step</strong></td>
+          <td>
+            Paso individual dentro de una ejecucion (tool call, delegacion,
+            confirmacion...)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Escalacion</strong></td>
+          <td>Proceso de derivar una conversacion a un operador humano</td>
+        </tr>
+        <tr>
+          <td><strong>Bearer Token</strong></td>
+          <td>Token de autenticacion entre Odoo y el microservicio BooKAI</td>
+        </tr>
+        <tr>
+          <td><strong>Provisioning Key</strong></td>
+          <td>Clave de un solo uso para registrar una instancia de Odoo en BooKAI</td>
+        </tr>
+        <tr>
+          <td><strong>Meta Template ID</strong></td>
+          <td>Identificador de una plantilla WhatsApp en Meta Cloud API</td>
+        </tr>
+        <tr>
+          <td><strong>Caller Type</strong></td>
+          <td>
+            Tipo de usuario que puede invocar un agente (internal, external_guest,
+            system, any)
+          </td>
+        </tr>
+        <tr>
+          <td><strong>God Mode</strong></td>
+          <td>
+            Modo de acceso completo a Odoo. Requiere confirmacion para todas las
+            escrituras
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Action Sensitivity</strong></td>
+          <td>Nivel de sensibilidad de una tool: none, sensitive, irreversible</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

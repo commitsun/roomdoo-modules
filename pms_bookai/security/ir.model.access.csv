@@ -23,4 +23,8 @@ access_bookai_execution_base_read,bookai.execution base read,model_bookai_execut
 access_bookai_execution_admin,bookai.execution admin full,model_bookai_execution,pms_bookai.group_bookai_admin,1,1,1,1
 access_bookai_execution_step_base_read,bookai.execution.step base read,model_bookai_execution_step,base.group_user,1,0,0,0
 access_bookai_execution_step_admin,bookai.execution.step admin full,model_bookai_execution_step,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_wa_account_user,bookai.wa.account user read,model_bookai_wa_account,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_wa_account_admin,bookai.wa.account admin full,model_bookai_wa_account,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_wa_phone_user,bookai.wa.phone user read,model_bookai_wa_phone,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_wa_phone_admin,bookai.wa.phone admin full,model_bookai_wa_phone,pms_bookai.group_bookai_admin,1,1,1,1
 access_bookai_register_wizard,bookai.register.wizard admin,model_bookai_register_wizard,base.group_system,1,1,1,1

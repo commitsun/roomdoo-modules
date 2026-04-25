@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- WA Phone tree (embedded inside WA Account form) -->
+    <record id="view_bookai_wa_phone_tree" model="ir.ui.view">
+        <field name="name">bookai.wa.phone.tree</field>
+        <field name="model">bookai.wa.phone</field>
+        <field name="arch" type="xml">
+            <tree string="Phone Numbers" editable="bottom">
+                <field name="phone_number_id" />
+                <field name="display_number" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- WA Account form -->
+    <record id="view_bookai_wa_account_form" model="ir.ui.view">
+        <field name="name">bookai.wa.account.form</field>
+        <field name="model">bookai.wa.account</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Business Account">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="WABA Name" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="waba_id" />
+                            <field name="active" invisible="1" />
+                        </group>
+                        <group>
+                            <field name="access_token" password="True" />
+                            <field name="verify_token" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Phone Numbers">
+                            <field name="phone_ids">
+                                <tree ref="pms_bookai.view_bookai_wa_phone_tree" />
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- WA Account tree -->
+    <record id="view_bookai_wa_account_tree" model="ir.ui.view">
+        <field name="name">bookai.wa.account.tree</field>
+        <field name="model">bookai.wa.account</field>
+        <field name="arch" type="xml">
+            <tree string="WhatsApp Accounts">
+                <field name="name" />
+                <field name="waba_id" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- WA Account action -->
+    <record id="action_bookai_wa_account" model="ir.actions.act_window">
+        <field name="name">WA Accounts</field>
+        <field name="res_model">bookai.wa.account</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

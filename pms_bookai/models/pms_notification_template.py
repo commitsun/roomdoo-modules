@@ -395,38 +395,82 @@ class PmsNotificationTemplate(models.Model):
         }
 
     def _sync_translations_from_i18n(self):
-        """Auto-create/update translations from body i18n."""
+        """Auto-create/update translations from body i18n.
+
+        Creates one translation record per (language × WA account) for
+        each WABA linked to the properties of this template.
+        """
         self.ensure_one()
         Translation = self.env["bookai.whatsapp.translation"]
         active_langs = self.env["res.lang"].search([("active", "=", True)])
-        found_codes = set()
+
+        # Collect WA accounts from associated properties
+        wa_accounts = self.env["bookai.wa.account"]
+        for prop in self.pms_property_ids:
+            if prop.bookai_wa_phone_id and prop.bookai_wa_phone_id.wa_account_id:
+                wa_accounts |= prop.bookai_wa_phone_id.wa_account_id
+        # If template has no properties or none have WA, use empty account
+        if not wa_accounts:
+            wa_accounts = self.env["bookai.wa.account"]
+
+        found_keys = set()  # (language, wa_account_id)
         for lang in active_langs:
             body = self.with_context(lang=lang.code).body
             if not body or not body.strip():
                 continue
             short_code = lang.iso_code or lang.code.split("_")[0]
-            if short_code in found_codes:
-                continue
-            found_codes.add(short_code)
-            existing = Translation.search(
-                [
-                    ("template_id", "=", self.id),
-                    ("language", "=", short_code),
-                ],
-                limit=1,
-            )
-            if not existing:
-                Translation.create(
-                    {
-                        "template_id": self.id,
-                        "language": short_code,
-                    }
+
+            accounts_to_process = wa_accounts or self.env["bookai.wa.account"]
+            if not accounts_to_process:
+                # No WA accounts: create translation without account
+                key = (short_code, False)
+                if key in found_keys:
+                    continue
+                found_keys.add(key)
+                existing = Translation.search(
+                    [
+                        ("template_id", "=", self.id),
+                        ("language", "=", short_code),
+                        ("wa_account_id", "=", False),
+                    ],
+                    limit=1,
                 )
-        # Deactivate translations without body
+                if not existing:
+                    Translation.create(
+                        {
+                            "template_id": self.id,
+                            "language": short_code,
+                        }
+                    )
+            else:
+                for wa_account in accounts_to_process:
+                    key = (short_code, wa_account.id)
+                    if key in found_keys:
+                        continue
+                    found_keys.add(key)
+                    existing = Translation.search(
+                        [
+                            ("template_id", "=", self.id),
+                            ("language", "=", short_code),
+                            ("wa_account_id", "=", wa_account.id),
+                        ],
+                        limit=1,
+                    )
+                    if not existing:
+                        Translation.create(
+                            {
+                                "template_id": self.id,
+                                "language": short_code,
+                                "wa_account_id": wa_account.id,
+                            }
+                        )
+
+        # Deactivate stale translations
+        found_langs = {k[0] for k in found_keys}
         stale = Translation.search(
             [
                 ("template_id", "=", self.id),
-                ("language", "not in", list(found_codes)),
+                ("language", "not in", list(found_langs)),
                 ("active", "=", True),
             ]
         )
@@ -451,6 +495,8 @@ class PmsNotificationTemplate(models.Model):
                 "property_ids": (self.pms_property_ids.ids or []),
                 "active": trans.active,
             }
+            if trans.wa_account_id:
+                entry["waba_id"] = trans.wa_account_id.waba_id
             if trans.meta_template_id:
                 entry["meta_template_id"] = trans.meta_template_id
             header = (tmpl_lang.bookai_header_text or "").strip()
@@ -492,8 +538,15 @@ class PmsNotificationTemplate(models.Model):
             lang = trans_data.get("language")
             if not lang:
                 continue
+            waba_id = trans_data.get("waba_id")
             trans = self.bookai_translation_ids.filtered(
-                lambda t, lang_code=lang: t.language == lang_code
+                lambda t, lang_code=lang, wid=waba_id: (
+                    t.language == lang_code
+                    and (
+                        (not wid)
+                        or (t.wa_account_id and t.wa_account_id.waba_id == wid)
+                    )
+                )
             )
             if not trans:
                 continue

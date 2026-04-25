@@ -40,6 +40,13 @@
     sequence="35"
   />
     <menuitem
+    id="menu_bookai_wa_account"
+    name="WA Accounts"
+    parent="menu_bookai_root"
+    action="action_bookai_wa_account"
+    sequence="36"
+  />
+    <menuitem
     id="menu_bookai_tool"
     name="Tools"
     parent="menu_bookai_root"

@@ -61,17 +61,54 @@ class TestBookaiProperty(TestBookaiCommon):
         self.assertNotIn(user_no_phone.id, contact_ids)
 
     def test_hotel_public_info_no_sensitive_data(self):
-        self.pms_property1.write(
+        wa_account = self.env["bookai.wa.account"].create(
             {
-                "bookai_wa_access_token": "secret-token",
-                "bookai_wa_phone_number_id": "12345",
+                "name": "Test WABA",
+                "waba_id": "test-waba-123",
+                "access_token": "secret-token",
             }
         )
+        wa_phone = self.env["bookai.wa.phone"].create(
+            {
+                "wa_account_id": wa_account.id,
+                "phone_number_id": "12345",
+                "display_number": "+34 900 000 000",
+            }
+        )
+        self.pms_property1.write({"bookai_wa_phone_id": wa_phone.id})
         info = self.pms_property1.get_bookai_hotel_public_info()
         self.assertNotIn("bookai_wa_access_token", info)
         self.assertNotIn("bookai_escalation_contacts", info)
         self.assertIn("name", info)
         self.assertIn("tz", info)
+
+    def test_hotel_config_info_wa_from_phone(self):
+        wa_account = self.env["bookai.wa.account"].create(
+            {
+                "name": "Test WABA",
+                "waba_id": "waba-456",
+                "access_token": "token-abc",
+                "verify_token": "verify-xyz",
+            }
+        )
+        wa_phone = self.env["bookai.wa.phone"].create(
+            {
+                "wa_account_id": wa_account.id,
+                "phone_number_id": "phone-789",
+                "display_number": "+34 600 000 000",
+            }
+        )
+        self.pms_property1.write({"bookai_wa_phone_id": wa_phone.id})
+        info = self.pms_property1.get_bookai_hotel_config_info()
+        self.assertEqual(info["bookai_wa_account_id"], "waba-456")
+        self.assertEqual(info["bookai_wa_access_token"], "token-abc")
+        self.assertEqual(info["bookai_wa_phone_number_id"], "phone-789")
+        self.assertEqual(info["bookai_wa_display_number"], "+34 600 000 000")
+
+    def test_hotel_config_info_wa_none_without_phone(self):
+        info = self.pms_property1.get_bookai_hotel_config_info()
+        self.assertIsNone(info["bookai_wa_account_id"])
+        self.assertIsNone(info["bookai_wa_phone_number_id"])
 
     def test_get_bookai_prices_date_range(self):
         room_type = self.env["pms.room.type"].create(
