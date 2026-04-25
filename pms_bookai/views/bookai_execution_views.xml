@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Execution Tree -->
+    <record id="view_bookai_execution_tree" model="ir.ui.view">
+        <field name="name">bookai.execution.tree</field>
+        <field name="model">bookai.execution</field>
+        <field name="arch" type="xml">
+            <tree create="false">
+                <field name="start_time" />
+                <field name="agent_id" />
+                <field name="pms_property_id" />
+                <field name="conversation_id" />
+                <field name="effective_role" />
+                <field
+          name="state"
+          widget="badge"
+          decoration-success="state == 'completed'"
+          decoration-danger="state == 'error'"
+          decoration-warning="state == 'running'"
+          decoration-muted="state == 'cancelled'"
+        />
+                <field name="step_count" />
+                <field name="confirmation_count" />
+                <field name="duration_seconds" string="Duration (s)" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Execution Form -->
+    <record id="view_bookai_execution_form" model="ir.ui.view">
+        <field name="name">bookai.execution.form</field>
+        <field name="model">bookai.execution</field>
+        <field name="arch" type="xml">
+            <form string="Execution" create="false">
+                <header>
+                    <field
+            name="state"
+            widget="statusbar"
+            statusbar_visible="running,completed"
+          />
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Context">
+                            <field name="agent_id" />
+                            <field name="pms_property_id" />
+                            <field name="conversation_id" />
+                            <field name="caller_info" />
+                        </group>
+                        <group string="Timing &amp; Policy">
+                            <field name="start_time" />
+                            <field name="end_time" />
+                            <field name="duration_seconds" />
+                            <field name="effective_role" />
+                            <field name="effective_confirmation" />
+                            <field name="effective_log_level" />
+                        </group>
+                    </group>
+                    <group string="Result">
+                        <field name="result_summary" nolabel="1" colspan="2" />
+                    </group>
+                    <group
+            string="Error"
+            attrs="{'invisible': [('state', '!=', 'error')]}"
+          >
+                        <field name="error_message" nolabel="1" colspan="2" />
+                    </group>
+                    <notebook>
+                        <page string="Steps" name="steps">
+                            <field name="step_ids">
+                                <tree>
+                                    <field name="sequence" />
+                                    <field name="step_type" />
+                                    <field name="agent_id" />
+                                    <field name="tool_name" />
+                                    <field name="delegated_agent_id" />
+                                    <field name="effective_role" />
+                                    <field
+                    name="status"
+                    widget="badge"
+                    decoration-success="status == 'success'"
+                    decoration-danger="status in ('error','rejected')"
+                    decoration-warning="status == 'pending'"
+                  />
+                                    <field name="timestamp" />
+                                    <field name="description" optional="show" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Execution Search -->
+    <record id="view_bookai_execution_search" model="ir.ui.view">
+        <field name="name">bookai.execution.search</field>
+        <field name="model">bookai.execution</field>
+        <field name="arch" type="xml">
+            <search string="Executions">
+                <field name="agent_id" />
+                <field name="pms_property_id" />
+                <field name="conversation_id" />
+                <filter
+          name="filter_running"
+          string="Running"
+          domain="[('state', '=', 'running')]"
+        />
+                <filter
+          name="filter_error"
+          string="Errors"
+          domain="[('state', '=', 'error')]"
+        />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_agent"
+            string="Agent"
+            context="{'group_by': 'agent_id'}"
+          />
+                    <filter
+            name="group_property"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                    <filter
+            name="group_state"
+            string="State"
+            context="{'group_by': 'state'}"
+          />
+                    <filter
+            name="group_role"
+            string="Role"
+            context="{'group_by': 'effective_role'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bookai_execution" model="ir.actions.act_window">
+        <field name="name">Executions</field>
+        <field name="res_model">bookai.execution</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_bookai_execution_search" />
+    </record>
+
+</odoo>

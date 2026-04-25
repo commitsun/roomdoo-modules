@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Root menu -->
+    <menuitem
+    id="menu_bookai_root"
+    name="BooKAI"
+    sequence="95"
+    groups="group_bookai_user"
+    web_icon="pms_bookai,static/description/icon.png"
+  />
+
+    <!-- Sub-menus -->
+    <menuitem
+    id="menu_bookai_agent"
+    name="Agents"
+    parent="menu_bookai_root"
+    action="action_bookai_agent"
+    sequence="10"
+  />
+    <menuitem
+    id="menu_bookai_kb_document"
+    name="KB Documents"
+    parent="menu_bookai_root"
+    action="action_bookai_kb_document"
+    sequence="20"
+  />
+    <menuitem
+    id="menu_bookai_llm_account"
+    name="LLM Accounts"
+    parent="menu_bookai_root"
+    action="action_bookai_llm_account"
+    sequence="30"
+  />
+    <menuitem
+    id="menu_bookai_mcp_server"
+    name="MCP Servers"
+    parent="menu_bookai_root"
+    action="action_bookai_mcp_server"
+    sequence="35"
+  />
+    <menuitem
+    id="menu_bookai_tool"
+    name="Tools"
+    parent="menu_bookai_root"
+    action="action_bookai_tool"
+    sequence="38"
+  />
+    <menuitem
+    id="menu_bookai_agent_usage"
+    name="Usage"
+    parent="menu_bookai_root"
+    action="action_bookai_agent_usage"
+    sequence="40"
+  />
+    <menuitem
+    id="menu_bookai_executions"
+    name="Executions"
+    parent="menu_bookai_root"
+    action="action_bookai_execution"
+    sequence="45"
+  />
+    <menuitem
+    id="menu_bookai_audit_log"
+    name="Audit Log"
+    parent="menu_bookai_root"
+    action="action_bookai_audit_log"
+    sequence="50"
+  />
+
+</odoo>

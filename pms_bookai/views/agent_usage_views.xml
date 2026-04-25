@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Tree -->
+    <record id="view_bookai_agent_usage_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.usage.tree</field>
+        <field name="model">bookai.agent.usage</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false">
+                <field name="timestamp" />
+                <field name="agent_id" />
+                <field name="pms_property_id" />
+                <field name="llm_account_id" />
+                <field name="model" />
+                <field name="tokens_in" />
+                <field name="tokens_out" />
+                <field name="total_cost_usd" sum="Total Cost" />
+                <field name="call_count" sum="Total Calls" />
+                <field name="whisper_seconds" optional="hide" />
+                <field name="vision_calls" optional="hide" />
+                <field name="status" />
+                <field name="conversation_id" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_bookai_agent_usage_form" model="ir.ui.view">
+        <field name="name">bookai.agent.usage.form</field>
+        <field name="model">bookai.agent.usage</field>
+        <field name="arch" type="xml">
+            <form string="Agent Usage" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group string="Agent &amp; Property">
+                            <field name="agent_id" />
+                            <field name="pms_property_id" />
+                            <field name="llm_account_id" />
+                            <field name="conversation_id" />
+                        </group>
+                        <group string="Execution">
+                            <field name="timestamp" />
+                            <field name="model" />
+                            <field name="tokens_in" />
+                            <field name="tokens_out" />
+                            <field name="call_count" />
+                            <field name="status" />
+                        </group>
+                    </group>
+                    <group string="Cost Breakdown">
+                        <group>
+                            <field name="cost_usd" string="LLM Cost (USD)" />
+                            <field name="whisper_cost_usd" />
+                        </group>
+                        <group>
+                            <field name="vision_cost_usd" />
+                            <field name="total_cost_usd" />
+                        </group>
+                        <group>
+                            <field name="whisper_seconds" />
+                            <field name="vision_calls" />
+                        </group>
+                    </group>
+                    <group
+            string="Error"
+            attrs="{'invisible': [('status', '!=', 'error')]}"
+          >
+                        <field name="error_message" nolabel="1" colspan="2" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search -->
+    <record id="view_bookai_agent_usage_search" model="ir.ui.view">
+        <field name="name">bookai.agent.usage.search</field>
+        <field name="model">bookai.agent.usage</field>
+        <field name="arch" type="xml">
+            <search string="Agent Usage">
+                <field name="agent_id" />
+                <field name="pms_property_id" />
+                <field name="conversation_id" />
+                <filter
+          name="filter_success"
+          string="Success"
+          domain="[('status', '=', 'success')]"
+        />
+                <filter
+          name="filter_error"
+          string="Error"
+          domain="[('status', '=', 'error')]"
+        />
+                <filter
+          name="filter_escalated"
+          string="Escalated"
+          domain="[('status', '=', 'escalated')]"
+        />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_agent"
+            string="Agent"
+            context="{'group_by': 'agent_id'}"
+          />
+                    <filter
+            name="group_llm_account"
+            string="LLM Account"
+            context="{'group_by': 'llm_account_id'}"
+          />
+                    <filter
+            name="group_property"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                    <filter
+            name="group_model"
+            string="Model"
+            context="{'group_by': 'model'}"
+          />
+                    <filter
+            name="group_status"
+            string="Status"
+            context="{'group_by': 'status'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bookai_agent_usage" model="ir.actions.act_window">
+        <field name="name">Usage</field>
+        <field name="res_model">bookai.agent.usage</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_bookai_agent_usage_search" />
+    </record>
+
+</odoo>

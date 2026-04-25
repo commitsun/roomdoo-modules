@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_bookai_register_wizard_form" model="ir.ui.view">
+        <field name="name">bookai.register.wizard.form</field>
+        <field name="model">bookai.register.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Register BooKAI Instance">
+                <group>
+                    <field
+            name="bookai_base_url"
+            placeholder="https://bookai.example.com"
+            invisible="1"
+          />
+                    <field
+            name="provisioning_key"
+            password="True"
+            placeholder="Provisioning key (single use)"
+          />
+                </group>
+                <group>
+                    <field
+            name="odoo_username"
+            placeholder="bookai@instance.com"
+            invisible="1"
+          />
+                    <field name="odoo_api_key" password="True" invisible="1" />
+                </group>
+                <footer>
+                    <button
+            name="action_register"
+            type="object"
+            string="Register"
+            class="btn-primary"
+            icon="fa-plug"
+          />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bookai_register_wizard" model="ir.actions.act_window">
+        <field name="name">Register BooKAI Instance</field>
+        <field name="res_model">bookai.register.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="res_config_settings_view_form_bookai" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.bookai</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40" />
+        <field name="inherit_id" ref="base.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div
+          class="app_settings_block"
+          data-string="BooKAI"
+          string="BooKAI"
+          data-key="pms_bookai"
+        >
+                    <h2>Connection</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane" />
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">BooKAI Base URL</span>
+                                <div class="text-muted mb8">
+                                    Base URL of the BooKAI service.
+                                </div>
+                                <div class="content-group">
+                                    <field
+                    name="bookai_base_url"
+                    placeholder="https://bookai.example.com"
+                    nolabel="1"
+                  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Odoo Credentials for BooKAI</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane" />
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Odoo Username</span>
+                                <div class="text-muted mb8">
+                                    Odoo user for BooKAI SDK (JSON-RPC).
+                                </div>
+                                <div class="content-group">
+                                    <field
+                    name="bookai_odoo_username"
+                    placeholder="bookai@instance.com"
+                    nolabel="1"
+                  />
+                                </div>
+                                <span class="o_form_label mt16">Odoo API Key</span>
+                                <div class="text-muted mb8">
+                                    API Key (Preferences → API Keys).
+                                </div>
+                                <div class="content-group">
+                                    <field
+                    name="bookai_odoo_api_key"
+                    password="True"
+                    nolabel="1"
+                  />
+                                </div>
+                                <div class="mt16">
+                                    <button
+                    name="%(pms_bookai.action_bookai_register_wizard)d"
+                    type="action"
+                    string="Register Instance"
+                    class="btn-primary"
+                    icon="fa-plug"
+                  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Connection Status</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane" />
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Bearer Token</span>
+                                <div class="text-muted mb8">
+                                    Auto-generated on registration.
+                                </div>
+                                <div class="content-group">
+                                    <field
+                    name="bookai_bearer_token"
+                    password="True"
+                    nolabel="1"
+                  />
+                                </div>
+                                <div class="mt16">
+                                    <button
+                    name="action_bookai_setup"
+                    type="object"
+                    string="Re-sync with BooKAI"
+                    class="btn-secondary"
+                    icon="fa-refresh"
+                  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

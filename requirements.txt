@@ -2,14 +2,13 @@
 geopy
 jose
 marshmallow
+phonenumbers
 pyinstrument
 requests
 git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-base&subdirectory=roomdoo-locks-base
 git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-omnitec&subdirectory=roomdoo-locks-omnitec
 git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-ttlock&subdirectory=roomdoo-locks-ttlock
-phonenumbers
 simplejson
 thefuzz
 whatsapp_formatter
 xlsxwriter
-phonenumbers

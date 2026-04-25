@@ -1,3 +1,26 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_bookai_param_user_read,pms.notification.template.bookai.param user read,model_pms_notification_template_bookai_param,base.group_user,1,0,0,0
 access_bookai_param_admin_full,pms.notification.template.bookai.param admin full,model_pms_notification_template_bookai_param,base.group_system,1,1,1,1
+access_bookai_llm_account_user,bookai.llm.account user read,model_bookai_llm_account,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_llm_account_admin,bookai.llm.account admin full,model_bookai_llm_account,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_agent_user,bookai.agent user read,model_bookai_agent,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_agent_admin,bookai.agent admin full,model_bookai_agent,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_kb_document_user,bookai.kb.document user read,model_bookai_kb_document,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_kb_document_admin,bookai.kb.document admin full,model_bookai_kb_document,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_agent_usage_user,bookai.agent.usage user read,model_bookai_agent_usage,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_agent_usage_admin,bookai.agent.usage admin full,model_bookai_agent_usage,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_wa_translation_user,bookai.whatsapp.translation user read,model_bookai_whatsapp_translation,pms_bookai.group_bookai_user,1,0,0,0
+access_bookai_wa_translation_admin,bookai.whatsapp.translation admin full,model_bookai_whatsapp_translation,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_tool_base_read,bookai.tool base read,model_bookai_tool,base.group_user,1,0,0,0
+access_bookai_tool_admin,bookai.tool admin full,model_bookai_tool,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_tool_binding_base_read,bookai.agent.tool.binding base read,model_bookai_agent_tool_binding,base.group_user,1,0,0,0
+access_bookai_tool_binding_admin,bookai.agent.tool.binding admin full,model_bookai_agent_tool_binding,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_mcp_server_base_read,bookai.mcp.server base read,model_bookai_mcp_server,base.group_user,1,0,0,0
+access_bookai_mcp_server_admin,bookai.mcp.server admin full,model_bookai_mcp_server,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_audit_log_base_read,bookai.agent.audit.log base read,model_bookai_agent_audit_log,base.group_user,1,0,0,0
+access_bookai_audit_log_admin,bookai.agent.audit.log admin full,model_bookai_agent_audit_log,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_execution_base_read,bookai.execution base read,model_bookai_execution,base.group_user,1,0,0,0
+access_bookai_execution_admin,bookai.execution admin full,model_bookai_execution,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_execution_step_base_read,bookai.execution.step base read,model_bookai_execution_step,base.group_user,1,0,0,0
+access_bookai_execution_step_admin,bookai.execution.step admin full,model_bookai_execution_step,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_register_wizard,bookai.register.wizard admin,model_bookai_register_wizard,base.group_system,1,1,1,1

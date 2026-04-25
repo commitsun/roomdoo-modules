@@ -691,15 +691,7 @@ class PmsNotificationLog(models.Model):
         self.ensure_one()
 
         prop = self.property_id
-        hotel_info = (
-            prop.get_bookai_hotel_info()
-            if prop and hasattr(prop, "get_bookai_hotel_info")
-            else {
-                "id": prop.id if prop else 0,
-                "external_code": "",
-                "name": "",
-            }
-        )
+        hotel_info = prop.get_bookai_hotel_public_info()
 
         instance_url = self._bookai_get_instance_url()
         db_name = self.env.cr.dbname

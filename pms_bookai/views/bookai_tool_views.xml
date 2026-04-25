@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Tree -->
+    <record id="view_bookai_tool_tree" model="ir.ui.view">
+        <field name="name">bookai.tool.tree</field>
+        <field name="model">bookai.tool</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="tool_type" />
+                <field name="sdk_method" optional="show" />
+                <field name="mcp_server_id" optional="show" />
+                <field name="requires_confirm" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_bookai_tool_form" model="ir.ui.view">
+        <field name="name">bookai.tool.form</field>
+        <field name="model">bookai.tool</field>
+        <field name="arch" type="xml">
+            <form string="Tool">
+                <sheet>
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Tool name..." />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tool_type" />
+                            <field name="requires_confirm" />
+                            <field name="active" invisible="1" />
+                        </group>
+                        <group>
+                            <!-- SDK -->
+                            <field
+                name="sdk_method"
+                attrs="{'invisible': [('tool_type', '!=', 'sdk')]}"
+              />
+                            <!-- MCP -->
+                            <field
+                name="mcp_server_id"
+                attrs="{'invisible': [('tool_type', '!=', 'mcp')]}"
+              />
+                            <field
+                name="mcp_tool_name"
+                attrs="{'invisible': [('tool_type', '!=', 'mcp')]}"
+              />
+                            <!-- Webhook / HTTP -->
+                            <field
+                name="endpoint_url"
+                attrs="{'invisible': [('tool_type', 'not in', ['webhook', 'http'])]}"
+              />
+                            <field
+                name="endpoint_headers"
+                attrs="{'invisible': [('tool_type', 'not in', ['webhook', 'http'])]}"
+              />
+                            <!-- Odoo Action -->
+                            <field
+                name="odoo_model"
+                attrs="{'invisible': [('tool_type', '!=', 'odoo_action')]}"
+              />
+                            <field
+                name="odoo_method"
+                attrs="{'invisible': [('tool_type', '!=', 'odoo_action')]}"
+              />
+                            <!-- Function -->
+                            <field
+                name="function_ref"
+                attrs="{'invisible': [('tool_type', '!=', 'function')]}"
+              />
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1" colspan="2" />
+                    </group>
+                    <group string="Input Schema (JSON)">
+                        <field name="input_schema" nolabel="1" colspan="2" />
+                    </group>
+                    <group string="Used by Agents">
+                        <field
+              name="agent_binding_ids"
+              nolabel="1"
+              colspan="2"
+              readonly="1"
+            >
+                            <tree>
+                                <field name="agent_id" />
+                                <field name="action_sensitivity_override" />
+                                <field name="active" />
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search -->
+    <record id="view_bookai_tool_search" model="ir.ui.view">
+        <field name="name">bookai.tool.search</field>
+        <field name="model">bookai.tool</field>
+        <field name="arch" type="xml">
+            <search string="Tools">
+                <field name="name" />
+                <field name="mcp_server_id" />
+                <filter
+          name="filter_sdk"
+          string="SDK"
+          domain="[('tool_type', '=', 'sdk')]"
+        />
+                <filter
+          name="filter_mcp"
+          string="MCP"
+          domain="[('tool_type', '=', 'mcp')]"
+        />
+                <filter
+          name="filter_inactive"
+          string="Archived"
+          domain="[('active', '=', False)]"
+        />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_type"
+            string="Type"
+            context="{'group_by': 'tool_type'}"
+          />
+                    <filter
+            name="group_server"
+            string="MCP Server"
+            context="{'group_by': 'mcp_server_id'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bookai_tool" model="ir.actions.act_window">
+        <field name="name">Tools</field>
+        <field name="res_model">bookai.tool</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_bookai_tool_search" />
+    </record>
+
+</odoo>

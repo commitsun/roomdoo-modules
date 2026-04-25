@@ -14,6 +14,44 @@
                         <field name="bookai_mode" />
                         <field name="external_code" />
                     </group>
+                    <group>
+                        <field name="bookai_online_selling" />
+                        <field
+                name="bookai_sale_channel_id"
+                attrs="{'invisible': [('bookai_online_selling', '=', False)], 'required': [('bookai_online_selling', '=', True)]}"
+              />
+                    </group>
+                </group>
+                <group string="WhatsApp Channel">
+                    <group>
+                        <field name="bookai_wa_phone_number_id" />
+                        <field name="bookai_wa_access_token" password="True" />
+                        <field name="bookai_wa_verify_token" />
+                    </group>
+                    <group>
+                        <field name="bookai_wa_account_id" />
+                        <field name="bookai_wa_display_number" />
+                    </group>
+                </group>
+                <group string="App">
+                    <group>
+                        <field
+                name="bookai_app_url"
+                placeholder="https://bookai.example.com"
+              />
+                    </group>
+                </group>
+                <group string="Escalation">
+                    <group>
+                        <field name="bookai_escalation_timeout" />
+                        <field name="bookai_escalation_template_id" />
+                    </group>
+                    <group>
+                        <field
+                name="bookai_escalation_user_ids"
+                widget="many2many_tags"
+              />
+                    </group>
                 </group>
             </page>
         </xpath>

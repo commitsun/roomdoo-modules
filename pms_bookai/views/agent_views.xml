@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Tree -->
+    <record id="view_bookai_agent_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.tree</field>
+        <field name="model">bookai.agent</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="technical_name" />
+                <field name="caller_type" />
+                <field name="identity_mode" />
+                <field name="god_mode" />
+                <field name="llm_account_id" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Agent Tool Binding tree (embedded) -->
+    <record id="view_bookai_agent_tool_binding_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.tool.binding.tree</field>
+        <field name="model">bookai.agent.tool.binding</field>
+        <field name="arch" type="xml">
+            <tree string="Tool Bindings" editable="bottom">
+                <field name="tool_id" domain="[('active', '=', True)]" />
+                <field name="tool_type" />
+                <field name="description_override" optional="hide" />
+                <field name="action_sensitivity_override" optional="show" />
+                <field name="requires_confirm" optional="hide" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_bookai_agent_form" model="ir.ui.view">
+        <field name="name">bookai.agent.form</field>
+        <field name="model">bookai.agent</field>
+        <field name="arch" type="xml">
+            <form string="Agent">
+                <sheet>
+                    <div class="oe_button_box" name="button_box" />
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <widget
+            name="web_ribbon"
+            title="GOD MODE"
+            bg_color="bg-warning"
+            attrs="{'invisible': [('god_mode', '=', False)]}"
+          />
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Agent name..." />
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identity">
+                            <field name="technical_name" />
+                            <field name="caller_type" />
+                            <field name="active" invisible="1" />
+                        </group>
+                        <group string="LLM Configuration">
+                            <field name="llm_account_id" />
+                            <field name="llm_model" />
+                            <field name="temperature" />
+                            <field name="max_tokens" />
+                            <field name="sensitive_data" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Prompt" name="prompt">
+                            <group>
+                                <field name="system_prompt" />
+                                <field name="context_template" />
+                            </group>
+                        </page>
+                        <page string="Description" name="description">
+                            <field name="description" nolabel="1" />
+                        </page>
+                        <page string="Knowledge Base" name="kb">
+                            <field name="kb_document_ids" widget="many2many_tags" />
+                        </page>
+                        <page string="Access Control" name="access">
+                            <group string="Layer 1 — Who can invoke?">
+                                <group>
+                                    <field
+                    name="allowed_user_ids"
+                    widget="many2many_tags"
+                  />
+                                    <field
+                    name="allowed_group_ids"
+                    widget="many2many_tags"
+                  />
+                                </group>
+                                <group>
+                                    <field
+                    name="property_scope_ids"
+                    widget="many2many_tags"
+                  />
+                                    <field
+                    name="allowed_agent_ids"
+                    widget="many2many_tags"
+                  />
+                                </group>
+                            </group>
+                            <group string="Layer 2 — Execution identity">
+                                <group>
+                                    <field name="identity_mode" />
+                                    <field
+                    name="technical_user_id"
+                    attrs="{'invisible': [('identity_mode', '=', 'caller_identity')], 'required': [('identity_mode', '!=', 'caller_identity')]}"
+                  />
+                                </group>
+                                <group>
+                                    <field name="god_mode" />
+                                </group>
+                            </group>
+                            <div
+                class="alert alert-warning"
+                role="alert"
+                attrs="{'invisible': [('god_mode', '=', False)]}"
+              >
+                                <strong>Warning:</strong>
+                                This agent has full unrestricted
+                                access to the Odoo database.
+                                All write operations require human
+                                confirmation and are logged.
+                            </div>
+                            <group string="Execution Modes">
+                                <group>
+                                    <field name="execution_role" />
+                                    <field name="confirmation_policy" />
+                                </group>
+                                <group>
+                                    <field name="log_level" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Tools" name="tools">
+                            <field name="tool_binding_ids">
+                                <tree
+                  ref="pms_bookai.view_bookai_agent_tool_binding_tree"
+                />
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Kanban -->
+    <record id="view_bookai_agent_kanban" model="ir.ui.view">
+        <field name="name">bookai.agent.kanban</field>
+        <field name="model">bookai.agent</field>
+        <field name="arch" type="xml">
+            <kanban sample="1">
+                <field name="id" />
+                <field name="name" />
+                <field name="technical_name" />
+                <field name="image_128" />
+                <field name="execution_role" />
+                <field name="confirmation_policy" />
+                <field name="log_level" />
+                <field name="identity_mode" />
+                <field name="technical_user_id" />
+                <field name="god_mode" />
+                <field name="is_supervisor" />
+                <field name="tool_count" />
+                <field name="allowed_agent_count" />
+                <field name="kb_document_count" />
+                <templates>
+                    <t t-name="kanban-box">
+                        <div
+              class="oe_kanban_global_click o_kanban_record_has_image_fill d-flex"
+              style="min-height: 140px;"
+            >
+                            <div
+                class="o_kanban_image_fill_left d-none d-md-block"
+                t-attf-style="background-image: url('/web/image/bookai.agent/#{record.id.raw_value}/image_128'); background-size: cover;"
+                role="img"
+              />
+                            <div class="oe_kanban_details d-flex flex-column">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <t t-if="record.god_mode.raw_value">
+                                                <span
+                          class="fa fa-bolt text-danger float-end"
+                          title="God Mode"
+                        />
+                                            </t>
+                                            <t t-if="record.is_supervisor.raw_value">
+                                                <span
+                          class="fa fa-shield text-primary float-end"
+                          title="Supervisor"
+                        />
+                                            </t>
+                                            <field name="name" />
+                                        </strong>
+                                        <span
+                      class="o_kanban_record_subtitle text-muted"
+                    >
+                                            <field name="technical_name" />
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <ul class="flex-grow-1">
+                                    <li>
+                                        <span class="text-muted">
+                                            <i class="fa fa-wrench" /> <field
+                        name="tool_count"
+                      />
+                                            <span class="mx-1">·</span>
+                                            <i class="fa fa-users" /> <field
+                        name="allowed_agent_count"
+                      />
+                                            <span class="mx-1">·</span>
+                                            <i class="fa fa-book" /> <field
+                        name="kb_document_count"
+                      />
+                                        </span>
+                                    </li>
+                                    <li class="o_text_overflow">
+                                        <field name="execution_role" />
+                                        <t
+                      t-if="record.confirmation_policy.raw_value != 'never'"
+                    >
+                                            <span class="mx-1">·</span>
+                                            <field name="confirmation_policy" />
+                                        </t>
+                                    </li>
+                                    <li class="text-muted o_text_overflow">
+                                        <i class="fa fa-user-circle-o" />
+                                        <field name="identity_mode" />
+                                        <t t-if="record.technical_user_id.raw_value">
+                                            (<field name="technical_user_id" />)
+                                        </t>
+                                    </li>
+                                    <li class="text-muted">
+                                        <t t-if="record.log_level.raw_value != 'basic'">
+                                            <i class="fa fa-file-text-o" />
+                                            Log: <field name="log_level" />
+                                        </t>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bookai_agent" model="ir.actions.act_window">
+        <field name="name">Agents</field>
+        <field name="res_model">bookai.agent</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'group_by': 'caller_type'}</field>
+    </record>
+
+</odoo>

@@ -35,6 +35,32 @@
         </field>
     </record>
 
+    <!-- BookAI WhatsApp translation tree (embedded in template form) -->
+    <record id="view_bookai_whatsapp_translation_tree" model="ir.ui.view">
+        <field name="name">bookai.whatsapp.translation.tree</field>
+        <field name="model">bookai.whatsapp.translation</field>
+        <field name="arch" type="xml">
+            <tree
+        string="WhatsApp Translations"
+        create="false"
+        delete="false"
+        editable="bottom"
+      >
+                <field name="language" />
+                <field name="active" />
+                <field
+          name="meta_status"
+          widget="badge"
+          decoration-success="meta_status == 'approved'"
+          decoration-warning="meta_status == 'pending'"
+          decoration-danger="meta_status in ('rejected','error')"
+          decoration-muted="meta_status == 'draft'"
+        />
+                <field name="meta_template_id" optional="show" />
+            </tree>
+        </field>
+    </record>
+
     <!-- Inherit PMS notification template form to add a BookAI WhatsApp tab -->
     <record id="view_pms_notification_template_form_inherit_bookai" model="ir.ui.view">
         <field name="name">pms.notification.template.form.inherit.bookai</field>
@@ -58,6 +84,7 @@
                         <group>
                             <group>
                                 <field name="bookai_template_code" />
+                                <field name="bookai_category" />
                                 <field
                   name="bookai_language_tmpl"
                   placeholder="{{ object.lang or user.lang }}"
@@ -82,11 +109,31 @@
               />
                         </group>
                         <group>
-                <field
+                            <field
+                name="bookai_header_text"
+                placeholder="Optional header..."
+              />
+                        </group>
+                        <group>
+                            <field
                 name="body"
                 widget="text"
                 placeholder="Hello {{ buyer_name }}, your reservation {{ reservation_locator }}..."
               />
+                        </group>
+                        <group>
+                            <group>
+                                <field
+                  name="bookai_footer_text"
+                  placeholder="Optional footer..."
+                />
+                            </group>
+                            <group>
+                                <field
+                  name="bookai_button_texts"
+                  placeholder='[{"type":"URL","text":"Check-in","url":"https://..."}]'
+                />
+                            </group>
                         </group>
 
                         <group string="Template Parameters">
@@ -99,6 +146,37 @@
                 />
                             </field>
                         </group>
+
+                        <group string="WhatsApp Translations (auto-managed on sync)">
+                            <field
+                name="bookai_translation_ids"
+                context="{'default_template_id': active_id}"
+              >
+                                <tree
+                  ref="pms_bookai.view_bookai_whatsapp_translation_tree"
+                />
+                            </field>
+                        </group>
+
+                        <div
+              class="mt16 mb16"
+              attrs="{'invisible': [('bookai_template_code', '=', False)]}"
+            >
+                            <button
+                name="action_sync_to_bookai"
+                type="object"
+                string="Sync to BooKAI"
+                class="btn-primary"
+                icon="fa-cloud-upload"
+              />
+                            <button
+                name="action_check_bookai_status"
+                type="object"
+                string="Check Status"
+                class="btn-secondary ms-2"
+                icon="fa-refresh"
+              />
+                        </div>
 
                         <!-- Tip for dynamic blocks and rich text formatting -->
                         <group>
