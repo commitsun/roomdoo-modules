@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Tree -->
+    <record id="view_bookai_audit_log_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.audit.log.tree</field>
+        <field name="model">bookai.agent.audit.log</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false">
+                <field name="timestamp" />
+                <field name="agent_id" />
+                <field name="operation" />
+                <field name="model_name" />
+                <field name="method_name" />
+                <field name="args_summary" />
+                <field name="confirmed_by" />
+                <field name="user_id" />
+                <field name="status" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_bookai_audit_log_form" model="ir.ui.view">
+        <field name="name">bookai.agent.audit.log.form</field>
+        <field name="model">bookai.agent.audit.log</field>
+        <field name="arch" type="xml">
+            <form string="Audit Log" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group string="Context">
+                            <field name="agent_id" />
+                            <field name="user_id" />
+                            <field name="pms_property_id" />
+                            <field name="conversation_id" />
+                            <field name="timestamp" />
+                        </group>
+                        <group string="Operation">
+                            <field name="operation" />
+                            <field name="model_name" />
+                            <field name="method_name" />
+                            <field name="record_ids" />
+                            <field name="confirmed_by" />
+                            <field name="status" />
+                        </group>
+                    </group>
+                    <group string="Summary">
+                        <field name="args_summary" nolabel="1" colspan="2" />
+                    </group>
+                    <group
+            string="Error"
+            attrs="{'invisible': [('status', '!=', 'error')]}"
+          >
+                        <field name="error_message" nolabel="1" colspan="2" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search -->
+    <record id="view_bookai_audit_log_search" model="ir.ui.view">
+        <field name="name">bookai.agent.audit.log.search</field>
+        <field name="model">bookai.agent.audit.log</field>
+        <field name="arch" type="xml">
+            <search string="Audit Log">
+                <field name="agent_id" />
+                <field name="model_name" />
+                <field name="conversation_id" />
+                <filter
+          name="filter_writes"
+          string="Writes"
+          domain="[('operation', 'in', ['create','write','unlink'])]"
+        />
+                <filter
+          name="filter_errors"
+          string="Errors"
+          domain="[('status', '=', 'error')]"
+        />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_agent"
+            string="Agent"
+            context="{'group_by': 'agent_id'}"
+          />
+                    <filter
+            name="group_operation"
+            string="Operation"
+            context="{'group_by': 'operation'}"
+          />
+                    <filter
+            name="group_model"
+            string="Model"
+            context="{'group_by': 'model_name'}"
+          />
+                    <filter
+            name="group_status"
+            string="Status"
+            context="{'group_by': 'status'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_bookai_audit_log" model="ir.actions.act_window">
+        <field name="name">Audit Log</field>
+        <field name="res_model">bookai.agent.audit.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_bookai_audit_log_search" />
+    </record>
+
+</odoo>

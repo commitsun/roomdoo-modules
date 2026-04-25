@@ -1,0 +1,1143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <!-- =================================================================
+         GLOBAL TOOL CATALOG
+         ================================================================= -->
+
+    <!-- Properties -->
+    <record id="tool_properties_get" model="bookai.tool">
+        <field name="name">properties.get</field>
+        <field
+      name="description"
+    >Get property details: name, address, contact, timezone, arrival/departure info, parking</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_properties_list" model="bookai.tool">
+        <field name="name">properties.list</field>
+        <field name="description">List all active properties</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.list</field>
+        <field name="input_schema">{}</field>
+    </record>
+    <record id="tool_properties_get_room_types" model="bookai.tool">
+        <field name="name">properties.get_room_types</field>
+        <field
+      name="description"
+    >Room types with guest descriptions, bed config, capacity</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_room_types</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_properties_get_rooms" model="bookai.tool">
+        <field name="name">properties.get_rooms</field>
+        <field
+      name="description"
+    >All rooms for a property with capacity and location</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_rooms</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_properties_get_amenities" model="bookai.tool">
+        <field name="name">properties.get_amenities</field>
+        <field name="description">Amenities available at the property</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_amenities</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_properties_get_board_services" model="bookai.tool">
+        <field name="name">properties.get_board_services</field>
+        <field name="description">Board services (breakfast, half-board, etc.)</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_board_services</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_properties_get_pricelists" model="bookai.tool">
+        <field name="name">properties.get_pricelists</field>
+        <field
+      name="description"
+    >Pricelists via BooKAI channel with cancellation policies</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_pricelists</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+
+    <record id="tool_properties_get_cancelation_policy" model="bookai.tool">
+        <field name="name">properties.get_cancelation_policy</field>
+        <field
+      name="description"
+    >Get full cancelation policy: free cancellation days, penalties, no-show policy, refund terms, guest-facing descriptions</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">properties.get_cancelation_policy</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"policy_id":{"type":"integer","description":"Cancelation rule ID"}},"required":["policy_id"]}</field>
+    </record>
+
+    <!-- Availability -->
+    <record id="tool_availability_check" model="bookai.tool">
+        <field name="name">availability.check</field>
+        <field name="description">Check room availability for dates</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">availability.check</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"checkin":{"type":"string"},"checkout":{"type":"string"},"pricelist_id":{"type":"integer","description":"Pricelist/rate ID (required)"},"room_type_id":{"type":"integer","description":"Optional filter"}},"required":["property_id","checkin","checkout","pricelist_id"]}</field>
+    </record>
+    <record id="tool_availability_get_prices" model="bookai.tool">
+        <field name="name">availability.get_prices</field>
+        <field name="description">Get nightly prices for room type and pricelist</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">availability.get_prices</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"checkin":{"type":"string"},"checkout":{"type":"string"},"room_type_id":{"type":"integer"},"pricelist_id":{"type":"integer"}},"required":["property_id","checkin","checkout","room_type_id","pricelist_id"]}</field>
+    </record>
+
+    <!-- Folios -->
+    <record id="tool_folios_get_folio" model="bookai.tool">
+        <field name="name">folios.get_folio</field>
+        <field
+      name="description"
+    >Folio summary: partner, dates, amounts, payment state</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_folio</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_folios_get_reservations" model="bookai.tool">
+        <field name="name">folios.get_reservations</field>
+        <field
+      name="description"
+    >Reservations for a folio: rooms, guests, prices</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_reservations</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_folios_get_reservation_lines" model="bookai.tool">
+        <field name="name">folios.get_reservation_lines</field>
+        <field name="description">Daily price breakdown for a reservation</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_reservation_lines</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"}},"required":["reservation_id"]}</field>
+    </record>
+    <record id="tool_folios_get_services" model="bookai.tool">
+        <field name="name">folios.get_services</field>
+        <field name="description">Services linked to a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_services</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_folios_get_payments" model="bookai.tool">
+        <field name="name">folios.get_payments</field>
+        <field name="description">Payments linked to a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_payments</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_folios_get_checkin_partners" model="bookai.tool">
+        <field name="name">folios.get_checkin_partners</field>
+        <field name="description">Guest check-in data for a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.get_checkin_partners</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_folios_search_by_guest" model="bookai.tool">
+        <field name="name">folios.search_by_guest</field>
+        <field name="description">Search folios by guest email, phone or name</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.search_by_guest</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"email":{"type":"string"},"phone":{"type":"string"},"name":{"type":"string"},"property_id":{"type":"integer"}}}</field>
+    </record>
+    <record id="tool_folios_update_arrival_hour" model="bookai.tool">
+        <field name="name">folios.update_arrival_hour</field>
+        <field
+      name="description"
+    >Update arrival time (HH:MM) for reservations in a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">folios.update_arrival_hour</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"},"arrival_hour":{"type":"string"}},"required":["folio_id","arrival_hour"]}</field>
+    </record>
+
+    <!-- Reservations (staff) -->
+    <record id="tool_reservations_search" model="bookai.tool">
+        <field name="name">reservations.search</field>
+        <field
+      name="description"
+    >Search reservations by property, dates, state, partner</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.search</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"checkin_from":{"type":"string"},"checkin_to":{"type":"string"},"state":{"type":"string"},"partner_name":{"type":"string"}}}</field>
+    </record>
+    <record id="tool_reservations_get" model="bookai.tool">
+        <field name="name">reservations.get</field>
+        <field name="description">Get reservation details by ID</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.get</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"}},"required":["reservation_id"]}</field>
+    </record>
+    <record id="tool_reservations_confirm" model="bookai.tool">
+        <field name="name">reservations.confirm</field>
+        <field name="description">Confirm a draft reservation</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.confirm</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"}},"required":["reservation_id"]}</field>
+    </record>
+    <record id="tool_reservations_cancel" model="bookai.tool">
+        <field name="name">reservations.cancel</field>
+        <field name="description">Cancel a reservation</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.cancel</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"},"reason":{"type":"string"}},"required":["reservation_id"]}</field>
+    </record>
+    <record id="tool_reservations_assign_room" model="bookai.tool">
+        <field name="name">reservations.assign_room</field>
+        <field name="description">Assign a room to a reservation</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.assign_room</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"},"room_id":{"type":"integer"}},"required":["reservation_id","room_id"]}</field>
+    </record>
+    <record id="tool_reservations_checkin" model="bookai.tool">
+        <field name="name">reservations.checkin</field>
+        <field name="description">Check-in a guest</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.checkin</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"checkin_partner_id":{"type":"integer"}},"required":["checkin_partner_id"]}</field>
+    </record>
+    <record id="tool_reservations_checkout" model="bookai.tool">
+        <field name="name">reservations.checkout</field>
+        <field name="description">Check-out a reservation</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.checkout</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"reservation_id":{"type":"integer"}},"required":["reservation_id"]}</field>
+    </record>
+    <record id="tool_reservations_create_booking" model="bookai.tool">
+        <field name="name">reservations.create_booking</field>
+        <field
+      name="description"
+    >Create a complete booking: folio + reservation + confirmation. Returns folio code and reservation details.</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reservations.create_booking</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"partner_name":{"type":"string"},"partner_phone":{"type":"string"},"partner_email":{"type":"string"},"room_type_id":{"type":"integer"},"checkin":{"type":"string"},"checkout":{"type":"string"},"adults":{"type":"integer","default":2},"children":{"type":"integer","default":0},"pricelist_id":{"type":"integer"},"sale_channel_id":{"type":"integer"}},"required":["property_id","partner_name","room_type_id","checkin","checkout","pricelist_id","sale_channel_id"]}</field>
+    </record>
+
+    <!-- Guests (staff) -->
+    <record id="tool_guests_search" model="bookai.tool">
+        <field name="name">guests.search</field>
+        <field
+      name="description"
+    >Search guests by name, email, phone or document</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">guests.search</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"name":{"type":"string"},"email":{"type":"string"},"phone":{"type":"string"},"document_number":{"type":"string"}}}</field>
+    </record>
+    <record id="tool_guests_get" model="bookai.tool">
+        <field name="name">guests.get</field>
+        <field name="description">Get guest contact details and history summary</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">guests.get</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"partner_id":{"type":"integer"}},"required":["partner_id"]}</field>
+    </record>
+    <record id="tool_guests_get_history" model="bookai.tool">
+        <field name="name">guests.get_history</field>
+        <field name="description">Get folio history for a guest</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">guests.get_history</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"partner_id":{"type":"integer"}},"required":["partner_id"]}</field>
+    </record>
+    <record id="tool_guests_update_contact" model="bookai.tool">
+        <field name="name">guests.update_contact</field>
+        <field name="description">Update guest email or phone</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">guests.update_contact</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"partner_id":{"type":"integer"},"email":{"type":"string"},"phone":{"type":"string"},"mobile":{"type":"string"}},"required":["partner_id"]}</field>
+    </record>
+
+    <!-- Invoices (staff) -->
+    <record id="tool_invoices_list_by_folio" model="bookai.tool">
+        <field name="name">invoices.list_by_folio</field>
+        <field name="description">Get invoices linked to a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">invoices.list_by_folio</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_invoices_get" model="bookai.tool">
+        <field name="name">invoices.get</field>
+        <field name="description">Get invoice details</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">invoices.get</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"invoice_id":{"type":"integer"}},"required":["invoice_id"]}</field>
+    </record>
+    <record id="tool_invoices_create" model="bookai.tool">
+        <field name="name">invoices.create_from_folio</field>
+        <field name="description">Generate invoice from a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">invoices.create_from_folio</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"}},"required":["folio_id"]}</field>
+    </record>
+    <record id="tool_invoices_validate" model="bookai.tool">
+        <field name="name">invoices.validate</field>
+        <field name="description">Validate/post a draft invoice</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">invoices.validate</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"invoice_id":{"type":"integer"}},"required":["invoice_id"]}</field>
+    </record>
+    <record id="tool_invoices_get_pdf_url" model="bookai.tool">
+        <field name="name">invoices.get_pdf_url</field>
+        <field name="description">Get portal URL for invoice PDF download</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">invoices.get_pdf_url</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"invoice_id":{"type":"integer"}},"required":["invoice_id"]}</field>
+    </record>
+
+    <!-- Payments (staff) -->
+    <record id="tool_payments_record" model="bookai.tool">
+        <field name="name">payments.record</field>
+        <field name="description">Record a payment for a folio</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">payments.record</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"folio_id":{"type":"integer"},"amount":{"type":"number"},"journal_id":{"type":"integer"}},"required":["folio_id","amount","journal_id"]}</field>
+    </record>
+    <record id="tool_payments_list_by_property" model="bookai.tool">
+        <field name="name">payments.list_by_property</field>
+        <field name="description">Payments for a property in a period</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">payments.list_by_property</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"date_from":{"type":"string"},"date_to":{"type":"string"}},"required":["property_id"]}</field>
+    </record>
+    <record id="tool_payments_get_pending" model="bookai.tool">
+        <field name="name">payments.get_pending_by_property</field>
+        <field name="description">Folios with pending balance for a property</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">payments.get_pending_by_property</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+
+    <!-- Reporting (staff) -->
+    <record id="tool_reporting_occupancy" model="bookai.tool">
+        <field name="name">reporting.occupancy</field>
+        <field name="description">Occupancy by room type for a date range</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reporting.occupancy</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"date_from":{"type":"string"},"date_to":{"type":"string"}},"required":["property_id","date_from","date_to"]}</field>
+    </record>
+    <record id="tool_reporting_revenue" model="bookai.tool">
+        <field name="name">reporting.revenue_summary</field>
+        <field name="description">Revenue summary for a property and period</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reporting.revenue_summary</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"date_from":{"type":"string"},"date_to":{"type":"string"}},"required":["property_id","date_from","date_to"]}</field>
+    </record>
+    <record id="tool_reporting_arrivals" model="bookai.tool">
+        <field name="name">reporting.arrivals_departures</field>
+        <field name="description">Arrivals and departures for a specific date</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reporting.arrivals_departures</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"},"date":{"type":"string"}},"required":["property_id","date"]}</field>
+    </record>
+    <record id="tool_reporting_pending_checkins" model="bookai.tool">
+        <field name="name">reporting.pending_checkins</field>
+        <field name="description">Reservations pending check-in</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">reporting.pending_checkins</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"property_id":{"type":"integer"}},"required":["property_id"]}</field>
+    </record>
+
+    <!-- Admin: agents, tools, kb, mcp, usage -->
+    <record id="tool_agents_get" model="bookai.tool">
+        <field name="name">agents.get</field>
+        <field name="description">Get agent configuration by technical name</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">agents.get</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"technical_name":{"type":"string"}},"required":["technical_name"]}</field>
+    </record>
+    <record id="tool_agents_list" model="bookai.tool">
+        <field name="name">agents.list</field>
+        <field name="description">List active agents</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">agents.list</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"active":{"type":"boolean"},"caller_type":{"type":"string"}}}</field>
+    </record>
+    <record id="tool_agents_create" model="bookai.tool">
+        <field name="name">agents.create</field>
+        <field name="description">Create a new agent</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">agents.create</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"technical_name":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"system_prompt":{"type":"string"},"caller_type":{"type":"string"}},"required":["technical_name","name","description","system_prompt"]}</field>
+    </record>
+    <record id="tool_agents_update" model="bookai.tool">
+        <field name="name">agents.update</field>
+        <field name="description">Update agent fields</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">agents.update</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"technical_name":{"type":"string"}},"required":["technical_name"]}</field>
+    </record>
+    <record id="tool_agents_update_prompt" model="bookai.tool">
+        <field name="name">agents.update_prompt</field>
+        <field name="description">Update agent system prompt</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">agents.update_prompt</field>
+        <field name="requires_confirm" eval="True" />
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"technical_name":{"type":"string"},"system_prompt":{"type":"string"}},"required":["technical_name","system_prompt"]}</field>
+    </record>
+    <record id="tool_usage_summary_agent" model="bookai.tool">
+        <field name="name">usage.summary_by_agent</field>
+        <field name="description">Usage aggregated by agent</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">usage.summary_by_agent</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"date_from":{"type":"string"},"date_to":{"type":"string"}}}</field>
+    </record>
+    <record id="tool_usage_summary_property" model="bookai.tool">
+        <field name="name">usage.summary_by_property</field>
+        <field name="description">Usage aggregated by property</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">usage.summary_by_property</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"date_from":{"type":"string"},"date_to":{"type":"string"}}}</field>
+    </record>
+    <record id="tool_usage_summary_model" model="bookai.tool">
+        <field name="name">usage.summary_by_model</field>
+        <field name="description">Usage aggregated by LLM model</field>
+        <field name="tool_type">sdk</field>
+        <field name="sdk_method">usage.summary_by_model</field>
+        <field
+      name="input_schema"
+    >{"type":"object","properties":{"date_from":{"type":"string"},"date_to":{"type":"string"}}}</field>
+    </record>
+
+    <!-- =================================================================
+         SUPERVISOR AGENTS (protected)
+         ================================================================= -->
+
+    <record id="agent_supervisor_external" model="bookai.agent">
+        <field name="name">Supervisor Externo</field>
+        <field name="technical_name">supervisor-external</field>
+        <field name="caller_type">external_guest</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="is_supervisor" eval="True" />
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Gestiona conversaciones con huéspedes. Decide qué agente worker usar, valida respuestas, escala a humano si necesario.</field>
+        <field
+      name="system_prompt"
+    >Eres el supervisor de conversaciones con huéspedes. Tu trabajo es:
+1. Evaluar cada mensaje del huésped y decidir qué agente worker es el más adecuado
+2. Validar que las respuestas de los workers sean correctas y apropiadas
+3. Escalar a un operador humano cuando detectes situaciones que requieran intervención
+
+Escala cuando:
+- El huésped pide explícitamente hablar con una persona
+- La respuesta del worker es incorrecta o inapropiada
+- No hay información disponible para responder
+- El huésped está frustrado o insatisfecho
+- Hay un tema de seguridad o urgencia</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">2048</field>
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_property_info'),
+            ref('agent_booking_assistant'),
+            ref('agent_availability'),
+            ref('agent_booking_agent'),
+        ])]"
+    />
+    </record>
+
+    <record id="agent_supervisor_internal" model="bookai.agent">
+        <field name="name">Supervisor Interno</field>
+        <field name="technical_name">supervisor-internal</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="is_supervisor" eval="True" />
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Gestiona conversaciones con staff del hotel. Enruta a agentes de soporte interno.</field>
+        <field
+      name="system_prompt"
+    >Eres el supervisor de conversaciones internas del hotel. Tu trabajo es:
+1. Evaluar cada mensaje del staff y decidir qué agente worker es el más adecuado
+2. Validar que las respuestas sean útiles y precisas
+3. Escalar a soporte técnico si el agente worker no puede resolver</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">2048</field>
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_reception_assistant'),
+            ref('agent_finance_assistant'),
+            ref('agent_operations_assistant'),
+        ])]"
+    />
+    </record>
+
+    <record id="agent_supervisor_roomdoo" model="bookai.agent">
+        <field name="name">Supervisor Roomdoo</field>
+        <field name="technical_name">supervisor-roomdoo</field>
+        <field name="caller_type">system</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="is_supervisor" eval="True" />
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Gestiona conversaciones con el equipo Roomdoo. Enruta a agentes de soporte y operaciones.</field>
+        <field
+      name="system_prompt"
+    >Eres el supervisor de conversaciones del equipo Roomdoo. Tu trabajo es:
+1. Evaluar cada mensaje y decidir qué agente worker es el más adecuado
+2. Gestionar tareas de soporte técnico, operaciones y administración
+3. Escalar a un desarrollador si el tema requiere intervención técnica</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">2048</field>
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_roomdoo_god'),
+            ref('agent_bookai_admin'),
+            ref('agent_usage_analyst'),
+            ref('agent_property_info'),
+        ])]"
+    />
+    </record>
+
+    <!-- =================================================================
+         WORKER AGENTS — External Guest
+         ================================================================= -->
+
+    <record id="agent_property_info" model="bookai.agent">
+        <field name="name">Property Info</field>
+        <field name="technical_name">property-info</field>
+        <field name="caller_type">external_guest</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Responde preguntas sobre el hotel: habitaciones, servicios, horarios, amenities, tarifas, ubicación y alrededores.</field>
+        <field
+      name="system_prompt"
+    >Eres un asistente de información del hotel. Respondes preguntas de huéspedes sobre instalaciones, servicios, horarios, políticas de check-in/check-out, tarifas y alrededores.
+
+Usa la información de la base de conocimiento y las tools disponibles para dar respuestas precisas. Sé amable y profesional.
+
+Si no tienes la información, indica que consultarás con recepción. Nunca inventes datos sobre el hotel.</field>
+        <field name="temperature">0.3</field>
+        <field name="max_tokens">2048</field>
+    </record>
+
+    <record id="agent_booking_assistant" model="bookai.agent">
+        <field name="name">Booking Assistant</field>
+        <field name="technical_name">booking-assistant</field>
+        <field name="caller_type">external_guest</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Ayuda a huéspedes con sus reservas: fechas, habitación, precios, pagos, datos de check-in. Puede actualizar la hora de llegada.</field>
+        <field
+      name="system_prompt"
+    >Eres un asistente de reservas. Ayudas a los huéspedes con información sobre su reserva: fechas, tipo de habitación, precio, pagos pendientes y datos de check-in.
+
+PUEDES actualizar la hora de llegada si el huésped lo solicita.
+Para cualquier otro cambio (cancelaciones, cambio de fechas, cambio de habitación), indica que le conectarás con recepción.
+
+Sé amable y conciso. Cuando muestres importes, incluye la moneda.</field>
+        <field name="temperature">0.3</field>
+        <field name="max_tokens">2048</field>
+    </record>
+
+    <record id="agent_availability" model="bookai.agent">
+        <field name="name">Availability Agent</field>
+        <field name="technical_name">availability-agent</field>
+        <field name="caller_type">external_guest</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Consulta disponibilidad de habitaciones y precios para fechas concretas.</field>
+        <field
+      name="system_prompt"
+    >Eres un asistente de disponibilidad. Ayudas a huéspedes a consultar la disponibilidad de habitaciones y precios para fechas concretas.
+
+Cuando el huésped pregunte por disponibilidad:
+1. Pregunta las fechas si no las ha dado
+2. Consulta disponibilidad con la tool availability.check
+3. Si hay disponibilidad, muestra los tipos de habitación disponibles y sus precios
+
+Si no hay disponibilidad, sugiere fechas alternativas cercanas.</field>
+        <field name="temperature">0.3</field>
+        <field name="max_tokens">2048</field>
+    </record>
+
+    <record id="agent_booking_agent" model="bookai.agent">
+        <field name="name">Booking Agent</field>
+        <field name="technical_name">booking-agent</field>
+        <field name="caller_type">external_guest</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Gestiona consultas de disponibilidad, precios y creación de reservas para huéspedes.</field>
+        <field
+      name="system_prompt"
+    >Eres el agente de reservas del hotel {pms_property_name}. Tu trabajo es ayudar a los huéspedes a:
+1. Consultar disponibilidad de habitaciones
+2. Informar sobre precios y tarifas
+3. Explicar políticas de cancelación
+4. Crear reservas cuando el huésped lo solicita
+
+FLUJO DE RESERVA:
+1. Pregunta fechas de entrada y salida
+2. Consulta disponibilidad con availability.check
+3. Presenta opciones de habitación con precios (usa availability.get_prices)
+4. Si el huésped pregunta por cancelación, usa properties.get_pricelists para obtener la política
+5. Cuando el huésped confirme, usa reservations.create_booking
+
+DATOS DEL HUÉSPED:
+- El nombre y teléfono del huésped ya están disponibles en el contexto de la conversación
+- No pidas datos que ya tienes
+- Si necesitas email, pregúntalo
+
+IMPORTANTE:
+- Siempre usa las tools antes de responder sobre disponibilidad o precios
+- No inventes precios ni disponibilidad
+- Presenta precios con IVA incluido
+- Responde en el idioma del huésped</field>
+        <field name="temperature">0.3</field>
+        <field name="max_tokens">2048</field>
+    </record>
+
+    <!-- =================================================================
+         WORKER AGENTS — Internal Staff
+         ================================================================= -->
+
+    <record id="agent_reception_assistant" model="bookai.agent">
+        <field name="name">Reception Assistant</field>
+        <field name="technical_name">reception-assistant</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Asistente de recepción: buscar reservas, check-in/out, asignar habitaciones, gestionar huéspedes.</field>
+        <field
+      name="system_prompt"
+    >Eres un asistente de recepción. Ayudas al equipo con la operativa diaria:
+- Buscar y consultar reservas
+- Hacer check-in y check-out
+- Asignar habitaciones
+- Buscar datos de huéspedes
+
+Sé conciso y orientado a la acción. Confirma antes de ejecutar operaciones que modifiquen datos.</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <record id="agent_finance_assistant" model="bookai.agent">
+        <field name="name">Finance Assistant</field>
+        <field name="technical_name">finance-assistant</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Asistente financiero: facturación, pagos, cobros, saldos pendientes.</field>
+        <field name="system_prompt">Eres un asistente financiero del hotel. Ayudas con:
+- Consultar y generar facturas
+- Registrar pagos
+- Ver saldos pendientes
+- Consultar pagos del día
+
+Sé preciso con los importes. Confirma antes de crear facturas o registrar pagos.</field>
+        <field name="temperature">0.1</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <record id="agent_operations_assistant" model="bookai.agent">
+        <field name="name">Operations Assistant</field>
+        <field name="technical_name">operations-assistant</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Asistente de operaciones: ocupación, ingresos, llegadas/salidas, métricas operativas.</field>
+        <field
+      name="system_prompt"
+    >Eres un asistente de operaciones. Proporcionas KPIs y métricas del hotel:
+- Ocupación por tipo de habitación
+- Resumen de ingresos
+- Llegadas y salidas del día
+- Reservas pendientes de check-in
+
+Presenta los datos de forma clara y estructurada. Usa tablas cuando sea posible.</field>
+        <field name="temperature">0.1</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <!-- =================================================================
+         WORKER AGENTS — Roomdoo Team
+         ================================================================= -->
+
+    <record id="agent_roomdoo_god" model="bookai.agent">
+        <field name="name">Roomdoo God Mode</field>
+        <field name="technical_name">roomdoo-god</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="god_mode" eval="True" />
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Acceso completo a Odoo. Consulta, crea, modifica y elimina registros. Solo para administradores.</field>
+        <field
+      name="system_prompt"
+    >Eres Roomdoo God Mode, asistente de administración con acceso completo a Odoo/Roomdoo.
+
+REGLAS:
+- SIEMPRE explica qué vas a hacer ANTES de ejecutar cualquier escritura
+- NUNCA ejecutes operaciones destructivas sin confirmación explícita
+- Presenta resultados en formato claro y estructurado
+- Si una petición es ambigua, pregunta antes de actuar</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <record id="agent_bookai_admin" model="bookai.agent">
+        <field name="name">BooKAI Admin</field>
+        <field name="technical_name">bookai-admin</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Gestión del sistema BooKAI: agentes, tools, knowledge base, servidores MCP.</field>
+        <field name="system_prompt">Eres el administrador de BooKAI. Gestionas:
+- Crear y configurar agentes conversacionales
+- Vincular y desvincular tools a agentes
+- Gestionar documentos de knowledge base
+- Consultar servidores MCP
+
+Confirma antes de crear o modificar configuraciones.</field>
+        <field name="temperature">0.2</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <record id="agent_usage_analyst" model="bookai.agent">
+        <field name="name">Usage Analyst</field>
+        <field name="technical_name">usage-analyst</field>
+        <field name="caller_type">internal</field>
+        <field name="identity_mode">technical_user</field>
+        <field name="active" eval="True" />
+        <field
+      name="description"
+    >Análisis de consumo de BooKAI: costes por agente, property y modelo LLM.</field>
+        <field
+      name="system_prompt"
+    >Eres un analista de consumo de BooKAI. Proporcionas métricas de uso:
+- Consumo por agente (tokens, costes, llamadas)
+- Consumo por property
+- Consumo por modelo LLM
+
+Presenta datos con comparativas y tendencias cuando sea posible.</field>
+        <field name="temperature">0.1</field>
+        <field name="max_tokens">4096</field>
+    </record>
+
+    <!-- =================================================================
+         AGENT ↔ TOOL BINDINGS
+         ================================================================= -->
+
+    <!-- Property Info bindings -->
+    <record id="binding_pi_get" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get" /></record>
+    <record id="binding_pi_room_types" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get_room_types" /></record>
+    <record id="binding_pi_rooms" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get_rooms" /></record>
+    <record id="binding_pi_amenities" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get_amenities" /></record>
+    <record id="binding_pi_board" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get_board_services" /></record>
+    <record id="binding_pi_pricelists" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_property_info"
+    /><field name="tool_id" ref="tool_properties_get_pricelists" /></record>
+
+    <!-- Booking Assistant bindings -->
+    <record id="binding_ba_folio" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_folio" /></record>
+    <record id="binding_ba_reservations" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_reservations" /></record>
+    <record id="binding_ba_lines" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_reservation_lines" /></record>
+    <record id="binding_ba_services" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_services" /></record>
+    <record id="binding_ba_payments" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_payments" /></record>
+    <record id="binding_ba_checkin" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_get_checkin_partners" /></record>
+    <record id="binding_ba_search" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_search_by_guest" /></record>
+    <record id="binding_ba_arrival" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_folios_update_arrival_hour" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ba_cancel_policy" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_assistant"
+    /><field name="tool_id" ref="tool_properties_get_cancelation_policy" /></record>
+
+    <!-- Availability Agent bindings -->
+    <record id="binding_av_check" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_availability"
+    /><field name="tool_id" ref="tool_availability_check" /></record>
+    <record id="binding_av_prices" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_availability"
+    /><field name="tool_id" ref="tool_availability_get_prices" /></record>
+    <record id="binding_av_room_types" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_availability"
+    /><field name="tool_id" ref="tool_properties_get_room_types" /></record>
+    <record id="binding_av_pricelists" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_availability"
+    /><field name="tool_id" ref="tool_properties_get_pricelists" /></record>
+    <record id="binding_av_cancel_policy" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_availability"
+    /><field name="tool_id" ref="tool_properties_get_cancelation_policy" /></record>
+
+    <!-- Booking Agent bindings -->
+    <record id="binding_bk_avail_check" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_availability_check" /></record>
+    <record id="binding_bk_avail_prices" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_availability_get_prices" /></record>
+    <record id="binding_bk_pricelists" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_properties_get_pricelists" /></record>
+    <record id="binding_bk_room_types" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_properties_get_room_types" /></record>
+    <record id="binding_bk_rooms" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_properties_get_rooms" /></record>
+    <record id="binding_bk_create" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_reservations_create_booking" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_bk_search" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_folios_search_by_guest" /></record>
+    <record id="binding_bk_cancel_policy" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_booking_agent"
+    /><field name="tool_id" ref="tool_properties_get_cancelation_policy" /></record>
+
+    <!-- Reception Assistant bindings -->
+    <record id="binding_ra_search" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_search" /></record>
+    <record id="binding_ra_get" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_get" /></record>
+    <record id="binding_ra_confirm" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_confirm" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ra_cancel" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_cancel" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ra_assign" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_assign_room" /></record>
+    <record id="binding_ra_checkin" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_checkin" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ra_checkout" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_reservations_checkout" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ra_guests_search" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_guests_search" /></record>
+    <record id="binding_ra_guests_get" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_reception_assistant"
+    /><field name="tool_id" ref="tool_guests_get" /></record>
+
+    <!-- Finance Assistant bindings -->
+    <record id="binding_fa_inv_list" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_invoices_list_by_folio" /></record>
+    <record id="binding_fa_inv_get" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_invoices_get" /></record>
+    <record id="binding_fa_inv_create" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_invoices_create" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_fa_inv_validate" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_invoices_validate" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_fa_inv_pdf" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_invoices_get_pdf_url" /></record>
+    <record id="binding_fa_pay_record" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_payments_record" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_fa_pay_list" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_payments_list_by_property" /></record>
+    <record id="binding_fa_pay_pending" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_finance_assistant"
+    /><field name="tool_id" ref="tool_payments_get_pending" /></record>
+
+    <!-- Operations Assistant bindings -->
+    <record id="binding_oa_occupancy" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_operations_assistant"
+    /><field name="tool_id" ref="tool_reporting_occupancy" /></record>
+    <record id="binding_oa_revenue" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_operations_assistant"
+    /><field name="tool_id" ref="tool_reporting_revenue" /></record>
+    <record id="binding_oa_arrivals" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_operations_assistant"
+    /><field name="tool_id" ref="tool_reporting_arrivals" /></record>
+    <record id="binding_oa_pending" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_operations_assistant"
+    /><field name="tool_id" ref="tool_reporting_pending_checkins" /></record>
+    <record id="binding_oa_property" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_operations_assistant"
+    /><field name="tool_id" ref="tool_properties_get" /></record>
+
+    <!-- BooKAI Admin bindings -->
+    <record id="binding_ba2_agents_get" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_bookai_admin"
+    /><field name="tool_id" ref="tool_agents_get" /></record>
+    <record id="binding_ba2_agents_list" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_bookai_admin"
+    /><field name="tool_id" ref="tool_agents_list" /></record>
+    <record id="binding_ba2_agents_create" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_bookai_admin"
+    /><field name="tool_id" ref="tool_agents_create" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ba2_agents_update" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_bookai_admin"
+    /><field name="tool_id" ref="tool_agents_update" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+    <record id="binding_ba2_agents_prompt" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_bookai_admin"
+    /><field name="tool_id" ref="tool_agents_update_prompt" /><field
+      name="requires_confirm"
+      eval="True"
+    /></record>
+
+    <!-- Usage Analyst bindings -->
+    <record id="binding_ua_agent" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_usage_analyst"
+    /><field name="tool_id" ref="tool_usage_summary_agent" /></record>
+    <record id="binding_ua_property" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_usage_analyst"
+    /><field name="tool_id" ref="tool_usage_summary_property" /></record>
+    <record id="binding_ua_model" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_usage_analyst"
+    /><field name="tool_id" ref="tool_usage_summary_model" /></record>
+    <record id="binding_ua_props" model="bookai.agent.tool.binding"><field
+      name="agent_id"
+      ref="agent_usage_analyst"
+    /><field name="tool_id" ref="tool_properties_list" /></record>
+
+</odoo>

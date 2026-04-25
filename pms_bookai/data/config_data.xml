@@ -19,4 +19,11 @@
         <field name="value" />
     </record>
 
+    <!-- BooKAI sale channel (do not rename or delete) -->
+    <record id="sale_channel_bookai" model="pms.sale.channel">
+        <field name="name">BooKAI</field>
+        <field name="channel_type">direct</field>
+        <field name="is_on_line" eval="True" />
+    </record>
+
 </odoo>

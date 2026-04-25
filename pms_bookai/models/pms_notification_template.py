@@ -1,14 +1,17 @@
+import json
 import logging
 import re
 from html import unescape
 
+import requests
+
 try:
     from whatsapp_formatter import convert_html_to_whatsapp
-except ImportError:  # pragma: no cover - fallback when dependency is not installed
+except ImportError:  # pragma: no cover
     convert_html_to_whatsapp = None
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 BODY_PLACEHOLDER_REGEX = re.compile(r"{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}")
@@ -33,6 +36,21 @@ class PmsNotificationTemplate(models.Model):
     bookai_template_code = fields.Char(
         string="BookAI Template Code",
         help="BookAI template code (e.g. booking_confirmation_v1).",
+    )
+    bookai_category = fields.Selection(
+        [
+            ("UTILITY", "Utility"),
+            ("MARKETING", "Marketing"),
+            ("AUTHENTICATION", "Authentication"),
+        ],
+        string="WhatsApp Category",
+        default="UTILITY",
+        help="Meta template category. Cannot be changed after " "first sync.",
+    )
+    bookai_translation_ids = fields.One2many(
+        "bookai.whatsapp.translation",
+        "template_id",
+        string="WhatsApp Translations",
     )
 
     # Rendered using mail engine syntax: {{ object.xxx }}, if/for blocks, etc.
@@ -71,6 +89,24 @@ class PmsNotificationTemplate(models.Model):
             "placeholder keys like {{ buyer_name }} defined in BookAI Parameters."
         ),
     )
+    bookai_header_text = fields.Text(
+        string="Header Text",
+        translate=True,
+        help="Optional header shown above the message "
+        "in WhatsApp. May contain placeholders.",
+    )
+    bookai_footer_text = fields.Text(
+        string="Footer Text",
+        translate=True,
+        help="Optional footer shown below the message "
+        "in WhatsApp. Meta does not allow placeholders.",
+    )
+    bookai_button_texts = fields.Text(
+        string="Button Texts",
+        translate=True,
+        help="Optional JSON list of buttons. Example: "
+        '[{"type":"URL","text":"Check-in","url":"https://..."}]',
+    )
 
     # ---------------------------------------------------------------------
     # Computed flags
@@ -92,7 +128,11 @@ class PmsNotificationTemplate(models.Model):
         - {{ expression }} inline expressions
         """
         self.ensure_one()
-        if not template_src:
+        if not template_src or not template_src.strip():
+            return ""
+        # Guard against empty expressions like "{{ }}"
+        stripped = template_src.strip()
+        if stripped == "{{ }}" or stripped == "{{}}":
             return ""
 
         ctx = dict(self.env.context)
@@ -246,6 +286,238 @@ class PmsNotificationTemplate(models.Model):
             lang=lang,
             extra_context=render_ctx,
         )
+
+    # ---------------------------------------------------------------------
+    # Sync to BookAI
+    # ---------------------------------------------------------------------
+    _SYNC_TIMEOUT = 15
+
+    def _get_bookai_headers(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        base_url = icp.get_param("pms_bookai.api_endpoint", "")
+        token = icp.get_param("pms_bookai.api_token", "")
+        if not base_url or not token:
+            raise UserError(
+                _(
+                    "Configure BooKAI Base URL and Bearer Token "
+                    "in Settings before syncing."
+                )
+            )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        return base_url, headers
+
+    def action_sync_to_bookai(self):
+        """Sync this WhatsApp template to BookAI."""
+        self.ensure_one()
+        if not self.bookai_template_code:
+            raise UserError(_("Set a BookAI Template Code before syncing."))
+        # Auto-create/sync translations from body i18n
+        self._sync_translations_from_i18n()
+        base_url, headers = self._get_bookai_headers()
+        payload = self._build_bookai_template_payload()
+        endpoint = base_url.rstrip("/") + "/api/v1/whatsapp/templates"
+        try:
+            resp = requests.post(
+                endpoint,
+                data=json.dumps(payload),
+                headers=headers,
+                timeout=self._SYNC_TIMEOUT,
+            )
+            if resp.status_code == 409:
+                patch_url = f"{endpoint}/{self.bookai_template_code}"
+                resp = requests.patch(
+                    patch_url,
+                    data=json.dumps({"translations": payload["translations"]}),
+                    headers=headers,
+                    timeout=self._SYNC_TIMEOUT,
+                )
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.exceptions.ConnectionError as exc:
+            raise UserError(_("Cannot connect to BooKAI at %s") % base_url) from exc
+        except requests.exceptions.Timeout as exc:
+            raise UserError(_("BooKAI sync timed out.")) from exc
+        except requests.exceptions.HTTPError as exc:
+            raise UserError(
+                _("BooKAI returned HTTP %s: %s")
+                % (exc.response.status_code, exc.response.text[:500])
+            ) from exc
+
+        self._update_translation_status(data)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Success"),
+                "message": _("Template '%s' synced to BooKAI.")
+                % self.bookai_template_code,
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def action_check_bookai_status(self):
+        """Check Meta approval status for this template."""
+        self.ensure_one()
+        if not self.bookai_template_code:
+            return
+        base_url, headers = self._get_bookai_headers()
+        url = (
+            base_url.rstrip("/") + f"/api/v1/whatsapp/templates"
+            f"/{self.bookai_template_code}/status"
+        )
+        try:
+            resp = requests.get(url, headers=headers, timeout=self._SYNC_TIMEOUT)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.exceptions.ConnectionError as exc:
+            raise UserError(_("Cannot connect to BooKAI at %s") % base_url) from exc
+        except requests.exceptions.HTTPError as exc:
+            raise UserError(
+                _("BooKAI returned HTTP %s: %s")
+                % (exc.response.status_code, exc.response.text[:500])
+            ) from exc
+
+        self._update_translation_status(data)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Status Updated"),
+                "message": _("Template '%s' status refreshed.")
+                % self.bookai_template_code,
+                "type": "info",
+                "sticky": False,
+            },
+        }
+
+    def _sync_translations_from_i18n(self):
+        """Auto-create/update translations from body i18n."""
+        self.ensure_one()
+        Translation = self.env["bookai.whatsapp.translation"]
+        active_langs = self.env["res.lang"].search([("active", "=", True)])
+        found_codes = set()
+        for lang in active_langs:
+            body = self.with_context(lang=lang.code).body
+            if not body or not body.strip():
+                continue
+            short_code = lang.iso_code or lang.code.split("_")[0]
+            if short_code in found_codes:
+                continue
+            found_codes.add(short_code)
+            existing = Translation.search(
+                [
+                    ("template_id", "=", self.id),
+                    ("language", "=", short_code),
+                ],
+                limit=1,
+            )
+            if not existing:
+                Translation.create(
+                    {
+                        "template_id": self.id,
+                        "language": short_code,
+                    }
+                )
+        # Deactivate translations without body
+        stale = Translation.search(
+            [
+                ("template_id", "=", self.id),
+                ("language", "not in", list(found_codes)),
+                ("active", "=", True),
+            ]
+        )
+        if stale:
+            stale.write({"active": False})
+
+    def _build_bookai_template_payload(self):
+        self.ensure_one()
+        param_keys = [p.key for p in self.bookai_param_ids.sorted("sequence")]
+        translations = []
+        for trans in self.bookai_translation_ids.filtered("active"):
+            lang_code = trans.language
+            odoo_lang = self._resolve_odoo_lang(lang_code)
+            tmpl_lang = self.with_context(lang=odoo_lang)
+            body_text = (tmpl_lang.body or "").strip()
+            if not body_text:
+                continue
+            entry = {
+                "language": lang_code,
+                "body_text": body_text,
+                "parameters": param_keys,
+                "property_ids": (self.pms_property_ids.ids or []),
+                "active": trans.active,
+            }
+            if trans.meta_template_id:
+                entry["meta_template_id"] = trans.meta_template_id
+            header = (tmpl_lang.bookai_header_text or "").strip()
+            if header:
+                entry["header_text"] = header
+            footer = (tmpl_lang.bookai_footer_text or "").strip()
+            if footer:
+                entry["footer_text"] = footer
+            buttons = (tmpl_lang.bookai_button_texts or "").strip()
+            if buttons:
+                try:
+                    entry["button_texts"] = json.loads(buttons)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            translations.append(entry)
+        return {
+            "code": self.bookai_template_code,
+            "category": self.bookai_category or "UTILITY",
+            "translations": translations,
+        }
+
+    def _resolve_odoo_lang(self, short_code):
+        """Resolve 'es' → 'es_ES', 'en' → 'en_US', etc."""
+        lang = self.env["res.lang"].search(
+            [
+                ("active", "=", True),
+                "|",
+                ("code", "=like", f"{short_code}_%"),
+                ("iso_code", "=", short_code),
+            ],
+            limit=1,
+        )
+        return lang.code if lang else short_code
+
+    def _update_translation_status(self, data):
+        """Update meta_status and meta_template_id from BookAI response."""
+        self.ensure_one()
+        for trans_data in data.get("translations", []):
+            lang = trans_data.get("language")
+            if not lang:
+                continue
+            trans = self.bookai_translation_ids.filtered(
+                lambda t, lang_code=lang: t.language == lang_code
+            )
+            if not trans:
+                continue
+            vals = {}
+            if trans_data.get("meta_status"):
+                vals["meta_status"] = trans_data["meta_status"]
+            if trans_data.get("meta_template_id"):
+                vals["meta_template_id"] = trans_data["meta_template_id"]
+            if vals:
+                trans.write(vals)
+
+    @api.onchange("body", "bookai_param_ids")
+    def _onchange_warn_multi_property(self):
+        if len(self.pms_property_ids) > 1:
+            return {
+                "warning": {
+                    "title": _("Multi-property template"),
+                    "message": _(
+                        "This template is linked to %d properties. "
+                        "Changes will affect all of them when synced."
+                    )
+                    % len(self.pms_property_ids),
+                }
+            }
 
     # ---------------------------------------------------------------------
     # Constraints

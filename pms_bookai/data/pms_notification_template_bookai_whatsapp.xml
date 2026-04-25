@@ -273,7 +273,9 @@ Check your reservation details.]]></field>
       name="description"
     >WhatsApp sent when a reservation (folio) is cancelled.</field>
         <field name="active" eval="True" />
-        <field name="apply_domain">[('state', '=', 'cancel')]</field>
+        <field
+      name="apply_domain"
+    >[('state', '=', 'cancel'), ('days_to_checkout', '&gt;', 0), ('cancelled_reason', '!=', 'modified')]</field>
         <field name="bookai_template_code">booking_cancellation_v1</field>
         <field
       name="bookai_recipient_phone_tmpl"
@@ -1387,6 +1389,93 @@ Si necesitas algo, como información de parking, estaremos encantados de ayudart
 {{ custom_query }}
 
 ¿Nos confirmas por aquí, por favor?]]></field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Escalation Alert Template                                    -->
+    <!-- ============================================================ -->
+
+    <record
+    id="pms_notification_template_escalation_alert_whatsapp"
+    model="pms.notification.template"
+  >
+        <field name="name">Escalation Alert (BookAI WhatsApp)</field>
+        <field name="code">escalation_alert_bookai_whatsapp_v1</field>
+        <field name="model_id" ref="pms.model_pms_folio" />
+        <field
+      name="description"
+    >WhatsApp alert sent to hotel staff when a guest conversation is escalated and no one attends within the configured timeout.</field>
+        <field name="active" eval="True" />
+        <field name="bookai_template_code">escalation_alert</field>
+        <field name="bookai_language_tmpl">{{ user.lang or 'es_ES' }}</field>
+    </record>
+
+    <record
+    id="pms_notification_template_escalation_alert_param_hotel_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_escalation_alert_whatsapp"
+    />
+        <field name="sequence">10</field>
+        <field name="key">hotel_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ '' }}</field>
+    </record>
+    <record
+    id="pms_notification_template_escalation_alert_param_guest_name"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_escalation_alert_whatsapp"
+    />
+        <field name="sequence">20</field>
+        <field name="key">guest_name</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ '' }}</field>
+    </record>
+    <record
+    id="pms_notification_template_escalation_alert_param_reason"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_escalation_alert_whatsapp"
+    />
+        <field name="sequence">30</field>
+        <field name="key">escalation_reason</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ '' }}</field>
+    </record>
+    <record
+    id="pms_notification_template_escalation_alert_param_chat_url"
+    model="pms.notification.template.bookai.param"
+  >
+        <field
+      name="template_id"
+      ref="pms_notification_template_escalation_alert_whatsapp"
+    />
+        <field name="sequence">40</field>
+        <field name="key">chat_url</field>
+        <field name="value_type">inline</field>
+        <field name="value_inline_tmpl">{{ '' }}</field>
+    </record>
+
+    <!-- Set body after params exist (constraint validates placeholders) -->
+    <record
+    id="pms_notification_template_escalation_alert_whatsapp"
+    model="pms.notification.template"
+  >
+        <field
+      name="body"
+    ><![CDATA[⚠️ Escalación pendiente en {{ hotel_name }}
+
+El huésped {{ guest_name }} necesita atención:
+{{ escalation_reason }}
+
+Accede al chat: {{ chat_url }}]]></field>
     </record>
 
 </odoo>
