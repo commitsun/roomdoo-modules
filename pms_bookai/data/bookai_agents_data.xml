@@ -536,15 +536,6 @@ Escala cuando:
 - Hay un tema de seguridad o urgencia</field>
         <field name="temperature">0.2</field>
         <field name="max_tokens">2048</field>
-        <field
-      name="allowed_agent_ids"
-      eval="[(6, 0, [
-            ref('agent_property_info'),
-            ref('agent_booking_assistant'),
-            ref('agent_availability'),
-            ref('agent_booking_agent'),
-        ])]"
-    />
     </record>
 
     <record id="agent_supervisor_internal" model="bookai.agent">
@@ -565,14 +556,6 @@ Escala cuando:
 3. Escalar a soporte técnico si el agente worker no puede resolver</field>
         <field name="temperature">0.2</field>
         <field name="max_tokens">2048</field>
-        <field
-      name="allowed_agent_ids"
-      eval="[(6, 0, [
-            ref('agent_reception_assistant'),
-            ref('agent_finance_assistant'),
-            ref('agent_operations_assistant'),
-        ])]"
-    />
     </record>
 
     <record id="agent_supervisor_roomdoo" model="bookai.agent">
@@ -593,15 +576,6 @@ Escala cuando:
 3. Escalar a un desarrollador si el tema requiere intervención técnica</field>
         <field name="temperature">0.2</field>
         <field name="max_tokens">2048</field>
-        <field
-      name="allowed_agent_ids"
-      eval="[(6, 0, [
-            ref('agent_roomdoo_god'),
-            ref('agent_bookai_admin'),
-            ref('agent_usage_analyst'),
-            ref('agent_property_info'),
-        ])]"
-    />
     </record>
 
     <!-- =================================================================
@@ -1139,5 +1113,44 @@ Presenta datos con comparativas y tendencias cuando sea posible.</field>
       name="agent_id"
       ref="agent_usage_analyst"
     /><field name="tool_id" ref="tool_properties_list" /></record>
+
+    <!-- =================================================================
+         SUPERVISOR allowed_agent_ids (set after workers exist)
+         ================================================================= -->
+
+    <record id="agent_supervisor_external" model="bookai.agent">
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_property_info'),
+            ref('agent_booking_assistant'),
+            ref('agent_availability'),
+            ref('agent_booking_agent'),
+        ])]"
+    />
+    </record>
+
+    <record id="agent_supervisor_internal" model="bookai.agent">
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_reception_assistant'),
+            ref('agent_finance_assistant'),
+            ref('agent_operations_assistant'),
+        ])]"
+    />
+    </record>
+
+    <record id="agent_supervisor_roomdoo" model="bookai.agent">
+        <field
+      name="allowed_agent_ids"
+      eval="[(6, 0, [
+            ref('agent_roomdoo_god'),
+            ref('agent_bookai_admin'),
+            ref('agent_usage_analyst'),
+            ref('agent_property_info'),
+        ])]"
+    />
+    </record>
 
 </odoo>
