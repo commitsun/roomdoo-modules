@@ -153,13 +153,13 @@ class PmsProperty(models.Model):
             "phone": self.phone or "",
             "bookai_online_selling": self.bookai_online_selling,
             "bookai_sale_channel_id": (
-                self.bookai_sale_channel_id.id if self.bookai_sale_channel_id else False
+                self.bookai_sale_channel_id.id if self.bookai_sale_channel_id else None
             ),
             "bookai_escalation_timeout": (self.bookai_escalation_timeout),
             "bookai_escalation_template_code": (
                 self.bookai_escalation_template_id.bookai_template_code
                 if self.bookai_escalation_template_id
-                else False
+                else None
             ),
             "bookai_escalation_contacts": [
                 {
@@ -176,11 +176,11 @@ class PmsProperty(models.Model):
                 .sudo()
                 .get_param("roomdoo_app_url", "")
             ),
-            "bookai_wa_phone_number_id": (self.bookai_wa_phone_number_id or False),
-            "bookai_wa_access_token": (self.bookai_wa_access_token or False),
-            "bookai_wa_account_id": (self.bookai_wa_account_id or False),
-            "bookai_wa_verify_token": (self.bookai_wa_verify_token or False),
-            "bookai_wa_display_number": (self.bookai_wa_display_number or False),
+            "bookai_wa_phone_number_id": self.bookai_wa_phone_number_id or None,
+            "bookai_wa_access_token": self.bookai_wa_access_token or None,
+            "bookai_wa_account_id": self.bookai_wa_account_id or None,
+            "bookai_wa_verify_token": self.bookai_wa_verify_token or None,
+            "bookai_wa_display_number": self.bookai_wa_display_number or None,
         }
 
     def get_bookai_hotel_public_info(self):
