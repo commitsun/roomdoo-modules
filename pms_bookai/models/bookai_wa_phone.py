@@ -43,4 +43,9 @@ class BookaiWaPhone(models.Model):
     @api.depends("display_number", "phone_number_id")
     def _compute_name(self):
         for rec in self:
-            rec.name = rec.display_number or rec.phone_number_id or ""
+            phone = rec.display_number or ""
+            pid = rec.phone_number_id or ""
+            if phone and pid:
+                rec.name = f"{pid} ({phone})"
+            else:
+                rec.name = pid or phone or ""
