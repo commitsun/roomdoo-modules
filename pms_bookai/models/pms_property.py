@@ -18,11 +18,7 @@ _WATCHED_FIELDS = {
     "bookai_escalation_timeout",
     "bookai_escalation_template_id",
     "bookai_app_url",
-    "bookai_wa_phone_number_id",
-    "bookai_wa_access_token",
-    "bookai_wa_account_id",
-    "bookai_wa_verify_token",
-    "bookai_wa_display_number",
+    "bookai_wa_phone_id",
 }
 
 
@@ -95,26 +91,10 @@ class PmsProperty(models.Model):
     )
 
     # WhatsApp channel config
-    bookai_wa_phone_number_id = fields.Char(
-        string="WA Phone Number ID",
-        help="Meta Cloud API phone_number_id.",
-    )
-    bookai_wa_access_token = fields.Char(
-        string="WA Access Token",
-        groups="base.group_system",
-        help="Meta Bearer token for sending messages.",
-    )
-    bookai_wa_account_id = fields.Char(
-        string="WA Business Account ID",
-        help="WhatsApp Business Account ID (for templates).",
-    )
-    bookai_wa_verify_token = fields.Char(
-        string="WA Verify Token",
-        help="Token for Meta webhook verification.",
-    )
-    bookai_wa_display_number = fields.Char(
-        string="WA Display Number",
-        help='Visible phone number (e.g. "+34 900 123 456").',
+    bookai_wa_phone_id = fields.Many2one(
+        "bookai.wa.phone",
+        string="WA Phone Number",
+        help="WhatsApp phone number used by this property.",
     )
 
     # -----------------------------------------------------------------
@@ -176,11 +156,31 @@ class PmsProperty(models.Model):
                 .sudo()
                 .get_param("roomdoo_app_url", "")
             ),
-            "bookai_wa_phone_number_id": self.bookai_wa_phone_number_id or None,
-            "bookai_wa_access_token": self.bookai_wa_access_token or None,
-            "bookai_wa_account_id": self.bookai_wa_account_id or None,
-            "bookai_wa_verify_token": self.bookai_wa_verify_token or None,
-            "bookai_wa_display_number": self.bookai_wa_display_number or None,
+            "bookai_wa_phone_number_id": (
+                self.bookai_wa_phone_id.phone_number_id
+                if self.bookai_wa_phone_id
+                else None
+            ),
+            "bookai_wa_display_number": (
+                self.bookai_wa_phone_id.display_number
+                if self.bookai_wa_phone_id
+                else None
+            ),
+            "bookai_wa_account_id": (
+                self.bookai_wa_phone_id.wa_account_id.waba_id
+                if self.bookai_wa_phone_id
+                else None
+            ),
+            "bookai_wa_access_token": (
+                self.bookai_wa_phone_id.wa_account_id.access_token
+                if self.bookai_wa_phone_id
+                else None
+            ),
+            "bookai_wa_verify_token": (
+                self.bookai_wa_phone_id.wa_account_id.verify_token
+                if self.bookai_wa_phone_id
+                else None
+            ),
         }
 
     def get_bookai_hotel_public_info(self):

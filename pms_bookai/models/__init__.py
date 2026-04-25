@@ -1,4 +1,6 @@
 from . import bookai_webhook_mixin
+from . import bookai_wa_account
+from . import bookai_wa_phone
 from . import bookai_agent
 from . import bookai_agent_audit_log
 from . import bookai_agent_tool_binding

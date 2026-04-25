@@ -46,6 +46,7 @@
         delete="false"
         editable="bottom"
       >
+                <field name="wa_account_id" />
                 <field name="language" />
                 <field name="active" />
                 <field

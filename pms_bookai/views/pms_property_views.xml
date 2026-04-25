@@ -24,13 +24,7 @@
                 </group>
                 <group string="WhatsApp Channel">
                     <group>
-                        <field name="bookai_wa_phone_number_id" />
-                        <field name="bookai_wa_access_token" password="True" />
-                        <field name="bookai_wa_verify_token" />
-                    </group>
-                    <group>
-                        <field name="bookai_wa_account_id" />
-                        <field name="bookai_wa_display_number" />
+                        <field name="bookai_wa_phone_id" />
                     </group>
                 </group>
                 <group string="App">
