@@ -263,13 +263,13 @@
         <field name="name">reservations.create_booking</field>
         <field
       name="description"
-    >Create a complete booking: folio + reservation + confirmation. Returns folio code and reservation details.</field>
+    >Create a complete booking: folio + one or more reservations + confirmation. Use the reservations array to book multiple rooms in a single folio. Returns folio code and reservation details.</field>
         <field name="tool_type">sdk</field>
         <field name="sdk_method">reservations.create_booking</field>
         <field name="requires_confirm" eval="True" />
         <field
       name="input_schema"
-    >{"type":"object","properties":{"property_id":{"type":"integer"},"partner_name":{"type":"string"},"partner_phone":{"type":"string"},"partner_email":{"type":"string"},"room_type_id":{"type":"integer"},"checkin":{"type":"string"},"checkout":{"type":"string"},"adults":{"type":"integer","default":2},"children":{"type":"integer","default":0},"pricelist_id":{"type":"integer"},"sale_channel_id":{"type":"integer"}},"required":["property_id","partner_name","room_type_id","checkin","checkout","pricelist_id","sale_channel_id"]}</field>
+    >{"type":"object","properties":{"property_id":{"type":"integer","description":"PMS property ID"},"partner_name":{"type":"string","description":"Guest full name"},"partner_phone":{"type":"string","description":"Guest phone in E.164 format"},"partner_email":{"type":"string","description":"Guest email address"},"pricelist_id":{"type":"integer","description":"Pricelist/rate ID"},"sale_channel_id":{"type":"integer","description":"Sale channel ID (use BooKAI channel)"},"reservations":{"type":"array","description":"Rooms to book. Use one entry per room.","items":{"type":"object","properties":{"room_type_id":{"type":"integer","description":"Room type ID"},"checkin":{"type":"string","description":"Check-in date YYYY-MM-DD"},"checkout":{"type":"string","description":"Check-out date YYYY-MM-DD"},"adults":{"type":"integer","default":2,"description":"Number of adult guests"},"children":{"type":"integer","default":0,"description":"Number of child guests"}},"required":["room_type_id","checkin","checkout"]}}},"required":["property_id","partner_name","pricelist_id","sale_channel_id","reservations"]}</field>
     </record>
 
     <!-- Guests (staff) -->
@@ -533,7 +533,9 @@ Escala cuando:
 - La respuesta del worker es incorrecta o inapropiada
 - No hay información disponible para responder
 - El huésped está frustrado o insatisfecho
-- Hay un tema de seguridad o urgencia</field>
+- Hay un tema de seguridad o urgencia
+
+VALIDACIÓN: Si un worker responde con datos de disponibilidad, precios o reservas sin haber ejecutado la tool correspondiente, RECHAZA su respuesta y reintenta. Un worker NUNCA debe inventar datos.</field>
         <field name="temperature">0.2</field>
         <field name="max_tokens">2048</field>
     </record>
@@ -618,7 +620,9 @@ Si no tienes la información, indica que consultarás con recepción. Nunca inve
 PUEDES actualizar la hora de llegada si el huésped lo solicita.
 Para cualquier otro cambio (cancelaciones, cambio de fechas, cambio de habitación), indica que le conectarás con recepción.
 
-Sé amable y conciso. Cuando muestres importes, incluye la moneda.</field>
+Sé amable y conciso. Cuando muestres importes, incluye la moneda.
+
+REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Informa que hubo un problema técnico y ofrece conectar con recepción. NUNCA respondas con datos que no vengan de una tool.</field>
         <field name="temperature">0.3</field>
         <field name="max_tokens">2048</field>
     </record>
@@ -641,7 +645,9 @@ Cuando el huésped pregunte por disponibilidad:
 2. Consulta disponibilidad con la tool availability.check
 3. Si hay disponibilidad, muestra los tipos de habitación disponibles y sus precios
 
-Si no hay disponibilidad, sugiere fechas alternativas cercanas.</field>
+Si no hay disponibilidad, sugiere fechas alternativas cercanas.
+
+REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Informa que hubo un problema técnico y ofrece conectar con recepción. NUNCA respondas con datos que no vengan de una tool.</field>
         <field name="temperature">0.3</field>
         <field name="max_tokens">2048</field>
     </record>
@@ -677,7 +683,8 @@ DATOS DEL HUÉSPED:
 
 IMPORTANTE:
 - Siempre usa las tools antes de responder sobre disponibilidad o precios
-- No inventes precios ni disponibilidad
+- NUNCA inventes precios, disponibilidad ni ningún dato. Si una tool falla, informa del error.
+- Si el huésped pide varias habitaciones, inclúyelas TODAS en UNA sola llamada a create_booking con el array reservations. NO llames a create_booking múltiples veces.
 - Presenta precios con IVA incluido
 - Responde en el idioma del huésped</field>
         <field name="temperature">0.3</field>
@@ -705,7 +712,9 @@ IMPORTANTE:
 - Asignar habitaciones
 - Buscar datos de huéspedes
 
-Sé conciso y orientado a la acción. Confirma antes de ejecutar operaciones que modifiquen datos.</field>
+Sé conciso y orientado a la acción. Confirma antes de ejecutar operaciones que modifiquen datos.
+
+REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Informa que hubo un problema técnico y ofrece conectar con recepción. NUNCA respondas con datos que no vengan de una tool.</field>
         <field name="temperature">0.2</field>
         <field name="max_tokens">4096</field>
     </record>
@@ -725,7 +734,9 @@ Sé conciso y orientado a la acción. Confirma antes de ejecutar operaciones que
 - Ver saldos pendientes
 - Consultar pagos del día
 
-Sé preciso con los importes. Confirma antes de crear facturas o registrar pagos.</field>
+Sé preciso con los importes. Confirma antes de crear facturas o registrar pagos.
+
+REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Informa que hubo un problema técnico y ofrece conectar con recepción. NUNCA respondas con datos que no vengan de una tool.</field>
         <field name="temperature">0.1</field>
         <field name="max_tokens">4096</field>
     </record>
@@ -747,7 +758,9 @@ Sé preciso con los importes. Confirma antes de crear facturas o registrar pagos
 - Llegadas y salidas del día
 - Reservas pendientes de check-in
 
-Presenta los datos de forma clara y estructurada. Usa tablas cuando sea posible.</field>
+Presenta los datos de forma clara y estructurada. Usa tablas cuando sea posible.
+
+REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Informa que hubo un problema técnico y ofrece conectar con recepción. NUNCA respondas con datos que no vengan de una tool.</field>
         <field name="temperature">0.1</field>
         <field name="max_tokens">4096</field>
     </record>
