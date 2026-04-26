@@ -141,22 +141,6 @@ class PmsNotificationTemplate(models.Model):
             record = rec.env[model_name].browse(rec.bookai_example_record_id).exists()
             rec.bookai_example_record_name = record.display_name if record else ""
 
-    def action_select_example_record(self):
-        """Open a selector for the template's target model."""
-        self.ensure_one()
-        if not self.model_id:
-            raise UserError(_("Set a target model first."))
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Select Example Record"),
-            "res_model": self.model_id.model,
-            "view_mode": "list,form",
-            "target": "new",
-            "context": {
-                "bookai_select_example_for": self.id,
-            },
-        }
-
     def action_generate_examples(self):
         """Fill example_value on each param by rendering
         against the selected example record."""
