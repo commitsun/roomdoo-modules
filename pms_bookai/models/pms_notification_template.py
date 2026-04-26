@@ -89,6 +89,12 @@ class PmsNotificationTemplate(models.Model):
             "placeholder keys like {{ buyer_name }} defined in BookAI Parameters."
         ),
     )
+    bookai_body_example = fields.Text(
+        string="Body Example",
+        compute="_compute_bookai_body_example",
+        help="Preview of the body with example param values.",
+    )
+
     bookai_header_text = fields.Text(
         string="Header Text",
         translate=True,
@@ -114,6 +120,22 @@ class PmsNotificationTemplate(models.Model):
     def _compute_channel_bookai_whatsapp_enabled(self):
         for rec in self:
             rec.channel_bookai_whatsapp_enabled = bool(rec.bookai_template_code)
+
+    def _compute_bookai_body_example(self):
+        for rec in self:
+            body = (rec.body or "").strip()
+            if not body or not rec.bookai_param_ids:
+                rec.bookai_body_example = ""
+                continue
+            example_map = {
+                p.key: p.example_value or p.key
+                for p in rec.bookai_param_ids.sorted("sequence")
+            }
+
+            def _replace(match, _map=example_map):
+                return _map.get(match.group(1), match.group(0))
+
+            rec.bookai_body_example = BODY_PLACEHOLDER_REGEX.sub(_replace, body)
 
     # ---------------------------------------------------------------------
     # Rendering helpers (mail engine)
@@ -499,6 +521,13 @@ class PmsNotificationTemplate(models.Model):
                 entry["waba_id"] = trans.wa_account_id.waba_id
             if trans.meta_template_id:
                 entry["meta_template_id"] = trans.meta_template_id
+            # Body examples for Meta template validation
+            body_examples = [
+                p.example_value or p.key
+                for p in self.bookai_param_ids.sorted("sequence")
+            ]
+            if body_examples:
+                entry["body_example"] = body_examples
             header = (tmpl_lang.bookai_header_text or "").strip()
             if header:
                 entry["header_text"] = header

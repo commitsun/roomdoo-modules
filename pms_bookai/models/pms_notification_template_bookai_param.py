@@ -36,6 +36,11 @@ class PmsNotificationTemplateBookaiParam(models.Model):
         string="Description",
         help="Optional description shown to API clients.",
     )
+    example_value = fields.Char(
+        string="Example",
+        help="Example value sent to Meta for template "
+        "validation (e.g. 'Juan Garcia', '2026-05-10').",
+    )
 
     value_type = fields.Selection(
         [
