@@ -7,30 +7,36 @@
         <field name="model">pms.notification.template.bookai.param</field>
         <field name="arch" type="xml">
             <tree string="BookAI Parameters" editable="bottom">
-                <!-- Required in the view because it is used in a domain -->
                 <field name="target_model_name" invisible="1" />
-
                 <field name="sequence" widget="handle" />
                 <field name="key" />
                 <field name="description" />
-                <field name="example_value" placeholder="e.g. Juan Garcia" />
+                <field name="example_value" placeholder="e.g. John Smith" />
                 <field name="value_type" />
-
                 <field
           name="field_id"
-          attrs="{'invisible':[('value_type','!=','field')], 'required':[('value_type','=','field')]}"
-          domain="[('model', '=', target_model_name),
-                                ('ttype', 'not in', ('one2many','many2many','binary'))]"
+          attrs="{
+                        'invisible': [('value_type', '!=', 'field')],
+                        'required': [('value_type', '=', 'field')]
+                    }"
+          domain="[
+                        ('model', '=', target_model_name),
+                        ('ttype', 'not in', ('one2many', 'many2many', 'binary'))
+                    ]"
         />
-
                 <field
           name="value_inline_tmpl"
-          attrs="{'invisible':[('value_type','not in',('inline','qweb'))], 'required':[('value_type','in',('inline','qweb'))]}"
+          attrs="{
+                        'invisible': [('value_type', 'not in', ('inline', 'qweb'))],
+                        'required': [('value_type', 'in', ('inline', 'qweb'))]
+                    }"
         />
-
                 <field
           name="value_literal"
-          attrs="{'invisible':[('value_type','!=','literal')], 'required':[('value_type','=','literal')]}"
+          attrs="{
+                        'invisible': [('value_type', '!=', 'literal')],
+                        'required': [('value_type', '=', 'literal')]
+                    }"
         />
             </tree>
         </field>
@@ -73,16 +79,16 @@
     />
         <field name="arch" type="xml">
 
-            <!-- Ensure target_model_name is present (invisible) for domains in embedded views -->
+            <!-- Ensure target_model_name is present (invisible) for domains -->
             <xpath expr="//form/sheet" position="inside">
                 <field name="target_model_name" invisible="1" />
             </xpath>
 
-            <!-- If base form has no notebook, we add one. If it already has, we append a page. -->
             <xpath expr="//form/sheet" position="inside">
                 <notebook>
-
                     <page string="BookAI WhatsApp">
+
+                        <!-- Identity & recipient -->
                         <group>
                             <group>
                                 <field name="bookai_template_code" />
@@ -104,18 +110,23 @@
                             </group>
                         </group>
 
+                        <!-- Folio reference -->
                         <group>
                             <field
                 name="bookai_origin_folio_id_tmpl"
                 placeholder="{{ (object if object._name == 'pms.folio' else object.folio_id).id }}"
               />
                         </group>
+
+                        <!-- Header -->
                         <group>
                             <field
                 name="bookai_header_text"
                 placeholder="Optional header..."
               />
                         </group>
+
+                        <!-- Body -->
                         <group>
                             <field
                 name="body"
@@ -123,12 +134,8 @@
                 placeholder="Hello {{ buyer_name }}, your reservation {{ reservation_locator }}..."
               />
                         </group>
-                        <group
-              string="Body Example (Meta)"
-              attrs="{'invisible': [('bookai_body_example', '=', False)]}"
-            >
-                            <field name="bookai_body_example" readonly="1" />
-                        </group>
+
+                        <!-- Footer + Buttons -->
                         <group>
                             <group>
                                 <field
@@ -144,6 +151,7 @@
                             </group>
                         </group>
 
+                        <!-- Parameters -->
                         <group string="Template Parameters">
                             <field
                 name="bookai_param_ids"
@@ -155,6 +163,15 @@
                             </field>
                         </group>
 
+                        <!-- Body example preview -->
+                        <group
+              string="Body Example (Meta)"
+              attrs="{'invisible': [('bookai_body_example', '=', False)]}"
+            >
+                            <field name="bookai_body_example" readonly="1" />
+                        </group>
+
+                        <!-- Translations -->
                         <group string="WhatsApp Translations (auto-managed on sync)">
                             <field
                 name="bookai_translation_ids"
@@ -166,6 +183,7 @@
                             </field>
                         </group>
 
+                        <!-- Sync buttons -->
                         <div
               class="mt16 mb16"
               attrs="{'invisible': [('bookai_template_code', '=', False)]}"
@@ -186,16 +204,16 @@
               />
                         </div>
 
-                        <!-- Tip for dynamic blocks and rich text formatting -->
+                        <!-- Tip -->
                         <group>
                             <separator string="Tip" />
                             <div>
                                 <p>
-                                    Use <strong
-                  >QWeb Template</strong> params for loops/conditionals (t-if, t-foreach),
-                                    and keep body placeholders as <code
-                  >{{ parameter_key }}</code>. The final rendered
-                                    output is converted to WhatsApp-safe text formatting.
+                                    Use <strong>QWeb Template</strong> params for
+                                    loops/conditionals (t-if, t-foreach), and keep body
+                                    placeholders as <code>{{ parameter_key }}</code>.
+                                    The final rendered output is converted to
+                                    WhatsApp-safe text formatting.
                                 </p>
                             </div>
                         </group>
