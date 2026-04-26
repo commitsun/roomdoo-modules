@@ -13,6 +13,7 @@
                 <field name="sequence" widget="handle" />
                 <field name="key" />
                 <field name="description" />
+                <field name="example_value" placeholder="e.g. Juan Garcia" />
                 <field name="value_type" />
 
                 <field
@@ -121,6 +122,12 @@
                 widget="text"
                 placeholder="Hello {{ buyer_name }}, your reservation {{ reservation_locator }}..."
               />
+                        </group>
+                        <group
+              string="Body Example (Meta)"
+              attrs="{'invisible': [('bookai_body_example', '=', False)]}"
+            >
+                            <field name="bookai_body_example" readonly="1" />
                         </group>
                         <group>
                             <group>

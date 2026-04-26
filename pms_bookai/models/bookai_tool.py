@@ -116,7 +116,7 @@ class BookaiTool(models.Model):
         if not base_url or not token:
             _logger.warning("SDK tools sync skipped: no BooKAI config.")
             return
-        url = base_url.rstrip("/") + "/sdk/tools"
+        url = base_url.rstrip("/") + "/api/v1/sdk/tools"
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
