@@ -89,6 +89,14 @@ class PmsNotificationTemplate(models.Model):
             "placeholder keys like {{ buyer_name }} defined in BookAI Parameters."
         ),
     )
+    bookai_example_record_id = fields.Integer(
+        string="Example Record ID",
+        help="ID of the record to render parameter examples.",
+    )
+    bookai_example_record_name = fields.Char(
+        string="Example Record",
+        compute="_compute_example_record_name",
+    )
     bookai_body_example = fields.Text(
         string="Body Example",
         compute="_compute_bookai_body_example",
@@ -115,11 +123,63 @@ class PmsNotificationTemplate(models.Model):
     )
 
     # ---------------------------------------------------------------------
-    # Computed flags
+    # Computed flags & selection helpers
     # ---------------------------------------------------------------------
     def _compute_channel_bookai_whatsapp_enabled(self):
         for rec in self:
             rec.channel_bookai_whatsapp_enabled = bool(rec.bookai_template_code)
+
+    def _compute_example_record_name(self):
+        for rec in self:
+            if not rec.bookai_example_record_id or not rec.model_id:
+                rec.bookai_example_record_name = ""
+                continue
+            model_name = rec.model_id.model
+            if model_name not in rec.env:
+                rec.bookai_example_record_name = ""
+                continue
+            record = rec.env[model_name].browse(rec.bookai_example_record_id).exists()
+            rec.bookai_example_record_name = record.display_name if record else ""
+
+    def action_select_example_record(self):
+        """Open a selector for the template's target model."""
+        self.ensure_one()
+        if not self.model_id:
+            raise UserError(_("Set a target model first."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Select Example Record"),
+            "res_model": self.model_id.model,
+            "view_mode": "list,form",
+            "target": "new",
+            "context": {
+                "bookai_select_example_for": self.id,
+            },
+        }
+
+    def action_generate_examples(self):
+        """Fill example_value on each param by rendering
+        against the selected example record."""
+        self.ensure_one()
+        if not self.bookai_example_record_id or not self.model_id:
+            raise UserError(_("Select an Example Record first."))
+        model_name = self.model_id.model
+        record = self.env[model_name].browse(self.bookai_example_record_id).exists()
+        if not record:
+            raise UserError(
+                _("Record %s(%s) not found.")
+                % (model_name, self.bookai_example_record_id)
+            )
+        lang = self._bookai_get_active_lang_code()
+        tz = self.env.user.tz or "UTC"
+        params = self._bookai_build_parameters(record, lang=lang, tz=tz)
+        for param in self.bookai_param_ids:
+            val = params.get(param.key, "")
+            param.write(
+                {
+                    "example_value": (str(val)[:200] if val else param.key),
+                }
+            )
 
     def _compute_bookai_body_example(self):
         for rec in self:
