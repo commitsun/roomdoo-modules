@@ -171,17 +171,10 @@
                             </group>
                             <group>
                                 <button
-                  name="action_select_example_record"
-                  type="object"
-                  string="Select Record"
-                  class="btn-secondary"
-                  icon="fa-search"
-                />
-                                <button
                   name="action_generate_examples"
                   type="object"
                   string="Generate Examples"
-                  class="btn-secondary"
+                  class="btn-primary"
                   icon="fa-magic"
                   attrs="{'invisible': [('bookai_example_record_id', '=', 0)]}"
                 />
