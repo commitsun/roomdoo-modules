@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <tree
         decoration-success="state == 'active'"
+        decoration-info="state == 'scheduled'"
         decoration-muted="state in ('cancelled','expired')"
         decoration-danger="state == 'failed'"
       >
@@ -32,7 +33,7 @@
                     <field
             name="state"
             widget="statusbar"
-            statusbar_visible="pending,active,cancelled"
+            statusbar_visible="pending,scheduled,active,cancelled"
           />
                 </header>
                 <sheet>
@@ -61,6 +62,25 @@
                             <field name="active" />
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Sync Jobs" name="sync_jobs">
+                            <field name="queue_job_ids" readonly="1">
+                                <tree
+                  decoration-success="state == 'done'"
+                  decoration-danger="state == 'failed'"
+                  decoration-warning="state in ('enqueued','started')"
+                  decoration-muted="state in ('cancelled','wait_dependencies')"
+                >
+                                    <field name="date_created" />
+                                    <field name="method_name" />
+                                    <field name="state" />
+                                    <field name="retry" />
+                                    <field name="max_retries" optional="hide" />
+                                    <field name="exc_info" optional="hide" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -80,6 +100,11 @@
           name="state_active"
           string="Active"
           domain="[('state', '=', 'active')]"
+        />
+                <filter
+          name="state_scheduled"
+          string="Scheduled"
+          domain="[('state', '=', 'scheduled')]"
         />
                 <filter
           name="state_pending"

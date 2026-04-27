@@ -15,6 +15,7 @@
     },
     "data": [
         "security/ir.model.access.csv",
+        "data/ir_cron.xml",
         "views/lock_vendor_views.xml",
         "views/lock_code_views.xml",
         "views/pms_room_views.xml",

@@ -1,8 +1,27 @@
 from datetime import timezone
 
-from roomdoo_locks_base import LockCodeDeletionError, LockError
+from roomdoo_locks_base import (
+    LockCodeDeletionError,
+    LockConnectionError,
+    LockError,
+    LockOfflineError,
+)
 
-from odoo import fields, models
+from odoo import api, fields, models
+from odoo.osv import expression
+
+from odoo.addons.queue_job.exception import RetryableJobError
+
+_TRANSIENT_RETRY_SECONDS = 300
+
+_STATE_SELECTION = [
+    ("pending", "Pending"),
+    ("scheduled", "Scheduled"),
+    ("active", "Active"),
+    ("expired", "Expired"),
+    ("failed", "Failed"),
+    ("cancelled", "Cancelled"),
+]
 
 
 class LockCode(models.Model):
@@ -41,18 +60,87 @@ class LockCode(models.Model):
     )
     date_from = fields.Datetime(required=True)
     date_to = fields.Datetime(required=True)
+    cancelled = fields.Boolean(
+        default=False,
+        copy=False,
+        help="Set to True when the code has been invalidated on the lock.",
+    )
+    failed = fields.Boolean(
+        default=False,
+        copy=False,
+        help="Set to True when a sync attempt failed permanently "
+        "(non-retryable error from the vendor).",
+    )
     state = fields.Selection(
-        selection=[
-            ("pending", "Pending"),
-            ("active", "Active"),
-            ("failed", "Failed"),
-            ("expired", "Expired"),
-            ("cancelled", "Cancelled"),
-        ],
-        default="pending",
-        required=True,
+        selection=_STATE_SELECTION,
+        compute="_compute_state",
+        search="_search_state",
+        help="Lifecycle of the code, derived from sync status and validity "
+        "window: pending (not synced yet), scheduled (synced, awaiting "
+        "date_from), active (within validity window), expired (past "
+        "date_to), failed (sync error), cancelled (invalidated).",
+    )
+    queue_job_ids = fields.Many2many(
+        comodel_name="queue.job",
+        relation="lock_code_queue_job_rel",
+        column1="lock_code_id",
+        column2="job_id",
+        string="Sync Jobs",
+        copy=False,
+        help="Queue jobs that have synchronised this code with the vendor. "
+        "Useful to inspect retries, errors and traces from a failed sync.",
     )
     active = fields.Boolean(default=True)
+
+    @api.depends("cancelled", "failed", "vendor_code_id", "date_from", "date_to")
+    def _compute_state(self):
+        now = fields.Datetime.now()
+        for record in self:
+            if record.cancelled:
+                record.state = "cancelled"
+            elif record.failed:
+                record.state = "failed"
+            elif not record.vendor_code_id:
+                record.state = "pending"
+            elif record.date_to and record.date_to <= now:
+                record.state = "expired"
+            elif record.date_from and record.date_from > now:
+                record.state = "scheduled"
+            else:
+                record.state = "active"
+
+    def _search_state(self, operator, value):
+        all_states = {s[0] for s in _STATE_SELECTION}
+        if isinstance(value, list | tuple):
+            values = set(value)
+        else:
+            values = {value}
+        if operator in ("!=", "not in"):
+            values = all_states - values
+        elif operator not in ("=", "in"):
+            raise ValueError(f"Unsupported operator '{operator}' on lock.code.state")
+        values &= all_states
+        if not values:
+            return [("id", "=", False)]
+
+        now = fields.Datetime.now()
+        base_active_not = [("cancelled", "=", False), ("failed", "=", False)]
+        state_domains = {
+            "cancelled": [("cancelled", "=", True)],
+            "failed": base_active_not[:1] + [("failed", "=", True)],
+            "pending": base_active_not + [("vendor_code_id", "=", False)],
+            "expired": base_active_not
+            + [("vendor_code_id", "!=", False), ("date_to", "<=", now)],
+            "scheduled": base_active_not
+            + [("vendor_code_id", "!=", False), ("date_from", ">", now)],
+            "active": base_active_not
+            + [
+                ("vendor_code_id", "!=", False),
+                ("date_from", "<=", now),
+                ("date_to", ">", now),
+            ],
+        }
+        return expression.OR([state_domains[v] for v in values])
 
     @staticmethod
     def _to_utc(dt):
@@ -77,23 +165,29 @@ class LockCode(models.Model):
 
     def _sync_create(self):
         self.ensure_one()
-        connector = self.vendor_id.get_connector()
+        if self.cancelled:
+            return
         try:
+            connector = self.vendor_id.get_connector()
             result = connector.create_code(
                 lock_id=self.room_id.lock_device_id,
                 starts_at=self._to_utc(self.date_from),
                 ends_at=self._to_utc(self.date_to),
             )
+        except (LockConnectionError, LockOfflineError) as exc:
+            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
-            self.state = "failed"
+            self.failed = True
             raise
         self._apply_code_result(result)
-        self.state = "active"
+        self.invalidate_recordset(["cancelled"])
+        if self.cancelled:
+            self._enqueue_sync("_sync_remove")
 
     def _sync_modify(self):
         self.ensure_one()
-        connector = self.vendor_id.get_connector()
         try:
+            connector = self.vendor_id.get_connector()
             result = connector.modify_code(
                 lock_id=self.room_id.lock_device_id,
                 code_id=self.vendor_code_id,
@@ -105,22 +199,33 @@ class LockCode(models.Model):
             self.with_delay()._retry_invalidate(exc.old_code_id)
             return
         except LockError:
-            self.state = "failed"
+            self.failed = True
             raise
         self._apply_code_result(result)
 
     def _sync_remove(self):
         self.ensure_one()
-        connector = self.vendor_id.get_connector()
         try:
+            connector = self.vendor_id.get_connector()
             connector.invalidate_code(
                 lock_id=self.room_id.lock_device_id,
                 code_id=self.vendor_code_id,
             )
         except LockError:
-            self.state = "failed"
+            self.failed = True
             raise
-        self.state = "cancelled"
+        self.cancelled = True
+
+    def _enqueue_sync(self, method_name):
+        """Enqueue ``method_name`` via queue_job and link the resulting
+        ``queue.job`` so the hotel can inspect retries and errors from the
+        ``lock.code`` form."""
+        self.ensure_one()
+        delayed = getattr(self.with_delay(), method_name)()
+        job = self.env["queue.job"].search([("uuid", "=", delayed.uuid)], limit=1)
+        if job:
+            self.sudo().queue_job_ids |= job
+        return delayed
 
     def _retry_invalidate(self, code_id):
         """Retry invalidation of an orphan vendor code_id after a modify
