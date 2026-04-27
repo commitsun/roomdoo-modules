@@ -143,7 +143,7 @@ class BookaiTool(models.Model):
             if not name:
                 continue
             remote_names.add(name)
-            existing = self.search(
+            existing = self.with_context(active_test=False).search(
                 [("name", "=", name), ("tool_type", "=", "sdk")],
                 limit=1,
             )
@@ -153,6 +153,8 @@ class BookaiTool(models.Model):
                 "sdk_method": tool_data.get("sdk_method", ""),
             }
             if existing:
+                if not existing.active:
+                    vals["active"] = True
                 existing.write(vals)
                 updated += 1
             else:
