@@ -21,3 +21,4 @@ from . import invoice
 from . import journal
 from . import payment_method
 from . import reservation_guest
+from . import pms_reservation
