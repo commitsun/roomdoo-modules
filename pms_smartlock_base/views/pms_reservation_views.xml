@@ -8,9 +8,18 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page name="smartlock" string="Smart Lock Codes">
+                    <button
+            name="action_generate_lock_codes"
+            type="object"
+            string="Generate Codes Now"
+            class="btn-secondary"
+            attrs="{'invisible': [('state', 'in', ('draft', 'cancel'))]}"
+            help="Force generation of lock codes for this reservation, ignoring the 24h horizon. No-op if codes already exist."
+          />
                     <field name="lock_code_ids">
                         <tree
               decoration-success="state == 'active'"
+              decoration-info="state == 'scheduled'"
               decoration-muted="state in ('cancelled','expired')"
               decoration-danger="state == 'failed'"
             >
