@@ -184,20 +184,22 @@ class LockCode(models.Model):
         if self.cancelled:
             self._enqueue_sync("_sync_remove")
 
-    def _sync_modify(self):
+    def _sync_modify(self, date_from, date_to):
         self.ensure_one()
         try:
             connector = self.vendor_id.get_connector()
             result = connector.modify_code(
                 lock_id=self.room_id.lock_device_id,
                 code_id=self.vendor_code_id,
-                starts_at=self._to_utc(self.date_from),
-                ends_at=self._to_utc(self.date_to),
+                starts_at=self._to_utc(date_from),
+                ends_at=self._to_utc(date_to),
             )
         except LockCodeDeletionError as exc:
             self._apply_code_result(exc.new_result)
             self.with_delay()._retry_invalidate(exc.old_code_id)
             return
+        except (LockConnectionError, LockOfflineError) as exc:
+            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
             self.failed = True
             raise
@@ -211,17 +213,19 @@ class LockCode(models.Model):
                 lock_id=self.room_id.lock_device_id,
                 code_id=self.vendor_code_id,
             )
+        except (LockConnectionError, LockOfflineError) as exc:
+            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
             self.failed = True
             raise
         self.cancelled = True
 
-    def _enqueue_sync(self, method_name):
+    def _enqueue_sync(self, method_name, **kwargs):
         """Enqueue ``method_name`` via queue_job and link the resulting
         ``queue.job`` so the hotel can inspect retries and errors from the
         ``lock.code`` form."""
         self.ensure_one()
-        delayed = getattr(self.with_delay(), method_name)()
+        delayed = getattr(self.with_delay(), method_name)(**kwargs)
         job = self.env["queue.job"].search([("uuid", "=", delayed.uuid)], limit=1)
         if job:
             self.sudo().queue_job_ids |= job
