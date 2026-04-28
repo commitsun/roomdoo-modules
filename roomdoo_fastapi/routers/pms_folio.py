@@ -8,7 +8,7 @@ from odoo.addons.fastapi.schemas import Paging
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.routers.pms_folio import folio_order
-from odoo.addons.pms_fastapi.schemas.pms_folio import FolioSummary
+from odoo.addons.pms_fastapi.schemas.pms_folio import FolioCountSummary, FolioSummary
 from odoo.addons.roomdoo_fastapi.schemas.pms_folio import FolioPendingSearch
 
 
@@ -32,4 +32,23 @@ async def list_folios_pending_closure(
     return PagedCollection[FolioSummary](
         count=count,
         items=[FolioSummary.from_pms_folio(folio) for folio in folios],
+    )
+
+
+@pms_api_router.get(
+    "/folios/pending-closure/count",
+    response_model=FolioCountSummary,
+    tags=["folio"],
+)
+async def count_folios_pending_closure(
+    env: AuthenticatedEnv,
+    filters: Annotated[FolioPendingSearch, Depends()],
+) -> FolioCountSummary:
+    """Get the counts of folios pending closure and their reservations."""
+    folios_count, reservations_count = (
+        env["pms_api_folio.folio_router.helper"].new().count(filters)
+    )
+    return FolioCountSummary(
+        foliosCount=folios_count,
+        reservationsCount=reservations_count,
     )
