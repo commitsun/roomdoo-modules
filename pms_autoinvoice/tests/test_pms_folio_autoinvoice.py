@@ -3,15 +3,24 @@ import datetime
 from odoo import fields
 from odoo.tests import tagged
 
-from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.addons.pms.tests.common import TestPms
 
 
 @tagged("post_install", "-at_install")
-class TestPmsFolioInvoice(TestPms, AccountTestInvoicingCommon):
+class TestPmsFolioInvoice(TestPms):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        company = cls.env.ref("base.main_company")
+        if not company.chart_template_id:
+            coa = cls.env.ref("l10n_generic_coa.configurable_chart_template", False)
+            if not coa:
+                coa = cls.env["account.chart.template"].search(
+                    [("visible", "=", True)], limit=1
+                )
+            if not coa:
+                cls.skipTest(cls, "No chart of accounts available.")
+            coa.try_loading(company=company, install_demo=False)
         user = cls.env["res.users"].browse(1)
         cls.env = cls.env(user=user)
         # create a room type availability

@@ -152,6 +152,14 @@ class PmsProperty(models.Model):
                 _("Error in autovalidate invoice: %s") % str(e)
             ) from e
 
+    def _try_populate_fiscal_data_from_id_numbers(self, partners):
+        for partner in partners:
+            mappable_id_numbers = partner.id_numbers.filtered(
+                lambda idn: idn.category_id.partner_map_field and idn.name
+            )
+            for id_number in mappable_id_numbers:
+                id_number.set_partner_id_field()
+
     def autoinvoice_folio(self, folio):
         try:
             with self.env.cr.savepoint():
@@ -175,11 +183,17 @@ class PmsProperty(models.Model):
                         > invoice.pms_property_id.max_amount_simplified_invoice
                         and invoice.journal_id.is_simplified_invoice
                     ):
-                        hosts_to_invoice = (
-                            invoice.folio_ids.partner_invoice_ids.filtered(
+                        all_invoice_partners = invoice.folio_ids.partner_invoice_ids
+                        hosts_to_invoice = all_invoice_partners.filtered(
+                            lambda p: p._check_enought_invoice_data()
+                        ).mapped("id")
+                        if not hosts_to_invoice:
+                            self._try_populate_fiscal_data_from_id_numbers(
+                                all_invoice_partners
+                            )
+                            hosts_to_invoice = all_invoice_partners.filtered(
                                 lambda p: p._check_enought_invoice_data()
                             ).mapped("id")
-                        )
                         if hosts_to_invoice:
                             invoice.partner_id = hosts_to_invoice[0]
                             invoice.journal_id = (

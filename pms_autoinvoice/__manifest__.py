@@ -8,6 +8,7 @@
         "base",
         "pms",
         "queue_job",
+        "partner_identification_map_partner_field",
     ],
     "data": [
         "data/ir_cron.xml",
