@@ -1,1 +1,1 @@
-from . import bookai_template
+from . import bookai_config, bookai_template
