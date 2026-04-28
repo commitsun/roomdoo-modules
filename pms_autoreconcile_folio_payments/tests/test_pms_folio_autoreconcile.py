@@ -141,7 +141,9 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
             "The invoice should be marked as paid after do_payment is called.",
         )
 
-    def test_no_autoreconcile_partial_payment(self):
+    def test_autoreconcile_sole_invoice_partial_payment(self):
+        """Tier 1: sole invoice in folio receives partial payment →
+        auto-reconciled partially (payment_state='partial')."""
         reservation = self.env["pms.reservation"].create(
             {
                 "checkin": datetime.now(),
@@ -158,8 +160,9 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
         invoice.action_post()
 
         partial_amount = reservation.folio_id.amount_total / 2
+        pml = self.payment_journal.inbound_payment_method_line_ids[0]
         reservation.folio_id.do_payment(
-            payment_method_line=self.payment_journal.inbound_payment_method_line_ids[0],
+            payment_method_line=pml,
             user=self.env.user,
             amount=partial_amount,
             folio=reservation.folio_id,
@@ -168,6 +171,259 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
 
         self.assertEqual(
             invoice.payment_state,
+            "partial",
+            "Sole invoice should be partially reconciled" " with a partial payment.",
+        )
+
+    def test_sole_invoice_multiple_payments(self):
+        """Tier 1: sole invoice with two payments that sum to the total →
+        fully paid."""
+        reservation = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = reservation.folio_id
+        invoice = folio._create_invoices()
+
+        total = folio.amount_total
+        for amount in [total * 0.6, total * 0.4]:
+            payment = self.env["account.payment"].create(
+                {
+                    "payment_type": "inbound",
+                    "payment_method_id": self.payment_method_manual_in.id,
+                    "journal_id": self.payment_journal.id,
+                    "amount": amount,
+                    "currency_id": folio.currency_id.id,
+                    "partner_id": folio.partner_id.id,
+                    "folio_ids": [(4, folio.id)],
+                }
+            )
+            payment.action_post()
+
+        invoice.action_post()
+        self.assertEqual(
+            invoice.payment_state,
+            "paid",
+            "Sole invoice should be fully paid when"
+            " multiple payments sum to its amount.",
+        )
+
+    def test_ambiguous_same_amount(self):
+        """Tier 2 blocked: two invoices with same residual + one matching
+        payment → ambiguous, no auto-reconcile for either invoice."""
+        res1 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = res1.folio_id
+        res2 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now() + timedelta(days=1),
+                "checkout": datetime.now() + timedelta(days=2),
+                "adults": 2,
+                "folio_id": folio.id,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        # Invoice each reservation separately (same amount each)
+        res1_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res1 and not ln.display_type
+        )
+        invoice1 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res1_lines}
+        )
+        res2_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res2 and not ln.display_type
+        )
+        invoice2 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res2_lines}
+        )
+        invoice1.action_post()
+        invoice2.action_post()
+
+        # One payment matching one invoice's amount (ambiguous)
+        pml = self.payment_journal.inbound_payment_method_line_ids[0]
+        folio.do_payment(
+            payment_method_line=pml,
+            user=self.env.user,
+            amount=invoice1.amount_total,
+            folio=folio,
+            partner=folio.partner_id,
+        )
+
+        self.assertEqual(
+            invoice1.payment_state,
             "not_paid",
-            "The invoice should not be marked as paid after a partial payment.",
+            "Ambiguous: payment could match either"
+            " invoice, should not auto-reconcile.",
+        )
+        self.assertEqual(
+            invoice2.payment_state,
+            "not_paid",
+            "Ambiguous: payment could match either"
+            " invoice, should not auto-reconcile.",
+        )
+
+    def test_unambiguous_different_amounts(self):
+        """Tier 2: two invoices with different amounts + matching payments →
+        both reconciled unambiguously."""
+        res1 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = res1.folio_id
+        res2 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now() + timedelta(days=1),
+                "checkout": datetime.now() + timedelta(days=3),
+                "adults": 2,
+                "folio_id": folio.id,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        # Invoice each reservation separately (25€ and 50€)
+        res1_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res1 and not ln.display_type
+        )
+        invoice1 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res1_lines}
+        )
+        res2_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res2 and not ln.display_type
+        )
+        invoice2 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res2_lines}
+        )
+        invoice1.action_post()
+        invoice2.action_post()
+
+        # Payment matching invoice1 (25€)
+        pml = self.payment_journal.inbound_payment_method_line_ids[0]
+        folio.do_payment(
+            payment_method_line=pml,
+            user=self.env.user,
+            amount=invoice1.amount_total,
+            folio=folio,
+            partner=folio.partner_id,
+        )
+        self.assertEqual(
+            invoice1.payment_state,
+            "paid",
+            "Invoice should be paid" " (unambiguous exact match).",
+        )
+
+        # Payment matching invoice2 (50€)
+        folio.do_payment(
+            payment_method_line=pml,
+            user=self.env.user,
+            amount=invoice2.amount_total,
+            folio=folio,
+            partner=folio.partner_id,
+        )
+        self.assertEqual(
+            invoice2.payment_state,
+            "paid",
+            "Invoice 50€ should be paid (sole remaining invoice).",
+        )
+
+    def test_subset_sum_match(self):
+        """Tier 3: unique subset of payment lines sums to invoice amount."""
+        res1 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = res1.folio_id
+        res2 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now() + timedelta(days=1),
+                "checkout": datetime.now() + timedelta(days=3),
+                "adults": 2,
+                "folio_id": folio.id,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        # Invoice each reservation separately: 25€ and 50€
+        res1_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res1 and not ln.display_type
+        )
+        invoice1 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res1_lines}
+        )
+        res2_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res2 and not ln.display_type
+        )
+        invoice2 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res2_lines}
+        )
+        invoice1.action_post()
+        invoice2.action_post()
+
+        # 3 payments: 10 + 15 + 50 = 75 (= 25 + 50)
+        # Invoice1 (25€) → subset {10+15} via Tier 3
+        # Invoice2 (50€) → {50} via Tier 1/2
+        for amount in [10, 15, 50]:
+            payment = self.env["account.payment"].create(
+                {
+                    "payment_type": "inbound",
+                    "payment_method_id": self.payment_method_manual_in.id,
+                    "journal_id": self.payment_journal.id,
+                    "amount": amount,
+                    "currency_id": folio.currency_id.id,
+                    "partner_id": folio.partner_id.id,
+                    "folio_ids": [(4, folio.id)],
+                }
+            )
+            payment.action_post()
+
+        # Trigger autoreconcile explicitly (payments were created without
+        # do_payment, so the folio hook did not fire)
+        invoice1._autoreconcile_folio_payments()
+        self.assertEqual(
+            invoice1.payment_state,
+            "paid",
+            "Invoice 25€ should match subset {10+15} via Tier 3.",
+        )
+
+        invoice2._autoreconcile_folio_payments()
+        self.assertEqual(
+            invoice2.payment_state,
+            "paid",
+            "Invoice 50€ should match remaining payment via Tier 1.",
         )
