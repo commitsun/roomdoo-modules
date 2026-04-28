@@ -11,6 +11,12 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
 OFFBOARDING_INVALID_RESERVATION_STATES = ("draft", "cancel")
+UNDO_ONBOARDING_INVALID_RESERVATION_STATES = (
+    "draft",
+    "cancel",
+    "done",
+    "departure_delayed",
+)
 
 
 @pms_api_router.post(
@@ -29,6 +35,52 @@ async def onboarding(
     Idempotent: returns 204 even if no guests are eligible.
     """
     return env["pms_api_reservation.router.helper"].new()._onboarding(reservation_id)
+
+
+@pms_api_router.delete(
+    "/reservations/{reservation_id}/onboarding",
+    status_code=204,
+    tags=["reservation"],
+    responses={
+        204: {
+            "description": ("Arrival confirmation reverted (or nothing to revert)."),
+        },
+        404: {"description": "Reservation not found."},
+        409: {
+            "description": (
+                "Reservation is in a state that does not allow reverting " "arrival."
+            ),
+        },
+    },
+)
+async def undo_onboarding(
+    env: AuthenticatedEnv,
+    reservation_id: int,
+):
+    """Revert the arrival confirmation of a reservation.
+
+    Use this when an operator confirmed arrival by mistake. It moves the
+    in-house guests of the reservation back to a state where their
+    arrival has not been confirmed, and reverts the reservation to its
+    confirmed (not arrived) state when no other guest remains in-house.
+
+    Idempotent: returns 204 even if no guest is currently in-house.
+
+    Important — what this endpoint does NOT do:
+      * It does not recall messages, e-mails or notifications already
+        sent to the guest as a side effect of confirming arrival.
+      * It does not return the sequential arrival identifier already
+        assigned to the guest; that number is permanently consumed and a
+        new one will be issued on a future re-confirmation.
+      * It does not roll back third-party integrations triggered by the
+        original arrival confirmation.
+
+    Returns 409 if the reservation is in a state where reverting arrival
+    no longer makes sense (e.g. the stay has already ended).
+    """
+    return (
+        env["pms_api_reservation.router.helper"].new()._undo_onboarding(reservation_id)
+    )
 
 
 @pms_api_router.post(
@@ -104,6 +156,31 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
         )
         if eligible:
             eligible.sudo().action_on_board()
+        return Response(status_code=204)
+
+    def _undo_onboarding(self, reservation_id):
+        try:
+            reservation = self.get(reservation_id)
+        except MissingError:
+            return self._reservation_not_found_response(reservation_id, "onboarding")
+
+        if reservation.state in UNDO_ONBOARDING_INVALID_RESERVATION_STATES:
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "type": "/errors/reservation-state-invalid",
+                    "title": ("Reservation state does not allow reverting arrival"),
+                    "status": 409,
+                    "detail": (
+                        f"Reservation {reservation_id} cannot revert "
+                        f"arrival in its current state."
+                    ),
+                    "instance": f"/reservations/{reservation_id}/onboarding",
+                },
+                media_type="application/problem+json",
+            )
+
+        reservation.sudo().action_undo_onboard()
         return Response(status_code=204)
 
     def _offboarding(self, reservation_id):
