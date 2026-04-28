@@ -314,13 +314,11 @@ class TestPmsFolioInvoice(TestPms):
             "is_board_service"
         ).default_invoice_to = self.partner_id
 
+        payment_method_line = (
+            reservation1.folio_id.pms_property_id._get_payment_methods()[:1]
+        )
         folio.do_payment(
-            journal=self.env["account.journal"].browse(
-                reservation1.folio_id.pms_property_id._get_payment_methods().ids[0]
-            ),
-            receivable_account=self.env["account.journal"]
-            .browse(reservation1.folio_id.pms_property_id._get_payment_methods().ids[0])
-            .suspense_account_id,
+            payment_method_line=payment_method_line,
             user=self.env.user,
             amount=reservation1.folio_id.pending_amount,
             folio=folio,
