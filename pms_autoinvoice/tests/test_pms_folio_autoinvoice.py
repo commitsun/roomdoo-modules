@@ -156,7 +156,7 @@ class TestPmsFolioInvoice(TestPms):
                 ("type", "in", ["bank", "cash"]),
             ]
         )
-        journals.allowed_pms_payments = True
+        journals.mapped("inbound_payment_method_line_ids").allowed_on_pms = True
 
     def test_autoinvoice_folio_checkout_property_policy(self):
         """
