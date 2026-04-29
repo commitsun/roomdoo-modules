@@ -57,7 +57,7 @@ class PmsTransactionService(Component):
             pms_api_check_access(user=self.env.user, records=pms_property)
             available_journals = pms_property._get_payment_methods(
                 automatic_included=True
-            ).sudo()
+            ).journal_id.sudo()
             # REVIEW: avoid send to app generic company journals
             available_journals = available_journals.filtered(
                 lambda j: j.pms_property_ids
@@ -326,7 +326,8 @@ class PmsTransactionService(Component):
             )
         pay = self.env["account.payment"].sudo().create(vals)
         if journal.type == "cash":
-            # REVIEW: Temporaly, if not cash session open, create a new one automatically
+            # REVIEW: Temporaly, if not cash session open,
+            # create a new one automatically
             # Review this in pms_folio_service (/charge & /refund)
             # and in pms_transaction_service (POST)
             last_session = self._get_last_cash_session(journal_id=journal.id)
@@ -347,7 +348,8 @@ class PmsTransactionService(Component):
                 .browse(pms_transaction_info.destinationJournalId)
             )
             if destination_journal.type == "cash":
-                # REVIEW: Temporaly, if not cash session open, create a new one automatically
+                # REVIEW: Temporaly, if not cash session open,
+                # create a new one automatically
                 # Review this in pms_folio_service (/charge & /refund)
                 # and in pms_transaction_service (POST)
                 last_session = self._get_last_cash_session(journal_id=journal.id)
@@ -723,10 +725,11 @@ class PmsTransactionService(Component):
                     .sudo()
                     .browse(match["statement_line_id"])
                 )
+                pay = payment
                 payment_move_line = payment.move_id.line_ids.filtered(
-                    lambda x: x.reconciled is False
+                    lambda x, p=pay: x.reconciled is False
                     and x.journal_id == journal
-                    and x.account_id in payment._get_valid_liquidity_accounts()
+                    and x.account_id in p._get_valid_liquidity_accounts()
                 )
                 statement_line_move = statement_line.move_id
                 statement_move_line = statement_line_move.line_ids.filtered(
@@ -782,7 +785,9 @@ class PmsTransactionService(Component):
                 if not statement.journal_id.loss_account_id:
                     raise UserError(
                         _(
-                            "Please go on the %s journal and define a Loss Account. This account will be used to record cash difference.",
+                            "Please go on the %s journal and define a"
+                            " Loss Account. This account will be used"
+                            " to record cash difference.",
                             statement.journal_id.name,
                         )
                     )
@@ -798,7 +803,9 @@ class PmsTransactionService(Component):
                 if not statement.journal_id.profit_account_id:
                     raise UserError(
                         _(
-                            "Please go on the %s journal and define a Profit Account. This account will be used to record cash difference.",
+                            "Please go on the %s journal and define a"
+                            " Profit Account. This account will be"
+                            " used to record cash difference.",
                             statement.journal_id.name,
                         )
                     )
@@ -818,7 +825,8 @@ class PmsTransactionService(Component):
         if statement.line_ids:
             return statement.balance_start
         else:
-            # statement lines ir order_by internal_index, so the first line is the last line created
+            # statement lines ir order_by internal_index,
+            # so the first line is the last line created
             # we use search limit=1 to get the last line created
             previous_line_with_statement = (
                 self.env["account.bank.statement.line"]
