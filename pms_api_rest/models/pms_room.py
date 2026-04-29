@@ -8,6 +8,7 @@ class PmsRoom(models.Model):
         selection=[
             ("clean", "Clean"),
             ("dirty", "Dirty"),
+            ("reviewed", "Reviewed"),
         ],
         string="Cleaning Status",
         default="clean",
