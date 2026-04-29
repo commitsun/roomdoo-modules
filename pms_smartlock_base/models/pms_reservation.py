@@ -9,6 +9,15 @@ _TRIGGER_FIELDS = {
     "arrival_hour",
     "departure_hour",
     "reservation_type",
+    # ``pms.reservation.line.room_id`` is a stored compute with
+    # ``readonly=False``: direct assignments go through the public
+    # ``write`` (caught by the line listener), but framework-driven
+    # recomputes (when ``preferred_room_id`` or ``room_type_id``
+    # change on the reservation) write via the internal ``_write``
+    # path and bypass the line's ``write`` override. We listen to
+    # the source fields here so those recomputes still enqueue.
+    "preferred_room_id",
+    "room_type_id",
 }
 _GENERATION_HORIZON = timedelta(hours=24)
 _PRECOMMIT_PENDING_KEY = "pms_smartlock.pending_sync_ids"
