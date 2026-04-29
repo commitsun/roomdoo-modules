@@ -44,6 +44,6 @@ class IdDocument(id_document.IdDocument, extends=True):
 
     @classmethod
     def from_pms_checkin_partner(cls, checkin_partner):
-        id_document_record = super().from_id_number(checkin_partner)
+        id_document_record = super().from_pms_checkin_partner(checkin_partner)
         id_document_record.type = checkin_partner.document_type.short_code or ""
         return id_document_record
