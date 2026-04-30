@@ -14,8 +14,11 @@ from odoo.addons.queue_job.exception import RetryableJobError
 
 _TRANSIENT_RETRY_SECONDS = 300
 
+_SYNCING_JOB_STATES = ("pending", "enqueued", "started")
+
 _STATE_SELECTION = [
     ("pending", "Pending"),
+    ("syncing", "Syncing"),
     ("scheduled", "Scheduled"),
     ("active", "Active"),
     ("expired", "Expired"),
@@ -76,9 +79,10 @@ class LockCode(models.Model):
         compute="_compute_state",
         search="_search_state",
         help="Lifecycle of the code, derived from sync status and validity "
-        "window: pending (not synced yet), scheduled (synced, awaiting "
-        "date_from), active (within validity window), expired (past "
-        "date_to), failed (sync error), cancelled (invalidated).",
+        "window: pending (not synced yet, no job in flight), syncing (a "
+        "vendor sync job is enqueued or running), scheduled (synced, "
+        "awaiting date_from), active (within validity window), expired "
+        "(past date_to), failed (sync error), cancelled (invalidated).",
     )
     queue_job_ids = fields.Many2many(
         comodel_name="queue.job",
@@ -92,7 +96,14 @@ class LockCode(models.Model):
     )
     active = fields.Boolean(default=True)
 
-    @api.depends("cancelled", "failed", "vendor_code_id", "date_from", "date_to")
+    @api.depends(
+        "cancelled",
+        "failed",
+        "vendor_code_id",
+        "date_from",
+        "date_to",
+        "queue_job_ids.state",
+    )
     def _compute_state(self):
         now = fields.Datetime.now()
         for record in self:
@@ -100,6 +111,8 @@ class LockCode(models.Model):
                 record.state = "cancelled"
             elif record.failed:
                 record.state = "failed"
+            elif any(j.state in _SYNCING_JOB_STATES for j in record.queue_job_ids):
+                record.state = "syncing"
             elif not record.vendor_code_id:
                 record.state = "pending"
             elif record.date_to and record.date_to <= now:
@@ -125,15 +138,33 @@ class LockCode(models.Model):
 
         now = fields.Datetime.now()
         base_active_not = [("cancelled", "=", False), ("failed", "=", False)]
+        # ``syncing`` is derived from queue_job_ids and overrides the
+        # date/vendor_code_id-driven states. The other "live" branches
+        # (pending/scheduled/active/expired) must therefore exclude codes
+        # with a job in flight to keep the state mutually exclusive.
+        syncing_ids = (
+            self.env["lock.code"]
+            .with_context(active_test=False)
+            .search(
+                base_active_not
+                + [("queue_job_ids.state", "in", list(_SYNCING_JOB_STATES))]
+            )
+            .ids
+        )
+        not_syncing = [("id", "not in", syncing_ids)]
         state_domains = {
             "cancelled": [("cancelled", "=", True)],
             "failed": base_active_not[:1] + [("failed", "=", True)],
-            "pending": base_active_not + [("vendor_code_id", "=", False)],
+            "syncing": [("id", "in", syncing_ids)],
+            "pending": base_active_not + not_syncing + [("vendor_code_id", "=", False)],
             "expired": base_active_not
+            + not_syncing
             + [("vendor_code_id", "!=", False), ("date_to", "<=", now)],
             "scheduled": base_active_not
+            + not_syncing
             + [("vendor_code_id", "!=", False), ("date_from", ">", now)],
             "active": base_active_not
+            + not_syncing
             + [
                 ("vendor_code_id", "!=", False),
                 ("date_from", "<=", now),

@@ -6,6 +6,7 @@ pyinstrument
 requests
 roomdoo_locks_base
 roomdoo_locks_omnitec
+roomdoo_locks_ttlock
 simplejson
 thefuzz
 xlsxwriter
