@@ -25,5 +25,6 @@
     "data": [
         "security/pms_fastapi_groups.xml",
         "data/res_users.xml",
+        "views/account_journal_views.xml",
     ],
 }

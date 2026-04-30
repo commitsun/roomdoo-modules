@@ -1,9 +1,16 @@
-from odoo import _, models
+from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
+
+    allowed_on_pms = fields.Boolean(
+        string="Allowed on PMS",
+        help="If checked, this journal is available for PMS folio invoices "
+        "and exposes the hotel/room configuration. Also gates PMS API "
+        "behaviors that depend on the journal.",
+    )
 
     def write(self, vals):
         if "type" in vals or "currency_id" in vals:
