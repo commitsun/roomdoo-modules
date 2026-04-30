@@ -20,6 +20,7 @@
                         <tree
               decoration-success="state == 'active'"
               decoration-info="state == 'scheduled'"
+              decoration-warning="state == 'syncing'"
               decoration-muted="state in ('cancelled','expired')"
               decoration-danger="state == 'failed'"
             >

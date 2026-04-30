@@ -8,6 +8,7 @@
             <tree
         decoration-success="state == 'active'"
         decoration-info="state == 'scheduled'"
+        decoration-warning="state == 'syncing'"
         decoration-muted="state in ('cancelled','expired')"
         decoration-danger="state == 'failed'"
       >
@@ -33,7 +34,7 @@
                     <field
             name="state"
             widget="statusbar"
-            statusbar_visible="pending,scheduled,active,cancelled"
+            statusbar_visible="pending,syncing,scheduled,active,cancelled"
           />
                 </header>
                 <sheet>
@@ -105,6 +106,11 @@
           name="state_scheduled"
           string="Scheduled"
           domain="[('state', '=', 'scheduled')]"
+        />
+                <filter
+          name="state_syncing"
+          string="Syncing"
+          domain="[('state', '=', 'syncing')]"
         />
                 <filter
           name="state_pending"

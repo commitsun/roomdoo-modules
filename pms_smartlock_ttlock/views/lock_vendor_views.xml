@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_vendor_view_form" model="ir.ui.view">
+        <field name="name">lock.vendor.form.ttlock</field>
+        <field name="model">lock.vendor</field>
+        <field name="inherit_id" ref="pms_smartlock_base.lock_vendor_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="before">
+                <page
+          name="ttlock_credentials"
+          string="TTLock Credentials"
+          attrs="{'invisible': [('vendor_type', '!=', 'ttlock')]}"
+        >
+                    <group>
+                        <field
+              name="ttlock_client_id"
+              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
+            />
+                        <field
+              name="ttlock_client_secret"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
+            />
+                        <field
+              name="ttlock_username"
+              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
+            />
+                        <field
+              name="ttlock_password"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
+            />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

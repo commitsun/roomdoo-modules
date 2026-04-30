@@ -101,7 +101,7 @@ class PmsReservation(models.Model):
         # current or future type qualifies for codes.
         if self.reservation_type != "out":
             if self.lock_code_ids.filtered(
-                lambda c: c.state in ("pending", "scheduled", "active")
+                lambda c: c.state in ("pending", "syncing", "scheduled", "active")
             ):
                 return True
             now = fields.Datetime.now()
@@ -130,7 +130,7 @@ class PmsReservation(models.Model):
         live_by_room = {
             code.room_id.id: code
             for code in self.lock_code_ids.filtered(
-                lambda c: c.state in ("pending", "scheduled", "active")
+                lambda c: c.state in ("pending", "syncing", "scheduled", "active")
             )
         }
         for room_id, code in live_by_room.items():
