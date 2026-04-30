@@ -49,9 +49,19 @@ class PmsApiJournalRouterHelper(models.AbstractModel):
     _description = "PMS API Journal Router Helper"
 
     def search_journals(self, pms_property_id=None, journal_type=None):
-        domain = []
+        """Return journals allowed on PMS, scoped by property and type.
+
+        ``journal_type`` accepts either a single ``str`` (HTTP layer) or an
+        iterable of types — useful when callers know up front which journal
+        types are relevant (e.g. payment methods only live on bank/cash
+        journals, so callers can skip sale/purchase/general entirely).
+        """
+        domain = [("allowed_on_pms", "=", True)]
         if journal_type:
-            domain.append(("type", "=", journal_type))
+            if isinstance(journal_type, str):
+                domain.append(("type", "=", journal_type))
+            else:
+                domain.append(("type", "in", list(journal_type)))
         if pms_property_id:
             domain = expression.AND(
                 [

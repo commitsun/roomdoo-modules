@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class AccountMove(models.Model):
@@ -83,3 +83,17 @@ class AccountMove(models.Model):
         if value:
             return [("line_ids.is_overdue", "=", True)]
         return []
+
+    # pylint: disable=W8110
+    @api.depends("pms_property_id")
+    def _compute_suitable_journal_ids(self):
+        super()._compute_suitable_journal_ids()
+        for move in self:
+            if move.pms_property_id:
+                move.suitable_journal_ids = move.suitable_journal_ids.filtered(
+                    lambda j, move=move: j.allowed_on_pms
+                    and (
+                        not j.pms_property_ids
+                        or move.pms_property_id.id in j.pms_property_ids.ids
+                    )
+                )

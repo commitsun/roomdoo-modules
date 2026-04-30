@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record id="account_journal_view_form_inherit_pms_fastapi" model="ir.ui.view">
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="pms.account_journal_view_form" />
+        <field name="arch" type="xml">
+            <field name="pms_property_ids" position="before">
+                <field name="allowed_on_pms" />
+            </field>
+            <field name="pms_property_ids" position="attributes">
+                <attribute
+          name="attrs"
+        >{'invisible': [('allowed_on_pms', '=', False)]}</attribute>
+            </field>
+            <field name="room_filter_ids" position="attributes">
+                <attribute
+          name="attrs"
+        >{'invisible': [('allowed_on_pms', '=', False)]}</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>
