@@ -48,6 +48,7 @@ class reservationStateEnum(str, Enum):
     CANCELLED = "cancelled"
     NO_SHOW = "noShow"
     OVERBOOKING = "overbooking"
+    RESELLING = "reselling"
 
 
 class folioPaymentStateEnum(str, Enum):
@@ -113,6 +114,11 @@ class reservationSummary(PmsBaseModel):
             )
         if reservation.overbooking and reservation.state != "cancel":
             filtered_data["state"] = reservationStateEnum.OVERBOOKING
+        elif (
+            reservation.is_reselling
+            or any(reservation.reservation_line_ids.mapped("is_reselling"))
+        ) and reservation.state != "cancel":
+            filtered_data["state"] = reservationStateEnum.RESELLING
         elif reservation.state == "draft":
             filtered_data["state"] = reservationStateEnum.DRAFT
         elif reservation.state == "cancel":
@@ -586,6 +592,13 @@ class FolioSearch(BaseSearch):
         state_mapping = {
             reservationStateEnum.OVERBOOKING: [
                 ("overbooking", "=", True),
+                ("state", "!=", "cancel"),
+            ],
+            reservationStateEnum.RESELLING: [
+                "|",
+                ("is_reselling", "=", True),
+                ("reservation_line_ids.is_reselling", "=", True),
+                ("overbooking", "=", False),
                 ("state", "!=", "cancel"),
             ],
             reservationStateEnum.CANCELLED: [
