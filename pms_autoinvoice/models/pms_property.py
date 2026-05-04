@@ -69,14 +69,10 @@ class PmsProperty(models.Model):
                 )
         for folio in folios_to_invoice:
             if with_delay:
-                self.with_delay().autoinvoice_folio(folio, post=False)
+                self.with_delay().autoinvoice_folio(folio, delay_post=True)
             else:
                 self.autoinvoice_folio(folio)
-        if with_delay:
-            # Schedule posting job after creation jobs have finished
-            eta = datetime.now() + timedelta(minutes=30)
-            self.with_delay(eta=eta).autopost_autoinvoice_drafts()
-        else:
+        if not with_delay:
             # 2- Validate the draft invoices created by the folios
             draft_invoices_to_post = self.env["account.move"].search(
                 [
@@ -161,6 +157,24 @@ class PmsProperty(models.Model):
         try:
             with self.env.cr.savepoint():
                 invoice.action_post()
+                # Reverse simplified downpayment invoices
+                for folio in invoice.folio_ids:
+                    downpayments = folio.sale_line_ids.filtered(
+                        lambda r: r.is_downpayment and r.qty_invoiced > 0
+                    )
+                    dp_invoices = (
+                        downpayments.invoice_lines.mapped("move_id")
+                    ).filtered(lambda i: i.is_simplified_invoice)
+                    if dp_invoices:
+                        default_values_list = [
+                            {
+                                "ref": _("Reversal of: " f'{m.name + " - " + m.ref}'),
+                            }
+                            for m in dp_invoices
+                        ]
+                        dp_invoices.with_context(sii_refund_type="I")._reverse_moves(
+                            default_values_list, cancel=True
+                        )
         except Exception as e:
             raise ValidationError(
                 _("Error in autovalidate invoice: %s") % str(e)
@@ -174,7 +188,7 @@ class PmsProperty(models.Model):
             for id_number in mappable_id_numbers:
                 id_number.set_partner_id_field()
 
-    def autoinvoice_folio(self, folio, post=True):
+    def autoinvoice_folio(self, folio, delay_post=False):
         try:
             with self.env.cr.savepoint():
                 # REVIEW: folio sale line "_compute_auotinvoice_date" sometimes
@@ -235,9 +249,12 @@ class PmsProperty(models.Model):
                         invoice.write(
                             {"invoice_line_ids": [(0, 0, invoice_down_payment_vals)]}
                         )
-                    if post:
+                    if delay_post:
+                        eta = datetime.now() + timedelta(minutes=15)
+                        self.with_delay(eta=eta).autovalidate_folio_invoice(invoice)
+                    else:
                         invoice.action_post()
-                if post:
+                if not delay_post:
                     # The downpayment invoices that not was included in final
                     # invoice, are reversed
                     downpayment_invoices = (
@@ -259,44 +276,3 @@ class PmsProperty(models.Model):
                         )._reverse_moves(default_values_list, cancel=True)
         except Exception as e:
             raise ValidationError(_("Error in autoinvoicing folio: %s") % str(e)) from e
-
-    @api.model
-    def autopost_autoinvoice_drafts(self):
-        """Post draft folio invoices sequentially to avoid
-        ir_sequence_date_range lock contention (FOR UPDATE NOWAIT)"""
-        draft_invoices = self.env["account.move"].search(
-            [
-                ("state", "=", "draft"),
-                ("folio_ids", "!=", False),
-                ("amount_total", ">", 0),
-            ]
-        )
-        for invoice in draft_invoices:
-            try:
-                with self.env.cr.savepoint():
-                    invoice.action_post()
-                    # Reverse simplified downpayment invoices
-                    for folio in invoice.folio_ids:
-                        downpayments = folio.sale_line_ids.filtered(
-                            lambda r: r.is_downpayment and r.qty_invoiced > 0
-                        )
-                        dp_invoices = (
-                            downpayments.invoice_lines.mapped("move_id")
-                        ).filtered(lambda i: i.is_simplified_invoice)
-                        if dp_invoices:
-                            default_values_list = [
-                                {
-                                    "ref": _(
-                                        "Reversal of: " f'{m.name + " - " + m.ref}'
-                                    ),
-                                }
-                                for m in dp_invoices
-                            ]
-                            dp_invoices.with_context(
-                                sii_refund_type="I"
-                            )._reverse_moves(default_values_list, cancel=True)
-            except Exception as e:
-                for folio in invoice.folio_ids:
-                    folio.sudo().message_post(
-                        body=_("Error posting autoinvoice: %s") % str(e)
-                    )
