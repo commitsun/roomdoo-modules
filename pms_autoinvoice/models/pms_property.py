@@ -74,10 +74,20 @@ class PmsProperty(models.Model):
         draft_invoices_to_post = self.env["account.move"].search(
             [
                 ("state", "=", "draft"),
-                ("invoice_date_due", "=", date_reference),
+                (
+                    "invoice_line_ids.folio_line_ids.autoinvoice_date",
+                    "=",
+                    date_reference,
+                ),
                 ("folio_ids", "!=", False),
                 ("amount_total", ">", 0),
             ]
+        )
+        # Skip invoices that still have lines with future autoinvoice dates
+        draft_invoices_to_post = draft_invoices_to_post.filtered(
+            lambda inv: not inv.invoice_line_ids.folio_line_ids.filtered(
+                lambda fl: fl.autoinvoice_date and fl.autoinvoice_date > date_reference
+            )
         )
         for invoice in draft_invoices_to_post:
             if with_delay:
