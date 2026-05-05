@@ -161,6 +161,7 @@ class FolioSummary(PmsBaseModel):
     nationality: CountrySummary | None = None
     amount_total: CurrencyAmount = Field(0.0, alias="totalAmount")
     amount_to_invoice: CurrencyAmount = Field(0.0, alias="pendingAmountToInvoice")
+    pending_amount: CurrencyAmount = Field(0.0, alias="pendingAmount")
     currency: CurrencySummary | None = None
     create_date: date = Field(alias="creationDate")
     reservations: list[reservationSummary]
