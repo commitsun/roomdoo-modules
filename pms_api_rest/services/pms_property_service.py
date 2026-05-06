@@ -33,6 +33,7 @@ class PmsPropertyService(Component):
         result_properties = []
         PmsPropertyInfo = self.env.datamodels["pms.property.info"]
         RoomdooAppMenu = self.env.datamodels["roomdoo.app.menu"]
+        PmsPropertyCurrency = self.env.datamodels["pms.property.currency"]
         properties = self.env["pms.property"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=properties)
         for prop in properties:
@@ -113,6 +114,11 @@ class PmsPropertyService(Component):
                         )
                         for menu in property_menus
                     ],
+                    currency=PmsPropertyCurrency(
+                        id=prop.company_id.currency_id.id,
+                        name=prop.company_id.currency_id.full_name,
+                        code=prop.company_id.currency_id.name,
+                    ),
                 )
             )
         return result_properties
@@ -137,6 +143,7 @@ class PmsPropertyService(Component):
         res = []
         PmsPropertyInfo = self.env.datamodels["pms.property.info"]
         RoomdooAppMenu = self.env.datamodels["roomdoo.app.menu"]
+        PmsPropertyCurrency = self.env.datamodels["pms.property.currency"]
         if not pms_property:
             pass
         else:
@@ -209,6 +216,11 @@ class PmsPropertyService(Component):
                     )
                     for menu in property_menus
                 ],
+                currency=PmsPropertyCurrency(
+                    id=pms_property.company_id.currency_id.id,
+                    name=pms_property.company_id.currency_id.full_name,
+                    code=pms_property.company_id.currency_id.name,
+                ),
             )
 
         return res
