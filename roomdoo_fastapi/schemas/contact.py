@@ -5,6 +5,16 @@ from odoo.addons.pms_fastapi.schemas.country import CountryId
 from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 
 
+class ContactIdImageIsAgency(contact.ContactIdImage, extends=True):
+    is_agency: bool = Field(False, alias="isAgency")
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        partner_record = super().from_res_partner(partner)
+        partner_record.is_agency = partner.is_agency
+        return partner_record
+
+
 class ContactDetailResidenceAddress(contact.ContactDetail, extends=True):
     """Schema for contact detail with residence address."""
 
