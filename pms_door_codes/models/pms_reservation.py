@@ -21,6 +21,8 @@
 
 from datetime import datetime, timedelta
 
+from lxml import html as lxml_html
+
 from odoo import _, fields, models
 
 
@@ -28,8 +30,38 @@ class InheritPmsReservation(models.Model):
     _inherit = "pms.reservation"
 
     door_codes = fields.Html("Entry Codes", compute="_compute_door_codes")
+    door_codes_text_plain = fields.Text(
+        "Entry Codes", compute="_compute_door_codes_text_plain", store=False
+    )
     box_number = fields.Integer("Box number")
     box_code = fields.Char("Box code")
+
+    def _compute_door_codes_text_plain(self):
+        SEP = " - "  # cambia a ". " o " | " si prefieres
+        for record in self:
+            if not record.checkin or not record.checkout:
+                record.door_codes_text_plain = _("Información no disponible")
+                continue
+
+            html = record.door_codes_text(record.checkin, record.checkout) or ""
+            raw = (
+                html.replace("<br/>", "\n")
+                .replace("<br />", "\n")
+                .replace("<br>", "\n")
+                .replace("</p>", "\n")
+                .replace("<p>", "")
+            )
+
+            # HTML -> texto plano
+            txt = lxml_html.fromstring(f"<div>{raw}</div>").text_content()
+
+            # Sin saltos de línea: los convertimos a separador
+            parts = [p.strip() for p in (txt or "").splitlines() if p.strip()]
+            one_line = SEP.join(parts)
+
+            # Limpieza final: sin dobles espacios
+            one_line = " ".join(one_line.split())
+            record.door_codes_text_plain = one_line or _("Información no disponible")
 
     def doorcode4(self, date, pms_property_id=False):
         # Calculate de Door Code...
