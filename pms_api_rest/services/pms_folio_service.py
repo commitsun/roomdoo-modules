@@ -2637,8 +2637,8 @@ class PmsFolioService(Component):
                         line.price - board_day_price, 2
                     ):
                         vals.update({"price": line.price - board_day_price})
-                    if round(proposed_line.discount, 2) != round(line.discount, 2):
-                        vals.update({"discount": line.discount})
+                    if round(proposed_line.discount, 2) != round(line.discount or 0, 2):
+                        vals.update({"discount": line.discount or 0})
                     if vals:
                         cmds.append((1, proposed_line.id, vals))
                 else:
