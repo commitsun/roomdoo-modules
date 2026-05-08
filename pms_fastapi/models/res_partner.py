@@ -13,7 +13,17 @@ class ResPartner(models.Model):
     in_house = fields.Boolean(
         compute="_compute_reservation_data", search="_search_in_house"
     )
-    identification_number = fields.Char(search="_search_identification_number")
+    identification_number = fields.Char(
+        compute="_compute_identification_number",
+        search="_search_identification_number",
+    )
+
+    def _compute_identification_number(self):
+        # No-op compute on purpose: this field is a search-only proxy over
+        # res.partner.id_number. Without a `compute=`, Odoo treats the field
+        # as a stored Char column and resolves domains against the (empty)
+        # column instead of calling `_search_identification_number`.
+        self.identification_number = False
 
     def _search_identification_number(self, operator, value):
         id_numbers = self.env["res.partner.id_number"].search(
