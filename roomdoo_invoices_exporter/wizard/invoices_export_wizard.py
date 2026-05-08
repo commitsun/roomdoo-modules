@@ -173,24 +173,19 @@ class RoomdooInvoicesExporter(models.TransientModel):
             data_format = next(data_formats)
             date_format = next(date_formats)
             money_format = next(money_formats)
-            country_code = ""
-            vat_partner = False
-            if inv.partner_id.vat:
-                vat_partner = inv.partner_id.vat
-            elif inv.partner_id.aeat_identification:
-                vat_partner = inv.partner_id.aeat_identification
-            country_partner = inv.partner_id.country_id
-            if country_partner:
-                country_code = country_partner.code
-                if inv.partner_id.vat:
-                    vat_partner = (
-                        inv.partner_id.vat[2:]
-                        if inv.partner_id.vat[2:] == country_code
-                        else inv.partner_id.vat
-                    )
-
-            if not vat_partner and inv.partner_id.vat:
-                vat_partner = inv.partner_id.vat
+            vat_partner = inv.partner_id.get_vat()
+            country_code = inv.partner_id.country_id.code or ""
+            # Strip duplicated country prefix from VAT, but only when the
+            # value is the VAT itself (not an AEAT alternative identification
+            # such as passport or residence permit, which has no country
+            # prefix).
+            if (
+                vat_partner
+                and country_code
+                and not inv.partner_id.aeat_identification_type
+                and vat_partner[:2] == country_code
+            ):
+                vat_partner = vat_partner[2:]
             origin = ""
             signed = 1
             if inv.move_type == "out_refund":

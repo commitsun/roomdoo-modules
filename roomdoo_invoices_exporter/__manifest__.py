@@ -3,7 +3,7 @@
 
 {
     "name": "Invoice & Payment XLSX Report",
-    "version": "16.0.2.0.0",
+    "version": "16.0.2.1.0",
     "author": "Commitsun",
     "website": "https://www.roomdoo.com",
     "category": "Accounting",
