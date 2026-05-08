@@ -12,6 +12,7 @@
     name="Vendors"
     parent="smartlock_menu"
     action="lock_vendor_action"
+    groups="pms_smartlock_base.group_smartlock_admin"
     sequence="10"
   />
     <menuitem
@@ -20,6 +21,14 @@
     parent="smartlock_menu"
     action="lock_code_action"
     sequence="20"
+  />
+    <menuitem
+    id="lock_code_access_log_menu"
+    name="PIN Access Log"
+    parent="smartlock_menu"
+    action="lock_code_access_log_action"
+    groups="pms_smartlock_base.group_smartlock_admin"
+    sequence="30"
   />
 
 </odoo>

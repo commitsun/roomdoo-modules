@@ -12,4 +12,16 @@
         <field name="doall" eval="False" />
         <field name="active" eval="True" />
     </record>
+    <record model="ir.cron" id="cron_purge_access_log">
+        <field name="name">Smartlocks: Purge old PIN access logs</field>
+        <field name="model_id" ref="model_lock_code_access_log" />
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old()</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False" />
+        <field name="active" eval="True" />
+    </record>
 </odoo>

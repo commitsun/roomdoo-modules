@@ -27,6 +27,17 @@ class CommonSmartlock(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.env = cls.env(user=cls.env.ref("base.user_admin"))
+        # Tests create lock.vendor / lock.code records directly. Both
+        # models are restricted to ``group_smartlock_admin``; grant it to
+        # the test user so the existing creation flow keeps working
+        # without spraying ``sudo()`` across the test scaffold.
+        cls.env.user.write(
+            {
+                "groups_id": [
+                    (4, cls.env.ref("pms_smartlock_base.group_smartlock_admin").id)
+                ]
+            }
+        )
 
         cls._register_test_vendor_type()
 
@@ -141,4 +152,4 @@ class CommonSmartlock(TransactionCase):
             "pin": "1234",
         }
         vals.update(overrides)
-        return self.env["lock.code"].create(vals)
+        return self.env["lock.code"].sudo().create(vals)

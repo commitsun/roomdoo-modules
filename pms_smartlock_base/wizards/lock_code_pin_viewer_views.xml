@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_code_pin_viewer_view_form" model="ir.ui.view">
+        <field name="name">lock.code.pin.viewer.form</field>
+        <field name="model">lock.code.pin.viewer</field>
+        <field name="arch" type="xml">
+            <form string="PIN">
+                <sheet>
+                    <h1
+            class="text-center"
+            style="font-size: 4rem; letter-spacing: 0.5rem;"
+          >
+                        <field name="pin" readonly="1" nolabel="1" />
+                    </h1>
+                    <p class="text-center text-muted">
+                        Show this code to the guest. Each reveal is recorded in
+                        the audit log.
+                    </p>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

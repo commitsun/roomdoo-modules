@@ -7,7 +7,11 @@
         <field name="inherit_id" ref="pms.pms_room_view_form" />
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page name="smartlock" string="Smart Lock">
+                <page
+          name="smartlock"
+          string="Smart Lock"
+          groups="pms_smartlock_base.group_smartlock_admin"
+        >
                     <group>
                         <field name="lock_vendor_id" />
                         <field name="lock_device_id" />

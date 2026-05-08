@@ -12,10 +12,12 @@
         decoration-muted="state in ('cancelled','expired')"
         decoration-danger="state == 'failed'"
       >
-                <field name="pin" />
                 <field name="room_id" />
                 <field name="reservation_id" />
-                <field name="vendor_id" />
+                <field
+          name="vendor_id"
+          groups="pms_smartlock_base.group_smartlock_admin"
+        />
                 <field name="date_from" />
                 <field name="date_to" />
                 <field name="state" />
@@ -31,6 +33,13 @@
         <field name="arch" type="xml">
             <form string="Lock Code">
                 <header>
+                    <button
+            name="action_reveal_pin"
+            type="object"
+            string="Reveal PIN"
+            class="btn-primary"
+            help="Reveal the PIN. Each click is recorded in the audit log."
+          />
                     <field
             name="state"
             widget="statusbar"
@@ -44,15 +53,12 @@
             bg_color="bg-danger"
             attrs="{'invisible': [('active', '=', True)]}"
           />
-                    <div class="oe_title">
-                        <label for="pin" string="PIN" />
-                        <h1>
-                            <field name="pin" placeholder="auto-generated" />
-                        </h1>
-                    </div>
                     <group>
                         <group>
-                            <field name="vendor_id" />
+                            <field
+                name="vendor_id"
+                groups="pms_smartlock_base.group_smartlock_admin"
+              />
                             <field name="room_id" />
                             <field name="reservation_id" />
                         </group>
@@ -81,6 +87,18 @@
                                 </tree>
                             </field>
                         </page>
+                        <page
+              string="Access Log"
+              name="access_log"
+              groups="pms_smartlock_base.group_smartlock_admin"
+            >
+                            <field name="access_log_ids" readonly="1">
+                                <tree>
+                                    <field name="accessed_at" />
+                                    <field name="user_id" />
+                                </tree>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -92,11 +110,13 @@
         <field name="model">lock.code</field>
         <field name="arch" type="xml">
             <search>
-                <field name="pin" />
                 <field name="vendor_code_id" />
                 <field name="room_id" />
                 <field name="reservation_id" />
-                <field name="vendor_id" />
+                <field
+          name="vendor_id"
+          groups="pms_smartlock_base.group_smartlock_admin"
+        />
                 <filter
           name="state_active"
           string="Active"
@@ -138,6 +158,7 @@
             name="group_vendor"
             string="Vendor"
             context="{'group_by': 'vendor_id'}"
+            groups="pms_smartlock_base.group_smartlock_admin"
           />
                     <filter
             name="group_room"

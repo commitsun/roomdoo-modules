@@ -111,7 +111,7 @@ class TestSyncingStatePriority(_StateTestBase):
         ``_sync_create`` job in flight should read ``syncing`` (we know
         something is happening) rather than ``pending`` (which now
         means "stuck without a job")."""
-        self.code.write({"vendor_code_id": False, "pin": False})
+        self.code.sudo().write({"vendor_code_id": False, "pin": False})
         self.assertEqual(self.code.state, "pending")
         self._make_job("enqueued", method_name="_sync_create")
         self.assertEqual(self.code.state, "syncing")

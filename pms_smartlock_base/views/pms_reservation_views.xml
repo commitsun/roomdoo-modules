@@ -14,6 +14,7 @@
             string="Generate Codes Now"
             class="btn-secondary"
             attrs="{'invisible': [('state', 'in', ('draft', 'cancel'))]}"
+            groups="pms_smartlock_base.group_smartlock_admin"
             help="Force generation of lock codes for this reservation, ignoring the 24h horizon. No-op if codes already exist."
           />
                     <field name="lock_code_ids">
@@ -23,10 +24,20 @@
               decoration-warning="state == 'syncing'"
               decoration-muted="state in ('cancelled','expired')"
               decoration-danger="state == 'failed'"
+              create="false"
+              delete="false"
             >
-                            <field name="pin" />
+                            <button
+                name="action_reveal_pin"
+                type="object"
+                string="Reveal PIN"
+                icon="fa-eye"
+              />
                             <field name="room_id" />
-                            <field name="vendor_id" />
+                            <field
+                name="vendor_id"
+                groups="pms_smartlock_base.group_smartlock_admin"
+              />
                             <field name="date_from" />
                             <field name="date_to" />
                             <field name="state" />
