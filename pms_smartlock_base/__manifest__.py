@@ -14,10 +14,13 @@
         "python": ["roomdoo_locks_base"],
     },
     "data": [
+        "security/security.xml",
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
+        "wizards/lock_code_pin_viewer_views.xml",
         "views/lock_vendor_views.xml",
         "views/lock_code_views.xml",
+        "views/lock_code_access_log_views.xml",
         "views/pms_room_views.xml",
         "views/pms_reservation_views.xml",
         "views/menus.xml",

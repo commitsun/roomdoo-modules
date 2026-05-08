@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="group_smartlock_admin" model="res.groups">
+        <field name="name">Smartlock: Administrator</field>
+        <field name="category_id" ref="base.module_category_hidden" />
+        <field
+      name="comment"
+    >Full manual control over lock.code records (create/edit/delete) and access to operator-driven actions like forced code generation. Intended for technical support and development; regular PMS users and managers cannot mutate codes — those flow through reservation automatisms.</field>
+    </record>
+
+</odoo>

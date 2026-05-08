@@ -78,7 +78,7 @@ class TestSyncCreate(_SyncTestBase):
         # _sync_create only operates on records that have not been
         # synced yet; clear the planted vendor_code_id so the create
         # flow is the relevant path.
-        self.code.write({"vendor_code_id": False, "pin": False})
+        self.code.sudo().write({"vendor_code_id": False, "pin": False})
 
     def test_happy_path_applies_result_and_calls_connector_with_utc(self):
         result = _result(code_id="created-1", pin="1111")
@@ -95,7 +95,7 @@ class TestSyncCreate(_SyncTestBase):
         self.assertEqual(kwargs["starts_at"].tzinfo, timezone.utc)
         self.assertEqual(kwargs["ends_at"].tzinfo, timezone.utc)
         self.assertEqual(self.code.vendor_code_id, "created-1")
-        self.assertEqual(self.code.pin, "1111")
+        self.assertEqual(self.code.sudo().pin, "1111")
 
     def test_already_cancelled_skips_connector(self):
         """``cancelled=True`` before the job runs (e.g. the reservation
@@ -169,7 +169,7 @@ class TestSyncModify(_SyncTestBase):
         self.assertEqual(kwargs["code_id"], "vendor-code-1")
         self.assertEqual(kwargs["starts_at"].tzinfo, timezone.utc)
         self.assertEqual(self.code.vendor_code_id, "rotated-id")
-        self.assertEqual(self.code.pin, "2222")
+        self.assertEqual(self.code.sudo().pin, "2222")
 
     def test_deletion_error_applies_new_and_retries_invalidate(self):
         """Some vendors regenerate the code on modify (delete-and-create)
@@ -192,7 +192,7 @@ class TestSyncModify(_SyncTestBase):
                 date_to=datetime(2026, 6, 5, 10, 0),
             )
             self.assertEqual(self.code.vendor_code_id, "brand-new-id")
-            self.assertEqual(self.code.pin, "3333")
+            self.assertEqual(self.code.sudo().pin, "3333")
             delayed._retry_invalidate.assert_called_once_with("orphan-id")
 
     def test_connection_error_raises_retryable(self):

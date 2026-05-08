@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_code_access_log_view_tree" model="ir.ui.view">
+        <field name="name">lock.code.access.log.tree</field>
+        <field name="model">lock.code.access.log</field>
+        <field name="arch" type="xml">
+            <tree create="false" edit="false" delete="false">
+                <field name="accessed_at" />
+                <field name="user_id" />
+                <field name="reservation_id" />
+                <field name="room_id" />
+                <field name="lock_code_id" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="lock_code_access_log_view_search" model="ir.ui.view">
+        <field name="name">lock.code.access.log.search</field>
+        <field name="model">lock.code.access.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id" />
+                <field name="reservation_id" />
+                <field name="room_id" />
+                <field name="lock_code_id" />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_user"
+            string="User"
+            context="{'group_by': 'user_id'}"
+          />
+                    <filter
+            name="group_reservation"
+            string="Reservation"
+            context="{'group_by': 'reservation_id'}"
+          />
+                    <filter
+            name="group_date"
+            string="Date"
+            context="{'group_by': 'accessed_at:day'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="lock_code_access_log_action" model="ir.actions.act_window">
+        <field name="name">PIN Access Log</field>
+        <field name="res_model">lock.code.access.log</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="lock_code_access_log_view_search" />
+    </record>
+
+</odoo>

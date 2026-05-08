@@ -42,7 +42,7 @@ class PmsReservation(models.Model):
         result = super().write(vals)
         if _TRIGGER_FIELDS.intersection(vals):
             self._enqueue_lock_sync()
-        if vals.get("state") == "cancel":
+        if vals.get("state") in ("cancel", "done"):
             self._cancel_lock_codes()
         return result
 
@@ -95,7 +95,7 @@ class PmsReservation(models.Model):
         live codes (system is committed) or is within
         ``_GENERATION_HORIZON`` of checkin."""
         self.ensure_one()
-        if self.state in ("draft", "cancel"):
+        if self.state in ("draft", "cancel", "done"):
             return False
         # "out" reservations are room blockers without a guest. Any other
         # current or future type qualifies for codes.
@@ -120,16 +120,20 @@ class PmsReservation(models.Model):
         even if the reservation window shifted — the ``_sync_create`` job
         already enqueued will use whatever dates were on the record at
         enqueue time. Updating them here would write vendor-bound state
-        before the vendor confirmed."""
+        before the vendor confirmed.
+
+        Operates on ``lock.code`` via sudo: ACL restricts mutations to the
+        smartlock admin group, but reservation flows must be able to create
+        and update codes regardless of the operator's group."""
         self.ensure_one()
-        LockCode = self.env["lock.code"]
+        LockCode = self.env["lock.code"].sudo()
         target = {
             room.id: (room, date_from, date_to)
             for room, date_from, date_to in self._build_lock_code_windows()
         }
         live_by_room = {
             code.room_id.id: code
-            for code in self.lock_code_ids.filtered(
+            for code in self.lock_code_ids.sudo().filtered(
                 lambda c: c.state in ("pending", "syncing", "scheduled", "active")
             )
         }
@@ -164,9 +168,12 @@ class PmsReservation(models.Model):
         still live (not already cancelled/failed). Codes already synced to
         the vendor are removed asynchronously; codes that never reached the
         vendor are marked cancelled locally (the create guard prevents any
-        subsequent vendor call)."""
+        subsequent vendor call).
+
+        Sudo on the codes — ACL restricts mutations to the smartlock admin
+        group; reservation cancel/done flows run regardless of operator."""
         for reservation in self:
-            for code in reservation.lock_code_ids.filtered(
+            for code in reservation.lock_code_ids.sudo().filtered(
                 lambda c: not c.cancelled and not c.failed
             ):
                 if code.vendor_code_id:
