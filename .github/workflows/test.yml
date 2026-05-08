@@ -31,11 +31,18 @@ jobs:
       PGUSER: odoo
       PGPASSWORD: odoo
 
+    # Necesario para que la action de comentario sticky pueda escribir en el PR
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           path: repo
+          # Histórico completo solo en PRs para que diff-cover pueda comparar con base
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
 
       - name: Checkout Odoo
         uses: actions/checkout@v4
@@ -88,7 +95,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip "setuptools<81" wheel coverage
+          pip install --upgrade pip "setuptools<81" wheel coverage diff-cover
 
           # gevent / greenlet fixes for Python 3.10
           sed -i -E "s/(gevent==)21\.8\.0/\122.10.2/" odoo/requirements.txt
@@ -102,7 +109,6 @@ jobs:
             [ -f "$dep/requirements.txt" ] && pip install -r "$dep/requirements.txt" || true
             [ -f "$dep/test-requirements.txt" ] && pip install -r "$dep/test-requirements.txt" || true
           done
-
 
       - name: Build addons path
         id: addons
@@ -139,10 +145,65 @@ jobs:
             --stop-after-init \
             --log-level=test
 
+      - name: Generate coverage XML
+        if: always()
+        run: |
+          # Generamos el XML desde la raíz para mantener consistencia con el .coverage
+          # Los paths quedan relativos al cwd actual: ej. "repo/modulo/models/x.py"
+          coverage xml --rcfile=repo/.github/.coveragerc -o coverage.xml
+
+      - name: Compute diff coverage
+        id: diffcover
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          # diff-cover necesita conocer la rama base. La traemos por si fetch-depth no la cubre del todo.
+          cd repo
+          git fetch origin ${{ github.base_ref }} --depth=50 || true
+
+          # Volvemos a la raíz porque ahí está coverage.xml y los paths son "repo/..."
+          cd ..
+
+          # diff-cover compara contra origin/<base>. --src-roots le dice dónde buscar el código fuente.
+          # --diff-range-notation '..' usa diff de tres puntos (cambios en la rama, no merge-base inverso)
+          # Falla con threshold 80 pero NO rompemos el job: dejamos que el comentario informe y un step posterior decide.
+          set +e
+          diff-cover coverage.xml \
+            --compare-branch=origin/${{ github.base_ref }} \
+            --src-roots repo \
+            --markdown-report diff-cover.md \
+            --fail-under=80
+          DIFF_EXIT=$?
+          set -e
+
+          echo "exit_code=$DIFF_EXIT" >> $GITHUB_OUTPUT
+
+          # Si diff-cover no generó el report (ej. no hay cambios en .py), creamos un placeholder
+          if [ ! -f diff-cover.md ]; then
+            echo "## Diff Coverage" > diff-cover.md
+            echo "" >> diff-cover.md
+            echo "_No Python changes detected in this PR._" >> diff-cover.md
+          fi
+
+      - name: Post diff coverage comment
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: diff-coverage
+          path: diff-cover.md
+
       - name: Coverage summary
         if: always()
         run: |
           echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+
+          # Bloque de patch coverage solo si hay PR
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ -f diff-cover.md ]; then
+            echo "### 🎯 Patch coverage (líneas modificadas en este PR)" >> $GITHUB_STEP_SUMMARY
+            cat diff-cover.md >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "---" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
 
           echo "### Por módulo" >> $GITHUB_STEP_SUMMARY
           echo "| Módulo | Statements | Miss | Cover |" >> $GITHUB_STEP_SUMMARY
