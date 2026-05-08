@@ -69,7 +69,14 @@ class CommonSmartlock(TransactionCase):
         )
         cls.partner = cls.env["res.partner"].create({"name": "Smartlock Test Guest"})
         cls.closure_reason = cls.env["room.closure.reason"].create(
-            {"name": "Smartlock Test Closure"}
+            {
+                "name": "Smartlock Test Closure",
+                # ``closure_reason_id`` on pms.reservation has
+                # ``check_pms_properties=True``; pin the property
+                # explicitly so the multi-property guard accepts the
+                # value when the reservation is switched to ``out``.
+                "pms_property_ids": [(4, cls.pms_property.id)],
+            }
         )
 
         cls.vendor = cls.env["lock.vendor"].create(

@@ -97,3 +97,14 @@ class TestCancelLockCodes(CommonSmartlock):
         code = self._plant_live_code(reservation)
         reservation.action_cancel()
         self.assertEqual(self._enqueue_for(code), [(code.id, "_sync_remove", {})])
+
+    def test_done_state_invokes_remove_for_synced_codes(self):
+        """``done`` is the only reliable signal of real checkout — early
+        checkout never trims the lines, so neither the line nor the
+        date listeners would notice. Switching to ``done`` must
+        revoke access immediately, same path as cancel."""
+        reservation = self._create_reservation()
+        code = self._plant_live_code(reservation)
+        reservation.state = "done"  # bypass the workflow constraints
+        self.assertEqual(self._enqueue_for(code), [(code.id, "_sync_remove", {})])
+        self.assertFalse(code.cancelled)
