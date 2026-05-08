@@ -260,7 +260,7 @@ class InvoicePaymentXlsx(models.AbstractModel):
             (inv.invoice_date, "date"),
             (inv.invoice_date_due, "date"),
             (partner.name or "", "text"),
-            (partner.vat or "", "text"),
+            (partner.get_vat(), "text"),
             (", ".join(address_parts), "text"),
             (partner.zip or "", "text"),
             (partner.city or "", "text"),
