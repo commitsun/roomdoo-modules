@@ -41,8 +41,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: repo
-          # Histórico completo solo en PRs para que diff-cover pueda comparar con base
-          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+          # Histórico completo solo en PRs para que diff-cover pueda comparar con base.
+          # Ojo: con números enteros la ternaria `&& 0 || 1` no funciona en GHA (0 es falsy
+          # y la expresión colapsa siempre a 1). Usamos strings para que `'0'` sea truthy.
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: Checkout Odoo
         uses: actions/checkout@v4
@@ -156,25 +158,23 @@ jobs:
         id: diffcover
         if: github.event_name == 'pull_request' && always()
         run: |
-          # diff-cover necesita conocer la rama base. La traemos por si fetch-depth no la cubre del todo.
+          # diff-cover invoca `git diff` desde cwd, así que tiene que ejecutarse DENTRO del
+          # repo. coverage.xml vive en la raíz del workflow; sus filenames "repo/..." se
+          # resuelven correctamente porque el <source> del XML apunta a esa raíz.
           cd repo
           git fetch origin ${{ github.base_ref }} --depth=50 || true
 
-          # Volvemos a la raíz porque ahí está coverage.xml y los paths son "repo/..."
-          cd ..
-
-          # diff-cover compara contra origin/<base>. --src-roots le dice dónde buscar el código fuente.
-          # --diff-range-notation '..' usa diff de tres puntos (cambios en la rama, no merge-base inverso)
-          # Falla con threshold 80 pero NO rompemos el job: dejamos que el comentario informe y un step posterior decide.
+          # Falla con threshold 80 pero NO rompemos el job: dejamos que el comentario informe
+          # y un step posterior decide.
           set +e
-          diff-cover coverage.xml \
+          diff-cover ../coverage.xml \
             --compare-branch=origin/${{ github.base_ref }} \
-            --src-roots repo \
-            --markdown-report diff-cover.md \
+            --format markdown:../diff-cover.md \
             --fail-under=80
           DIFF_EXIT=$?
           set -e
 
+          cd ..
           echo "exit_code=$DIFF_EXIT" >> $GITHUB_OUTPUT
 
           # Si diff-cover no generó el report (ej. no hay cambios en .py), creamos un placeholder
