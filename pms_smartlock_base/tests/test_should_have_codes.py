@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from odoo import fields
 
@@ -26,6 +27,16 @@ class TestShouldHaveLockCodes(CommonSmartlock):
     def test_cancel_returns_false(self):
         reservation = self._create_reservation()
         reservation.action_cancel()
+        self.assertFalse(reservation._should_have_lock_codes())
+
+    def test_done_returns_false(self):
+        """``done`` is the only reliable signal of real checkout (early
+        checkout doesn't trim ``reservation.line``); the predicate must
+        skip so a write landing after ``done`` doesn't regenerate
+        codes for a guest who already left."""
+        reservation = self._create_reservation()
+        self._plant_live_code(reservation)
+        reservation.state = "done"  # bypass the workflow constraints
         self.assertFalse(reservation._should_have_lock_codes())
 
     def test_out_reservation_type_returns_false(self):
@@ -68,13 +79,22 @@ class TestShouldHaveLockCodes(CommonSmartlock):
 
     def test_within_horizon_no_codes_returns_true(self):
         """Within 24h with no codes yet — the create flow's
-        ``action_generate_lock_codes`` path, plus the cron's gate."""
+        ``action_generate_lock_codes`` path, plus the cron's gate.
+
+        Pin ``fields.Datetime.now`` to one hour before
+        ``checkin_datetime`` so the predicate's window
+        (``now < checkin_datetime <= now + 24h``) is always exercised
+        regardless of the wall clock at test time. Without this, a run
+        after the property's default ``arrival_hour`` falls past the
+        lower bound and the assertion flips."""
         today = fields.Date.context_today(self.env.user)
         reservation = self._create_reservation(
-            checkin=today,
-            checkout=today + timedelta(days=2),
+            checkin=today + timedelta(days=1),
+            checkout=today + timedelta(days=3),
         )
-        self.assertTrue(reservation._should_have_lock_codes())
+        frozen_now = reservation.checkin_datetime - timedelta(hours=1)
+        with patch.object(fields.Datetime, "now", return_value=frozen_now):
+            self.assertTrue(reservation._should_have_lock_codes())
 
     def test_pending_code_counts_as_live(self):
         """Pending codes (no ``vendor_code_id`` yet) still keep the

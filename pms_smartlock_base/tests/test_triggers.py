@@ -165,6 +165,20 @@ class TestReservationTriggers(CommonSmartlock):
             self.reservation.action_cancel()
             cancel_mock.assert_called_once()
 
+    def test_done_state_invokes_cancel_lock_codes(self):
+        """Same as the cancel listener but for ``done`` — the only
+        reliable signal of real checkout (early checkout doesn't trim
+        ``reservation.line``, so neither line nor date listeners
+        notice). The ``done`` write must fire ``_cancel_lock_codes``
+        to revoke access immediately."""
+        with patch.object(
+            type(self.reservation),
+            "_cancel_lock_codes",
+            autospec=True,
+        ) as cancel_mock:
+            self.reservation.state = "done"  # bypass the workflow constraints
+            cancel_mock.assert_called_once()
+
     def test_two_reservations_each_enqueued_independently(self):
         """Precommit dedups *within* a reservation, not across — two
         different reservations must both end up in the pending set."""
