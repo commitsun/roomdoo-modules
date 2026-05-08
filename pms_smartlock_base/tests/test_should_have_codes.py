@@ -55,12 +55,13 @@ class TestShouldHaveLockCodes(CommonSmartlock):
         should evaluate False so the next sync cancels it."""
         reservation = self._create_reservation()
         self._plant_live_code(reservation)
-        reservation.write(
-            {
-                "reservation_type": "out",
-                "closure_reason_id": self.closure_reason.id,
-            }
-        )
+        # ``closure_reason_id`` is related to ``folio_id.closure_reason_id``;
+        # writing it on the reservation in the same call as
+        # ``reservation_type=out`` races the inverse with the
+        # ``_check_closure_reason_id`` constraint in CI. Writing on
+        # the folio first sidesteps the race.
+        reservation.folio_id.closure_reason_id = self.closure_reason.id
+        reservation.reservation_type = "out"
         self.assertFalse(reservation._should_have_lock_codes())
 
     def test_far_future_no_codes_returns_false(self):

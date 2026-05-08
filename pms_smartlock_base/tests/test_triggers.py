@@ -89,12 +89,12 @@ class TestReservationTriggers(CommonSmartlock):
     def test_reservation_type_change_enqueues_sync(self):
         """Switching to/from ``out`` flips whether codes should exist;
         the listener must fire so the predicate gets re-evaluated."""
-        self.reservation.write(
-            {
-                "reservation_type": "out",
-                "closure_reason_id": self.closure_reason.id,
-            }
-        )
+        # ``closure_reason_id`` is related to ``folio_id.closure_reason_id``;
+        # write it on the folio first so the ``_check_closure_reason_id``
+        # constraint sees the value when ``reservation_type`` flips
+        # to ``out`` (the inverse-then-validate ordering is brittle in CI).
+        self.reservation.folio_id.closure_reason_id = self.closure_reason.id
+        self.reservation.reservation_type = "out"
         self._assert_enqueued(self.reservation)
 
     def test_unrelated_field_does_not_enqueue(self):
