@@ -31,8 +31,12 @@ class _StateTestBase(CommonSmartlock):
     def _make_job(self, state, method_name="_sync_modify"):
         """Create a ``queue.job`` row directly (bypassing ``with_delay``)
         and link it to ``self.code``. The ``_job_edit_sentinel`` context
-        is the OCA-blessed escape hatch for seeding job rows in tests."""
-        QueueJob = self.env["queue.job"]
+        is the OCA-blessed escape hatch for seeding job rows in tests.
+
+        Sudo on create: ``queue_job`` ACL only grants create to
+        ``queue_job.group_queue_job_manager``, which the test user
+        doesn't belong to in a clean CI environment."""
+        QueueJob = self.env["queue.job"].sudo()
         job = QueueJob.with_context(_job_edit_sentinel=QueueJob.EDIT_SENTINEL).create(
             {
                 "uuid": uuid.uuid4().hex,
