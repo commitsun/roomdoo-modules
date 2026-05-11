@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Query
 
-from odoo import api
+from odoo import api, fields
 from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
@@ -120,7 +120,8 @@ class FolioPendingSearch(FolioSearch):
         totalAmountGt: Annotated[
             float | None,
             Query(
-                description="Filter folios whose total amount is greater than this value.",
+                description="Filter folios whose total amount is greater than "
+                "this value.",
             ),
         ] = None,
         totalAmountLt: Annotated[
@@ -211,6 +212,9 @@ class FolioPendingSearch(FolioSearch):
     def to_odoo_domain(self, env: api.Environment) -> list:
         # super() skips paymentState and invoiceState (both None)
         domain = super().to_odoo_domain(env)
+
+        today = fields.Date.context_today(env.user)
+        domain = expression.AND([domain, [("last_checkout", "<", today)]])
 
         pending_subdomains = []
         for state in self._paymentStates or []:
