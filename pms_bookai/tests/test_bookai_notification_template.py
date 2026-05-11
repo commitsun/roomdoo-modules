@@ -155,7 +155,7 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
             self.assertEqual(t.get("footer_text"), "Footer")
             self.assertTrue(t.get("button_texts"))
 
-    def test_update_translation_status(self):
+    def test_update_translation_status_legacy(self):
         self.bookai_template._sync_translations_from_i18n()
         trans = self.bookai_template.bookai_translation_ids[:1]
         lang = trans.language
@@ -173,6 +173,61 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
         trans.invalidate_recordset()
         self.assertEqual(trans.meta_status, "approved")
         self.assertEqual(trans.meta_template_id, "meta-456")
+
+    def test_update_translation_status_waba_entries(self):
+        wa_account = self.env["bookai.wa.account"].create(
+            {"name": "Test WABA", "waba_id": "999888777"}
+        )
+        trans = self.env["bookai.whatsapp.translation"].create(
+            {
+                "template_id": self.bookai_template.id,
+                "language": "es",
+                "wa_account_id": wa_account.id,
+            }
+        )
+        self.bookai_template._update_translation_status(
+            {
+                "translations": [
+                    {
+                        "language": "es",
+                        "waba_entries": [
+                            {
+                                "waba_id": "999888777",
+                                "meta_status": "approved",
+                                "meta_template_id": "meta-789",
+                            }
+                        ],
+                    }
+                ]
+            }
+        )
+        trans.invalidate_recordset()
+        self.assertEqual(trans.meta_status, "approved")
+        self.assertEqual(trans.meta_template_id, "meta-789")
+
+    def test_update_translation_status_waba_entries_unknown_waba(self):
+        """waba_entries with unknown waba_id should not crash."""
+        self.bookai_template._sync_translations_from_i18n()
+        trans = self.bookai_template.bookai_translation_ids[:1]
+        old_status = trans.meta_status
+        self.bookai_template._update_translation_status(
+            {
+                "translations": [
+                    {
+                        "language": trans.language,
+                        "waba_entries": [
+                            {
+                                "waba_id": "unknown_waba",
+                                "meta_status": "approved",
+                                "meta_template_id": "meta-000",
+                            }
+                        ],
+                    }
+                ]
+            }
+        )
+        trans.invalidate_recordset()
+        self.assertEqual(trans.meta_status, old_status)
 
     def test_resolve_odoo_lang(self):
         es_lang = self.env["res.lang"].search(
