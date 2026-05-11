@@ -255,7 +255,9 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         return folios_count, reservations_count
 
     def get_sale_lines(self, folio) -> list[FolioSaleLine]:
-        lines = folio.sale_line_ids.filtered(lambda line: not line.display_type)
+        lines = folio.sale_line_ids.filtered(
+            lambda line: not line.display_type and not line.is_downpayment
+        )
         return [FolioSaleLine.from_folio_sale_line(line) for line in lines]
 
     def get_contacts(self, folio) -> list[ContactIdImage]:
