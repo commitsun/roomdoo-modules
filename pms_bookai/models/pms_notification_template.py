@@ -605,31 +605,62 @@ class PmsNotificationTemplate(models.Model):
         return lang.code if lang else short_code
 
     def _update_translation_status(self, data):
-        """Update meta_status and meta_template_id from BookAI response."""
+        """Update meta_status and meta_template_id from BookAI response.
+
+        Supports two response formats:
+        - New format: waba_entries[] inside each translation, each with
+          waba_id, meta_status, meta_template_id.
+        - Legacy format: meta_status / meta_template_id / waba_id directly
+          at translation level.
+        """
         self.ensure_one()
         for trans_data in data.get("translations", []):
             lang = trans_data.get("language")
             if not lang:
                 continue
-            waba_id = trans_data.get("waba_id")
-            trans = self.bookai_translation_ids.filtered(
-                lambda t, lang_code=lang, wid=waba_id: (
-                    t.language == lang_code
-                    and (
-                        (not wid)
-                        or (t.wa_account_id and t.wa_account_id.waba_id == wid)
+            waba_entries = trans_data.get("waba_entries", [])
+            if waba_entries:
+                for entry in waba_entries:
+                    waba_id = entry.get("waba_id")
+                    if not waba_id:
+                        continue
+                    trans = self.bookai_translation_ids.filtered(
+                        lambda t, lc=lang, wid=waba_id: (
+                            t.language == lc
+                            and t.wa_account_id
+                            and t.wa_account_id.waba_id == wid
+                        )
+                    )
+                    if not trans:
+                        continue
+                    vals = {}
+                    if entry.get("meta_status"):
+                        vals["meta_status"] = entry["meta_status"]
+                    if entry.get("meta_template_id"):
+                        vals["meta_template_id"] = entry["meta_template_id"]
+                    if vals:
+                        trans.write(vals)
+            else:
+                # Legacy format: fields at translation level
+                waba_id = trans_data.get("waba_id")
+                trans = self.bookai_translation_ids.filtered(
+                    lambda t, lang_code=lang, wid=waba_id: (
+                        t.language == lang_code
+                        and (
+                            (not wid)
+                            or (t.wa_account_id and t.wa_account_id.waba_id == wid)
+                        )
                     )
                 )
-            )
-            if not trans:
-                continue
-            vals = {}
-            if trans_data.get("meta_status"):
-                vals["meta_status"] = trans_data["meta_status"]
-            if trans_data.get("meta_template_id"):
-                vals["meta_template_id"] = trans_data["meta_template_id"]
-            if vals:
-                trans.write(vals)
+                if not trans:
+                    continue
+                vals = {}
+                if trans_data.get("meta_status"):
+                    vals["meta_status"] = trans_data["meta_status"]
+                if trans_data.get("meta_template_id"):
+                    vals["meta_template_id"] = trans_data["meta_template_id"]
+                if vals:
+                    trans.write(vals)
 
     @api.onchange("body", "bookai_param_ids")
     def _onchange_warn_multi_property(self):
