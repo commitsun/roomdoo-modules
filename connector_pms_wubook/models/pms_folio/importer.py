@@ -1,10 +1,16 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import logging
+
 from psycopg2.extensions import AsIs
 
 from odoo import _, fields
 
 from odoo.addons.component.core import Component
+from odoo.addons.connector.exception import IDMissingInBackend
+from odoo.addons.connector_pms.components.adapter import ChannelAdapterError
+
+_logger = logging.getLogger(__name__)
 
 
 class ChannelWubookPmsFolioDelayedBatchImporter(Component):
@@ -26,6 +32,50 @@ class ChannelWubookPmsFolioImporter(Component):
     _inherit = "channel.wubook.importer"
 
     _apply_on = "channel.wubook.pms.folio"
+
+    def run(self, external_id, external_data=None, external_fields=None):
+        if not external_data:
+            external_data = self.backend_adapter.read(external_id)
+            if not external_data:
+                raise IDMissingInBackend(
+                    _("Record with external_id '%s' does not exist in Backend")
+                    % (external_id,)
+                )
+        binder = self.binder_for("channel.wubook.pms.folio")
+        binding = binder.to_internal(external_id)
+        is_cancel = not external_data.get("was_modified") and str(
+            external_data.get("status", "")
+        ) in ("3", "5", "6")
+        if binding and is_cancel:
+            try:
+                return super().run(
+                    external_id,
+                    external_data=external_data,
+                    external_fields=external_fields,
+                )
+            except (IDMissingInBackend, ChannelAdapterError) as e:
+                _logger.warning(
+                    "Folio %s cancellation: full import failed (%s). "
+                    "Falling back to local-only cancellation because the "
+                    "folio already exists and Wubook reports a cancelled "
+                    "status. Some Wubook dependencies referenced by the "
+                    "reservation no longer exist on Wubook.",
+                    external_id,
+                    e,
+                )
+                binding.with_context(
+                    connector_no_export=True,
+                    force_write_blocked=True,
+                    mail_create_nosubscribe=True,
+                    force_overbooking=True,
+                ).write({"wubook_status": str(external_data["status"])})
+                self._after_import(binding)
+                return True
+        return super().run(
+            external_id,
+            external_data=external_data,
+            external_fields=external_fields,
+        )
 
     def _import_dependencies(self, external_data, external_fields):
         self._import_dependency(
@@ -63,7 +113,9 @@ class ChannelWubookPmsFolioImporter(Component):
             folio.with_context(confirm_all_reservations=True).action_confirm()
 
         # TODO: move get_all_items action_cancel here
-        # binding.reservation_ids.filtered(lambda x: x['wubook_status'] == '5').action_cancel()
+        # binding.reservation_ids.filtered(
+        #     lambda x: x["wubook_status"] == "5"
+        # ).action_cancel()
 
         # Pre payment Folio
         if binding.payment_gateway_fee > 0:
@@ -155,8 +207,10 @@ class ChannelWubookPmsFolioImporter(Component):
                 ("room_type_id", "in", folio.mapped("reservation_ids.room_type_id.id")),
             ]
         )
+        # %s/%%s here is psycopg2 placeholder syntax, the `%` operator below
+        # only substitutes AsIs into actual_write_date.
         query = (
-            'UPDATE "channel_wubook_pms_availability" '
+            'UPDATE "channel_wubook_pms_availability" '  # noqa: UP031
             'SET "actual_write_date"=%s WHERE id IN %%s'
             % (AsIs("(now() at time zone 'UTC')"),)
         )
