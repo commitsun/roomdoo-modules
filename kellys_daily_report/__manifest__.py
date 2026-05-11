@@ -21,7 +21,7 @@
 
 {
     "name": "Hotel Kellys Daily Report",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "author": "Jose Luis Algara <osotranquilo@gmail.com>,"
     "Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/pms",
