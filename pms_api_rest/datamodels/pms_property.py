@@ -14,6 +14,11 @@ class RoomdooAppMenu(Datamodel):
     label = fields.String(required=True)
     id = fields.Integer(required=False, allow_none=True)
 
+class PmsPropertyCurrency(Datamodel):
+    _name = "pms.property.currency"
+    id = fields.Integer(required=False, allow_none=True)
+    name = fields.String(required=False, allow_none=True)
+    code = fields.String(required=False, allow_none=True)
 
 class PmsPropertyInfo(Datamodel):
     _name = "pms.property.info"
@@ -53,3 +58,4 @@ class PmsPropertyInfo(Datamodel):
     supportUrl = NestedModel("roomdoo.app.menu")
     linksRoomdoo = fields.List(NestedModel("roomdoo.app.menu"))
     warningToInvoiceColor = fields.String(required=False, allow_none=True)
+    currency = NestedModel("pms.property.currency")
