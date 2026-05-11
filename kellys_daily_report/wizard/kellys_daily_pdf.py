@@ -161,6 +161,15 @@ class KellysWizard(models.TransientModel):
                     room = reservation.reservation_line_ids.filtered(
                         lambda line: line.date == fechalimpieza
                     ).room_id
+                # Reserva entrante para conteo de adultos/niños:
+                # con 2 reservas (salida+entrada) la entrante es reservations[1];
+                # si solo hay salida (checkin "no prevista") o avería, no entra nadie.
+                if tipos == "5" or checkinhour == "no prevista":
+                    incoming = self.env["pms.reservation"]
+                elif len(reservations) == 2:
+                    incoming = reservations[1]
+                else:
+                    incoming = reservations[0]
                 listid.append(
                     grids2.create(
                         {
@@ -182,6 +191,8 @@ class KellysWizard(models.TransientModel):
                             "checkout": checkouthour,
                             # 'kelly': 5,
                             "clean_date": fechalimpieza,
+                            "adults": incoming.adults if incoming else 0,
+                            "children": incoming.children if incoming else 0,
                         }
                     ).id
                 )
@@ -231,6 +242,9 @@ class KellysWizard(models.TransientModel):
         worksheet.write("D1", _("Entrada"), xls_cell_format_header)
         worksheet.write("E1", _("Salida"), xls_cell_format_header)
         worksheet.write("F1", _("Asignado"), xls_cell_format_header)
+        worksheet.write("G1", _("Adultos"), xls_cell_format_header)
+        worksheet.write("H1", _("Niños"), xls_cell_format_header)
+        worksheet.write("I1", _("Total"), xls_cell_format_header)
 
         worksheet.set_column("A:A", 10)
         worksheet.set_column("B:B", 10)
@@ -238,6 +252,9 @@ class KellysWizard(models.TransientModel):
         worksheet.set_column("D:D", 15)
         worksheet.set_column("E:E", 15)
         worksheet.set_column("F:F", 10)
+        worksheet.set_column("G:G", 8)
+        worksheet.set_column("H:H", 8)
+        worksheet.set_column("I:I", 8)
 
         rooms = self.env["kellysrooms"].search(
             [("id", "in", self.habitaciones.ids)], order="habitacion ASC"
@@ -251,6 +268,9 @@ class KellysWizard(models.TransientModel):
             worksheet.write(k_room + offset, 3, v_room.checkin, xls_cell_format_date)
             worksheet.write(k_room + offset, 4, v_room.checkout, xls_cell_format_date)
             worksheet.write(k_room + offset, 5, v_room.kelly.name)
+            worksheet.write(k_room + offset, 6, v_room.adults)
+            worksheet.write(k_room + offset, 7, v_room.children)
+            worksheet.write(k_room + offset, 8, v_room.total_pax)
 
         workbook.close()
         file_data.seek(0)

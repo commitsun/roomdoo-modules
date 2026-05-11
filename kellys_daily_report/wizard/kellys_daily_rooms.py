@@ -17,7 +17,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class KellysRooms(models.TransientModel):
@@ -44,3 +44,11 @@ class KellysRooms(models.TransientModel):
         comodel_name="kellysnames",
     )
     clean_date = fields.Date(string="Limpiar fecha")
+    adults = fields.Integer(string="Adultos")
+    children = fields.Integer(string="Niños")
+    total_pax = fields.Integer(string="Total", compute="_compute_total_pax", store=True)
+
+    @api.depends("adults", "children")
+    def _compute_total_pax(self):
+        for rec in self:
+            rec.total_pax = rec.adults + rec.children
