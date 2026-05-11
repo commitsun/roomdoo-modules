@@ -1,4 +1,4 @@
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, Field
 
 from .base import PmsBaseModel
 from .currency import CurrencySummary
@@ -10,11 +10,7 @@ class PropertyId(PmsBaseModel):
 
     @classmethod
     def parse_common_fields(cls, pms_property) -> dict:
-        record_dict = {
-            "id": pms_property.id,
-            "name": pms_property.name,
-        }
-        return record_dict
+        return cls._read_odoo_record(pms_property)
 
     @classmethod
     def from_pms_property(cls, pms_property):
@@ -25,7 +21,8 @@ class PropertyId(PmsBaseModel):
 class PropertySummary(PropertyId):
     image: AnyHttpUrl | None = None
     currency: CurrencySummary
-    timezone: str | None = None
+    tz: str | None = Field(None, alias="timezone")
+    max_amount_simplified_invoice: float = Field(0.0, alias="simplifiedInvoiceLimit")
 
     @classmethod
     def from_pms_property(cls, pms_property):
@@ -41,6 +38,4 @@ class PropertySummary(PropertyId):
         )
         if image_url:
             data["image"] = image_url
-        if pms_property.tz:
-            data["timezone"] = pms_property.tz
         return cls(**data)
