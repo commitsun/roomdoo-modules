@@ -114,6 +114,16 @@ class ContactIdImage(ContactId):
         return cls(**record_dict)
 
 
+class ContactIdImageEmail(ContactIdImage):
+    email: str = ""
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        record = super().from_res_partner(partner)
+        record.email = partner.email or ""
+        return record
+
+
 class ContactBase(PmsBaseModel):
     id: int
     name: str
