@@ -13,7 +13,7 @@ from odoo.addons.roomdoo_fastapi.schemas.pms_folio import FolioPendingSearch
 
 
 @pms_api_router.get(
-    "/folios/pending-closure",
+    "/folios-pending-closure",
     response_model=PagedCollection[FolioSummary],
     tags=["folio"],
 )
@@ -36,7 +36,7 @@ async def list_folios_pending_closure(
 
 
 @pms_api_router.get(
-    "/folios/pending-closure/count",
+    "/folios-pending-closure/count",
     response_model=FolioCountSummary,
     tags=["folio"],
 )
