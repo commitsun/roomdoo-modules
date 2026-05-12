@@ -11,8 +11,8 @@ from odoo.addons.pms_fastapi.schemas.pms_folio import (
     folioPaymentStateEnum,
     invoiceStateEnum,
     preCheckinStateEnum,
-    reservationStateEnum,
 )
+from odoo.addons.pms_fastapi.schemas.pms_reservation import reservationStateEnum
 
 
 class FolioPendingSearch(FolioSearch):
