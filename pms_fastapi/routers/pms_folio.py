@@ -18,7 +18,7 @@ from odoo.addons.pms_fastapi.dependencies import (
     create_order_dependency,
 )
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
-from odoo.addons.pms_fastapi.schemas.contact import ContactIdImage
+from odoo.addons.pms_fastapi.schemas.contact import ContactIdImageEmail
 from odoo.addons.pms_fastapi.schemas.folio_sale_line import FolioSaleLine
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FOLIO_ORDER_MAPPING,
@@ -164,13 +164,13 @@ async def get_folio_sale_lines(
 
 @pms_api_router.get(
     "/folios/{folio_id}/contacts",
-    response_model=list[ContactIdImage],
+    response_model=list[ContactIdImageEmail],
     tags=["folio"],
 )
 async def get_folio_contacts(
     env: AuthenticatedEnv,
     folio_id: int,
-) -> list[ContactIdImage]:
+) -> list[ContactIdImageEmail]:
     """Get all contacts associated with a folio.
 
     Collects unique contacts from the folio, its reservations, and guests.
@@ -260,7 +260,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         )
         return [FolioSaleLine.from_folio_sale_line(line) for line in lines]
 
-    def get_contacts(self, folio) -> list[ContactIdImage]:
+    def get_contacts(self, folio) -> list[ContactIdImageEmail]:
         partners = folio.partner_id
         active_reservations = folio.reservation_ids.filtered(
             lambda r: r.cancelled_reason != "modified"
@@ -270,7 +270,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         partners |= active_reservations.mapped(
             "checkin_partner_ids.partner_id"
         ).filtered("id")
-        return [ContactIdImage.from_res_partner(p) for p in partners]
+        return [ContactIdImageEmail.from_res_partner(p) for p in partners]
 
     @api.model
     def extra_features(self):
