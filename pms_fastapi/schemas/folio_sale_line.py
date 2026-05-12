@@ -4,7 +4,7 @@ from pydantic import Field
 
 from .base import CurrencyAmount, PmsBaseModel
 from .currency import CurrencySummary
-from .pms_reservation import ReservationId
+from .pms_reservation import reservationSummary
 
 
 class saleLineTypeEnum(str, Enum):
@@ -44,7 +44,7 @@ class FolioSaleLine(PmsBaseModel):
     id: int
     lineType: saleLineTypeEnum
     description: str = Field("")
-    reservation: ReservationId | None = None
+    reservation: reservationSummary | None = None
     quantity: float
     quantityInvoiced: float = Field(0.0)
     priceUnit: float = Field(0.0)
@@ -109,7 +109,7 @@ class FolioSaleLine(PmsBaseModel):
                 "lineType": line_type,
                 "description": line.name or "",
                 "reservation": (
-                    ReservationId.from_pms_reservation(line.reservation_id)
+                    reservationSummary.from_pms_reservation(line.reservation_id)
                     if line.reservation_id
                     else None
                 ),
