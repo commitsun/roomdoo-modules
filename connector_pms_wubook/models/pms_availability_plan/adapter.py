@@ -176,12 +176,11 @@ class ChannelWubookPmsAvailabilityPlanAdapter(Component):
 
         # plan values
         if "name" in values:
-            self._prepare_parameters(
+            params = self._prepare_parameters(
                 {"id": _id, **{k: values[k] for k in values if k in {"name"}}},
                 ["id", "name"],
             )
-            # HOTFIX: Avoid update
-            # self._exec("rplan_rename_rplan", *params)
+            self._exec("rplan_rename_rplan", *params)
 
         # rule item values
         items = values.get("items")

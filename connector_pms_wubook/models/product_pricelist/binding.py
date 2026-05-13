@@ -4,6 +4,10 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 
+# Wubook rejects dates more than ~2 years ahead. Hard ceiling for any
+# window we push (flatten included).
+WUBOOK_MAX_DAYS_AHEAD = 730
+
 
 class ChannelWubookProductPriceBinding(models.Model):
     _name = "channel.wubook.product.pricelist"
@@ -23,6 +27,17 @@ class ChannelWubookProductPriceBinding(models.Model):
         help="Items in Pricelist",
         comodel_name="channel.wubook.product.pricelist.item",
         inverse_name="channel_wubook_pricelist_id",
+    )
+
+    wubook_last_synced_name = fields.Char(
+        string="Last name pushed to Wubook",
+        readonly=True,
+        help=(
+            "Snapshot of the pricelist name at the last successful export. "
+            "Used by the mapper to skip the ``update_plan_name`` XMLRPC "
+            "call when the name has not actually changed (the export is "
+            "otherwise triggered by item changes via the scheduler)."
+        ),
     )
 
     def _is_synced_export(self):
@@ -144,11 +159,147 @@ class ChannelWubookProductPriceBinding(models.Model):
             backend_record=backend_record,
             domain=[
                 ("channel_wubook_bind_ids.backend_id", "in", backend_record.ids),
+                "|",
                 ("pricelist_type", "=", "daily"),
+                ("wubook_flatten_to_daily", "=", True),
                 "|",
                 ("pms_property_ids", "=", False),
                 ("pms_property_ids", "in", backend_record.pms_property_id.ids),
             ],
+        )
+
+    # --- Flatten-to-daily helpers ---------------------------------------
+
+    def _get_flatten_export_room_types(self):
+        """Return the room types eligible for flatten export on this backend.
+
+        Includes only room types that already have a binding in the same
+        backend, since Wubook requires the external id (``rid``) to be set.
+        """
+        self.ensure_one()
+        return self.env["pms.room.type"].search(
+            [("channel_wubook_bind_ids.backend_id", "=", self.backend_id.id)]
+        )
+
+    def _get_flatten_default_window(self):
+        """Default forward window for a flatten export, derived from the
+        backend setting and capped by:
+        * the latest parent-chain rule date,
+        * Wubook's 2-year ceiling (730 days from today).
+
+        Returns ``(date_from, date_to)`` or ``(None, None)`` if window is
+        empty/invalid.
+        """
+        self.ensure_one()
+        window = self.backend_id.flatten_window_days or 0
+        if window <= 0:
+            return None, None
+        date_from = fields.Date.today()
+        date_to = date_from + relativedelta(days=window - 1)
+        chain_max = self.odoo_id._get_flatten_chain_max_date()
+        if chain_max and chain_max < date_to:
+            date_to = chain_max
+        wubook_ceiling = date_from + relativedelta(days=WUBOOK_MAX_DAYS_AHEAD)
+        if date_to > wubook_ceiling:
+            date_to = wubook_ceiling
+        if date_to < date_from:
+            return None, None
+        return date_from, date_to
+
+    def _compute_flatten_payload_items(
+        self, date_from, date_to, room_type_ids=None
+    ):
+        """Build the adapter-shaped item dicts for a flatten export.
+
+        Each entry is ``{"date": <date>, "price": <float>, "rid": <int>}``,
+        matching the format produced by the standard item mapper.
+
+        ``room_type_ids`` restricts the payload to the given subset; if not
+        provided, all bound room types of this backend are included. In
+        any case the result is intersected with bound room types — we
+        never compute prices for room types we can't push to Wubook.
+        """
+        self.ensure_one()
+        if not date_from or not date_to:
+            return []
+        bound_room_types = self._get_flatten_export_room_types()
+        if room_type_ids:
+            requested = set(room_type_ids)
+            room_types = bound_room_types.filtered(
+                lambda rt: rt.id in requested
+            )
+        else:
+            room_types = bound_room_types
+        if not room_types:
+            return []
+        raw = self.odoo_id._compute_flattened_items(
+            self.backend_id.pms_property_id, room_types, date_from, date_to
+        )
+        if not raw:
+            return []
+        with self.backend_id.work_on("channel.wubook.pms.room.type") as work:
+            rt_binder = work.component(usage="binder")
+        result = []
+        for entry in raw:
+            binding = rt_binder.wrap_record(entry["room_type_id"])
+            if not binding or not binding.external_id:
+                continue
+            result.append(
+                {
+                    "date": entry["date"],
+                    "price": entry["fixed_price"],
+                    "rid": int(binding.external_id),
+                }
+            )
+        return result
+
+    def export_flattened(self, date_from=None, date_to=None, room_type_ids=None):
+        """Push a windowed flatten-to-daily export to Wubook for this binding.
+
+        Called by listeners via ``with_delay()`` whenever an item change
+        invalidates a slice of dates on a flatten pricelist (own rule
+        change → default window; parent rule change → only the dates of the
+        modified parent item).
+
+        If the Wubook plan does not exist yet (no ``external_id``) the call
+        falls back to the regular create flow through the mapper, which in
+        turn produces synthetic items for the default window.
+        """
+        self.ensure_one()
+        if not self.odoo_id.wubook_flatten_to_daily:
+            # Flag was unchecked between enqueue and execution: defer to
+            # the regular export flow so nothing surprising happens.
+            return self.export_record(self.backend_id, self.odoo_id)
+        if not self.external_id:
+            return self.export_record(self.backend_id, self.odoo_id)
+        if not date_from or not date_to:
+            date_from, date_to = self._get_flatten_default_window()
+        else:
+            chain_max = self.odoo_id._get_flatten_chain_max_date()
+            if chain_max and date_to > chain_max:
+                date_to = chain_max
+            wubook_ceiling = (
+                fields.Date.today()
+                + relativedelta(days=WUBOOK_MAX_DAYS_AHEAD)
+            )
+            if date_to > wubook_ceiling:
+                date_to = wubook_ceiling
+        items = self._compute_flatten_payload_items(
+            date_from, date_to, room_type_ids
+        )
+        if not items:
+            return _("Nothing to export")
+        with self.backend_id.work_on(self._name) as work:
+            adapter = work.component(usage="backend.adapter")
+        adapter.write(
+            int(self.external_id),
+            {"type": "standard", "items": items},
+        )
+        self.write({"sync_date_export": fields.Datetime.now()})
+        return _("Flatten window exported: %s..%s (%d prices)") % (
+            date_from,
+            date_to,
+            len(items),
         )
 
     def resync_import(self):

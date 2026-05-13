@@ -47,4 +47,9 @@ class ChannelWubookPmsRoomTypeExporter(Component):
         )
 
     def _force_binding_creation(self, relation):
+        # Intentionally a no-op: never auto-create room type bindings from
+        # a cascade. Room types must be manually connected through the
+        # ``Connect to Wubook`` wizard (which pre-creates the empty
+        # binding) before any other master that references them is
+        # exported.
         pass

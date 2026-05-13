@@ -124,6 +124,19 @@
         <field name="retry_pattern" eval="{1: 10, 5: 30, 10: 60, 15: 300}" />
     </record>
 
+    <record
+        id="wubook_product_pricelist_export_flattened_job_function"
+        model="queue.job.function"
+    >
+        <field
+            name="model_id"
+            ref="connector_pms_wubook.model_channel_wubook_product_pricelist"
+        />
+        <field name="method">export_flattened</field>
+        <field name="channel_id" ref="connector_pms_wubook.prices" />
+        <field name="retry_pattern" eval="{1: 10, 5: 30, 10: 60, 15: 300}" />
+    </record>
+
 
     <!-- availability plan -->
     <record

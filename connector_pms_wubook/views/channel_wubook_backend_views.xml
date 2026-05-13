@@ -101,6 +101,10 @@
                   string="Export Pricelists"
                 />
                                 <div>
+                                    <field
+                    name="flatten_window_days"
+                    class="oe_inline"
+                  />
                                     <button
                     name="export_pricelists"
                     type="object"

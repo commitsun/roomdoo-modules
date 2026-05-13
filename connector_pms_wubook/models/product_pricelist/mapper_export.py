@@ -14,24 +14,48 @@ class ChannelWubookProductPricelistMapperExport(Component):
 
     _apply_on = "channel.wubook.product.pricelist"
 
-    direct = [
-        ("name", "name"),
-    ]
-
     children = [
         ("channel_wubook_item_ids", "items", "channel.wubook.product.pricelist.item")
     ]
 
+    @mapping
+    def name(self, record):
+        """Only emit ``name`` when it differs from the last value pushed to
+        Wubook (or has never been pushed). The adapter calls
+        ``update_plan_name`` only when ``name`` is present in the payload,
+        so this skip avoids redundant XMLRPC traffic when the export was
+        triggered by item changes via the scheduler.
+        """
+        last = record.wubook_last_synced_name
+        if last and last == record.name:
+            return None
+        return {"name": record.name}
+
     @only_create
     @mapping
     def pricelist_type(self, record):
-        if record.pricelist_type != "daily":
+        if record.pricelist_type != "daily" and not record.wubook_flatten_to_daily:
             raise ValidationError(_("Only 'Daily' pricelists are supported"))
         return {"daily": 1}
 
     @mapping
     def pricelist_plan_type(self, record):
         return {"type": record.wubook_plan_type}
+
+    @mapping
+    def items_flatten(self, record):
+        """For pricelists marked as ``wubook_flatten_to_daily``, replace the
+        normal items mapping by a synthetic list computed on the fly over
+        the configured default window. The child binder mapper is
+        short-circuited to an empty recordset, so this value wins.
+        """
+        if not record.wubook_flatten_to_daily:
+            return None
+        date_from, date_to = record._get_flatten_default_window()
+        if not date_from or not date_to:
+            return {"items": []}
+        items = record._compute_flatten_payload_items(date_from, date_to)
+        return {"items": items}
 
 
 class ChannelWubookProductPricelistChildBinderMapperExport(Component):
@@ -72,6 +96,10 @@ class ChannelWubookProductPricelistChildBinderMapperExport(Component):
         )
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
+        # Flatten pricelists provide their items via the parent mapping
+        # ``items_flatten``; short-circuit the normal child binder flow.
+        if parent.source.wubook_flatten_to_daily:
+            return []
         # TODO: this is always the same on every child binder mapper
         #   except 'rule_ids' try to move it to the parent
         bindings = items.filtered(lambda x: x.backend_id == self.backend_record)

@@ -18,7 +18,6 @@ class ChannelWubookPmsRoomTypeMapperExport(Component):
         ("name", "name"),
         ("occupancy", "occupancy"),
         ("list_price", "price"),
-        ("default_code", "shortname"),
         ("min_price", "min_price"),
         ("max_price", "max_price"),
         ("default_availability", "availability"),
@@ -31,6 +30,36 @@ class ChannelWubookPmsRoomTypeMapperExport(Component):
             "channel.wubook.pms.room.type.board.service",
         ),
     ]
+
+    @mapping
+    def shortname(self, record):
+        # Wubook enforces a 4-char limit on the room shortname; surface a
+        # clear validation error instead of letting WuBook reject the
+        # XMLRPC call with a cryptic "Shortname: max 4 chars please".
+        code = record.default_code or ""
+        if len(code) > 4:
+            raise ValidationError(
+                _(
+                    "Room type '%(name)s' has default code '%(code)s' "
+                    "(%(length)d chars). Wubook accepts a maximum of 4 "
+                    "characters for the room shortname. Please shorten "
+                    "the default code before connecting this room type."
+                )
+                % {
+                    "name": record.display_name,
+                    "code": code,
+                    "length": len(code),
+                }
+            )
+        if not code:
+            raise ValidationError(
+                _(
+                    "Room type '%s' has no default code. Wubook requires "
+                    "a non-empty shortname (up to 4 chars)."
+                )
+                % record.display_name
+            )
+        return {"shortname": code}
 
     @mapping
     def default_board_service(self, record):

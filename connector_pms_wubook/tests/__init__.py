@@ -8,3 +8,5 @@
 # from . import test_product_pricelist
 # from . import test_availability_plan
 # from . import test_folio
+from . import test_master_sync
+from . import test_pricelist_flatten

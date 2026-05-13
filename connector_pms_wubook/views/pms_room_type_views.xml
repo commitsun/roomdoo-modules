@@ -9,6 +9,25 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook/page[@name='connector']">
                 <separator string="Wubook Connector" />
+                <group>
+                    <field name="wubook_connection_state" widget="badge" />
+                    <div>
+                        <button
+                            name="action_open_wubook_connect_wizard"
+                            type="object"
+                            string="Connect to Wubook"
+                            class="btn-primary"
+                            attrs="{'invisible': [('wubook_connection_state', '=', 'connected')]}"
+                        />
+                        <button
+                            name="action_view_wubook_connection"
+                            type="object"
+                            string="Wubook Connection"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('wubook_connection_state', '!=', 'connected')]}"
+                        />
+                    </div>
+                </group>
                 <field name="channel_wubook_bind_ids" nolabel="1">
                     <tree editable="bottom">
                         <field
