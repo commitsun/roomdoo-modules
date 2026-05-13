@@ -138,6 +138,16 @@ class ChannelWubookBackend(models.Model):
         column1="backend_id",
         column2="room_type_id",
     )
+    flatten_window_days = fields.Integer(
+        string="Flatten Forward Window (days)",
+        default=540,
+        help=(
+            "Forward window (in days from today) used when exporting a pricelist "
+            "marked as 'Flatten to Daily on Wubook' triggered by a change on its "
+            "own rules. The actual end date is capped by the latest dated rule "
+            "found on the parent chain."
+        ),
+    )
 
     def import_pricelists(self):
         if self.user_id:
@@ -362,5 +372,13 @@ class ChannelWubookBackend(models.Model):
         for i in range(0, interval_sec, int(interval_sec / count)):
             eta = fields.Datetime.add(now, seconds=i)
             self.with_delay(eta=eta)._scheduler_export_avail()
-        self._scheduler_export_rules()
-        self._scheduler_export_pricelist_items()
+        # Both schedulers below are kept defined for manual / one-off use,
+        # but the cron no longer calls them: rule and pricelist-item
+        # changes now enqueue export jobs via transactional coalescence
+        # in their dedicated listeners (see ``product_pricelist_item`` and
+        # ``pms_availability_plan_rule``). This pushes changes immediately
+        # instead of waiting for the next cron tick and avoids the
+        # redundant ``update_plan_name`` / ``rplan_rename_rplan`` traffic
+        # the cron-driven full re-export used to generate.
+        # self._scheduler_export_rules()
+        # self._scheduler_export_pricelist_items()

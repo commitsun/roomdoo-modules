@@ -134,6 +134,17 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
             ],
         )
 
+    @api.depends(
+        "room_ids.capacity",
+        "room_ids.pms_property_id",
+        "backend_id.pms_property_id",
+    )
     def _compute_occupancy(self):
         for record in self:
-            record.occupancy = min(record.room_ids.mapped("capacity"), default=1)
+            property_rooms = record.room_ids.filtered(
+                lambda r: r.pms_property_id
+                == record.backend_id.pms_property_id
+            )
+            record.occupancy = min(
+                property_rooms.mapped("capacity"), default=1
+            )

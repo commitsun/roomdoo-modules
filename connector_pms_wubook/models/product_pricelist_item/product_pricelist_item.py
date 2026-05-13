@@ -40,11 +40,15 @@ class ProductPricelistItem(models.Model):
                 rec.wubook_item_type = False
 
     def wubook_date_valid(self):
-        # TODO: config virtual pricelists syncr
         if not self.date_start_consumption:
             return False
-        # Wubook does not allow to update records older than 2 days ago
-        return (fields.Date.today() - self.date_start_consumption).days <= 2
+        today = fields.Date.today()
+        age = (today - self.date_start_consumption).days
+        # Wubook rejects updates older than 2 days. It also refuses dates
+        # more than ~2 years (730 days) in the future — surface both bounds
+        # so the mapper's ``skip_item`` filters them out instead of letting
+        # the XMLRPC call fail.
+        return -730 <= age <= 2
 
     def _write(self, vals):
         cr = self._cr

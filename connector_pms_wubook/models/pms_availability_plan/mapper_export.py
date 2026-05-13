@@ -3,6 +3,7 @@
 
 
 from odoo.addons.component.core import Component
+from odoo.addons.connector.components.mapper import mapping
 
 
 class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
@@ -11,10 +12,6 @@ class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
 
     _apply_on = "channel.wubook.pms.availability.plan"
 
-    direct = [
-        ("name", "name"),
-    ]
-
     children = [
         (
             "channel_wubook_rule_ids",
@@ -22,6 +19,19 @@ class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
             "channel.wubook.pms.availability.plan.rule",
         )
     ]
+
+    @mapping
+    def name(self, record):
+        """Only emit ``name`` when it differs from the last value pushed to
+        Wubook (or has never been pushed). The adapter calls
+        ``rplan_rename_rplan`` only when ``name`` is present, so this skip
+        avoids redundant XMLRPC traffic when the export was triggered by
+        rule changes via the scheduler.
+        """
+        last = record.wubook_last_synced_name
+        if last and last == record.name:
+            return None
+        return {"name": record.name}
 
 
 class ChannelWubookPmsAvailabilityPlanChildBinderMapperExport(Component):

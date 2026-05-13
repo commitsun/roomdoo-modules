@@ -29,8 +29,12 @@ class PmsRoomTypeAvailabilityRule(models.Model):
     )
 
     def wubook_date_valid(self):
-        # Wubook does not allow to update records older than 2 days ago
-        return (fields.Date.today() - self.date).days <= 2
+        if not self.date:
+            return False
+        age = (fields.Date.today() - self.date).days
+        # Lower bound: WuBook rejects updates older than 2 days.
+        # Upper bound: WuBook also rejects dates more than ~2 years ahead.
+        return -730 <= age <= 2
 
     inconsistent_rules = fields.Many2many(
         readonly=True,

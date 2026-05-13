@@ -25,6 +25,17 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         inverse_name="channel_wubook_availability_plan_id",
     )
 
+    wubook_last_synced_name = fields.Char(
+        string="Last name pushed to Wubook",
+        readonly=True,
+        help=(
+            "Snapshot of the plan name at the last successful export. "
+            "Used by the mapper to skip the ``rplan_rename_rplan`` XMLRPC "
+            "call when the name has not actually changed (the export is "
+            "otherwise triggered by rule changes via the scheduler)."
+        ),
+    )
+
     def _is_synced_export(self):
         synced = super()._is_synced_export()
         if not synced:

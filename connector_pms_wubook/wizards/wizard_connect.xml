@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_wubook_connect_wizard_form" model="ir.ui.view">
+        <field name="name">channel.wubook.connect.wizard.form</field>
+        <field name="model">channel.wubook.connect.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Connect to Wubook">
+                <sheet>
+                    <group>
+                        <field name="res_model" invisible="1" />
+                        <field name="res_id" invisible="1" />
+                        <field name="binding_model" invisible="1" />
+                        <field name="record_display_name" readonly="1" string="Odoo record" />
+                        <field name="backend_id" options="{'no_create': True}" />
+                        <field name="mode" widget="radio" />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'existing')]}">
+                        <field
+                            name="selected_candidate_id"
+                            options="{'no_create': True, 'no_open': True}"
+                            domain="[('wizard_id', '=', id)]"
+                            attrs="{'required': [('mode', '=', 'existing')]}"
+                        />
+                        <field name="candidate_ids" invisible="1" />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'manual')]}">
+                        <field
+                            name="manual_external_id"
+                            attrs="{'required': [('mode', '=', 'manual')]}"
+                        />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'new')]}">
+                        <div>
+                            <p>
+                                A new Wubook record will be created using the data of
+                                this Odoo record. The binding is created automatically.
+                            </p>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button
+                        name="action_connect"
+                        type="object"
+                        string="Connect"
+                        class="btn-primary"
+                    />
+                    <button string="Cancel" special="cancel" class="btn-secondary" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

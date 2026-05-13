@@ -12,8 +12,10 @@ class ChannelWubookPmsRoomTypeBinder(Component):
 
     _apply_on = "channel.wubook.pms.room.type"
 
-    _internal_alt_id = ("default_code", "pms_property_ids")
-    _external_alt_id = "shortname"
+    # Auto-matching deliberately disabled: phase 3 enforces a manual
+    # "Connect to Wubook" wizard flow consistent across all masters.
+    # _internal_alt_id = ("default_code", "pms_property_ids")
+    # _external_alt_id = "shortname"
 
     def _get_internal_record_alt(self, model_name, values):
         pms_property_id = values["pms_property_ids"][0][1]
