@@ -18,49 +18,47 @@ class ChannelAdapter(AbstractComponent):
             yield lst[i : i + n]
 
     def _filter(self, values, domain=None):
-        # TODO support for domains with 'or' clauses
-        # TODO refactor and optimize
+        """Filter a list of dict ``values`` against a simple AND domain.
+
+        Only flat AND domains with the standard scalar operators
+        (``=``, ``!=``, ``>``, ``<``, ``>=``, ``<=``) and the membership
+        operators (``in``, ``not in``) are supported. ``or`` clauses are
+        not supported (mirrors the original behavior).
+        """
         if not domain:
             return values
 
-        operations = {
-            "=": lambda x, y: x != y,
-            "!=": lambda x, y: x == y,
-            ">": lambda x, y: x <= y,
-            "<": lambda x, y: x >= y,
-            ">=": lambda x, y: x < y,
-            "<=": lambda x, y: x > y,
+        scalar_ops = {
+            "=": lambda x, y: x == y,
+            "!=": lambda x, y: x != y,
+            ">": lambda x, y: x > y,
+            "<": lambda x, y: x < y,
+            ">=": lambda x, y: x >= y,
+            "<=": lambda x, y: x <= y,
         }
 
-        values_filtered = []
-        for record in values:
-            for elem in domain:
-                k, op, v = elem
-                if k not in record:
-                    raise ValidationError(_("Key %s does not exist") % k)
-                if operations[op](record[k], v):
-                    break
-                elif op == "in":
-                    if not isinstance(v, (tuple, list)):
-                        raise ValidationError(
-                            _("The value %s should be a list or tuple") % v
-                        )
-                    if record[k] not in v:
-                        break
-                elif op == "not in":
-                    if not isinstance(v, (tuple, list)):
-                        raise ValidationError(
-                            _("The value %s should be a list or tuple") % v
-                        )
-                    if record[k] in v:
-                        break
-                else:
-                    break
-                    # raise NotImplementedError("Operator '%s' not supported" % op)
-            else:
-                values_filtered.append(record)
+        def _match(record, clause):
+            field, op, value = clause
+            if field not in record:
+                raise ValidationError(_("Key %s does not exist") % field)
+            actual = record[field]
+            if op in scalar_ops:
+                return scalar_ops[op](actual, value)
+            if op == "in":
+                if not isinstance(value, list | tuple):
+                    raise ValidationError(
+                        _("The value %s should be a list or tuple") % value
+                    )
+                return actual in value
+            if op == "not in":
+                if not isinstance(value, list | tuple):
+                    raise ValidationError(
+                        _("The value %s should be a list or tuple") % value
+                    )
+                return actual not in value
+            raise ValidationError(_("Operator %s not supported") % op)
 
-        return values_filtered
+        return [r for r in values if all(_match(r, c) for c in domain)]
 
     def _extract_domain_clauses(self, domain, fields):
         if not isinstance(fields, (tuple, list)):
@@ -74,7 +72,7 @@ class ChannelAdapter(AbstractComponent):
     def _convert_format(self, elem, mapper, path=""):
         if isinstance(elem, dict):
             for k, v in elem.items():
-                current_path = "{}/{}".format(path, k)
+                current_path = f"{path}/{k}"
                 if v == "":
                     elem[k] = None
                     continue

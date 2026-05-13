@@ -28,11 +28,13 @@ class BinderCustom(AbstractComponent):
         :type binding: int
         """
         # Prevent False, None, or "", but not 0
-        assert (
-            external_id or external_id == 0
-        ) and binding, "external_id or binding missing, " "got: %s, %s" % (
-            external_id,
-            binding,
+        assert (external_id or external_id == 0) and binding, (
+            "external_id or binding missing, "
+            "got: %s, %s"
+            % (
+                external_id,
+                binding,
+            )
         )
         # avoid to trigger the export when we modify the `external_id`
         now_fmt = fields.Datetime.now()
@@ -83,7 +85,7 @@ class BinderCustom(AbstractComponent):
             [
                 (self._odoo_field, "=", relation.id),
                 (self._backend_field, "=", self.backend_record.id),
-                ('no_export', '=', False),
+                ("no_export", "=", False),
             ]
         )
         if not binding:
@@ -236,19 +238,13 @@ class BinderCustom(AbstractComponent):
                     _logger.debug("%d already binded to Backend", binding)
                 # return binding
             else:
-                import_mapper = self.component(usage="import.mapper")
-                mapper_internal_data = import_mapper.map_record(record)
-
-                binding_ext_fields = mapper_internal_data._mapper.get_target_fields(
-                    mapper_internal_data, fields=self.model._model_fields
-                )
-                importer = self.component(usage="direct.record.importer")
-                importer.run(
-                    external_id,
-                    external_data=record,
-                    external_fields=binding_ext_fields,
-                )
-                binding = self.to_internal(external_id)
+                # We have the Odoo record (``relation``) and a matching
+                # external record; just create the binding linking them.
+                # Avoid the heavyweight import path (which relied on a
+                # ``self.model._model_fields`` attribute that bindings do
+                # not declare).
+                binding = self.wrap_record(relation, force=True)
+                self.bind(external_id, binding, export=True)
 
             if not binding:
                 raise InvalidDataError(
@@ -278,7 +274,7 @@ class BinderCustom(AbstractComponent):
                 [
                     (self._odoo_field, "=", binding.id),
                     (self._backend_field, "=", self.backend_record.id),
-                    ('no_export', '=', False),
+                    ("no_export", "=", False),
                 ]
             )
             if not binding:
@@ -286,6 +282,7 @@ class BinderCustom(AbstractComponent):
             binding.ensure_one()
             return binding[self._external_field]
         return binding[self._external_field]
+
 
 # TODO: naming the methods more intuitively
 # TODO: unify both methods, they have a lot of common code
