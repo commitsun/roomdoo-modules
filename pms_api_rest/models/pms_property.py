@@ -836,39 +836,50 @@ class PmsProperty(models.Model):
 
     @api.model
     def pms_cron_rule_push(self):
-        neobookings_user = self.env["res.users"].search(
-            [("pms_api_client", "=", True)], limit=1
-        )
-        neobookings_property_ids = neobookings_user.pms_property_ids.ids
+        api_clients = self.env["res.users"].search([("pms_api_client", "=", True)])
+        if not api_clients:
+            return
+        allowed_property_ids = api_clients.mapped("pms_property_ids").ids
         rules_to_export = self.env["pms.availability.plan.rule"].search(
             [
                 ("date", ">=", fields.Date.today()),
-                ("pms_property_id", "in", neobookings_property_ids),
+                ("pms_property_id", "in", allowed_property_ids),
                 ("write_date", ">", fields.Datetime.now() - timedelta(minutes=10)),
             ]
         )
-        pms_properties = rules_to_export.mapped("pms_property_id")
-        for pms_property in pms_properties:
-            neobookings_property = pms_property
-            ota_neo_settings = neobookings_property.ota_property_settings_ids.filtered(
-                lambda r: "eobookings" in r.agency_id.name
+        if not rules_to_export:
+            return
+        for client in api_clients:
+            client_properties = rules_to_export.mapped("pms_property_id").filtered(
+                lambda p, _c=client: p in _c.pms_property_ids
             )
-            neobookings_availability_plan_id = ota_neo_settings.main_avail_plan_id.id
-            items_to_upload = rules_to_export.filtered(
-                lambda r: r.pms_property_id.id == pms_property.id
-                and r.availability_plan_id.id == neobookings_availability_plan_id
-            )
-            payload, endpoint = neobookings_property.get_payload_rules(
-                rules=items_to_upload, client=neobookings_user
-            )
-            if payload:
-                response = neobookings_property.pms_api_push_payload(
-                    payload=payload, endpoint=endpoint, client=neobookings_user
+            for pms_property in client_properties:
+                ota_settings = pms_property.ota_property_settings_ids.filtered(
+                    lambda r, _c=client: r.agency_id == _c.partner_id
+                )
+                if not ota_settings or not ota_settings.main_avail_plan_id:
+                    continue
+                availability_plan_id = ota_settings.main_avail_plan_id.id
+                items_to_upload = rules_to_export.filtered(
+                    lambda r, _ppid=pms_property.id, _apid=availability_plan_id: (
+                        r.pms_property_id.id == _ppid
+                        and r.availability_plan_id.id == _apid
+                    )
+                )
+                if not items_to_upload:
+                    continue
+                payload, endpoint = pms_property.get_payload_rules(
+                    rules=items_to_upload, client=client
+                )
+                if not payload:
+                    continue
+                response = pms_property.pms_api_push_payload(
+                    payload=payload, endpoint=endpoint, client=client
                 )
                 self.env["pms.api.log"].sudo().create(
                     {
-                        "pms_property_id": neobookings_property.id,
-                        "client_id": neobookings_user.id,
+                        "pms_property_id": pms_property.id,
+                        "client_id": client.id,
                         "request": payload,
                         "response": str(response),
                         "status": "success" if response.ok else "error",
