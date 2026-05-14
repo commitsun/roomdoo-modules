@@ -2759,6 +2759,13 @@ class PmsFolioService(Component):
         )
         if not room_type_ids or not api_clients:
             return False
+        # Flush pending recomputes (pms.availability.real_avail and the related
+        # pms.availability.plan.rule.plan_avail) before pushing. Without this,
+        # a folio POST/PUT can export stale avail values from the same
+        # transaction that just created/modified reservation lines, and the
+        # bad value gets persisted in the stored compute field — observed
+        # cause of the Galería Coruña overbooking (ADG0006249, 25/02/2026).
+        self.env.flush_all()
         for room_type_id in room_type_ids:
             pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
             pms_api_check_access(user=self.env.user, records=pms_property)
