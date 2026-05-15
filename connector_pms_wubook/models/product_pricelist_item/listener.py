@@ -79,7 +79,16 @@ def _flush_regular_pricelist_buffer(env):
         binding = binding.exists()
         if not binding:
             continue
-        binding.with_delay().export_record(binding.backend_id, binding.odoo_id)
+        # Coarse identity_key per binding so a burst of changes spanning
+        # several transactions (e.g. an API import that commits per
+        # record) collapses to at most one PENDING job per binding in
+        # queue_job. Once that job moves to ``started``, a follow-up
+        # change can still enqueue a fresh job — eventual consistency
+        # without flooding the queue.
+        binding.with_delay(
+            identity_key="wubook_export_record:%s:%s"
+            % (binding._name, binding.id)
+        ).export_record(binding.backend_id, binding.odoo_id)
 
 
 class ChannelWubookProductPricelistItemListener(Component):

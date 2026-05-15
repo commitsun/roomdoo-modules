@@ -364,18 +364,15 @@ class ChannelWubookBackend(models.Model):
         IF this is called using Odoo Cron job, the interval must be
         the same as the interval execution defined in job
         """
-        interval_sec = interval * 60
-        now = fields.Datetime.now()
-        for i in range(0, interval_sec, int(interval_sec / count)):
-            eta = fields.Datetime.add(now, seconds=i)
-            self.with_delay(eta=eta)._scheduler_export_avail()
-        # Both schedulers below are kept defined for manual / one-off use,
-        # but the cron no longer calls them: rule and pricelist-item
-        # changes now enqueue export jobs via transactional coalescence
-        # in their dedicated listeners (see ``product_pricelist_item`` and
-        # ``pms_availability_plan_rule``). This pushes changes immediately
-        # instead of waiting for the next cron tick and avoids the
-        # redundant ``update_plan_name`` / ``rplan_rename_rplan`` traffic
-        # the cron-driven full re-export used to generate.
+        # All three legacy schedulers are kept defined on the model for
+        # manual / one-off use (e.g. a "Force re-sync" button or a
+        # recovery script), but the cron no longer calls any of them:
+        # availability, rule and pricelist-item changes all enqueue
+        # export jobs via transactional coalescence in their dedicated
+        # listeners (see ``pms_availability``, ``pms_availability_plan_rule``,
+        # ``product_pricelist_item``). Each listener uses queue_job's
+        # ``identity_key`` so bursts of changes across many transactions
+        # collapse to at most one pending job per affected binding.
+        # self._scheduler_export_avail()
         # self._scheduler_export_rules()
         # self._scheduler_export_pricelist_items()
