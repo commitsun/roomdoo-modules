@@ -613,6 +613,94 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
         trap.assert_jobs_count(0)
 
 
+class TestExportRecordIdentityKey(TransactionComponentCase):
+    """Bursts of changes that span several transactions must collapse
+    to at most one PENDING ``export_record`` job per binding via
+    queue_job's ``identity_key``. We verify the listener wires the key
+    correctly; queue_job itself enforces the dedup at insert time.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        _make_backend_environment(cls)
+        cls.room_type_a_binding = cls.env[
+            "channel.wubook.pms.room.type"
+        ].create({
+            "odoo_id": cls.room_type_a.id,
+            "backend_id": cls.backend.id,
+            "external_id": 111,
+        })
+        cls.pricelist = cls.env["product.pricelist"].create(
+            {"name": "Identity PL", "company_id": cls.company.id}
+        )
+        cls.pricelist_binding = cls.env[
+            "channel.wubook.product.pricelist"
+        ].create({
+            "odoo_id": cls.pricelist.id,
+            "backend_id": cls.backend.id,
+            "external_id": 9001,
+        })
+        cls.plan = cls.env["pms.availability.plan"].create(
+            {"name": "Identity Plan"}
+        )
+        cls.plan_binding = cls.env[
+            "channel.wubook.pms.availability.plan"
+        ].create({
+            "odoo_id": cls.plan.id,
+            "backend_id": cls.backend.id,
+            "external_id": 9002,
+        })
+
+    def test_pricelist_item_listener_sets_identity_key(self):
+        item = self.env["product.pricelist.item"].create({
+            "pricelist_id": self.pricelist.id,
+            "applied_on": "0_product_variant",
+            "compute_price": "fixed",
+            "product_id": self.product_a.id,
+            "fixed_price": 50.0,
+            "date_start_consumption": date.today() + timedelta(days=2),
+            "date_end_consumption": date.today() + timedelta(days=2),
+        })
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            item.fixed_price = 99.0
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+        expected_key = "wubook_export_record:%s:%s" % (
+            self.pricelist_binding._name,
+            self.pricelist_binding.id,
+        )
+        trap.assert_enqueued_job(
+            self.pricelist_binding.export_record,
+            args=(self.backend, self.pricelist),
+            properties={"identity_key": expected_key},
+        )
+
+    def test_plan_rule_listener_sets_identity_key(self):
+        rule = self.env["pms.availability.plan.rule"].create({
+            "availability_plan_id": self.plan.id,
+            "room_type_id": self.room_type_a.id,
+            "date": date.today() + timedelta(days=3),
+            "quota": 5,
+            "pms_property_id": self.pms_property.id,
+        })
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            rule.quota = 7
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+        expected_key = "wubook_export_record:%s:%s" % (
+            self.plan_binding._name,
+            self.plan_binding.id,
+        )
+        trap.assert_enqueued_job(
+            self.plan_binding.export_record,
+            args=(self.backend, self.plan),
+            properties={"identity_key": expected_key},
+        )
+
+
 class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
     """When an item change affects a parent pricelist that is itself
     connected as a regular daily pricelist AND has a flatten descendant,
@@ -1219,3 +1307,117 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertEqual(result, {"name": "Renamed Plan"})
+
+
+class TestAvailabilityListener(TransactionComponentCase):
+    """Availability changes (``pms.availability.real_avail`` recomputes
+    after reservation line flips) push to Wubook via the new listener
+    instead of the legacy ``_scheduler_export_avail`` cron. Coalescence
+    per ``(backend × property)`` and identity_key for cross-transaction
+    dedup.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        _make_backend_environment(cls)
+        cls.room_type_a_binding = cls.env[
+            "channel.wubook.pms.room.type"
+        ].create({
+            "odoo_id": cls.room_type_a.id,
+            "backend_id": cls.backend.id,
+            "external_id": 111,
+        })
+        cls.property_avail_binding = cls.env[
+            "channel.wubook.pms.property.availability"
+        ].create({
+            "odoo_id": cls.pms_property.id,
+            "backend_id": cls.backend.id,
+            "external_id": cls.pms_property.id,
+        })
+        cls.d0 = date.today() + timedelta(days=4)
+
+    def _make_avail(self):
+        return self.env["pms.availability"].create({
+            "room_type_id": self.room_type_a.id,
+            "pms_property_id": self.pms_property.id,
+            "date": self.d0,
+        })
+
+    def test_create_enqueues_property_export(self):
+        with trap_jobs() as trap:
+            self._make_avail()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": "wubook_export_property_avail:%s:%s"
+                % (self.backend.id, self.pms_property.id)
+            },
+        )
+
+    def test_write_real_avail_enqueues_one_job(self):
+        avail = self._make_avail()
+        self.env.cr.precommit.run()  # flush creation buffer
+        with trap_jobs() as trap:
+            # ``real_avail`` is computed but stored; write it directly
+            # to simulate the reservation-line-driven recompute.
+            self.env.cr.execute(
+                "UPDATE pms_availability SET real_avail = %s WHERE id = %s",
+                (3, avail.id),
+            )
+            avail.invalidate_recordset(["real_avail"])
+            avail.write({"real_avail": 2})
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+
+    def test_without_property_binding_no_enqueue(self):
+        # Unbind the property
+        self.property_avail_binding.unlink()
+        with trap_jobs() as trap:
+            self._make_avail()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_room_type_not_bound_no_enqueue(self):
+        # Property is bound but a room type without backend binding
+        # must not trigger anything.
+        other_product = self.env["product.product"].create(
+            {"name": "Other prod", "type": "service"}
+        )
+        other_rt = self.env["pms.room.type"].create({
+            "name": "RT-other",
+            "default_code": "RTOT",
+            "class_id": self.room_type_class.id,
+            "product_id": other_product.id,
+            "pms_property_ids": [(6, 0, [self.pms_property.id])],
+        })
+        with trap_jobs() as trap:
+            self.env["pms.availability"].create({
+                "room_type_id": other_rt.id,
+                "pms_property_id": self.pms_property.id,
+                "date": self.d0,
+            })
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_massive_avail_writes_collapse_to_one_job(self):
+        # Five availability rows for different dates → still ONE job
+        # per (backend × property).
+        avails = self.env["pms.availability"].create([
+            {
+                "room_type_id": self.room_type_a.id,
+                "pms_property_id": self.pms_property.id,
+                "date": self.d0 + timedelta(days=i),
+            }
+            for i in range(5)
+        ])
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            for av in avails:
+                av.write({"real_avail": 1})
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+

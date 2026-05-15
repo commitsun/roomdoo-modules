@@ -22,7 +22,13 @@ def _flush_plan_rules_buffer(env):
         binding = binding.exists()
         if not binding:
             continue
-        binding.with_delay().export_record(binding.backend_id, binding.odoo_id)
+        # Coarse identity_key per plan binding so bursts of rule changes
+        # spanning several transactions collapse to at most one PENDING
+        # job per plan in queue_job (eventual consistency, no flood).
+        binding.with_delay(
+            identity_key="wubook_export_record:%s:%s"
+            % (binding._name, binding.id)
+        ).export_record(binding.backend_id, binding.odoo_id)
 
 
 class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
