@@ -8,12 +8,31 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="name" />
+                <field name="description" optional="show" />
                 <field name="source_type" />
                 <field name="doc_type" />
+                <field
+          name="pms_property_ids"
+          widget="many2many_tags"
+          optional="show"
+        />
                 <field name="inject_always" />
                 <field name="vectorize" />
                 <field name="vector_status" />
                 <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- KB Binding tree (embedded in document form) -->
+    <record id="view_bookai_kb_document_binding_tree" model="ir.ui.view">
+        <field name="name">bookai.kb.document.binding.tree</field>
+        <field name="model">bookai.agent.kb.binding</field>
+        <field name="arch" type="xml">
+            <tree string="Agent Bindings" editable="bottom">
+                <field name="agent_id" />
+                <field name="description_override" optional="show" />
+                <field name="active" />
             </tree>
         </field>
     </record>
@@ -36,6 +55,10 @@
                         <h1>
                             <field name="name" placeholder="Document name..." />
                         </h1>
+                        <field
+              name="description"
+              placeholder="Short description for agents..."
+            />
                     </div>
                     <group>
                         <group string="Identity">
@@ -48,6 +71,15 @@
                             <field name="vectorize" />
                             <field name="vector_status" readonly="1" />
                         </group>
+                    </group>
+                    <group string="Property Scope">
+                        <field
+              name="pms_property_ids"
+              widget="many2many_tags"
+              nolabel="1"
+              colspan="2"
+              placeholder="Empty = available for all properties"
+            />
                     </group>
                     <group string="Content">
                         <field
@@ -68,7 +100,11 @@
                     </group>
                     <notebook>
                         <page string="Agents" name="agents">
-                            <field name="agent_ids" widget="many2many_tags" />
+                            <field name="kb_binding_ids">
+                                <tree
+                  ref="pms_bookai.view_bookai_kb_document_binding_tree"
+                />
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

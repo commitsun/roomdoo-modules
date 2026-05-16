@@ -15,6 +15,11 @@ class BookaiKbDocument(models.Model):
     _bookai_webhook_event = "kb_updated"
 
     name = fields.Char(required=True)
+    description = fields.Char(
+        help="Short description of the document. Agents see "
+        "this to know what the document is about. Can be "
+        "overridden per agent in the binding.",
+    )
     source_type = fields.Selection(
         [
             ("markdown", "Markdown"),
@@ -52,14 +57,40 @@ class BookaiKbDocument(models.Model):
         default="not_needed",
     )
 
+    # Property scope (empty = all properties, PMS standard)
+    pms_property_ids = fields.Many2many(
+        "pms.property",
+        "bookai_kb_document_pms_property_rel",
+        "document_id",
+        "property_id",
+        string="Properties",
+        help="Properties this document applies to. "
+        "Empty = available for all properties.",
+    )
+
     # Relations
+    kb_binding_ids = fields.One2many(
+        "bookai.agent.kb.binding",
+        "document_id",
+        string="Agent Bindings",
+    )
     agent_ids = fields.Many2many(
         "bookai.agent",
-        "bookai_agent_kb_document_rel",
-        "document_id",
-        "agent_id",
         string="Agents",
+        compute="_compute_agent_ids",
+        search="_search_agent_ids",
     )
+
+    @api.depends("kb_binding_ids.agent_id", "kb_binding_ids.active")
+    def _compute_agent_ids(self):
+        for rec in self:
+            rec.agent_ids = rec.kb_binding_ids.filtered("active").mapped("agent_id")
+
+    def _search_agent_ids(self, operator, value):
+        bindings = self.env["bookai.agent.kb.binding"].search(
+            [("agent_id", operator, value), ("active", "=", True)]
+        )
+        return [("id", "in", bindings.document_id.ids)]
 
     @api.onchange("source_type")
     def _onchange_source_type(self):

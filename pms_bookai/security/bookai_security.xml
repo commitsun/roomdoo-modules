@@ -41,7 +41,7 @@
         <field name="model_id" ref="model_bookai_kb_document" />
         <field
       name="domain_force"
-    >[('agent_ids.allowed_user_ids', 'in', user.id)]</field>
+    >[('kb_binding_ids.agent_id.allowed_user_ids', 'in', user.id)]</field>
         <field name="groups" eval="[(4, ref('group_bookai_user'))]" />
         <field name="perm_read" eval="True" />
         <field name="perm_write" eval="False" />

@@ -4,6 +4,7 @@ from . import bookai_wa_phone
 from . import bookai_agent
 from . import bookai_agent_audit_log
 from . import bookai_agent_tool_binding
+from . import bookai_agent_kb_binding
 from . import bookai_execution
 from . import bookai_execution_step
 from . import bookai_agent_usage

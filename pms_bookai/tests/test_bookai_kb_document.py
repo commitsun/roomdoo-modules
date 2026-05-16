@@ -51,8 +51,10 @@ class TestBookaiKbDocument(TestBookaiCommon):
             {
                 "name": "Del Doc",
                 "source_type": "markdown",
-                "agent_ids": [(4, self.agent.id)],
             }
+        )
+        self.env["bookai.agent.kb.binding"].create(
+            {"agent_id": self.agent.id, "document_id": doc.id}
         )
         doc_id = doc.id
         agent_id = self.agent.id
