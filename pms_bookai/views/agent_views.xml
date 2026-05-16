@@ -34,6 +34,22 @@
         </field>
     </record>
 
+    <!-- Agent KB Binding tree (embedded) -->
+    <record id="view_bookai_agent_kb_binding_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.kb.binding.tree</field>
+        <field name="model">bookai.agent.kb.binding</field>
+        <field name="arch" type="xml">
+            <tree string="KB Bindings" editable="bottom">
+                <field name="document_id" domain="[('active', '=', True)]" />
+                <field name="doc_type" />
+                <field name="source_type" optional="hide" />
+                <field name="document_description" optional="show" />
+                <field name="description_override" optional="show" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
     <!-- Form -->
     <record id="view_bookai_agent_form" model="ir.ui.view">
         <field name="name">bookai.agent.form</field>
@@ -90,7 +106,11 @@
                             <field name="description" nolabel="1" />
                         </page>
                         <page string="Knowledge Base" name="kb">
-                            <field name="kb_document_ids" widget="many2many_tags" />
+                            <field name="kb_binding_ids">
+                                <tree
+                  ref="pms_bookai.view_bookai_agent_kb_binding_tree"
+                />
+                            </field>
                         </page>
                         <page string="Access Control" name="access">
                             <group string="Layer 1 — Who can invoke?">

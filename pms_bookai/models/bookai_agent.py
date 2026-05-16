@@ -36,7 +36,7 @@ class BookaiAgent(models.Model):
         for rec in self:
             rec.tool_count = len(rec.tool_binding_ids)
             rec.allowed_agent_count = len(rec.allowed_agent_ids)
-            rec.kb_document_count = len(rec.kb_document_ids)
+            rec.kb_document_count = len(rec.kb_binding_ids)
 
     # -----------------------------------------------------------------
     # LLM
@@ -66,15 +66,32 @@ class BookaiAgent(models.Model):
     )
 
     # -----------------------------------------------------------------
-    # Knowledge Base
+    # Knowledge Base (via binding)
     # -----------------------------------------------------------------
+    kb_binding_ids = fields.One2many(
+        "bookai.agent.kb.binding",
+        "agent_id",
+        string="KB Bindings",
+    )
     kb_document_ids = fields.Many2many(
         "bookai.kb.document",
-        "bookai_agent_kb_document_rel",
-        "agent_id",
-        "document_id",
         string="KB Documents",
+        compute="_compute_kb_document_ids",
+        search="_search_kb_document_ids",
     )
+
+    @api.depends("kb_binding_ids.document_id", "kb_binding_ids.active")
+    def _compute_kb_document_ids(self):
+        for rec in self:
+            rec.kb_document_ids = rec.kb_binding_ids.filtered("active").mapped(
+                "document_id"
+            )
+
+    def _search_kb_document_ids(self, operator, value):
+        bindings = self.env["bookai.agent.kb.binding"].search(
+            [("document_id", operator, value), ("active", "=", True)]
+        )
+        return [("id", "in", bindings.agent_id.ids)]
 
     # -----------------------------------------------------------------
     # Capa 1 — ¿Quién puede invocar al agente?

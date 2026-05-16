@@ -121,7 +121,9 @@ class TestBookaiAgent(TestBookaiCommon):
         self.env["bookai.agent.tool.binding"].create(
             {"agent_id": agent.id, "tool_id": self.tool_sdk.id}
         )
-        agent.kb_document_ids = [(4, self.kb_doc.id)]
+        self.env["bookai.agent.kb.binding"].create(
+            {"agent_id": agent.id, "document_id": self.kb_doc.id}
+        )
         agent2 = self._create_agent(technical_name="counts-sub")
         agent.allowed_agent_ids = [(4, agent2.id)]
         agent.invalidate_recordset()
