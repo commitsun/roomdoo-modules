@@ -86,8 +86,7 @@ def _flush_regular_pricelist_buffer(env):
         # change can still enqueue a fresh job — eventual consistency
         # without flooding the queue.
         binding.with_delay(
-            identity_key="wubook_export_record:%s:%s"
-            % (binding._name, binding.id)
+            identity_key=f"wubook_export_record:{binding._name}:{binding.id}"
         ).export_record(binding.backend_id, binding.odoo_id)
 
 
@@ -137,9 +136,7 @@ class ChannelWubookProductPricelistItemListener(Component):
         if _REGULAR_PRICELIST_BUFFER_KEY not in data:
             data[_REGULAR_PRICELIST_BUFFER_KEY] = {}
             env = self.env
-            cr.precommit.add(
-                lambda env=env: _flush_regular_pricelist_buffer(env)
-            )
+            cr.precommit.add(lambda env=env: _flush_regular_pricelist_buffer(env))
         data[_REGULAR_PRICELIST_BUFFER_KEY].setdefault(binding.id, binding)
 
     def _enqueue_pricelist_exports(self, record, date_from=None, date_to=None):
@@ -157,22 +154,37 @@ class ChannelWubookProductPricelistItemListener(Component):
         * Flatten descendants of the pricelist: buffer flatten export
           scoped to the changed item's date range and to the room type
           tied to ``product_id`` (or "all" if undeterminable).
+
+        Property scoping: an item may declare ``pms_property_ids`` to
+        restrict where it applies. When it does, only bindings whose
+        backend covers one of those properties get the export. An empty
+        ``pms_property_ids`` means the item applies globally, so every
+        binding is enqueued.
         """
         pricelist = record.pricelist_id
         if not pricelist:
             return
+
+        item_property_ids = set(record.pms_property_ids.ids)
+
+        def _binding_in_scope(binding):
+            if not item_property_ids:
+                return True
+            return binding.backend_id.pms_property_id.id in item_property_ids
 
         # Own bindings
         if pricelist.wubook_flatten_to_daily:
             for binding in pricelist.channel_wubook_bind_ids:
                 if not binding.external_id:
                     continue
-                self._buffer_flatten_export(
-                    binding, None, None, _ALL_ROOM_TYPES
-                )
+                if not _binding_in_scope(binding):
+                    continue
+                self._buffer_flatten_export(binding, None, None, _ALL_ROOM_TYPES)
         else:
             for binding in pricelist.channel_wubook_bind_ids:
                 if not binding.external_id:
+                    continue
+                if not _binding_in_scope(binding):
                     continue
                 self._buffer_regular_export(binding)
 
@@ -182,13 +194,13 @@ class ChannelWubookProductPricelistItemListener(Component):
             return
         item_dfrom = record.date_start_consumption if not date_from else date_from
         item_dto = record.date_end_consumption if not date_to else date_to
-        room_type = (
-            record.product_id.room_type_id if record.product_id else False
-        )
+        room_type = record.product_id.room_type_id if record.product_id else False
         affected_room_type_id = room_type.id if room_type else _ALL_ROOM_TYPES
         for descendant in descendants:
             for binding in descendant.channel_wubook_bind_ids:
                 if not binding.external_id:
+                    continue
+                if not _binding_in_scope(binding):
                     continue
                 self._buffer_flatten_export(
                     binding, item_dfrom, item_dto, affected_room_type_id

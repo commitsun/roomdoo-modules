@@ -98,9 +98,16 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
         plan = record.availability_plan_id
         if not plan:
             return
+        rule_property_id = record.pms_property_id.id
         for binding in plan.channel_wubook_bind_ids:
             if not binding.external_id:
                 # The plan has not been connected yet on this backend.
+                continue
+            # The plan can be global (shared by N properties) and own
+            # one binding per backend. The rule belongs to a single
+            # property, so only the binding whose backend covers that
+            # property needs the push.
+            if binding.backend_id.pms_property_id.id != rule_property_id:
                 continue
             self._buffer_plan_export(binding)
 
