@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#10b981"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">PI</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#3b82f6"/>
+  <g fill="white">
+    <rect x="34" y="26" width="60" height="86" rx="3"/>
+  </g>
+  <g fill="#3b82f6">
+    <rect x="42" y="36" width="11" height="11" rx="1"/>
+    <rect x="59" y="36" width="11" height="11" rx="1"/>
+    <rect x="76" y="36" width="11" height="11" rx="1"/>
+    <rect x="42" y="56" width="11" height="11" rx="1"/>
+    <rect x="59" y="56" width="11" height="11" rx="1"/>
+    <rect x="76" y="56" width="11" height="11" rx="1"/>
+    <rect x="42" y="76" width="11" height="11" rx="1"/>
+    <rect x="76" y="76" width="11" height="11" rx="1"/>
+    <rect x="58" y="92" width="13" height="20" rx="1"/>
+  </g>
 </svg>

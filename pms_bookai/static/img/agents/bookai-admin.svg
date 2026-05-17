@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#6366f1"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">AD</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#475569"/>
+  <path d="M30 96 L60 66 C54 50 60 34 76 28 C84 25 94 26 100 32 L84 48 L92 56 L108 40 C114 46 115 56 112 64 C106 80 90 86 74 80 L44 110 Z" fill="white" stroke="white" stroke-width="3" stroke-linejoin="round"/>
 </svg>

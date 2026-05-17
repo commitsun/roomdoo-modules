@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#7c3aed"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">SR</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#334155"/>
+  <path d="M64 22 L98 36 V70 C98 88 84 102 64 108 C44 102 30 88 30 70 V36 Z" fill="white"/>
+  <path d="M48 66 L60 78 L82 52" stroke="#334155" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
