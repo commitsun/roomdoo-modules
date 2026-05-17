@@ -35,7 +35,7 @@ class BookaiAgent(models.Model):
     def _compute_counts(self):
         for rec in self:
             rec.tool_count = len(rec.tool_binding_ids)
-            rec.allowed_agent_count = len(rec.allowed_agent_ids)
+            rec.allowed_agent_count = len(rec.delegation_ids)
             rec.kb_document_count = len(rec.kb_binding_ids)
 
     # -----------------------------------------------------------------
@@ -130,15 +130,48 @@ class BookaiAgent(models.Model):
         help="For external_guest: only guests of these properties. "
         "Empty = all properties.",
     )
+    delegation_ids = fields.One2many(
+        "bookai.agent.delegation",
+        "agent_id",
+        string="Delegations",
+    )
     allowed_agent_ids = fields.Many2many(
         "bookai.agent",
-        "bookai_agent_allowed_agents_rel",
-        "agent_id",
-        "allowed_agent_id",
         string="Can Invoke Agents",
+        compute="_compute_allowed_agent_ids",
+        inverse="_inverse_allowed_agent_ids",
+        search="_search_allowed_agent_ids",
         help="Agents this agent can delegate to. "
         "Empty = no agent-to-agent restriction.",
     )
+
+    @api.depends("delegation_ids.delegate_agent_id", "delegation_ids.active")
+    def _compute_allowed_agent_ids(self):
+        for rec in self:
+            rec.allowed_agent_ids = rec.delegation_ids.filtered("active").mapped(
+                "delegate_agent_id"
+            )
+
+    def _inverse_allowed_agent_ids(self):
+        Delegation = self.env["bookai.agent.delegation"]
+        for rec in self:
+            existing = rec.delegation_ids.mapped("delegate_agent_id")
+            target = rec.allowed_agent_ids
+            to_remove = rec.delegation_ids.filtered(
+                lambda d, target=target: d.delegate_agent_id not in target
+            )
+            if to_remove:
+                to_remove.unlink()
+            for delegate in target - existing:
+                Delegation.create(
+                    {"agent_id": rec.id, "delegate_agent_id": delegate.id}
+                )
+
+    def _search_allowed_agent_ids(self, operator, value):
+        delegations = self.env["bookai.agent.delegation"].search(
+            [("delegate_agent_id", operator, value), ("active", "=", True)]
+        )
+        return [("id", "in", delegations.agent_id.ids)]
 
     # -----------------------------------------------------------------
     # Capa 2 — ¿Con qué identidad opera?
