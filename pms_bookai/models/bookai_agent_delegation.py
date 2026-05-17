@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class BookaiAgentDelegation(models.Model):
@@ -48,3 +48,34 @@ class BookaiAgentDelegation(models.Model):
             "An agent cannot delegate to itself.",
         ),
     ]
+
+    # ------------------------------------------------------------------
+    # CRUD — fan out to parent agent's webhook so BookAI reloads.
+    # ------------------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._notify_agent_webhook()
+        return records
+
+    def write(self, vals):
+        if "agent_id" in vals:
+            old_agents = self.mapped("agent_id")
+            result = super().write(vals)
+            new_agents = self.mapped("agent_id")
+            (old_agents | new_agents)._notify_bookai_webhook("upsert")
+        else:
+            result = super().write(vals)
+            self._notify_agent_webhook()
+        return result
+
+    def unlink(self):
+        agents = self.mapped("agent_id")
+        result = super().unlink()
+        agents._notify_bookai_webhook("upsert")
+        return result
+
+    def _notify_agent_webhook(self):
+        agents = self.mapped("agent_id")
+        if agents:
+            agents._notify_bookai_webhook("upsert")
