@@ -353,6 +353,130 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
             "Invoice 50€ should be paid (sole remaining invoice).",
         )
 
+    def test_partial_invoice_does_not_steal_pending_payment(self):
+        """Bug fix: when the folio still has lines pending invoicing,
+        Tier 1 must NOT kick in. A payment collected for a future invoice
+        (e.g. tourist tax invoiced at night) must not be reconciled with
+        the current invoice."""
+        res1 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = res1.folio_id
+        self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now() + timedelta(days=1),
+                "checkout": datetime.now() + timedelta(days=3),
+                "adults": 2,
+                "folio_id": folio.id,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        # Invoice only res1 (25€). res2 (50€) stays pending → folio is not
+        # fully invoiced.
+        res1_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res1 and not ln.display_type
+        )
+        invoice1 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res1_lines}
+        )
+
+        # Payment of 50€ collected up-front for the future invoice (res2).
+        payment = self.env["account.payment"].create(
+            {
+                "payment_type": "inbound",
+                "payment_method_id": self.payment_method_manual_in.id,
+                "journal_id": self.payment_journal.id,
+                "amount": 50,
+                "currency_id": folio.currency_id.id,
+                "partner_id": folio.partner_id.id,
+                "folio_ids": [(4, folio.id)],
+            }
+        )
+        payment.action_post()
+        invoice1.action_post()
+
+        self.assertIn(
+            folio.invoice_status,
+            ("to_invoice", "to_confirm"),
+            "Folio must still have lines pending invoicing for this scenario.",
+        )
+        self.assertEqual(
+            invoice1.payment_state,
+            "not_paid",
+            "Tier 1 must not steal payments meant for pending invoices.",
+        )
+
+    def test_partial_invoice_exact_match_reconciles(self):
+        """Tier 2 with pending folio lines: when one of the available
+        payments matches the invoice residual exactly, only that payment
+        is reconciled. The remaining payment stays available for the
+        future invoice."""
+        res1 = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        folio = res1.folio_id
+        self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now() + timedelta(days=1),
+                "checkout": datetime.now() + timedelta(days=3),
+                "adults": 2,
+                "folio_id": folio.id,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        # Invoice only res1 (25€); res2 (50€) stays pending.
+        res1_lines = folio.sale_line_ids.filtered(
+            lambda ln: ln.reservation_id == res1 and not ln.display_type
+        )
+        invoice1 = folio._create_invoices(
+            lines_to_invoice={ln.id: ln.qty_to_invoice for ln in res1_lines}
+        )
+
+        # Two payments: 25€ (for invoice1) and 50€ (for the future invoice).
+        for amount in [25, 50]:
+            payment = self.env["account.payment"].create(
+                {
+                    "payment_type": "inbound",
+                    "payment_method_id": self.payment_method_manual_in.id,
+                    "journal_id": self.payment_journal.id,
+                    "amount": amount,
+                    "currency_id": folio.currency_id.id,
+                    "partner_id": folio.partner_id.id,
+                    "folio_ids": [(4, folio.id)],
+                }
+            )
+            payment.action_post()
+        invoice1.action_post()
+
+        self.assertEqual(
+            invoice1.payment_state,
+            "paid",
+            "Tier 2 must reconcile the exact-match payment even when the"
+            " folio still has pending lines.",
+        )
+
     def test_subset_sum_match(self):
         """Tier 3: unique subset of payment lines sums to invoice amount."""
         res1 = self.env["pms.reservation"].create(

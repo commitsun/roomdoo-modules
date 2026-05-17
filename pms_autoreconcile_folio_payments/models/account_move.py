@@ -16,8 +16,9 @@ class AccountMove(models.Model):
         an unambiguous result wins:
 
         Tier 0 – Early exits (empty data, zero residual, credit notes).
-        Tier 1 – This is the sole unpaid invoice in its folio(s): all payments
-                  belong to it (partial reconciliation is handled by Odoo).
+        Tier 1 – Folio is fully invoiced (no pending lines) and this is the
+                  sole unpaid invoice: all payments belong to it (partial
+                  reconciliation is handled by Odoo).
         Tier 2 – Exactly one payment line matches the invoice residual and no
                   sibling invoice has the same residual (no ambiguity).
         Tier 3 – A unique subset of payment lines sums to the invoice residual
@@ -55,8 +56,15 @@ class AccountMove(models.Model):
             and m.move_type not in ("out_refund", "in_refund")
         )
 
-        # ── Tier 1: sole unpaid invoice → all payments belong here ───────
-        if not sibling_invoices:
+        # ── Tier 1: folio fully invoiced and sole unpaid invoice ─────────
+        # Only reconcile all payments here when the folio has nothing left
+        # to invoice. Otherwise pending lines (e.g. tourist tax invoiced at
+        # night) may have payments already collected that don't belong to
+        # this invoice.
+        folio_fully_invoiced = all(
+            f.invoice_status in ("invoiced", "no") for f in move.folio_ids
+        )
+        if not sibling_invoices and folio_fully_invoiced:
             return to_propose
 
         # ── Tier 2: exact 1:1 match with ambiguity check ────────────────
