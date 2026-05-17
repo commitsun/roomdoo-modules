@@ -50,6 +50,21 @@
         </field>
     </record>
 
+    <!-- Agent Delegation tree (embedded) -->
+    <record id="view_bookai_agent_delegation_tree" model="ir.ui.view">
+        <field name="name">bookai.agent.delegation.tree</field>
+        <field name="model">bookai.agent.delegation</field>
+        <field name="arch" type="xml">
+            <tree string="Delegations" editable="bottom">
+                <field name="delegate_agent_id" domain="[('active', '=', True)]" />
+                <field name="delegate_caller_type" />
+                <field name="delegate_description" optional="show" />
+                <field name="description_override" optional="show" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
     <!-- Form -->
     <record id="view_bookai_agent_form" model="ir.ui.view">
         <field name="name">bookai.agent.form</field>
@@ -129,10 +144,6 @@
                     name="property_scope_ids"
                     widget="many2many_tags"
                   />
-                                    <field
-                    name="allowed_agent_ids"
-                    widget="many2many_tags"
-                  />
                                 </group>
                             </group>
                             <group string="Layer 2 — Execution identity">
@@ -172,6 +183,13 @@
                             <field name="tool_binding_ids">
                                 <tree
                   ref="pms_bookai.view_bookai_agent_tool_binding_tree"
+                />
+                            </field>
+                        </page>
+                        <page string="Agents" name="agents">
+                            <field name="delegation_ids">
+                                <tree
+                  ref="pms_bookai.view_bookai_agent_delegation_tree"
                 />
                             </field>
                         </page>

@@ -17,6 +17,8 @@ access_bookai_tool_binding_base_read,bookai.agent.tool.binding base read,model_b
 access_bookai_tool_binding_admin,bookai.agent.tool.binding admin full,model_bookai_agent_tool_binding,pms_bookai.group_bookai_admin,1,1,1,1
 access_bookai_kb_binding_base_read,bookai.agent.kb.binding base read,model_bookai_agent_kb_binding,base.group_user,1,0,0,0
 access_bookai_kb_binding_admin,bookai.agent.kb.binding admin full,model_bookai_agent_kb_binding,pms_bookai.group_bookai_admin,1,1,1,1
+access_bookai_delegation_base_read,bookai.agent.delegation base read,model_bookai_agent_delegation,base.group_user,1,0,0,0
+access_bookai_delegation_admin,bookai.agent.delegation admin full,model_bookai_agent_delegation,pms_bookai.group_bookai_admin,1,1,1,1
 access_bookai_mcp_server_base_read,bookai.mcp.server base read,model_bookai_mcp_server,base.group_user,1,0,0,0
 access_bookai_mcp_server_admin,bookai.mcp.server admin full,model_bookai_mcp_server,pms_bookai.group_bookai_admin,1,1,1,1
 access_bookai_audit_log_base_read,bookai.agent.audit.log base read,model_bookai_agent_audit_log,base.group_user,1,0,0,0
