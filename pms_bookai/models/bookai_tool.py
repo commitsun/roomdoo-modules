@@ -12,8 +12,12 @@ _SYNC_TIMEOUT = 15
 
 class BookaiTool(models.Model):
     _name = "bookai.tool"
+    _inherit = ["bookai.webhook.mixin"]
     _description = "BooKAI Tool"
     _order = "tool_type, name, id"
+
+    _bookai_webhook_path = "/webhooks/tool-updated"
+    _bookai_webhook_event = "tool_updated"
 
     name = fields.Char(required=True)
     description = fields.Text(required=True)
@@ -106,6 +110,35 @@ class BookaiTool(models.Model):
             "Tool name must be unique per type.",
         ),
     ]
+
+    # ------------------------------------------------------------------
+    # Webhook payload
+    # ------------------------------------------------------------------
+    def _bookai_webhook_payload(self):
+        return [
+            {"tool_id": rec.id, "name": rec.name, "tool_type": rec.tool_type}
+            for rec in self
+        ]
+
+    # ------------------------------------------------------------------
+    # CRUD
+    # ------------------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._notify_bookai_webhook("upsert")
+        return records
+
+    def write(self, vals):
+        result = super().write(vals)
+        self._notify_bookai_webhook("upsert")
+        return result
+
+    def unlink(self):
+        webhook_data = self._bookai_webhook_payload()
+        result = super().unlink()
+        self._notify_bookai_webhook_delete(webhook_data)
+        return result
 
     @api.model
     def action_sync_sdk_tools(self):
