@@ -1,4 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#10b981"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">AV</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#0ea5e9"/>
+  <g fill="white">
+    <rect x="22" y="34" width="62" height="64" rx="4"/>
+    <rect x="22" y="34" width="62" height="14"/>
+  </g>
+  <g stroke="white" stroke-width="4" stroke-linecap="round">
+    <line x1="36" y1="22" x2="36" y2="40"/>
+    <line x1="70" y1="22" x2="70" y2="40"/>
+  </g>
+  <g fill="#0ea5e9">
+    <rect x="30" y="58" width="8" height="8" rx="1"/>
+    <rect x="42" y="58" width="8" height="8" rx="1"/>
+    <rect x="54" y="58" width="8" height="8" rx="1"/>
+    <rect x="66" y="58" width="8" height="8" rx="1"/>
+    <rect x="30" y="74" width="8" height="8" rx="1"/>
+    <rect x="42" y="74" width="8" height="8" rx="1"/>
+  </g>
+  <g stroke="white" stroke-width="6" fill="#0ea5e9">
+    <circle cx="92" cy="80" r="14"/>
+    <line x1="102" y1="90" x2="112" y2="100" stroke-linecap="round"/>
+  </g>
 </svg>

@@ -514,6 +514,11 @@
     <record id="agent_supervisor_external" model="bookai.agent">
         <field name="name">Supervisor Externo</field>
         <field name="technical_name">supervisor-external</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/supervisor-external.png"
+    />
         <field name="caller_type">external_guest</field>
         <field name="identity_mode">technical_user</field>
         <field name="is_supervisor" eval="True" />
@@ -543,6 +548,11 @@ VALIDACIÓN: Si un worker responde con datos de disponibilidad, precios o reserv
     <record id="agent_supervisor_internal" model="bookai.agent">
         <field name="name">Supervisor Interno</field>
         <field name="technical_name">supervisor-internal</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/supervisor-internal.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="is_supervisor" eval="True" />
@@ -563,6 +573,11 @@ VALIDACIÓN: Si un worker responde con datos de disponibilidad, precios o reserv
     <record id="agent_supervisor_roomdoo" model="bookai.agent">
         <field name="name">Supervisor Roomdoo</field>
         <field name="technical_name">supervisor-roomdoo</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/supervisor-roomdoo.png"
+    />
         <field name="caller_type">system</field>
         <field name="identity_mode">technical_user</field>
         <field name="is_supervisor" eval="True" />
@@ -587,6 +602,11 @@ VALIDACIÓN: Si un worker responde con datos de disponibilidad, precios o reserv
     <record id="agent_property_info" model="bookai.agent">
         <field name="name">Property Info</field>
         <field name="technical_name">property-info</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/property-info.png"
+    />
         <field name="caller_type">external_guest</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -607,6 +627,11 @@ Si no tienes la información, indica que consultarás con recepción. Nunca inve
     <record id="agent_booking_assistant" model="bookai.agent">
         <field name="name">Booking Assistant</field>
         <field name="technical_name">booking-assistant</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/booking-assistant.png"
+    />
         <field name="caller_type">external_guest</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -630,6 +655,11 @@ REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Info
     <record id="agent_availability" model="bookai.agent">
         <field name="name">Availability Agent</field>
         <field name="technical_name">availability-agent</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/availability-agent.png"
+    />
         <field name="caller_type">external_guest</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -655,6 +685,11 @@ REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Info
     <record id="agent_booking_agent" model="bookai.agent">
         <field name="name">Booking Agent</field>
         <field name="technical_name">booking-agent</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/booking-agent.png"
+    />
         <field name="caller_type">external_guest</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -698,6 +733,11 @@ IMPORTANTE:
     <record id="agent_reception_assistant" model="bookai.agent">
         <field name="name">Reception Assistant</field>
         <field name="technical_name">reception-assistant</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/reception-assistant.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -722,6 +762,11 @@ REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Info
     <record id="agent_finance_assistant" model="bookai.agent">
         <field name="name">Finance Assistant</field>
         <field name="technical_name">finance-assistant</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/finance-assistant.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -744,6 +789,11 @@ REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Info
     <record id="agent_operations_assistant" model="bookai.agent">
         <field name="name">Operations Assistant</field>
         <field name="technical_name">operations-assistant</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/operations-assistant.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -772,6 +822,11 @@ REGLA CRÍTICA: Si una tool devuelve un error, NUNCA inventes el resultado. Info
     <record id="agent_roomdoo_god" model="bookai.agent">
         <field name="name">Roomdoo God Mode</field>
         <field name="technical_name">roomdoo-god</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/roomdoo-god.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="god_mode" eval="True" />
@@ -795,6 +850,11 @@ REGLAS:
     <record id="agent_bookai_admin" model="bookai.agent">
         <field name="name">BooKAI Admin</field>
         <field name="technical_name">bookai-admin</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/bookai-admin.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />
@@ -815,6 +875,11 @@ Confirma antes de crear o modificar configuraciones.</field>
     <record id="agent_usage_analyst" model="bookai.agent">
         <field name="name">Usage Analyst</field>
         <field name="technical_name">usage-analyst</field>
+        <field
+      name="image_128"
+      type="base64"
+      file="pms_bookai/static/img/agents/usage-analyst.png"
+    />
         <field name="caller_type">internal</field>
         <field name="identity_mode">technical_user</field>
         <field name="active" eval="True" />

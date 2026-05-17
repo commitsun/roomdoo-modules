@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#10b981"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">UA</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#06b6d4"/>
+  <g fill="white">
+    <rect x="30" y="74" width="16" height="32" rx="2"/>
+    <rect x="56" y="54" width="16" height="52" rx="2"/>
+    <rect x="82" y="34" width="16" height="72" rx="2"/>
+  </g>
+  <line x1="22" y1="108" x2="106" y2="108" stroke="white" stroke-width="4" stroke-linecap="round"/>
 </svg>

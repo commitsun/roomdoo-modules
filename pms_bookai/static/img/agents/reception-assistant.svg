@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-  <rect width="128" height="128" rx="20" fill="#f59e0b"/>
-  <text x="64" y="72" font-family="Arial,sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">RA</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="20" fill="#14b8a6"/>
+  <g fill="white">
+    <circle cx="64" cy="36" r="6"/>
+    <path d="M40 84 C40 60 50 44 64 44 C78 44 88 60 88 84 Z"/>
+    <rect x="32" y="84" width="64" height="8" rx="2"/>
+    <rect x="58" y="94" width="12" height="6" rx="2"/>
+  </g>
 </svg>
