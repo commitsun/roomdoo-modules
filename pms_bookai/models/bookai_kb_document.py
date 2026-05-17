@@ -78,6 +78,7 @@ class BookaiKbDocument(models.Model):
         "bookai.agent",
         string="Agents",
         compute="_compute_agent_ids",
+        inverse="_inverse_agent_ids",
         search="_search_agent_ids",
     )
 
@@ -85,6 +86,19 @@ class BookaiKbDocument(models.Model):
     def _compute_agent_ids(self):
         for rec in self:
             rec.agent_ids = rec.kb_binding_ids.filtered("active").mapped("agent_id")
+
+    def _inverse_agent_ids(self):
+        Binding = self.env["bookai.agent.kb.binding"]
+        for rec in self:
+            existing = rec.kb_binding_ids.mapped("agent_id")
+            target = rec.agent_ids
+            to_remove = rec.kb_binding_ids.filtered(
+                lambda b, target=target: b.agent_id not in target
+            )
+            if to_remove:
+                to_remove.unlink()
+            for agent in target - existing:
+                Binding.create({"agent_id": agent.id, "document_id": rec.id})
 
     def _search_agent_ids(self, operator, value):
         bindings = self.env["bookai.agent.kb.binding"].search(
