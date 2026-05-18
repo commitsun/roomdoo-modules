@@ -20,9 +20,29 @@ import json
 import logging
 from datetime import timedelta
 
+import psycopg2
+from psycopg2.errorcodes import (
+    DEADLOCK_DETECTED,
+    LOCK_NOT_AVAILABLE,
+    SERIALIZATION_FAILURE,
+)
+
 from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
+
+# psycopg2 error codes that must NOT be swallowed by the per-rule
+# ``except`` below: they imply the surrounding transaction is dead and
+# only Odoo's ORM-level retry can recover it. Catching them silently
+# and ``continue``-ing leaves the transaction in an aborted state and
+# every subsequent query of the main flow fails with
+# ``InFailedSqlTransaction`` — typically losing the parent operation
+# (e.g. creation of a folio from an external API).
+_CONCURRENCY_PG_CODES = (
+    SERIALIZATION_FAILURE,
+    DEADLOCK_DETECTED,
+    LOCK_NOT_AVAILABLE,
+)
 
 
 class PmsNotificationMixin(models.AbstractModel):
@@ -236,6 +256,22 @@ class PmsNotificationMixin(models.AbstractModel):
                         changed_fields=changed_fields,
                         pre_domain_matches=pre_domain_matches,
                     )
+                except psycopg2.OperationalError as e:
+                    # Transactional failures (serialization conflict,
+                    # deadlock, lock-not-available) must bubble up so
+                    # Odoo's retry mechanism can replay the whole
+                    # transaction. Swallowing them here would leave
+                    # the cursor aborted and break the caller's flow.
+                    if e.pgcode in _CONCURRENCY_PG_CODES:
+                        raise
+                    _logger.exception(
+                        "Notification rule processing failed "
+                        "(rule=%s, model=%s, id=%s)",
+                        rule.id,
+                        rec._name,
+                        rec.id,
+                    )
+                    continue
                 except Exception:
                     _logger.exception(
                         "Notification rule processing failed "
