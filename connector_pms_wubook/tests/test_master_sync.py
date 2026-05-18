@@ -64,9 +64,7 @@ def _make_backend_environment(cls):
             ],
         }
     )
-    payment_method_line = cls.env["account.payment.method.line"].search(
-        [], limit=1
-    )
+    payment_method_line = cls.env["account.payment.method.line"].search([], limit=1)
     cls.backend = cls.env["channel.wubook.backend"].create(
         {
             "name": "Master Sync Backend",
@@ -91,9 +89,7 @@ class TestWubookConnectMixin(TransactionComponentCase):
         _make_backend_environment(cls)
 
     def test_connection_state_disconnected_by_default(self):
-        self.assertEqual(
-            self.room_type_a.wubook_connection_state, "disconnected"
-        )
+        self.assertEqual(self.room_type_a.wubook_connection_state, "disconnected")
 
     def test_connection_state_flips_to_connected_after_binding(self):
         self.env["channel.wubook.pms.room.type"].create(
@@ -104,17 +100,13 @@ class TestWubookConnectMixin(TransactionComponentCase):
             }
         )
         self.room_type_a.invalidate_recordset()
-        self.assertEqual(
-            self.room_type_a.wubook_connection_state, "connected"
-        )
+        self.assertEqual(self.room_type_a.wubook_connection_state, "connected")
 
     def test_action_open_wizard_creates_pre_saved_wizard(self):
         action = self.room_type_a.action_open_wubook_connect_wizard()
         self.assertEqual(action["res_model"], "channel.wubook.connect.wizard")
         self.assertTrue(action.get("res_id"))
-        wizard = self.env["channel.wubook.connect.wizard"].browse(
-            action["res_id"]
-        )
+        wizard = self.env["channel.wubook.connect.wizard"].browse(action["res_id"])
         self.assertEqual(wizard.res_model, "pms.room.type")
         self.assertEqual(wizard.res_id, self.room_type_a.id)
         self.assertEqual(wizard.backend_id, self.backend)
@@ -157,9 +149,7 @@ class TestWubookConnectWizard(TransactionComponentCase):
 
     def test_binding_model_resolved_from_res_model(self):
         wiz = self._open_wizard(self.room_type_a)
-        self.assertEqual(
-            wiz.binding_model, "channel.wubook.pms.room.type"
-        )
+        self.assertEqual(wiz.binding_model, "channel.wubook.pms.room.type")
 
     def test_manual_mode_creates_binding(self):
         wiz = self._open_wizard(self.room_type_a, mode="manual")
@@ -191,9 +181,7 @@ class TestWubookConnectWizard(TransactionComponentCase):
 
     def test_existing_mode_creates_binding_from_candidate(self):
         wiz = self._open_wizard(self.room_type_a, mode="existing")
-        candidate = self.env[
-            "channel.wubook.connect.wizard.candidate"
-        ].create(
+        candidate = self.env["channel.wubook.connect.wizard.candidate"].create(
             {
                 "wizard_id": wiz.id,
                 "external_id": 314,
@@ -264,9 +252,7 @@ class TestWubookConnectWizard(TransactionComponentCase):
     def test_new_mode_creates_empty_binding_then_exports(self):
         wiz = self._open_wizard(self.room_type_a, mode="new")
         binding_model = self.env["channel.wubook.pms.room.type"]
-        with mock.patch.object(
-            type(binding_model), "export_record"
-        ) as mocked_export:
+        with mock.patch.object(type(binding_model), "export_record") as mocked_export:
             wiz.action_connect()
         mocked_export.assert_called_once()
         args, _kw = mocked_export.call_args
@@ -333,9 +319,7 @@ class TestMasterListeners(TransactionComponentCase):
         )
 
     def test_plan_with_binding_enqueues_export_on_name_change(self):
-        plan = self.env["pms.availability.plan"].create(
-            {"name": "Test Plan listener"}
-        )
+        plan = self.env["pms.availability.plan"].create({"name": "Test Plan listener"})
         binding = self.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": plan.id,
@@ -422,21 +406,15 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create(
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
                 "backend_id": cls.backend.id,
                 "external_id": 111,
             }
         )
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "Coalescing Plan"}
-        )
-        cls.plan_binding = cls.env[
-            "channel.wubook.pms.availability.plan"
-        ].create(
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Coalescing Plan"})
+        cls.plan_binding = cls.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": cls.plan.id,
                 "backend_id": cls.backend.id,
@@ -505,9 +483,7 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create(
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
                 "backend_id": cls.backend.id,
@@ -520,9 +496,7 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
                 "company_id": cls.company.id,
             }
         )
-        cls.pricelist_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.pricelist_binding = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": cls.pricelist.id,
                 "backend_id": cls.backend.id,
@@ -532,18 +506,20 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
 
     def _add_items(self, n, start_offset=1):
         d0 = date.today() + timedelta(days=start_offset)
-        return self.env["product.pricelist.item"].create([
-            {
-                "pricelist_id": self.pricelist.id,
-                "applied_on": "0_product_variant",
-                "compute_price": "fixed",
-                "product_id": self.product_a.id,
-                "fixed_price": 10.0 + i,
-                "date_start_consumption": d0 + timedelta(days=i),
-                "date_end_consumption": d0 + timedelta(days=i),
-            }
-            for i in range(n)
-        ])
+        return self.env["product.pricelist.item"].create(
+            [
+                {
+                    "pricelist_id": self.pricelist.id,
+                    "applied_on": "0_product_variant",
+                    "compute_price": "fixed",
+                    "product_id": self.product_a.id,
+                    "fixed_price": 10.0 + i,
+                    "date_start_consumption": d0 + timedelta(days=i),
+                    "date_end_consumption": d0 + timedelta(days=i),
+                }
+                for i in range(n)
+            ]
+        )
 
     def test_single_item_write_enqueues_one_export_record(self):
         items = self._add_items(1)
@@ -576,15 +552,17 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
             {"name": "Unconnected PL", "company_id": self.company.id}
         )
         with trap_jobs() as trap:
-            self.env["product.pricelist.item"].create({
-                "pricelist_id": other_pl.id,
-                "applied_on": "0_product_variant",
-                "compute_price": "fixed",
-                "product_id": self.product_a.id,
-                "fixed_price": 50.0,
-                "date_start_consumption": date.today() + timedelta(days=1),
-                "date_end_consumption": date.today() + timedelta(days=1),
-            })
+            self.env["product.pricelist.item"].create(
+                {
+                    "pricelist_id": other_pl.id,
+                    "applied_on": "0_product_variant",
+                    "compute_price": "fixed",
+                    "product_id": self.product_a.id,
+                    "fixed_price": 50.0,
+                    "date_start_consumption": date.today() + timedelta(days=1),
+                    "date_end_consumption": date.today() + timedelta(days=1),
+                }
+            )
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
 
@@ -594,21 +572,25 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
         bare_pl = self.env["product.pricelist"].create(
             {"name": "Bare PL", "company_id": self.company.id}
         )
-        self.env["channel.wubook.product.pricelist"].create({
-            "odoo_id": bare_pl.id,
-            "backend_id": self.backend.id,
-            # no external_id
-        })
+        self.env["channel.wubook.product.pricelist"].create(
+            {
+                "odoo_id": bare_pl.id,
+                "backend_id": self.backend.id,
+                # no external_id
+            }
+        )
         with trap_jobs() as trap:
-            self.env["product.pricelist.item"].create({
-                "pricelist_id": bare_pl.id,
-                "applied_on": "0_product_variant",
-                "compute_price": "fixed",
-                "product_id": self.product_a.id,
-                "fixed_price": 12.0,
-                "date_start_consumption": date.today() + timedelta(days=1),
-                "date_end_consumption": date.today() + timedelta(days=1),
-            })
+            self.env["product.pricelist.item"].create(
+                {
+                    "pricelist_id": bare_pl.id,
+                    "applied_on": "0_product_variant",
+                    "compute_price": "fixed",
+                    "product_id": self.product_a.id,
+                    "fixed_price": 12.0,
+                    "date_start_consumption": date.today() + timedelta(days=1),
+                    "date_end_consumption": date.today() + timedelta(days=1),
+                }
+            )
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
 
@@ -624,52 +606,52 @@ class TestExportRecordIdentityKey(TransactionComponentCase):
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create({
-            "odoo_id": cls.room_type_a.id,
-            "backend_id": cls.backend.id,
-            "external_id": 111,
-        })
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": cls.room_type_a.id,
+                "backend_id": cls.backend.id,
+                "external_id": 111,
+            }
+        )
         cls.pricelist = cls.env["product.pricelist"].create(
             {"name": "Identity PL", "company_id": cls.company.id}
         )
-        cls.pricelist_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create({
-            "odoo_id": cls.pricelist.id,
-            "backend_id": cls.backend.id,
-            "external_id": 9001,
-        })
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "Identity Plan"}
+        cls.pricelist_binding = cls.env["channel.wubook.product.pricelist"].create(
+            {
+                "odoo_id": cls.pricelist.id,
+                "backend_id": cls.backend.id,
+                "external_id": 9001,
+            }
         )
-        cls.plan_binding = cls.env[
-            "channel.wubook.pms.availability.plan"
-        ].create({
-            "odoo_id": cls.plan.id,
-            "backend_id": cls.backend.id,
-            "external_id": 9002,
-        })
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Identity Plan"})
+        cls.plan_binding = cls.env["channel.wubook.pms.availability.plan"].create(
+            {
+                "odoo_id": cls.plan.id,
+                "backend_id": cls.backend.id,
+                "external_id": 9002,
+            }
+        )
 
     def test_pricelist_item_listener_sets_identity_key(self):
-        item = self.env["product.pricelist.item"].create({
-            "pricelist_id": self.pricelist.id,
-            "applied_on": "0_product_variant",
-            "compute_price": "fixed",
-            "product_id": self.product_a.id,
-            "fixed_price": 50.0,
-            "date_start_consumption": date.today() + timedelta(days=2),
-            "date_end_consumption": date.today() + timedelta(days=2),
-        })
+        item = self.env["product.pricelist.item"].create(
+            {
+                "pricelist_id": self.pricelist.id,
+                "applied_on": "0_product_variant",
+                "compute_price": "fixed",
+                "product_id": self.product_a.id,
+                "fixed_price": 50.0,
+                "date_start_consumption": date.today() + timedelta(days=2),
+                "date_end_consumption": date.today() + timedelta(days=2),
+            }
+        )
         self.env.cr.precommit.run()
         with trap_jobs() as trap:
             item.fixed_price = 99.0
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
-        expected_key = "wubook_export_record:%s:%s" % (
-            self.pricelist_binding._name,
-            self.pricelist_binding.id,
+        expected_key = (
+            f"wubook_export_record:{self.pricelist_binding._name}"
+            f":{self.pricelist_binding.id}"
         )
         trap.assert_enqueued_job(
             self.pricelist_binding.export_record,
@@ -678,21 +660,22 @@ class TestExportRecordIdentityKey(TransactionComponentCase):
         )
 
     def test_plan_rule_listener_sets_identity_key(self):
-        rule = self.env["pms.availability.plan.rule"].create({
-            "availability_plan_id": self.plan.id,
-            "room_type_id": self.room_type_a.id,
-            "date": date.today() + timedelta(days=3),
-            "quota": 5,
-            "pms_property_id": self.pms_property.id,
-        })
+        rule = self.env["pms.availability.plan.rule"].create(
+            {
+                "availability_plan_id": self.plan.id,
+                "room_type_id": self.room_type_a.id,
+                "date": date.today() + timedelta(days=3),
+                "quota": 5,
+                "pms_property_id": self.pms_property.id,
+            }
+        )
         self.env.cr.precommit.run()
         with trap_jobs() as trap:
             rule.quota = 7
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
-        expected_key = "wubook_export_record:%s:%s" % (
-            self.plan_binding._name,
-            self.plan_binding.id,
+        expected_key = (
+            f"wubook_export_record:{self.plan_binding._name}" f":{self.plan_binding.id}"
         )
         trap.assert_enqueued_job(
             self.plan_binding.export_record,
@@ -712,9 +695,7 @@ class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create(
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
                 "backend_id": cls.backend.id,
@@ -725,9 +706,7 @@ class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
         cls.parent = cls.env["product.pricelist"].create(
             {"name": "Parent", "company_id": cls.company.id}
         )
-        cls.parent_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.parent_binding = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": cls.parent.id,
                 "backend_id": cls.backend.id,
@@ -741,19 +720,21 @@ class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
                 "company_id": cls.company.id,
                 "wubook_flatten_to_daily": True,
                 "item_ids": [
-                    (0, 0, {
-                        "applied_on": "3_global",
-                        "compute_price": "formula",
-                        "base": "pricelist",
-                        "base_pricelist_id": cls.parent.id,
-                        "price_discount": -10.0,
-                    })
+                    (
+                        0,
+                        0,
+                        {
+                            "applied_on": "3_global",
+                            "compute_price": "formula",
+                            "base": "pricelist",
+                            "base_pricelist_id": cls.parent.id,
+                            "price_discount": -10.0,
+                        },
+                    )
                 ],
             }
         )
-        cls.flat_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.flat_binding = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": cls.flat.id,
                 "backend_id": cls.backend.id,
@@ -763,15 +744,17 @@ class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
         cls.d = date.today() + timedelta(days=3)
 
     def test_parent_item_change_fires_both_buffers(self):
-        item = self.env["product.pricelist.item"].create({
-            "pricelist_id": self.parent.id,
-            "applied_on": "0_product_variant",
-            "compute_price": "fixed",
-            "product_id": self.product_a.id,
-            "fixed_price": 50.0,
-            "date_start_consumption": self.d,
-            "date_end_consumption": self.d,
-        })
+        item = self.env["product.pricelist.item"].create(
+            {
+                "pricelist_id": self.parent.id,
+                "applied_on": "0_product_variant",
+                "compute_price": "fixed",
+                "product_id": self.product_a.id,
+                "fixed_price": 50.0,
+                "date_start_consumption": self.d,
+                "date_end_consumption": self.d,
+            }
+        )
         self.env.cr.precommit.run()
         with trap_jobs() as trap:
             item.fixed_price = 75.0
@@ -825,9 +808,7 @@ class TestExportDependencies(TransactionComponentCase):
         )
 
     def _build_pricelist_exporter(self, pricelist):
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             exporter = work.component(usage="direct.record.exporter")
         binding = self.env["channel.wubook.product.pricelist"].create(
             {
@@ -852,9 +833,7 @@ class TestExportDependencies(TransactionComponentCase):
             }
         )
         exporter = self._build_pricelist_exporter(pricelist)
-        with mock.patch.object(
-            exporter, "_export_dependency"
-        ) as mocked_dep:
+        with mock.patch.object(exporter, "_export_dependency") as mocked_dep:
             exporter._export_dependencies()
         called_models = [c.args[1] for c in mocked_dep.call_args_list]
         self.assertIn("channel.wubook.pms.room.type", called_models)
@@ -865,9 +844,7 @@ class TestExportDependencies(TransactionComponentCase):
         """
         pricelist = self._make_pricelist_with_item()
         exporter = self._build_pricelist_exporter(pricelist)
-        with mock.patch.object(
-            exporter, "_export_dependency"
-        ) as mocked_dep:
+        with mock.patch.object(exporter, "_export_dependency") as mocked_dep:
             exporter._export_dependencies()
         mocked_dep.assert_not_called()
 
@@ -913,9 +890,7 @@ class TestExportDependencies(TransactionComponentCase):
             }
         )
         exporter = self._build_pricelist_exporter(pricelist)
-        with mock.patch.object(
-            exporter, "_export_dependency"
-        ) as mocked_dep:
+        with mock.patch.object(exporter, "_export_dependency") as mocked_dep:
             exporter._export_dependencies()
         mocked_dep.assert_not_called()
 
@@ -933,9 +908,7 @@ class TestWubookDateValid(TransactionComponentCase):
         cls.pricelist = cls.env["product.pricelist"].create(
             {"name": "Date valid PL", "company_id": cls.company.id}
         )
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "Date valid plan"}
-        )
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Date valid plan"})
 
     def _make_item(self, dt):
         return self.env["product.pricelist.item"].create(
@@ -1029,9 +1002,7 @@ class TestFlattenWindowCap(TransactionComponentCase):
                 ],
             }
         )
-        cls.binding_b = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.binding_b = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": pricelist_b.id,
                 "backend_id": cls.backend.id,
@@ -1077,27 +1048,21 @@ class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
                             "compute_price": "fixed",
                             "product_id": cls.product_a.id,
                             "fixed_price": 50.0,
-                            "date_start_consumption": date.today()
-                            + timedelta(days=2),
-                            "date_end_consumption": date.today()
-                            + timedelta(days=2),
+                            "date_start_consumption": date.today() + timedelta(days=2),
+                            "date_end_consumption": date.today() + timedelta(days=2),
                         },
                     )
                 ],
             }
         )
-        cls.pricelist_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.pricelist_binding = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": cls.pricelist.id,
                 "backend_id": cls.backend.id,
                 "external_id": 7001,
             }
         )
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "Dep plan"}
-        )
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Dep plan"})
         cls.env["pms.availability.plan.rule"].create(
             {
                 "availability_plan_id": cls.plan.id,
@@ -1106,9 +1071,7 @@ class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
                 "pms_property_id": cls.pms_property.id,
             }
         )
-        cls.plan_binding = cls.env[
-            "channel.wubook.pms.availability.plan"
-        ].create(
+        cls.plan_binding = cls.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": cls.plan.id,
                 "backend_id": cls.backend.id,
@@ -1227,9 +1190,7 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
                 "wubook_last_synced_name": "Stable PL",
             }
         )
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertIsNone(result)
@@ -1246,9 +1207,7 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
                 "wubook_last_synced_name": "Old PL name",
             }
         )
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertEqual(result, {"name": "Renamed PL"})
@@ -1263,17 +1222,13 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
                 "backend_id": self.backend.id,
             }
         )
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertEqual(result, {"name": "Brand new PL"})
 
     def test_plan_mapper_skips_name_when_unchanged(self):
-        plan = self.env["pms.availability.plan"].create(
-            {"name": "Stable Plan"}
-        )
+        plan = self.env["pms.availability.plan"].create({"name": "Stable Plan"})
         binding = self.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": plan.id,
@@ -1282,17 +1237,13 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
                 "wubook_last_synced_name": "Stable Plan",
             }
         )
-        with self.backend.work_on(
-            "channel.wubook.pms.availability.plan"
-        ) as work:
+        with self.backend.work_on("channel.wubook.pms.availability.plan") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertIsNone(result)
 
     def test_plan_mapper_emits_name_when_changed(self):
-        plan = self.env["pms.availability.plan"].create(
-            {"name": "Renamed Plan"}
-        )
+        plan = self.env["pms.availability.plan"].create({"name": "Renamed Plan"})
         binding = self.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": plan.id,
@@ -1301,48 +1252,78 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
                 "wubook_last_synced_name": "Original Plan",
             }
         )
-        with self.backend.work_on(
-            "channel.wubook.pms.availability.plan"
-        ) as work:
+        with self.backend.work_on("channel.wubook.pms.availability.plan") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.name(binding)
         self.assertEqual(result, {"name": "Renamed Plan"})
 
 
 class TestAvailabilityListener(TransactionComponentCase):
-    """Availability changes (``pms.availability.real_avail`` recomputes
-    after reservation line flips) push to Wubook via the new listener
-    instead of the legacy ``_scheduler_export_avail`` cron. Coalescence
-    per ``(backend × property)`` and identity_key for cross-transaction
-    dedup.
+    """Property availability exports to Wubook. Two trigger paths:
+
+    * Calendar expansion (a new ``pms.availability`` row appears) fires
+      the ``pms.availability`` listener on create.
+    * ``plan_avail`` (= min(real_avail, quota, max_avail)) flips on a
+      ``pms.availability.plan.rule`` — the only value actually shipped
+      to Wubook. ``real_avail`` is intentionally NOT a trigger because
+      the cap can absorb the change (no-op).
+
+    Both paths share the same precommit buffer so simultaneous events
+    collapse to one ``export_record`` job per ``(backend × property)``
+    pair, with ``identity_key`` for cross-transaction dedup.
     """
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create({
-            "odoo_id": cls.room_type_a.id,
-            "backend_id": cls.backend.id,
-            "external_id": 111,
-        })
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": cls.room_type_a.id,
+                "backend_id": cls.backend.id,
+                "external_id": 111,
+            }
+        )
         cls.property_avail_binding = cls.env[
             "channel.wubook.pms.property.availability"
-        ].create({
-            "odoo_id": cls.pms_property.id,
-            "backend_id": cls.backend.id,
-            "external_id": cls.pms_property.id,
-        })
+        ].create(
+            {
+                "odoo_id": cls.pms_property.id,
+                "backend_id": cls.backend.id,
+                "external_id": cls.pms_property.id,
+            }
+        )
+        cls.plan = cls.env["pms.availability.plan"].create(
+            {"name": "Avail Listener Plan"}
+        )
+        cls.plan_binding = cls.env["channel.wubook.pms.availability.plan"].create(
+            {
+                "odoo_id": cls.plan.id,
+                "backend_id": cls.backend.id,
+                "external_id": 7070,
+            }
+        )
         cls.d0 = date.today() + timedelta(days=4)
 
     def _make_avail(self):
-        return self.env["pms.availability"].create({
+        return self.env["pms.availability"].create(
+            {
+                "room_type_id": self.room_type_a.id,
+                "pms_property_id": self.pms_property.id,
+                "date": self.d0,
+            }
+        )
+
+    def _make_rule(self, day_offset=0, **overrides):
+        vals = {
+            "availability_plan_id": self.plan.id,
             "room_type_id": self.room_type_a.id,
             "pms_property_id": self.pms_property.id,
-            "date": self.d0,
-        })
+            "date": self.d0 + timedelta(days=day_offset),
+            "quota": 5,
+        }
+        vals.update(overrides)
+        return self.env["pms.availability.plan.rule"].create(vals)
 
     def test_create_enqueues_property_export(self):
         with trap_jobs() as trap:
@@ -1353,25 +1334,35 @@ class TestAvailabilityListener(TransactionComponentCase):
             self.property_avail_binding.export_record,
             args=(self.backend, self.pms_property),
             properties={
-                "identity_key": "wubook_export_property_avail:%s:%s"
-                % (self.backend.id, self.pms_property.id)
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
             },
         )
 
-    def test_write_real_avail_enqueues_one_job(self):
-        avail = self._make_avail()
-        self.env.cr.precommit.run()  # flush creation buffer
+    def test_write_plan_avail_enqueues_property_export(self):
+        # ``plan_avail`` (not ``real_avail``) is the trigger: it's the
+        # value actually pushed to Wubook. The listener lives on
+        # ``pms.availability.plan.rule`` and shares the property-avail
+        # precommit buffer, so this still results in one property
+        # export per (backend × property).
+        rule = self._make_rule()
+        self.env.cr.precommit.run()  # flush plan-export buffer from rule create
         with trap_jobs() as trap:
-            # ``real_avail`` is computed but stored; write it directly
-            # to simulate the reservation-line-driven recompute.
-            self.env.cr.execute(
-                "UPDATE pms_availability SET real_avail = %s WHERE id = %s",
-                (3, avail.id),
-            )
-            avail.invalidate_recordset(["real_avail"])
-            avail.write({"real_avail": 2})
+            rule.write({"plan_avail": 2})
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
 
     def test_without_property_binding_no_enqueue(self):
         # Unbind the property
@@ -1387,37 +1378,35 @@ class TestAvailabilityListener(TransactionComponentCase):
         other_product = self.env["product.product"].create(
             {"name": "Other prod", "type": "service"}
         )
-        other_rt = self.env["pms.room.type"].create({
-            "name": "RT-other",
-            "default_code": "RTOT",
-            "class_id": self.room_type_class.id,
-            "product_id": other_product.id,
-            "pms_property_ids": [(6, 0, [self.pms_property.id])],
-        })
+        other_rt = self.env["pms.room.type"].create(
+            {
+                "name": "RT-other",
+                "default_code": "RTOT",
+                "class_id": self.room_type_class.id,
+                "product_id": other_product.id,
+                "pms_property_ids": [(6, 0, [self.pms_property.id])],
+            }
+        )
         with trap_jobs() as trap:
-            self.env["pms.availability"].create({
-                "room_type_id": other_rt.id,
-                "pms_property_id": self.pms_property.id,
-                "date": self.d0,
-            })
+            self.env["pms.availability"].create(
+                {
+                    "room_type_id": other_rt.id,
+                    "pms_property_id": self.pms_property.id,
+                    "date": self.d0,
+                }
+            )
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
 
-    def test_massive_avail_writes_collapse_to_one_job(self):
-        # Five availability rows for different dates → still ONE job
-        # per (backend × property).
-        avails = self.env["pms.availability"].create([
-            {
-                "room_type_id": self.room_type_a.id,
-                "pms_property_id": self.pms_property.id,
-                "date": self.d0 + timedelta(days=i),
-            }
-            for i in range(5)
-        ])
-        self.env.cr.precommit.run()
+    def test_massive_plan_avail_writes_collapse_to_one_job(self):
+        # Five rules on different dates with plan_avail flipping →
+        # still ONE property-export job per (backend × property).
+        rules = self.env["pms.availability.plan.rule"]
+        for i in range(5):
+            rules |= self._make_rule(day_offset=i)
+        self.env.cr.precommit.run()  # flush plan-export buffer from rule creates
         with trap_jobs() as trap:
-            for av in avails:
-                av.write({"real_avail": 1})
+            for r in rules:
+                r.write({"plan_avail": 1})
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
-
