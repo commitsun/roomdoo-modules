@@ -78,7 +78,7 @@ class ChannelWubookProductPricelistChildBinderMapperExport(Component):
             [
                 map_record.source.wubook_item_type == "standard"
                 and map_record.source.product_id.room_type_id.class_id.default_code
-                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),
+                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),  # noqa: E501
                 not map_record.source.wubook_item_type
                 or map_record.parent.source.wubook_plan_type
                 != map_record.source.wubook_item_type,
@@ -89,7 +89,7 @@ class ChannelWubookProductPricelistChildBinderMapperExport(Component):
                 map_record.source.wubook_item_type == "standard"
                 and not map_record.source.odoo_id.wubook_date_valid(),
                 map_record.source.wubook_item_type == "standard"
-                and not map_record.source.product_id.room_type_id.channel_wubook_bind_ids.filtered(
+                and not map_record.source.product_id.room_type_id.channel_wubook_bind_ids.filtered(  # noqa: E501
                     lambda x: x.backend_id == self.backend_record
                 ),
             ]
@@ -100,21 +100,45 @@ class ChannelWubookProductPricelistChildBinderMapperExport(Component):
         # ``items_flatten``; short-circuit the normal child binder flow.
         if parent.source.wubook_flatten_to_daily:
             return []
-        # TODO: this is always the same on every child binder mapper
-        #   except 'rule_ids' try to move it to the parent
-        bindings = items.filtered(lambda x: x.backend_id == self.backend_record)
-        new_bindings = parent.source["item_ids"].filtered(
-            lambda x: self.backend_record not in x.channel_wubook_bind_ids.backend_id
-            and (
-                not x.pms_property_ids
-                or self.backend_record.pms_property_id in x.pms_property_ids
-            )
+        # Resolve "items of this pricelist that apply to this backend's
+        # property and still lack a binding for this backend" with a
+        # single SQL query. The naive ``parent.source["item_ids"].filtered(...)``
+        # walks every item of the pricelist in Python (~317k for the
+        # global "Tarifa Estándar"), turning every export into a multi-
+        # minute job even when no new bindings need to be created.
+        # ``pms_property_ids`` empty means the item applies globally;
+        # otherwise the backend's property must be included.
+        backend = self.backend_record
+        bindings = items.filtered(lambda x: x.backend_id == backend)
+        self.env.cr.execute(
+            """
+            SELECT i.id
+            FROM product_pricelist_item i
+            LEFT JOIN channel_wubook_product_pricelist_item ib
+                ON ib.odoo_id = i.id AND ib.backend_id = %s
+            WHERE i.pricelist_id = %s
+              AND ib.id IS NULL
+              AND (
+                NOT EXISTS (
+                    SELECT 1 FROM product_pricelist_item_pms_property_rel rel
+                    WHERE rel.product_pricelist_item_id = i.id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM product_pricelist_item_pms_property_rel rel
+                    WHERE rel.product_pricelist_item_id = i.id
+                      AND rel.pms_property_id = %s
+                )
+              )
+            """,
+            (backend.id, parent.source.id, backend.pms_property_id.id),
         )
-        items = (
-            items.browse(
-                [self.binder_for().wrap_record(x, force=True).id for x in new_bindings]
-            )
-            | bindings
-        )
-        mapper = super().get_all_items(mapper, items, parent, to_attr, options)
-        return mapper
+        new_item_ids = [row[0] for row in self.env.cr.fetchall()]
+        if new_item_ids:
+            new_items = self.env["product.pricelist.item"].browse(new_item_ids)
+            new_binding_ids = [
+                self.binder_for().wrap_record(i, force=True).id for i in new_items
+            ]
+            items = items.browse(new_binding_ids) | bindings
+        else:
+            items = bindings
+        return super().get_all_items(mapper, items, parent, to_attr, options)
