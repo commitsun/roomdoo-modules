@@ -45,7 +45,7 @@ class ChannelWubookPmsAvailabilityPlanChildBinderMapperExport(Component):
         return any(
             [
                 map_record.source.room_type_id.class_id.default_code
-                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),
+                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),  # noqa: E501
                 map_record.source.pms_property_id
                 != self.backend_record.pms_property_id,
                 map_record.source.synced_export,
@@ -57,18 +57,33 @@ class ChannelWubookPmsAvailabilityPlanChildBinderMapperExport(Component):
         )
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
-        # TODO: this is always the same on every child binder mapper
-        #   except 'rule_ids' try to move it to the parent
-        bindings = items.filtered(lambda x: x.backend_id == self.backend_record)
-        new_bindings = parent.source["rule_ids"].filtered(
-            lambda x: self.backend_record not in x.channel_wubook_bind_ids.backend_id
-            and self.backend_record.pms_property_id == x.pms_property_id
+        # Resolve "rules of this plan in this backend's property that
+        # don't have a binding for this backend yet" with a single SQL
+        # query. The naive ``parent.source["rule_ids"].filtered(...)``
+        # walks the whole plan's rule_ids in Python (~671k records for
+        # the global OTA'S plan), turning every export into a multi-
+        # minute job even when no new bindings need to be created.
+        backend = self.backend_record
+        bindings = items.filtered(lambda x: x.backend_id == backend)
+        self.env.cr.execute(
+            """
+            SELECT r.id
+            FROM pms_availability_plan_rule r
+            LEFT JOIN channel_wubook_pms_availability_plan_rule rb
+                ON rb.odoo_id = r.id AND rb.backend_id = %s
+            WHERE r.availability_plan_id = %s
+              AND r.pms_property_id = %s
+              AND rb.id IS NULL
+            """,
+            (backend.id, parent.source.id, backend.pms_property_id.id),
         )
-        items = (
-            items.browse(
-                [self.binder_for().wrap_record(x, force=True).id for x in new_bindings]
-            )
-            | bindings
-        )
-        mapper = super().get_all_items(mapper, items, parent, to_attr, options)
-        return mapper
+        new_rule_ids = [row[0] for row in self.env.cr.fetchall()]
+        if new_rule_ids:
+            new_rules = self.env["pms.availability.plan.rule"].browse(new_rule_ids)
+            new_binding_ids = [
+                self.binder_for().wrap_record(r, force=True).id for r in new_rules
+            ]
+            items = items.browse(new_binding_ids) | bindings
+        else:
+            items = bindings
+        return super().get_all_items(mapper, items, parent, to_attr, options)
