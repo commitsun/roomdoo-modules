@@ -33,30 +33,44 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
         binding on this backend, and only rules applicable to the
         backend's property. Unconnected room types must be connected
         manually via the ``Connect to Wubook`` wizard first.
+
+        The "applicable room types" set is resolved with a single SQL
+        ``SELECT DISTINCT room_type_id`` filtered by plan and property,
+        instead of iterating ``binding.rule_ids`` in Python — the plan
+        may be shared by every property in the chain (e.g. plan "OTA'S"
+        holds ~671k rules), so the Python filter would walk hundreds of
+        thousands of records just to collapse to a handful of room types.
         """
         binding = self.binding
         backend = binding.backend_id
         prop = backend.pms_property_id
 
-        applicable_rules = binding.rule_ids.filtered(
-            lambda r: not r.pms_property_id or r.pms_property_id == prop
+        self.env.cr.execute(
+            """
+            SELECT DISTINCT r.room_type_id
+            FROM pms_availability_plan_rule r
+            WHERE r.availability_plan_id = %s
+              AND (r.pms_property_id = %s OR r.pms_property_id IS NULL)
+              AND r.room_type_id IS NOT NULL
+            """,
+            (binding.odoo_id.id, prop.id),
         )
-        ref_room_types = applicable_rules.mapped("room_type_id")
-        if not ref_room_types:
+        ref_room_type_ids = [row[0] for row in self.env.cr.fetchall()]
+        if not ref_room_type_ids:
             return
         bound_ids = (
             self.env["channel.wubook.pms.room.type"]
             .search(
                 [
                     ("backend_id", "=", backend.id),
-                    ("odoo_id", "in", ref_room_types.ids),
+                    ("odoo_id", "in", ref_room_type_ids),
                 ]
             )
             .mapped("odoo_id.id")
         )
-        for room_type in ref_room_types.filtered(
-            lambda r: r.id in bound_ids
-        ):
+        if not bound_ids:
+            return
+        for room_type in self.env["pms.room.type"].browse(bound_ids):
             self._export_dependency(room_type, "channel.wubook.pms.room.type")
 
     def _has_to_skip(self):
@@ -71,6 +85,6 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
         if self.binding:
             current_name = self.binding.name
             if self.binding.wubook_last_synced_name != current_name:
-                self.binding.with_context(
-                    connector_no_export=True
-                ).write({"wubook_last_synced_name": current_name})
+                self.binding.with_context(connector_no_export=True).write(
+                    {"wubook_last_synced_name": current_name}
+                )
