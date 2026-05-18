@@ -161,6 +161,13 @@ class PmsReservationService(Component):
                 else None,
                 toAssign=reservation.to_assign,
                 reservationType=reservation.reservation_type,
+                longStayGroupId=getattr(
+                    reservation, "long_stay_group_id", reservation.browse()
+                ).id
+                or None,
+                isLongStayMaster=getattr(
+                    reservation, "is_long_stay_master", False
+                ),
                 priceTotal=round(reservation.price_room_services_set, 2),
                 priceTax=round(reservation.price_tax, 2),
                 discount=round(reservation.discount, 2),
@@ -952,6 +959,13 @@ class PmsReservationService(Component):
                         else None,
                         toAssign=reservation.to_assign,
                         reservationType=reservation.reservation_type,
+                        longStayGroupId=getattr(
+                            reservation, "long_stay_group_id", reservation.browse()
+                        ).id
+                        or None,
+                        isLongStayMaster=getattr(
+                            reservation, "is_long_stay_master", False
+                        ),
                         priceTotal=round(reservation.price_room_services_set, 2),
                         discount=round(reservation.discount, 2),
                         commissionAmount=round(reservation.commission_amount, 2)
@@ -1410,7 +1424,7 @@ class PmsReservationService(Component):
                 "('state', 'in', ['draft', 'confirm', 'arrival_delayed']), "
                 "('overbooking', '=', True), "
                 f"('checkin', '>=', '{today}'),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
                 "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}.",
@@ -1423,7 +1437,7 @@ class PmsReservationService(Component):
                 "('state', 'in', ['draft', 'confirm', 'arrival_delayed']), "
                 "('overbooking', '=', True), "
                 f"('checkin', '>=', '{today}'),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
                 "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}."
@@ -1437,7 +1451,7 @@ class PmsReservationService(Component):
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('splitted', '=', True),"
                 f"('checkin', '>=', '{today}'),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
                 "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes "
@@ -1451,7 +1465,7 @@ class PmsReservationService(Component):
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('splitted', '=', True),"
                 f"('checkin', '>=', '{today}'),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
                 "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes"
@@ -1464,7 +1478,7 @@ class PmsReservationService(Component):
                 "title": "Por asignar",
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('to_assign', '=', True),"
-                "('reservation_type', 'in', ['normal', 'staff']),"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay']),"
                 f"('checkin', '>=', '{today}'),"
                 "]",
                 "text": f"La reserva de {reservation.partner_name} ha sido asignada a la habitación {reservation.preferred_room_id.name},"
@@ -1476,7 +1490,7 @@ class PmsReservationService(Component):
                 "title": "Por confirmar",
                 "domain": "[('state', '=', 'draft'),"
                 f"('checkin', '>=', '{today}'),"
-                "('reservation_type', 'in', ['normal', 'staff']),"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay']),"
                 "]",
                 "text": f"La reserva de {reservation.partner_name} está pendiente de confirmar, puedes confirmarla desde aquí.",
                 "priority": 400,
@@ -1487,7 +1501,7 @@ class PmsReservationService(Component):
                 "domain": "[('state', '=',  'confirm'),"
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '=', 0),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "text": "Todos los huéspedes de esta reserva tienen los datos registrados, "
                 " puedes marcar la entrada directamente desde aquí",
@@ -1500,7 +1514,7 @@ class PmsReservationService(Component):
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('checkin_partner_ids.state','=', 'precheckin'),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "text": f"Faltan {reservation.pending_checkin_data} {' huésped ' if reservation.pending_checkin_data == 1 else ' huéspedes '} "
                 f"por registrar sus datos.Puedes abrir el asistente de checkin "
@@ -1513,7 +1527,7 @@ class PmsReservationService(Component):
                 "domain": "[('state', '=', 'confirm'),"
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
-                "('reservation_type', 'in', ['normal', 'staff'])"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay'])"
                 "]",
                 "filtered": "lambda r: all([c.state in ('draft','dummy') for c in r.checkin_partner_ids]) ",
                 "text": "Registra los datos de los huéspedes desde el asistente del checkin.",
@@ -1523,7 +1537,7 @@ class PmsReservationService(Component):
                 "code": "confirmed_without_payment_and_precheckin",
                 "title": "Confirmadas a futuro sin pagar y sin precheckin realizado",
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
-                "('reservation_type', 'in', ['normal', 'staff']),"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
@@ -1536,7 +1550,7 @@ class PmsReservationService(Component):
                 "code": "confirmed_without_payment",
                 "title": "Confirmadas a futuro sin pagar",
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
-                "('reservation_type', 'in', ['normal', 'staff']),"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '=', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
@@ -1548,7 +1562,7 @@ class PmsReservationService(Component):
                 "code": "confirmed_without_precheckin",
                 "title": "Confirmadas a futuro sin pagar",
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
-                "('reservation_type', 'in', ['normal', 'staff']),"
+                "('reservation_type', 'in', ['normal', 'staff', 'long_stay']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['paid', 'overpayment','nothing_to_pay'])"

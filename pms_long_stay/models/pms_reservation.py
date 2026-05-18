@@ -29,69 +29,93 @@ class PmsReservation(models.Model):
     # ---------------------------------------------------------
     # CREATE OVERRIDE — AUTO-SPLITTING LONG STAY RESERVATIONS
     # ---------------------------------------------------------
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """
         Intercepts creation of long stay reservations to automatically split
         the stay into period-based blocks (weekly or monthly).
 
         The record explicitly created by the user is reused as the first
         period, so no "full-range" orphan reservation is left.
+
+        Batch-safe: the base ``pms.reservation.create`` is decorated with
+        ``@api.model_create_multi`` (it receives a list of vals dicts), so this
+        override must keep the same signature. Non long-stay vals are delegated
+        to ``super()`` in a single batched call; long-stay vals are processed
+        individually because each one expands into several segments. The
+        returned recordset preserves the order of ``vals_list``.
         """
-        if vals.get("reservation_type") != "long_stay":
-            return super().create(vals)
+        if not any(
+            vals.get("reservation_type") == "long_stay" for vals in vals_list
+        ):
+            return super().create(vals_list)
 
-        if not vals.get("checkin") or not vals.get("checkout"):
-            raise ValidationError(
-                _("Check-in and Check-out are required for long stay reservations.")
+        records = self.browse()
+        for vals in vals_list:
+            if vals.get("reservation_type") != "long_stay":
+                records += super().create([vals])
+                continue
+
+            # Create the initial reservation (will become the first segment).
+            # Validation is done AFTER creation, on the record, because
+            # checkin/checkout may not be passed explicitly in ``vals`` (e.g.
+            # pms_api_rest sends ``reservation_line_ids`` and the model derives
+            # checkin/checkout from them). The base model computes those fields.
+            master_reservation = super().create([vals])
+
+            start = master_reservation.checkin
+            end = master_reservation.checkout
+            if not start or not end:
+                raise ValidationError(
+                    _(
+                        "Check-in and Check-out are required for long stay "
+                        "reservations."
+                    )
+                )
+
+            room_type = master_reservation.room_type_id
+            if not room_type:
+                raise ValidationError(
+                    _("Room type is required for long stay reservations.")
+                )
+            if not room_type.long_stay_period:
+                raise ValidationError(
+                    _("This room type has no long stay period configured.")
+                )
+
+            period = room_type.long_stay_period
+
+            # Create the group representing the whole original stay
+            group = self.env["pms.reservation.long.stay.group"].create(
+                {
+                    "name": "Long Stay %s"
+                    % (master_reservation.name or master_reservation.id),
+                    "period": period,
+                    "original_checkin": start,
+                    "original_checkout": end,
+                }
             )
-        if not vals.get("room_type_id"):
-            raise ValidationError(
-                _("Room type is required for long stay reservations.")
+
+            # Link master to the group and mark as master
+            master_reservation.write(
+                {
+                    "long_stay_group_id": group.id,
+                    "is_long_stay_master": True,
+                }
             )
 
-        # Create the initial reservation (will become the first segment)
-        master_reservation = super().create(vals)
-
-        room_type = master_reservation.room_type_id
-        if not room_type.long_stay_period:
-            raise ValidationError(
-                _("This room type has no long stay period configured.")
+            # Split: reuse master as first block, create the rest
+            master_reservation._split_long_stay_into_periods(
+                period=period,
+                start=start,
+                end=end,
+                group=group,
             )
 
-        period = room_type.long_stay_period
-        start = master_reservation.checkin
-        end = master_reservation.checkout
+            # The caller keeps working with the first segment (reused master)
+            records += master_reservation
 
-        # Create the group representing the whole original stay
-        group = self.env["pms.reservation.long.stay.group"].create(
-            {
-                "name": "Long Stay %s"
-                % (master_reservation.name or master_reservation.id),
-                "period": period,
-                "original_checkin": start,
-                "original_checkout": end,
-            }
-        )
-
-        # Link master to the group and mark as master
-        master_reservation.write(
-            {
-                "long_stay_group_id": group.id,
-                "is_long_stay_master": True,
-            }
-        )
-
-        # Split the reservation: reuse master as first block, create the rest
-        master_reservation._split_long_stay_into_periods(
-            period=period,
-            start=start,
-            end=end,
-            group=group,
-        )
-
-        # The caller keeps working with the first segment (the reused master)
-        return master_reservation
+        return records
 
     # ---------------------------------------------------------
     # HELPERS FOR PERIOD BOUNDARIES
@@ -204,7 +228,9 @@ class PmsReservation(models.Model):
                     checkout=current_end,
                     group=group,
                 )
-                child_res = super().create(child_vals)
+                # Bypass this override (no re-split) via super(); pass a list
+                # to match the base @api.model_create_multi signature.
+                child_res = super().create([child_vals])
                 # Create long stay service for the new segment
                 child_res._create_long_stay_service_for_segment()
 
@@ -239,7 +265,12 @@ class PmsReservation(models.Model):
         checkin_date = self._to_date(self.checkin)
         period = room_type.long_stay_period or "monthly"
 
-        env_lang = self.env(context=dict(self.env.context, lang=self.lang))
+        # ``self.lang`` is a res.lang Many2one record; the ``lang`` context key
+        # expects a language code string (e.g. "es_ES"), not a recordset.
+        lang_code = (
+            self.lang.code or self.env.context.get("lang") or "en_US"
+        )
+        env_lang = self.env(context=dict(self.env.context, lang=lang_code))
 
         month_label = format_date(env_lang, checkin_date)
         room_name = room_type.display_name or ""

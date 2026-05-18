@@ -20,3 +20,8 @@ class PmsRoomTypeInfo(Datamodel):
     minPrice = fields.Float(required=False, allow_none=True)
     defaultMaxAvail = fields.Integer(required=False, allow_none=True)
     defaultQuota = fields.Integer(required=False, allow_none=True)
+    # Long stay configuration (pms_long_stay)
+    longStayPeriod = fields.String(required=False, allow_none=True)
+    longStayPrice = fields.Float(required=False, allow_none=True)
+    longStayTaxIds = fields.List(fields.Integer(), required=False)
+    longStayProductId = fields.Integer(required=False, allow_none=True)

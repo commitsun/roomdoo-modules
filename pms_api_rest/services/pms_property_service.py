@@ -112,6 +112,12 @@ class PmsPropertyService(Component):
                         )
                         for menu in property_menus
                     ],
+                    # Long stay config (only if pms_long_stay is installed)
+                    weekStartDay=getattr(prop, "week_start_day", None) or None,
+                    longStayBillingTiming=getattr(
+                        prop, "long_stay_billing_timing", None
+                    )
+                    or None,
                 )
             )
         return result_properties
@@ -207,6 +213,13 @@ class PmsPropertyService(Component):
                         )
                         for menu in property_menus
                     ],
+                    # Long stay config (only if pms_long_stay is installed)
+                    weekStartDay=getattr(pms_property, "week_start_day", None)
+                    or None,
+                    longStayBillingTiming=getattr(
+                        pms_property, "long_stay_billing_timing", None
+                    )
+                    or None,
             )
 
         return res

@@ -395,6 +395,13 @@ class PmsFolioService(Component):
                         "isSplitted": reservation.splitted,
                         "toAssign": reservation.to_assign,
                         "reservationType": reservation.reservation_type,
+                        "longStayGroupId": getattr(
+                            reservation, "long_stay_group_id", reservation.browse()
+                        ).id
+                        or None,
+                        "isLongStayMaster": getattr(
+                            reservation, "is_long_stay_master", False
+                        ),
                         "nights": reservation.nights,
                         "numServices": len(reservation.service_ids)
                         if reservation.service_ids

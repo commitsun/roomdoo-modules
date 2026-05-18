@@ -50,3 +50,6 @@ class PmsPropertyInfo(Datamodel):
     maxAmountSimplifiedInvoice = fields.Float(required=False, allow_none=True)
     supportUrl =  NestedModel("roomdoo.app.menu")
     linksRoomdoo = fields.List(NestedModel("roomdoo.app.menu"))
+    # Long stay configuration (pms_long_stay)
+    weekStartDay = fields.String(required=False, allow_none=True)
+    longStayBillingTiming = fields.String(required=False, allow_none=True)

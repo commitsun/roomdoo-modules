@@ -21,7 +21,7 @@ class PmsRoomType(models.Model):
 
     long_stay_product_id = fields.Many2one(
         comodel_name="product.template",
-        string="Long Stay Product",
+        string="Long Stay Internal Product",
         readonly=True,
         help="Internal product automatically created for long stay pricing.",
     )
@@ -109,13 +109,18 @@ class PmsRoomType(models.Model):
                 product = ProductTemplate.create(vals)
                 room_type.long_stay_product_id = product.id
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """
         Extend create() to auto-generate long stay products
         if the long stay fields are set at creation.
+
+        Batch-safe: the base ``pms.room.type.create`` is decorated with
+        ``@api.model_create_multi`` (it receives a list of vals dicts), so this
+        override keeps the same signature. ``_create_or_update_long_stay_product``
+        already iterates over the recordset, so it handles batches correctly.
         """
-        room_types = super().create(vals)
+        room_types = super().create(vals_list)
         room_types._create_or_update_long_stay_product()
         return room_types
 

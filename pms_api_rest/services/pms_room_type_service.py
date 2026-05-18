@@ -70,6 +70,17 @@ class PmsRoomTypeService(Component):
                     classId=room.class_id,
                     defaultMaxAvail=room.default_max_avail,
                     defaultQuota=room.default_quota,
+                    # Long stay config (only if pms_long_stay is installed)
+                    longStayPeriod=getattr(room, "long_stay_period", None)
+                    or None,
+                    longStayPrice=getattr(room, "long_stay_price", None) or None,
+                    longStayTaxIds=getattr(
+                        room, "long_stay_tax_ids", self.env["account.tax"]
+                    ).ids,
+                    longStayProductId=getattr(
+                        room, "long_stay_product_id", self.env["product.template"]
+                    ).id
+                    or None,
                 )
             )
         return result_rooms
@@ -100,6 +111,26 @@ class PmsRoomTypeService(Component):
                 classId=room_type_record.class_id,
                 defaultMaxAvail=room_type_record.default_max_avail,
                 defaultQuota=room_type_record.default_quota,
+                # Long stay config (only if pms_long_stay is installed)
+                longStayPeriod=getattr(
+                    room_type_record, "long_stay_period", None
+                )
+                or None,
+                longStayPrice=getattr(
+                    room_type_record, "long_stay_price", None
+                )
+                or None,
+                longStayTaxIds=getattr(
+                    room_type_record,
+                    "long_stay_tax_ids",
+                    self.env["account.tax"],
+                ).ids,
+                longStayProductId=getattr(
+                    room_type_record,
+                    "long_stay_product_id",
+                    self.env["product.template"],
+                ).id
+                or None,
             )
         else:
             raise MissingError(_("Room Type Class not found"))
