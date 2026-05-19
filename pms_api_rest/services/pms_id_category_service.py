@@ -26,7 +26,6 @@ class PmsIdCategoryService(Component):
         PmsIdCategoryInfo = self.env.datamodels["pms.id.category.info"]
         for id_category in (
             self.env["res.partner.id_category"]
-            .with_context(lang=self.env.user.lang)
             .sudo()
             .search([], order="priority asc")
         ):

@@ -24,6 +24,19 @@ class RestApiDispatcherPms(RestApiDispatcher):
     def __init__(self, httprequest):
         super().__init__(httprequest)
 
+    def pre_dispatch(self, rule, args):
+        try:
+            return super().pre_dispatch(rule, args)
+        except HTTPException as e:
+            if e.code is None and self.request.httprequest.method == "OPTIONS":
+                # Odoo omits Accept-Language from Access-Control-Allow-Headers,
+                # causing preflight failures when the frontend sends that header.
+                headers = self.request.future_response.headers
+                existing = headers.get("Access-Control-Allow-Headers", "")
+                if "Accept-Language" not in existing:
+                    headers.set("Access-Control-Allow-Headers", existing + ", Accept-Language")
+            raise
+
     def handle_error(self, exception):
         """Called within an except block to allow converting exceptions
         to abitrary responses. Anything returned (except None) will
