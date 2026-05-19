@@ -26,7 +26,6 @@ class ResCountryService(Component):
         ResCountriesInfo = self.env.datamodels["res.country.info"]
         for country in (
             self.env["res.country"]
-            .with_context(lang=self.env.user.lang)
             .sudo()
             .search([])
         ):
