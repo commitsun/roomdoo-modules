@@ -1988,7 +1988,7 @@ class PmsReservationService(Component):
             folio_id = (
                 self.env["pms.reservation"]
                 .sudo()
-                .browse(pms_checkin_partner_info.reservationId)
+                .browse(reservation_id)
                 .folio_id.id
             )
             record_checkin_partner_legal_representative = (
