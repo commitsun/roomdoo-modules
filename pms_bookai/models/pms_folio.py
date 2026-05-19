@@ -10,7 +10,10 @@ class PmsFolio(models.Model):
         <folio_id>/precheckin/<access_token>[/<lang_iso>]
         """
         self.ensure_one()
-        access_token = (self.access_token or "").strip()
+        # Use _portal_ensure_token() to handle the race condition where the
+        # folio access_token is not yet populated when the notification rule
+        # fires during folio create/confirm (e.g. event rule on_write).
+        access_token = (self._portal_ensure_token() or "").strip()
         if not access_token:
             return ""
 
