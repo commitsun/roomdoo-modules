@@ -60,10 +60,9 @@ class PmsFolio(models.Model):
             return False
         if any(r.state != "done" for r in active_reservations):
             return False
-        if not self.partner_id or not self.partner_id.email:
+        if not self.email:
             _logger.info(
-                "Folio %s eligible for satisfaction survey but has no partner email; "
-                "skipping.",
+                "Folio %s eligible for satisfaction survey but has no email; skipping.",
                 self.display_name,
             )
             return False
@@ -99,12 +98,12 @@ class PmsFolio(models.Model):
             survey = folio.pms_property_id.satisfaction_survey_id
             scheduled_date = folio._satisfaction_survey_scheduled_date()
             user_input = survey.sudo()._create_answer(
-                partner=folio.partner_id,
-                email=folio.partner_id.email,
+                partner=folio.partner_id or False,
+                email=folio.email,
                 check_attempts=False,
                 **{"folio_id": folio.id},
             )
-            lang = folio.lang or folio.partner_id.lang or self.env.lang
+            lang = folio.lang or self.env.lang
             invite_template.with_context(lang=lang).send_mail(
                 user_input.id,
                 email_values={"scheduled_date": scheduled_date},
