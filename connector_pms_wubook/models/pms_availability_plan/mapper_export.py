@@ -75,7 +75,7 @@ class ChannelWubookPmsAvailabilityPlanChildBinderMapperExport(Component):
               AND r.pms_property_id = %s
               AND rb.id IS NULL
             """,
-            (backend.id, parent.source.id, backend.pms_property_id.id),
+            (backend.id, parent.source.odoo_id.id, backend.pms_property_id.id),
         )
         new_rule_ids = [row[0] for row in self.env.cr.fetchall()]
         if new_rule_ids:

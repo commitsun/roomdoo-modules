@@ -130,7 +130,7 @@ class ChannelWubookProductPricelistChildBinderMapperExport(Component):
                 )
               )
             """,
-            (backend.id, parent.source.id, backend.pms_property_id.id),
+            (backend.id, parent.source.odoo_id.id, backend.pms_property_id.id),
         )
         new_item_ids = [row[0] for row in self.env.cr.fetchall()]
         if new_item_ids:
