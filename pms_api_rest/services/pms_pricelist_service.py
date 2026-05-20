@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from odoo import _
@@ -189,60 +190,137 @@ class PmsPricelistService(Component):
         return result
 
     def _create_or_update_pricelist_items(self, pms_pricelist_item_info):
-        for pms_pricelist_item in pms_pricelist_item_info.pricelistItems:
-            date = datetime.strptime(pms_pricelist_item.date, "%Y-%m-%d").date()
-            product_id = (
-                self.env["pms.room.type"]
-                .sudo()
-                .browse(pms_pricelist_item.roomTypeId)
-                .product_id
+        """Upsert ``product.pricelist.item`` rows from the API payload in
+        bulk.
+
+        Semantically equivalent to the previous per-item ``search →
+        write|create`` loop, but folds N item-level operations into a
+        single ``SELECT`` (for the existence check) and bulk
+        ``write`` / ``create`` calls. With the per-write listener
+        scaling out a hundredfold on each save, the loop dominated
+        request time and pushed PATCHes past the frontend timeout —
+        which then retried and produced duplicates.
+
+        The SQL below mirrors the Odoo domain it replaces:
+
+        * ``pricelist_id = X``,
+        * ``product_id = Y``,
+        * ``pms_property_ids contains Z`` (M2M; modelled by the join
+          on ``product_pricelist_item_pms_property_rel``),
+        * ``date_start_consumption = D`` and ``date_end_consumption =
+          D`` (a single-day item),
+        * implicit ``active = TRUE`` filter that Odoo's ``search``
+          applies when the model defines ``active``.
+
+        Access checks run on the deduplicated set of products,
+        pricelists, properties and matched existing items — same
+        records the loop used to check, just once.
+        """
+        items_info = list(pms_pricelist_item_info.pricelistItems)
+        if not items_info:
+            return
+
+        # Resolve room types to products in a single browse.
+        room_type_ids = list({it.roomTypeId for it in items_info})
+        room_types = self.env["pms.room.type"].sudo().browse(room_type_ids)
+        products = room_types.product_id
+        pms_api_check_access(user=self.env.user, records=products)
+        rt_to_product_id = {rt.id: rt.product_id.id for rt in room_types}
+
+        # Build (pricelist_id, product_id, property_id, date) -> price.
+        # A dict naturally deduplicates same-key entries in the payload
+        # (last write wins, mirroring the per-item loop which would
+        # write the second value on top of the first).
+        targets = {}
+        pricelist_ids = set()
+        property_ids = set()
+        for it in items_info:
+            date = datetime.strptime(it.date, "%Y-%m-%d").date()
+            product_id = rt_to_product_id[it.roomTypeId]
+            targets[(it.pricelistId, product_id, it.pmsPropertyId, date)] = it.price
+            pricelist_ids.add(it.pricelistId)
+            property_ids.add(it.pmsPropertyId)
+
+        # Access checks on the deduplicated pricelist / property sets.
+        # The previous loop checked these only inside the "else"
+        # (create) branch; we check them up-front because we cannot
+        # know which keys will go into create vs write until after the
+        # batched SELECT, and the check is property-scoped (same set
+        # of records, same outcome).
+        pricelists = self.env["product.pricelist"].sudo().browse(list(pricelist_ids))
+        properties = self.env["pms.property"].sudo().browse(list(property_ids))
+        pms_api_check_access(user=self.env.user, records=pricelists)
+        pms_api_check_access(user=self.env.user, records=properties)
+
+        # Batched existence check. Equivalent to running the original
+        # search for every key in ``targets``, but in a single query.
+        self.env.cr.execute(
+            """
+            SELECT
+                ppi.id,
+                ppi.pricelist_id,
+                ppi.product_id,
+                ppr.pms_property_id,
+                ppi.date_start_consumption
+            FROM product_pricelist_item ppi
+            JOIN product_pricelist_item_pms_property_rel ppr
+                ON ppr.product_pricelist_item_id = ppi.id
+            WHERE ppi.active = TRUE
+              AND ppi.date_start_consumption IS NOT NULL
+              AND ppi.date_start_consumption = ppi.date_end_consumption
+              AND (
+                ppi.pricelist_id,
+                ppi.product_id,
+                ppr.pms_property_id,
+                ppi.date_start_consumption
+              ) IN %s
+            """,
+            (tuple(targets.keys()),),
+        )
+        # Map key -> list of ids: if the legacy ``search`` matched more
+        # than one item for the same key (e.g. legacy duplicates that
+        # the unique-constraint backlog will prevent going forward),
+        # all of them got written to. Preserve that.
+        existing = defaultdict(list)
+        existing_ids = []
+        for row in self.env.cr.fetchall():
+            key = (row[1], row[2], row[3], row[4])
+            existing[key].append(row[0])
+            existing_ids.append(row[0])
+        if existing_ids:
+            existing_items = (
+                self.env["product.pricelist.item"].sudo().browse(existing_ids)
             )
-            pms_api_check_access(user=self.env.user, records=product_id)
-            product_pricelist_item = (
-                self.env["product.pricelist.item"]
-                .sudo()
-                .search(
-                    [
-                        ("pricelist_id", "=", pms_pricelist_item.pricelistId),
-                        ("product_id", "=", product_id.id),
-                        ("pms_property_ids", "in", pms_pricelist_item.pmsPropertyId),
-                        ("date_start_consumption", "=", date),
-                        ("date_end_consumption", "=", date),
-                    ]
-                )
-            )
-            pms_api_check_access(user=self.env.user, records=product_pricelist_item)
-            if product_pricelist_item:
-                product_pricelist_item.write(
-                    {
-                        "fixed_price": pms_pricelist_item.price,
-                    }
-                )
+            pms_api_check_access(user=self.env.user, records=existing_items)
+
+        # Group writes by new price so we issue at most one ``write``
+        # per distinct price (instead of one per item). Items not in
+        # ``existing`` go to the bulk ``create``.
+        by_price = defaultdict(list)
+        to_create = []
+        for key, price in targets.items():
+            if key in existing:
+                by_price[price].extend(existing[key])
             else:
-                pms_api_check_access(
-                    user=self.env.user,
-                    records=self.env["product.pricelist"]
-                    .sudo()
-                    .browse(pms_pricelist_item.pricelistId),
-                )
-                pms_api_check_access(
-                    user=self.env.user,
-                    records=self.env["pms.property"]
-                    .sudo()
-                    .browse(pms_pricelist_item.pmsPropertyId),
-                )
-                self.env["product.pricelist.item"].sudo().create(
+                pricelist_id, product_id, property_id, date = key
+                to_create.append(
                     {
                         "applied_on": "0_product_variant",
-                        "product_id": product_id.id,
-                        "pms_property_ids": [pms_pricelist_item.pmsPropertyId],
+                        "product_id": product_id,
+                        "pms_property_ids": [property_id],
                         "date_start_consumption": date,
                         "date_end_consumption": date,
                         "compute_price": "fixed",
-                        "fixed_price": pms_pricelist_item.price,
-                        "pricelist_id": pms_pricelist_item.pricelistId,
+                        "fixed_price": price,
+                        "pricelist_id": pricelist_id,
                     }
                 )
+
+        Item = self.env["product.pricelist.item"].sudo()
+        for price, ids in by_price.items():
+            Item.browse(ids).write({"fixed_price": price})
+        if to_create:
+            Item.create(to_create)
 
     @restapi.method(
         [
