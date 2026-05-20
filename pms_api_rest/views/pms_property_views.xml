@@ -17,6 +17,9 @@
                 </group>
             </xpath>
             <xpath expr="//field[@name='default_departure_hour']" position="after">
+                <group string="Housekeeping">
+                    <field name="cleaning_mode" />
+                </group>
                 <group string="Planning Colors">
                     <field name="color_option_config" />
                     <group>
