@@ -72,30 +72,35 @@ class PmsProperty(models.Model):
                 self.with_delay().autoinvoice_folio(folio, delay_post=True)
             else:
                 self.autoinvoice_folio(folio)
-        if not with_delay:
-            # 2- Validate the draft invoices created by the folios
-            draft_invoices_to_post = self.env["account.move"].search(
-                [
-                    ("state", "=", "draft"),
-                    (
-                        "invoice_line_ids.folio_line_ids.autoinvoice_date",
-                        "=",
-                        date_reference,
-                    ),
-                    ("folio_ids", "!=", False),
-                    ("amount_total", ">", 0),
-                ]
+        # 2- Validate draft invoices ready for posting. Invoices created
+        # in step 1 schedule their own posting job from inside
+        # autoinvoice_folio; this search catches orphan drafts left over
+        # from previous runs or created manually outside the cron flow.
+        draft_invoices_to_post = self.env["account.move"].search(
+            [
+                ("state", "=", "draft"),
+                (
+                    "invoice_line_ids.folio_line_ids.autoinvoice_date",
+                    "=",
+                    date_reference,
+                ),
+                ("folio_ids", "!=", False),
+                ("amount_total", ">", 0),
+            ]
+        )
+        # Skip invoices that still have lines with future autoinvoice dates
+        draft_invoices_to_post = draft_invoices_to_post.filtered(
+            lambda inv: not inv.invoice_line_ids.folio_line_ids.filtered(
+                lambda fl: fl.autoinvoice_date and fl.autoinvoice_date > date_reference
             )
-            # Skip invoices that still have lines with future autoinvoice dates
-            draft_invoices_to_post = draft_invoices_to_post.filtered(
-                lambda inv: not inv.invoice_line_ids.folio_line_ids.filtered(
-                    lambda fl: fl.autoinvoice_date
-                    and fl.autoinvoice_date > date_reference
-                )
-            )
-            for invoice in draft_invoices_to_post:
+        )
+        for invoice in draft_invoices_to_post:
+            if with_delay:
+                self.with_delay().autovalidate_folio_invoice(invoice)
+            else:
                 self.autovalidate_folio_invoice(invoice)
 
+        if not with_delay:
             # 3- Reverse the downpayment invoices not included in final invoice
             downpayments_invoices_to_reverse = self.env["account.move.line"].search(
                 [
