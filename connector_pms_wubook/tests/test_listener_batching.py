@@ -390,6 +390,11 @@ class TestPlanRulePropertyScope(TransactionComponentCase):
         super().setUpClass()
         _make_backend_environment(cls)
         _make_second_backend(cls)
+        # ``pms.availability``'s integrity check rejects rules whose
+        # ``pms_property_id`` is not in ``room_type.pms_property_ids``,
+        # so extend the room type to cover both properties before
+        # creating any rule.
+        cls.room_type_a.pms_property_ids = [(4, cls.pms_property_b.id)]
         cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
