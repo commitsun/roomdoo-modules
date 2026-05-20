@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import api, models
+from odoo import SUPERUSER_ID, api, models
 from odoo.exceptions import MissingError, UserError
 from odoo.osv import expression
 
@@ -399,8 +399,12 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
 
     def _render_invoice_xlsx(self, invoices):
         report_name = self._get_invoice_xlsx_report_name()
+        # `report_xlsx._render_xlsx` forces `.sudo(False)` on the report
+        # model, so `.sudo()` here would not bypass ACL inside the export.
         content, _report_type = (
-            self.env["ir.actions.report"].sudo()._render(report_name, invoices.ids)
+            self.env["ir.actions.report"]
+            .with_user(SUPERUSER_ID)
+            ._render(report_name, invoices.ids)
         )
         return Response(
             content=content,
