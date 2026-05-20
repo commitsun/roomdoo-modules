@@ -314,9 +314,7 @@ class TestPlanRulePerPlanPropertyBatching(TransactionComponentCase):
                 "external_id": 111,
             }
         )
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "OTA Plan", "company_id": cls.company.id}
-        )
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "OTA Plan"})
         cls.plan_binding = cls.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": cls.plan.id,
@@ -406,9 +404,7 @@ class TestPlanRulePropertyScope(TransactionComponentCase):
                 "external_id": 222,
             }
         )
-        cls.plan = cls.env["pms.availability.plan"].create(
-            {"name": "Shared Plan", "company_id": cls.company.id}
-        )
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Shared Plan"})
         cls.plan_binding_a = cls.env["channel.wubook.pms.availability.plan"].create(
             {
                 "odoo_id": cls.plan.id,
