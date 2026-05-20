@@ -15,6 +15,22 @@ _FLATTEN_BUFFER_KEY = "connector_pms_wubook.flatten_buffer"
 # flatten buffer.
 _REGULAR_PRICELIST_BUFFER_KEY = "connector_pms_wubook.regular_pricelist_buffer"
 
+# Sentinel key for the per-pricelist staging buffer populated by the
+# listener on every write/create/unlink. Resolved **once** at precommit
+# by ``_flush_pending_pricelist_items``, which then iterates the
+# pricelist's Wubook bindings and flatten descendants a single time per
+# pricelist and forwards to ``_FLATTEN_BUFFER_KEY`` / ``_REGULAR_PRICELIST_BUFFER_KEY``
+# (the per-binding deduplicating buffers).
+#
+# Why the indirection: ``pricelist.channel_wubook_bind_ids`` resolves to
+# ~one binding per Wubook backend (~90 in Alda prod) and
+# ``_get_flatten_descendant_pricelists`` does a SQL search. Doing this
+# per item in a 500-item PATCH spent ~25 s in pure listener work,
+# blowing through the frontend timeout and triggering retry-driven
+# duplicates. Doing it once per pricelist at precommit collapses that
+# to sub-second.
+_PENDING_PRICELIST_ITEMS_KEY = "connector_pms_wubook.pending_pricelist_items"
+
 # Sentinel inserted in the ``room_type_ids`` set to mark "all room types"
 # (used when the change affects the rule globally, e.g. the flatten
 # pricelist's own % rule or a parent rule with no specific room type).
@@ -90,23 +106,139 @@ def _flush_regular_pricelist_buffer(env):
         ).export_record(binding.backend_id, binding.odoo_id)
 
 
+def _flush_pending_pricelist_items(env):
+    """Precommit callback: resolve bindings and flatten descendants
+    **once per pricelist** and forward to the per-binding flatten /
+    regular buffers (which deduplicate and emit a single job each).
+
+    Behavior is equivalent to calling ``_enqueue_pricelist_exports``
+    item-by-item: the per-binding buffers were already collapsing N
+    item-level requests into one job, so feeding them with a single
+    pricelist-level pass yields the same final set of jobs.
+    """
+    data = env.cr.precommit.data.pop(_PENDING_PRICELIST_ITEMS_KEY, None)
+    if not data:
+        return
+    Pricelist = env["product.pricelist"]
+    for pricelist_id, entry in data.items():
+        pricelist = Pricelist.browse(pricelist_id).exists()
+        if not pricelist:
+            continue
+        _dispatch_pricelist_exports(env, pricelist, entry)
+
+
+def _dispatch_pricelist_exports(env, pricelist, entry):
+    """Forward an aggregated buffer entry to the per-binding flatten /
+    regular buffers. Iterates ``pricelist.channel_wubook_bind_ids`` and
+    ``pricelist._get_flatten_descendant_pricelists()`` exactly once.
+    """
+    is_global = entry["global"]
+    property_ids = entry["property_ids"]
+
+    def _in_scope(binding):
+        return is_global or (binding.backend_id.pms_property_id.id in property_ids)
+
+    _dispatch_own_bindings(env, pricelist, _in_scope)
+    _dispatch_flatten_descendants(env, pricelist, entry, _in_scope)
+
+
+def _dispatch_own_bindings(env, pricelist, in_scope):
+    """Forward to the flatten / regular buffer for the pricelist's own
+    Wubook bindings."""
+    is_flatten = pricelist.wubook_flatten_to_daily
+    for binding in pricelist.channel_wubook_bind_ids:
+        if not binding.external_id:
+            continue
+        if not in_scope(binding):
+            continue
+        if is_flatten:
+            _buffer_flatten_export_at(env, binding, None, None, _ALL_ROOM_TYPES)
+        else:
+            _buffer_regular_export_at(env, binding)
+
+
+def _dispatch_flatten_descendants(env, pricelist, entry, in_scope):
+    """Forward to the flatten buffer for every binding of the
+    pricelist's flatten descendants, scoped by the buffer's aggregated
+    date window and room-type set."""
+    descendants = pricelist._get_flatten_descendant_pricelists()
+    if not descendants:
+        return
+    date_from = entry["date_from"]
+    date_to = entry["date_to"]
+    room_type_ids = entry["room_type_ids"]
+    has_all_rt = _ALL_ROOM_TYPES in room_type_ids
+    specific_rt_ids = [rid for rid in room_type_ids if rid is not _ALL_ROOM_TYPES]
+    for descendant in descendants:
+        for binding in descendant.channel_wubook_bind_ids:
+            if not binding.external_id:
+                continue
+            if not in_scope(binding):
+                continue
+            if has_all_rt:
+                _buffer_flatten_export_at(
+                    env, binding, date_from, date_to, _ALL_ROOM_TYPES
+                )
+                continue
+            for rt_id in specific_rt_ids:
+                _buffer_flatten_export_at(env, binding, date_from, date_to, rt_id)
+
+
+def _buffer_flatten_export_at(env, binding, date_from, date_to, room_type_id):
+    """Module-level twin of
+    ``ChannelWubookProductPricelistItemListener._buffer_flatten_export``,
+    callable from the precommit flush (no ``self``).
+    """
+    cr = env.cr
+    data = cr.precommit.data
+    if _FLATTEN_BUFFER_KEY not in data:
+        data[_FLATTEN_BUFFER_KEY] = {}
+        env_captured = env
+        cr.precommit.add(lambda env=env_captured: _flush_flatten_buffer(env))
+    entry = data[_FLATTEN_BUFFER_KEY].setdefault(
+        binding.id,
+        {"binding": binding, "ranges": [], "room_type_ids": set()},
+    )
+    entry["ranges"].append((date_from, date_to))
+    entry["room_type_ids"].add(room_type_id)
+
+
+def _buffer_regular_export_at(env, binding):
+    """Module-level twin of
+    ``ChannelWubookProductPricelistItemListener._buffer_regular_export``,
+    callable from the precommit flush (no ``self``).
+    """
+    cr = env.cr
+    data = cr.precommit.data
+    if _REGULAR_PRICELIST_BUFFER_KEY not in data:
+        data[_REGULAR_PRICELIST_BUFFER_KEY] = {}
+        env_captured = env
+        cr.precommit.add(lambda env=env_captured: _flush_regular_pricelist_buffer(env))
+    data[_REGULAR_PRICELIST_BUFFER_KEY].setdefault(binding.id, binding)
+
+
 class ChannelWubookProductPricelistItemListener(Component):
     """Cascade listener for every ``product.pricelist.item`` change.
 
-    Within a single transaction, requests are coalesced through two
-    independent buffers on ``cr.precommit.data`` and flushed as a single
-    job per affected binding:
+    On every write / create / unlink, the listener appends a lightweight
+    fingerprint to a per-pricelist staging buffer in ``cr.precommit.data``
+    and lets a single precommit callback resolve bindings and flatten
+    descendants once per pricelist. The actual job-emitting buffers
+    (flatten / regular) and their flushes are unchanged.
 
-    * **Regular pricelist binding** (the pricelist owning the item):
-      enqueues ``export_record(backend, pricelist)`` so the mapper can
-      push the dirty items via ``update_plan_prices``. Replaces the old
-      ``_scheduler_export_pricelist_items`` cron — pushes are immediate
-      instead of waiting for the next cron tick.
+    Within a single transaction, requests are coalesced through three
+    buffers on ``cr.precommit.data`` and flushed in order at precommit
+    time:
 
-    * **Flatten descendants** of the pricelist: enqueues
-      ``export_flattened(date_from, date_to, room_type_ids)`` with the
-      minimal date / room-type scope to avoid re-pushing prices that
-      didn't change.
+    1. ``_PENDING_PRICELIST_ITEMS_KEY`` — populated synchronously by
+       this listener. One entry per pricelist with the union of
+       ``pms_property_ids`` (or a ``global`` flag if any pending item
+       has no property restriction), the min/max ``date_start_consumption``
+       / ``date_end_consumption`` and the union of affected room types.
+       Flushed first.
+    2. ``_FLATTEN_BUFFER_KEY`` and ``_REGULAR_PRICELIST_BUFFER_KEY`` —
+       populated by the precommit flush above. One entry per Wubook
+       binding. Flushed last, emit a single queue job per binding.
 
     Bindings without ``external_id`` are skipped (the wizard's connect
     flow is still in progress).
@@ -116,108 +248,83 @@ class ChannelWubookProductPricelistItemListener(Component):
     _inherit = "base.connector.listener"
     _apply_on = "product.pricelist.item"
 
-    def _buffer_flatten_export(self, binding, date_from, date_to, room_type_id):
-        cr = self.env.cr
-        data = cr.precommit.data
-        if _FLATTEN_BUFFER_KEY not in data:
-            data[_FLATTEN_BUFFER_KEY] = {}
-            env = self.env  # captured for the precommit closure
-            cr.precommit.add(lambda env=env: _flush_flatten_buffer(env))
-        entry = data[_FLATTEN_BUFFER_KEY].setdefault(
-            binding.id,
-            {"binding": binding, "ranges": [], "room_type_ids": set()},
-        )
-        entry["ranges"].append((date_from, date_to))
-        entry["room_type_ids"].add(room_type_id)
-
-    def _buffer_regular_export(self, binding):
-        cr = self.env.cr
-        data = cr.precommit.data
-        if _REGULAR_PRICELIST_BUFFER_KEY not in data:
-            data[_REGULAR_PRICELIST_BUFFER_KEY] = {}
-            env = self.env
-            cr.precommit.add(lambda env=env: _flush_regular_pricelist_buffer(env))
-        data[_REGULAR_PRICELIST_BUFFER_KEY].setdefault(binding.id, binding)
-
-    def _enqueue_pricelist_exports(self, record, date_from=None, date_to=None):
-        """Buffer the appropriate export for every Wubook binding affected
-        by a change on ``record``.
-
-        Logic:
-
-        * Pricelist's own bindings:
-          - If ``wubook_flatten_to_daily`` → buffer flatten export with
-            ``(None, None)`` (default window) and ``_ALL_ROOM_TYPES``
-            scope: the percentage rule on the flatten pricelist applies
-            globally so we can't scope per room type.
-          - Else → buffer a regular ``export_record``.
-        * Flatten descendants of the pricelist: buffer flatten export
-          scoped to the changed item's date range and to the room type
-          tied to ``product_id`` (or "all" if undeterminable).
-
-        Property scoping: an item may declare ``pms_property_ids`` to
-        restrict where it applies. When it does, only bindings whose
-        backend covers one of those properties get the export. An empty
-        ``pms_property_ids`` means the item applies globally, so every
-        binding is enqueued.
+    def _stage_pending_item(
+        self,
+        record,
+        item_property_ids,
+        item_date_from,
+        item_date_to,
+        item_room_type_id,
+    ):
+        """Append a record's contribution to the per-pricelist staging
+        buffer. Cheap (dict / set operations). The expensive binding
+        resolution happens later, once per pricelist, at precommit.
         """
         pricelist = record.pricelist_id
         if not pricelist:
             return
-
-        item_property_ids = set(record.pms_property_ids.ids)
-
-        def _binding_in_scope(binding):
-            if not item_property_ids:
-                return True
-            return binding.backend_id.pms_property_id.id in item_property_ids
-
-        # Own bindings
-        if pricelist.wubook_flatten_to_daily:
-            for binding in pricelist.channel_wubook_bind_ids:
-                if not binding.external_id:
-                    continue
-                if not _binding_in_scope(binding):
-                    continue
-                self._buffer_flatten_export(binding, None, None, _ALL_ROOM_TYPES)
+        cr = self.env.cr
+        data = cr.precommit.data
+        if _PENDING_PRICELIST_ITEMS_KEY not in data:
+            data[_PENDING_PRICELIST_ITEMS_KEY] = {}
+            env = self.env
+            cr.precommit.add(lambda env=env: _flush_pending_pricelist_items(env))
+        entry = data[_PENDING_PRICELIST_ITEMS_KEY].setdefault(
+            pricelist.id,
+            {
+                "global": False,
+                "property_ids": set(),
+                "date_from": None,
+                "date_to": None,
+                "room_type_ids": set(),
+            },
+        )
+        if not item_property_ids:
+            entry["global"] = True
         else:
-            for binding in pricelist.channel_wubook_bind_ids:
-                if not binding.external_id:
-                    continue
-                if not _binding_in_scope(binding):
-                    continue
-                self._buffer_regular_export(binding)
+            entry["property_ids"].update(item_property_ids)
+        if item_date_from is not None:
+            entry["date_from"] = (
+                item_date_from
+                if entry["date_from"] is None
+                else min(entry["date_from"], item_date_from)
+            )
+        if item_date_to is not None:
+            entry["date_to"] = (
+                item_date_to
+                if entry["date_to"] is None
+                else max(entry["date_to"], item_date_to)
+            )
+        entry["room_type_ids"].add(item_room_type_id)
 
-        # Cascade to flatten descendants
-        descendants = pricelist._get_flatten_descendant_pricelists()
-        if not descendants:
-            return
-        item_dfrom = record.date_start_consumption if not date_from else date_from
-        item_dto = record.date_end_consumption if not date_to else date_to
+    def _stage_from_record(self, record, date_from=None, date_to=None):
+        """Read the listener inputs from ``record`` and stage them.
+
+        ``date_from`` / ``date_to`` overrides exist so that
+        ``on_record_unlink`` can capture the row's dates before it is
+        gone by precommit time.
+        """
+        item_property_ids = set(record.pms_property_ids.ids)
         room_type = record.product_id.room_type_id if record.product_id else False
-        affected_room_type_id = room_type.id if room_type else _ALL_ROOM_TYPES
-        for descendant in descendants:
-            for binding in descendant.channel_wubook_bind_ids:
-                if not binding.external_id:
-                    continue
-                if not _binding_in_scope(binding):
-                    continue
-                self._buffer_flatten_export(
-                    binding, item_dfrom, item_dto, affected_room_type_id
-                )
+        item_room_type_id = room_type.id if room_type else _ALL_ROOM_TYPES
+        item_dfrom = record.date_start_consumption if date_from is None else date_from
+        item_dto = record.date_end_consumption if date_to is None else date_to
+        self._stage_pending_item(
+            record, item_property_ids, item_dfrom, item_dto, item_room_type_id
+        )
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
-        self._enqueue_pricelist_exports(record)
+        self._stage_from_record(record)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
-        self._enqueue_pricelist_exports(record)
+        self._stage_from_record(record)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_unlink(self, record, fields=None):
         # Read dates now because the row will be gone by precommit time.
-        self._enqueue_pricelist_exports(
+        self._stage_from_record(
             record,
             date_from=record.date_start_consumption,
             date_to=record.date_end_consumption,
