@@ -8,19 +8,33 @@ class PmsFolio(models.Model):
 
     def _get_lines_to_invoice(self, final=False):
         self = self.with_context(lines_auto_add=True)
-        lines_to_invoice = dict()
         res = super()._get_lines_to_invoice(final=final)
         if not self._context.get("autoinvoice"):
             return res
-        for line in self.sale_line_ids.filtered(
-            lambda r: r.qty_to_invoice > 0
-            or (r.qty_to_invoice < 0 and final)
-            or r.display_type == "line_note"
-        ):
-            if line.autoinvoice_date and line.autoinvoice_date <= fields.Date.today():
-                lines_to_invoice[line.id] = (
-                    0 if line.display_type else line.qty_to_invoice
-                )
+        due_lines = self.sale_line_ids.filtered(
+            lambda r: r.autoinvoice_date
+            and r.autoinvoice_date <= fields.Date.today()
+            and (
+                r.qty_to_invoice > 0
+                or (r.qty_to_invoice < 0 and final)
+                or r.display_type == "line_note"
+            )
+        )
+        # Drop line_notes whose partner_invoice has no billable line in this
+        # batch — otherwise _create_invoices would group them into a 0€
+        # invoice for that partner (e.g. late reservations added as orphan
+        # notes after the original folio was already invoiced).
+        billable_partner_ids = {
+            line.default_invoice_to.id for line in due_lines if not line.display_type
+        }
+        lines_to_invoice = dict()
+        for line in due_lines:
+            if (
+                line.display_type == "line_note"
+                and line.default_invoice_to.id not in billable_partner_ids
+            ):
+                continue
+            lines_to_invoice[line.id] = 0 if line.display_type else line.qty_to_invoice
         return lines_to_invoice
 
     def _get_invoice_date(self, partner_invoice_id, lines_to_invoice, date=None):
