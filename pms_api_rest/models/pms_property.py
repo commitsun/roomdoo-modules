@@ -14,6 +14,24 @@ _logger = logging.getLogger(__name__)
 class PmsProperty(models.Model):
     _inherit = "pms.property"
 
+    cleaning_mode = fields.Selection(
+        selection=[
+            ("per_stay", "Per stay (dirty on checkout)"),
+            ("daily", "Daily (dirty every morning by cron)"),
+        ],
+        string="Housekeeping Mode",
+        default="per_stay",
+        required=True,
+        help=(
+            "How rooms are flagged as dirty:\n"
+            " * Per stay: a room becomes dirty only when its reservation is "
+            "checked out (default — apartments).\n"
+            " * Daily: a daily cron also flags as dirty every room whose "
+            "reservation occupied it the previous night (hotels, daily "
+            "housekeeping)."
+        ),
+    )
+
     color_option_config = fields.Selection(
         string="Color Option Configuration",
         help="Configuration of the color code for the planning.",
@@ -35,7 +53,10 @@ class PmsProperty(models.Model):
 
     simple_future_color = fields.Char(
         string="Future Reservations",
-        help="Color for confirm, arrival_delayed and draft reservations in the planning.",
+        help=(
+            "Color for confirm, arrival_delayed and draft reservations in "
+            "the planning."
+        ),
         default="rgba(1,182,227)",
     )
 
@@ -123,6 +144,39 @@ class PmsProperty(models.Model):
         selection=[],
     )
 
+    @api.model
+    def _cron_mark_rooms_dirty_daily(self):
+        """Flag rooms as dirty on properties with daily housekeeping.
+
+        For each property with ``cleaning_mode = 'daily'``, find rooms whose
+        reservation_line occupied them the previous night (regardless of
+        whether the guest stays another night, is checking out today, or
+        has already been checked out) and write ``cleaning_status = 'dirty'``
+        if they are not already dirty.
+        """
+        properties = self.search([("cleaning_mode", "=", "daily")])
+        if not properties:
+            return
+        yesterday = fields.Date.context_today(self) - datetime.timedelta(days=1)
+        lines = self.env["pms.reservation.line"].search(
+            [
+                ("pms_property_id", "in", properties.ids),
+                ("date", "=", yesterday),
+                ("overnight_room", "=", True),
+                (
+                    "reservation_id.state",
+                    "in",
+                    ("onboard", "departure_delayed", "done"),
+                ),
+                ("room_id", "!=", False),
+            ]
+        )
+        rooms_to_dirty = lines.mapped("room_id").filtered(
+            lambda r: r.cleaning_status != "dirty"
+        )
+        if rooms_to_dirty:
+            rooms_to_dirty.write({"cleaning_status": "dirty"})
+
     # PUSH API NOTIFICATIONS
     def get_payload_avail(self, avails, client):
         self.ensure_one()
@@ -143,7 +197,9 @@ class PmsProperty(models.Model):
         ]
         for room_type_id in room_type_ids:
             room_type_avails = sorted(
-                avails.filtered(lambda r: r.room_type_id.id == room_type_id),
+                avails.filtered(
+                    lambda r, rt_id=room_type_id: r.room_type_id.id == rt_id
+                ),
                 key=lambda r: r.date,
             )
             avail_room_type_index = {}
@@ -212,7 +268,7 @@ class PmsProperty(models.Model):
                 self.env["pms.room.type"].search([("product_id", "=", product_id)]).id
             )
             product_prices = sorted(
-                prices.filtered(lambda r: r.product_id.id == product_id),
+                prices.filtered(lambda r, pid=product_id: r.product_id.id == pid),
                 key=lambda r: r.date_end_consumption,
             )
             price_product_index = {}
@@ -263,7 +319,9 @@ class PmsProperty(models.Model):
         ]
         for room_type_id in room_type_ids:
             room_type_rules = sorted(
-                rules.filtered(lambda r: r.room_type_id.id == room_type_id),
+                rules.filtered(
+                    lambda r, rt_id=room_type_id: r.room_type_id.id == rt_id
+                ),
                 key=lambda r: r.date,
             )
             rules_room_type_index = {}
@@ -346,7 +404,7 @@ class PmsProperty(models.Model):
         )
         plan_avail = property_client_conf.main_avail_plan_id
         for date in all_dates:
-            avail_record = avail_records.filtered(lambda r: r.date == date)
+            avail_record = avail_records.filtered(lambda r, d=date: r.date == d)
             if avail_record:
                 avail_rule = avail_record.avail_rule_ids.filtered(
                     lambda r: r.availability_plan_id == plan_avail
@@ -467,7 +525,7 @@ class PmsProperty(models.Model):
             for x in range((date_to - date_from).days + 1)
         ]
         for date in all_dates:
-            rules_record = rules_records.filtered(lambda r: r.date == date)
+            rules_record = rules_records.filtered(lambda r, d=date: r.date == d)
             if rules_record:
                 rule = rules_record[0]
             else:
@@ -651,8 +709,8 @@ class PmsProperty(models.Model):
                         .search([("pms_property_id", "=", pms_property.id)])
                         .mapped("room_type_id")
                         .filtered(
-                            lambda r: r.id
-                            not in property_client_conf.excluded_room_type_ids.ids
+                            lambda r, conf=property_client_conf: r.id
+                            not in conf.excluded_room_type_ids.ids
                         )
                         .ids
                     )

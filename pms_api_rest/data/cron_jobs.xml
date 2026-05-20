@@ -11,10 +11,26 @@
             <field name="state">code</field>
             <field name="model_id" ref="model_pms_api_log" />
             <field
-            name="nextcall"
-            eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"
-        />
+      name="nextcall"
+      eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"
+    />
             <field name="code">model.clean_log_data(offset=60)</field>
+        </record>
+
+        <record model="ir.cron" id="mark_rooms_dirty_daily">
+            <field name="name">Mark Rooms Dirty Daily</field>
+            <field name="interval_number">1</field>
+            <field name="user_id" ref="base.user_root" />
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False" />
+            <field name="state">code</field>
+            <field name="model_id" ref="pms.model_pms_property" />
+            <field
+      name="nextcall"
+      eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"
+    />
+            <field name="code">model._cron_mark_rooms_dirty_daily()</field>
         </record>
 
 </odoo>
