@@ -123,7 +123,7 @@ class ChannelWubookPmsFolioMapperImport(Component):
         if lang:
             return {"lang": lang.code}
         return {}
-    
+
 
 class ChannelWubookPmsFolioChildMapperImport(Component):
     _name = "channel.wubook.pms.folio.child.mapper.import"
@@ -152,6 +152,14 @@ class ChannelWubookPmsFolioChildMapperImport(Component):
                             x.room_type_id == room_type,
                             x.checkin == checkin,
                             x.checkout == checkout,
+                            # Skip reservations cancelled because of a previous
+                            # modification: they are historical artefacts of
+                            # earlier versions of the same booking and must not
+                            # be revived. A brand-new reservation is created
+                            # for the incoming payload instead.
+                            not (
+                                x.state == "cancel" and x.cancelled_reason == "modified"
+                            ),
                         ]
                     )
                 )
