@@ -29,8 +29,11 @@ class PmsProperty(models.Model):
     def _get_folio_default_journal(self, partner_invoice_id, room_ids=False):
         self.ensure_one()
         partner = self.env["res.partner"].browse(partner_invoice_id)
-        if not not partner._check_enought_invoice_data() and self._context.get(
-            "autoinvoice"
+        # Partners without enough invoicing data fall back to the simplified
+        # journal during autoinvoicing. Partners with a complete fiscal
+        # profile keep the normal flow and are billed as nominal invoices.
+        if self._context.get("autoinvoice") and not (
+            partner._check_enought_invoice_data()
         ):
             return self._get_journal(is_simplified_invoice=True, room_ids=room_ids)
         return super()._get_folio_default_journal(partner_invoice_id, room_ids=room_ids)
