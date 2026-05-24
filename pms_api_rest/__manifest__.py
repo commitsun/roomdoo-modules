@@ -17,6 +17,7 @@
         "sql_export_excel",
         "feed_rss",
         "pms_partner_type_residence",
+        "pms_autoinvoice",
     ],
     "external_dependencies": {
         "python": ["simplejson", "marshmallow", "jose"],
