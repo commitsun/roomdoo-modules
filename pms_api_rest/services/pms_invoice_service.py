@@ -135,15 +135,44 @@ class PmsInvoiceService(Component):
                         isDownPayment=move_line.move_id._is_downpayment(),
                     )
                 )
-            invoice_date = (
-                datetime.combine(invoice.invoice_date, datetime.min.time()).isoformat()
-                if invoice.invoice_date
-                else datetime.combine(
-                    invoice.invoice_date_due, datetime.min.time()
+            # TEMP: for draft invoices, surface the autoinvoice_date computed
+            # by pms_autoinvoice for the folio sale lines bound to this move
+            # (or today() if all of them resolve to manual policy and have no
+            # date), so the front-end can preview when the move will be
+            # auto-validated and stop interpreting a null `date` as a hard
+            # block on the manual invoice-validation flow. Posted moves keep
+            # returning their real invoice_date with the invoice_date_due
+            # fallback. Drop this branch once a dedicated field (e.g. an
+            # explicit can-validate flag or a display-only invoice-date
+            # field) is exposed to the front-end.
+            if invoice.state == "draft":
+                autoinvoice_dates = [
+                    d
+                    for d in invoice.invoice_line_ids.mapped(
+                        "folio_line_ids.autoinvoice_date"
+                    )
+                    if d
+                ]
+                display_date = (
+                    max(autoinvoice_dates)
+                    if autoinvoice_dates
+                    else fields.Date.today()
+                )
+                invoice_date = datetime.combine(
+                    display_date, datetime.min.time()
                 ).isoformat()
-                if invoice.invoice_date_due
-                else None
-            )
+            else:
+                invoice_date = (
+                    datetime.combine(
+                        invoice.invoice_date, datetime.min.time()
+                    ).isoformat()
+                    if invoice.invoice_date
+                    else datetime.combine(
+                        invoice.invoice_date_due, datetime.min.time()
+                    ).isoformat()
+                    if invoice.invoice_date_due
+                    else None
+                )
             invoice_url = (
                 invoice.get_proforma_portal_url()
                 if invoice.state == "draft"

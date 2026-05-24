@@ -1593,13 +1593,40 @@ class PmsFolioService(Component):
                         self.env["ir.config_parameter"].sudo().get_param("web.base.url")
                         + move_url
                     )
-                    invoice_date = (
-                        move.invoice_date.strftime("%d/%m/%Y")
-                        if move.invoice_date
-                        else move.invoice_date_due.strftime("%d/%m/%Y")
-                        if move.invoice_date_due
-                        else None
-                    )
+                    # TEMP: for draft invoices, surface the autoinvoice_date
+                    # computed by pms_autoinvoice for the folio sale lines
+                    # bound to this move (or today() if all of them resolve
+                    # to manual policy and have no date), so the front-end
+                    # can preview when the move will be auto-validated and
+                    # stop interpreting a null `date` as a hard block on the
+                    # manual invoice-validation flow. Posted moves keep
+                    # returning their real invoice_date with the
+                    # invoice_date_due fallback. Drop this branch once a
+                    # dedicated field (e.g. an explicit can-validate flag or
+                    # a display-only invoice-date field) is exposed to the
+                    # front-end.
+                    if move.state == "draft":
+                        autoinvoice_dates = [
+                            d
+                            for d in move.invoice_line_ids.mapped(
+                                "folio_line_ids.autoinvoice_date"
+                            )
+                            if d
+                        ]
+                        display_date = (
+                            max(autoinvoice_dates)
+                            if autoinvoice_dates
+                            else fields.Date.today()
+                        )
+                        invoice_date = display_date.strftime("%d/%m/%Y")
+                    else:
+                        invoice_date = (
+                            move.invoice_date.strftime("%d/%m/%Y")
+                            if move.invoice_date
+                            else move.invoice_date_due.strftime("%d/%m/%Y")
+                            if move.invoice_date_due
+                            else None
+                        )
                     invoices.append(
                         PmsFolioInvoiceInfo(
                             id=move.id if move.id else None,
