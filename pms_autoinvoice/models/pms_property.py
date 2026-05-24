@@ -210,6 +210,34 @@ class PmsProperty(models.Model):
                     grouped=True,
                     final=False,
                 )
+                # Safety net: abort if a folio sale line with a future
+                # autoinvoice_date leaked into the draft. The autoinvoice
+                # filter is meant to exclude these, but recomputations
+                # triggered during _create_invoices have been observed
+                # to let some through; rolling back protects against
+                # early invoicing of reservations still in the future.
+                today = fields.Date.today()
+                for invoice in invoices:
+                    leaked = invoice.invoice_line_ids.folio_line_ids.filtered(
+                        lambda fl, t=today: fl.autoinvoice_date
+                        and fl.autoinvoice_date > t
+                    )
+                    if leaked:
+                        folio.sudo().message_post(
+                            body=_(
+                                "Autoinvoice aborted: folio sale lines "
+                                "with a future autoinvoice_date leaked "
+                                "into the draft invoice (%s)."
+                            )
+                            % ", ".join(leaked.mapped("name"))
+                        )
+                        raise ValidationError(
+                            _(
+                                "Future folio sale lines leaked into "
+                                "automatic invoice for folio %s"
+                            )
+                            % folio.name
+                        )
                 downpayments = folio.sale_line_ids.filtered(
                     lambda r: r.is_downpayment and r.qty_invoiced > 0
                 )
