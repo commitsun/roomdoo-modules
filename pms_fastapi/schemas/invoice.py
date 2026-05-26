@@ -13,11 +13,71 @@ from .contact import ContactId
 from .currency import CurrencySummary
 from .journal import JournalSummary
 from .payment_method import PaymentMethodSummary
+from .payment_term import PaymentTermId
 from .pms_folio import FolioId
 
 
 class ShareUrl(PmsBaseModel):
     url: str
+
+
+class FolioInvoiceLine(PmsBaseModel):
+    saleLineId: int = Field(
+        alias="saleLineId",
+        description="ID of the folio sale line to invoice.",
+    )
+    description: str = Field(
+        description=(
+            "Final description for the invoice line. May differ from the "
+            "original sale line description."
+        ),
+    )
+    quantityToInvoice: float = Field(
+        alias="quantityToInvoice",
+        gt=0,
+        description=(
+            "Quantity to invoice for this line. Must be greater than 0 and "
+            "less than or equal to the pending quantity of the sale line."
+        ),
+    )
+
+
+class FolioInvoiceCreate(PmsBaseModel):
+    validate_invoice: bool = Field(
+        alias="validate",
+        description=(
+            "If true, the invoice is posted immediately after creation. "
+            "If false, it is created as a draft."
+        ),
+    )
+    customerId: int | None = Field(
+        None,
+        alias="customerId",
+        description=(
+            "Customer for the invoice. Null creates a simplified invoice. "
+            "Subject to simplifiedInvoiceLimit validation server-side."
+        ),
+    )
+    invoiceDate: date | None = Field(
+        None,
+        alias="invoiceDate",
+        description="Invoice date. Server defaults to today if null/omitted.",
+    )
+    dueDate: date | None = Field(
+        None,
+        alias="dueDate",
+        description=(
+            "Invoice due date. Server defaults from payment terms if null/omitted."
+        ),
+    )
+    lines: list[FolioInvoiceLine] = Field(
+        min_length=1,
+        description=(
+            "Sale lines to invoice. Must contain at least one line. All "
+            "lines must belong to the same property. Lines can reference "
+            "sale lines from different folios."
+        ),
+    )
 
 
 class InvoiceOrderField(str, Enum):
@@ -183,6 +243,179 @@ class InvoiceSummary(PmsBaseModel):
                 account_move.payment_state, InvoicePaymentStateEnum.not_paid
             )
         return cls(**data)
+
+
+class FolioLineInput(PmsBaseModel):
+    id: int = Field(description="Id of the folio line being invoiced.")
+    quantity: float = Field(
+        gt=0,
+        description="Quantity of this line to invoice.",
+    )
+    description: str = Field(
+        description="Final description for the line on the invoice. May be empty."
+    )
+
+
+class InvoiceInput(PmsBaseModel):
+    partner: int = Field(description="Customer id the invoice is issued to.")
+    invoiceDate: date | None = Field(
+        description="Invoice date. Null lets the server set the current date.",
+    )
+    invoiceDateDue: date | None = Field(
+        description="Due date. Null lets the server compute it from payment terms.",
+    )
+    narration: str = Field(description="Internal notes. May be empty.")
+    folioLines: list[FolioLineInput] = Field(
+        description=(
+            "Folio lines to invoice. Full replacement of the previous composition."
+        ),
+    )
+    downpaymentLines: list[int] = Field(
+        description=(
+            "Ids of down-payment lines to subtract. Full replacement of the "
+            "previous composition."
+        ),
+    )
+
+
+class FolioLineDetail(PmsBaseModel):
+    id: int
+    quantity: float
+    description: str = ""
+
+
+class InvoiceLine(PmsBaseModel):
+    id: int
+    description: str = ""
+    quantity: float
+    priceUnit: float = Field(0.0, alias="priceUnit")
+    discount: float = 0.0
+    priceSubtotal: float = Field(0.0, alias="priceSubtotal")
+    priceTotal: float = Field(0.0, alias="priceTotal")
+
+    @classmethod
+    def from_account_move_line(cls, line):
+        return cls(
+            id=line.id,
+            description=line.name or "",
+            quantity=line.quantity,
+            priceUnit=line.price_unit,
+            discount=line.discount,
+            priceSubtotal=line.price_subtotal,
+            priceTotal=line.price_total,
+        )
+
+
+class InvoiceRef(PmsBaseModel):
+    id: int
+    name: str
+
+    @classmethod
+    def from_account_move(cls, move):
+        return cls(id=move.id, name=move.name or "")
+
+
+class InvoiceDetail(PmsBaseModel):
+    id: int
+    name: str = ""
+    move_type: InvoiceTypeEnum = Field(alias="invoiceType")
+    state: InvoiceStateEnum
+    paymentState: InvoicePaymentStateEnum
+    partner_id: ContactId | None = Field(None, alias="partner")
+    invoice_date: date | None = Field(None, alias="invoiceDate")
+    invoice_date_due: date | None = Field(None, alias="invoiceDateDue")
+    paymentTerm: PaymentTermId | None = None
+    journal: JournalSummary | None = None
+    ref: str = Field("", alias="reference")
+    narration: str = ""
+    amount_total_signed: CurrencyAmount = Field(0.0, alias="totalAmount")
+    currency_id: CurrencySummary = Field(alias="currency")
+    folioLines: list[FolioLineDetail] = Field(default_factory=list)
+    downpaymentLines: list[int] = Field(default_factory=list)
+    lines: list[InvoiceLine] = Field(default_factory=list)
+    refundedInvoice: InvoiceRef | None = None
+    refundedBy: InvoiceRef | None = None
+    replaces: InvoiceRef | None = None
+    replacedBy: InvoiceRef | None = None
+
+    @classmethod
+    def from_account_move(cls, account_move):
+        data = cls._read_odoo_record(account_move)
+        data["move_type"] = ODOO_INVOICE_TYPE_REVERSE_MAP.get(account_move.move_type)
+        data["narration"] = account_move.narration or ""
+        data["ref"] = account_move.ref or ""
+        if account_move.partner_id:
+            data["partner_id"] = ContactId.from_res_partner(account_move.partner_id)
+        if account_move.currency_id:
+            data["_decimal_places"] = account_move.currency_id.decimal_places
+            data["currency_id"] = CurrencySummary.from_res_currency(
+                account_move.currency_id
+            )
+        if account_move.invoice_payment_term_id:
+            data["paymentTerm"] = PaymentTermId.from_account_payment_term(
+                account_move.invoice_payment_term_id
+            )
+        if account_move.journal_id:
+            data["journal"] = JournalSummary.from_account_journal(
+                account_move.journal_id
+            )
+        if account_move.has_overdue_payments:
+            data["paymentState"] = InvoicePaymentStateEnum.overdue
+        else:
+            data["paymentState"] = ODOO_PAYMENT_STATE_MAP.get(
+                account_move.payment_state, InvoicePaymentStateEnum.not_paid
+            )
+        invoice_lines = account_move.invoice_line_ids.filtered(
+            lambda line: not line.display_type
+        )
+        folio_lines = invoice_lines.mapped("folio_line_ids").filtered(
+            lambda fl: not fl.is_downpayment
+        )
+        downpayment_lines = invoice_lines.mapped("folio_line_ids").filtered(
+            "is_downpayment"
+        )
+        data["folioLines"] = [
+            FolioLineDetail(
+                id=fl.id,
+                quantity=cls._invoiced_quantity(fl, invoice_lines),
+                description=cls._invoiced_description(fl, invoice_lines),
+            )
+            for fl in folio_lines
+        ]
+        data["downpaymentLines"] = downpayment_lines.ids
+        data["lines"] = [
+            InvoiceLine.from_account_move_line(line) for line in invoice_lines
+        ]
+        if account_move.reversed_entry_id:
+            data["refundedInvoice"] = InvoiceRef.from_account_move(
+                account_move.reversed_entry_id
+            )
+        refund = account_move.reversal_move_id[:1]
+        if refund:
+            data["refundedBy"] = InvoiceRef.from_account_move(refund)
+        if account_move.replaces_invoice_id:
+            data["replaces"] = InvoiceRef.from_account_move(
+                account_move.replaces_invoice_id
+            )
+        replacement = account_move.replaced_by_invoice_ids[:1]
+        if replacement:
+            data["replacedBy"] = InvoiceRef.from_account_move(replacement)
+        return cls(**data)
+
+    @staticmethod
+    def _invoiced_quantity(folio_line, invoice_lines):
+        return sum(
+            line.quantity for line in invoice_lines if folio_line in line.folio_line_ids
+        )
+
+    @staticmethod
+    def _invoiced_description(folio_line, invoice_lines):
+        descriptions = [
+            line.name
+            for line in invoice_lines
+            if folio_line in line.folio_line_ids and line.name
+        ]
+        return descriptions[0] if descriptions else ""
 
 
 class InvoiceSearch(BaseSearch):

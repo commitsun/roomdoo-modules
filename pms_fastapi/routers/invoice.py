@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import SUPERUSER_ID, api, models
+from odoo import SUPERUSER_ID, api, fields, models
 from odoo.exceptions import MissingError, UserError
 from odoo.osv import expression
 
@@ -18,8 +18,13 @@ from odoo.addons.pms_fastapi.dependencies import (
     create_order_dependency,
 )
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
+from odoo.addons.pms_fastapi.models.folio_sale_line import (
+    FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX,
+)
 from odoo.addons.pms_fastapi.schemas.invoice import (
     INVOICE_ORDER_MAPPING,
+    InvoiceDetail,
+    InvoiceInput,
     InvoiceOrderField,
     InvoiceSearch,
     InvoiceSummary,
@@ -27,6 +32,15 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
     ShareUrl,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+
+
+class _InvoiceEditProblem(Exception):
+    """Control-flow exception carrying an RFC 9457 JSONResponse."""
+
+    def __init__(self, response):
+        super().__init__()
+        self.response = response
+
 
 INVOICE_REPORT_MAX_RECORDS = 5000
 INVOICE_PDF_REPORT_MAX_RECORDS = 100
@@ -94,6 +108,39 @@ async def validate_invoice_contact(
         env["pms_api_invoice.invoice_router.helper"]
         .new()
         ._validate_contact(pmsPropertyId, contactId)
+    )
+
+
+@pms_api_router.put(
+    "/invoices/{invoice_id}",
+    response_model=InvoiceDetail,
+    tags=["invoice"],
+)
+async def edit_invoice(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+    payload: InvoiceInput,
+    confirmRefund: Annotated[
+        bool,
+        Query(
+            description=(
+                "Required when the invoice is validated. Without this flag, "
+                "editing a validated invoice returns 409."
+            ),
+        ),
+    ] = False,
+):
+    """Edit an existing invoice as a full replacement.
+
+    Drafts are rewritten in-place (same id). Validated invoices, when
+    confirmRefund=true, generate a full refund that cancels the original
+    and a new corrected invoice in draft (different id) whose `replaces`
+    points to the original.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._edit_invoice(invoice_id, payload, confirmRefund)
     )
 
 
@@ -246,6 +293,370 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     @api.model
     def extra_features(self):
         return []
+
+    # -- Invoice edit (PUT /invoices/{id}) --
+
+    @staticmethod
+    def _raise_edit_problem(status, type_, title, detail, **extra):
+        raise _InvoiceEditProblem(
+            JSONResponse(
+                status_code=status,
+                content={
+                    "type": type_,
+                    "title": title,
+                    "status": status,
+                    "detail": detail,
+                    **extra,
+                },
+                media_type="application/problem+json",
+            )
+        )
+
+    def _edit_invoice(self, invoice_id, payload, confirm_refund):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        try:
+            if invoice.state == "cancel":
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-not-editable",
+                    "Invoice not editable",
+                    "Cancelled invoices cannot be edited.",
+                )
+            if invoice.state == "posted" and not confirm_refund:
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-refund-confirmation-required",
+                    "Refund confirmation required",
+                    (
+                        "This invoice is validated. Editing it will generate "
+                        "a refund and a new corrected invoice. Confirm by "
+                        "passing confirmRefund=true."
+                    ),
+                )
+            sale_lines = self._edit_resolve_sale_lines(payload)
+            downpayment_lines = self._edit_resolve_downpayment_lines(
+                payload, sale_lines
+            )
+            pms_property = self._edit_resolve_property(sale_lines)
+            partner = self._edit_resolve_partner(payload, pms_property)
+            self._edit_check_quantities(payload, sale_lines, current_invoice=invoice)
+            self._edit_check_composition(
+                sale_lines, downpayment_lines, current_invoice=invoice
+            )
+            if invoice.state == "draft":
+                result = self._edit_draft_invoice(
+                    invoice, payload, sale_lines, downpayment_lines, partner
+                )
+            else:
+                result = self._edit_posted_invoice(
+                    invoice, payload, sale_lines, downpayment_lines, partner
+                )
+        except _InvoiceEditProblem as problem:
+            return problem.response
+        return InvoiceDetail.from_account_move(result)
+
+    def _edit_resolve_sale_lines(self, payload):
+        line_ids = [fl.id for fl in payload.folioLines]
+        if len(line_ids) != len(set(line_ids)):
+            self._raise_edit_problem(
+                422,
+                "/errors/duplicate-sale-lines",
+                "Duplicate sale lines",
+                "Each folio line can only appear once in the request.",
+            )
+        sale_lines = self.env["folio.sale.line"].browse(line_ids).exists()
+        missing = set(line_ids) - set(sale_lines.ids)
+        if missing:
+            self._raise_edit_problem(
+                404,
+                "/errors/sale-lines-not-found",
+                "Sale lines not found",
+                "Some folio lines could not be found.",
+                missingFolioLineIds=sorted(missing),
+            )
+        invalid_kind = sale_lines.filtered(lambda r: r.display_type or r.is_downpayment)
+        if invalid_kind:
+            self._raise_edit_problem(
+                422,
+                "/errors/invalid-folio-line",
+                "Invalid folio line",
+                "Sections, notes and down payments cannot be sent as folioLines.",
+                invalidFolioLineIds=invalid_kind.ids,
+            )
+        return sale_lines
+
+    def _edit_resolve_downpayment_lines(self, payload, sale_lines):
+        if not payload.downpaymentLines:
+            return self.env["folio.sale.line"]
+        ids = list(set(payload.downpaymentLines))
+        if len(ids) != len(payload.downpaymentLines):
+            self._raise_edit_problem(
+                422,
+                "/errors/duplicate-downpayment-lines",
+                "Duplicate down-payment lines",
+                "Each down-payment line can only appear once in the request.",
+            )
+        dp_lines = self.env["folio.sale.line"].browse(ids).exists()
+        missing = set(ids) - set(dp_lines.ids)
+        if missing:
+            self._raise_edit_problem(
+                404,
+                "/errors/downpayment-lines-not-found",
+                "Down-payment lines not found",
+                "Some down-payment lines could not be found.",
+                missingDownpaymentLineIds=sorted(missing),
+            )
+        not_downpayment = dp_lines.filtered(lambda r: not r.is_downpayment)
+        if not_downpayment:
+            self._raise_edit_problem(
+                422,
+                "/errors/invalid-downpayment-line",
+                "Invalid down-payment line",
+                "Only down-payment lines are accepted as downpaymentLines.",
+                invalidDownpaymentLineIds=not_downpayment.ids,
+            )
+        folio_ids = set(sale_lines.folio_id.ids)
+        out_of_scope = dp_lines.filtered(lambda r: r.folio_id.id not in folio_ids)
+        if out_of_scope:
+            self._raise_edit_problem(
+                422,
+                "/errors/downpayment-line-out-of-scope",
+                "Down-payment line out of scope",
+                "Down-payment lines must belong to the same folios as folioLines.",
+                outOfScopeDownpaymentLineIds=out_of_scope.ids,
+            )
+        return dp_lines
+
+    def _edit_resolve_property(self, sale_lines):
+        properties = sale_lines.mapped("pms_property_id")
+        if len(properties) > 1:
+            self._raise_edit_problem(
+                422,
+                "/errors/multiple-properties",
+                "Folio lines from multiple properties",
+                "All folio lines must belong to the same property.",
+                propertyIds=properties.ids,
+            )
+        return properties
+
+    def _edit_resolve_partner(self, payload, pms_property):
+        partner = self.env["res.partner"].browse(payload.partner).exists()
+        if not partner:
+            self._raise_edit_problem(
+                404,
+                "/errors/not-found",
+                "Contact not found",
+                "Customer not found.",
+            )
+        various = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        if various and partner.id == various.id:
+            return partner
+        errors = self._get_contact_validation_errors(partner, pms_property)
+        if errors:
+            self._raise_edit_problem(
+                422,
+                "/errors/invoicing-validation-failed",
+                "Invoicing validation failed",
+                "Customer does not meet invoicing requirements.",
+                errors=errors,
+            )
+        return partner
+
+    def _edit_check_quantities(self, payload, sale_lines, current_invoice):
+        sale_lines_by_id = {sl.id: sl for sl in sale_lines}
+        qty_errors = []
+        # When editing a draft, requested qty can include the qty already
+        # invoiced by this very draft (it'll be released on rewrite).
+        current_invoice_lines = (
+            current_invoice.invoice_line_ids if current_invoice else None
+        )
+        for payload_line in payload.folioLines:
+            sale_line = sale_lines_by_id[payload_line.id]
+            available = sale_line.qty_to_invoice
+            if current_invoice_lines:
+                available += sum(
+                    line.quantity
+                    for line in current_invoice_lines
+                    if sale_line in line.folio_line_ids
+                )
+            if payload_line.quantity > available:
+                qty_errors.append(
+                    {
+                        "folioLineId": sale_line.id,
+                        "requested": payload_line.quantity,
+                        "pending": available,
+                    }
+                )
+        if qty_errors:
+            self._raise_edit_problem(
+                422,
+                "/errors/quantity-exceeds-pending",
+                "Quantity to invoice exceeds pending quantity",
+                "One or more folio lines were asked to invoice more "
+                "than their pending quantity.",
+                lines=qty_errors,
+            )
+
+    def _edit_check_composition(self, sale_lines, downpayment_lines, current_invoice):
+        composition_errors = []
+        current_invoice_id = current_invoice.id if current_invoice else None
+        for sl in sale_lines | downpayment_lines:
+            other_moves = sl.invoice_lines.move_id.filtered(
+                lambda m: m.state != "cancel" and m.id != current_invoice_id
+            )
+            if other_moves:
+                composition_errors.append(
+                    {
+                        "type": "/errors/folio-line-already-invoiced",
+                        "title": "Folio line already invoiced",
+                        "detail": (
+                            f"Folio line {sl.id} is already included in "
+                            f"invoice {other_moves[0].id}."
+                        ),
+                    }
+                )
+        if composition_errors:
+            self._raise_edit_problem(
+                422,
+                "/errors/invoice-composition-invalid",
+                "Invalid invoice composition",
+                "Some folio lines cannot be invoiced.",
+                errors=composition_errors,
+            )
+
+    @staticmethod
+    def _edit_build_lines_to_invoice(payload, sale_lines, downpayment_lines):
+        lines_to_invoice = {fl.id: fl.quantity for fl in payload.folioLines}
+        for dp in downpayment_lines:
+            lines_to_invoice[dp.id] = dp.qty_to_invoice or 1
+        # Include sections and notes referenced by the regular sale lines
+        # so the resulting invoice keeps its structure.
+        section_ids = sale_lines.mapped("section_id")
+        for section in section_ids:
+            lines_to_invoice.setdefault(section.id, 0)
+        sections_in_scope = section_ids | sale_lines.filtered(
+            lambda r: r.display_type == "line_section"
+        )
+        notes = sale_lines.folio_id.sale_line_ids.filtered(
+            lambda r: r.display_type == "line_note"
+            and r.section_id in sections_in_scope
+        )
+        for note in notes:
+            lines_to_invoice.setdefault(note.id, 0)
+        return lines_to_invoice
+
+    def _edit_compute_invoice_vals(
+        self, payload, sale_lines, downpayment_lines, partner
+    ):
+        lines_to_invoice = self._edit_build_lines_to_invoice(
+            payload, sale_lines, downpayment_lines
+        )
+        descriptions = {fl.id: fl.description for fl in payload.folioLines}
+        folios = sale_lines.folio_id.with_context(
+            **{FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX: descriptions}
+        )
+        try:
+            vals_list = folios.get_invoice_vals_list(
+                final=True,
+                lines_to_invoice=lines_to_invoice,
+                partner_invoice_id=partner.id,
+            )
+        except UserError as e:
+            self._raise_edit_problem(
+                422,
+                "/errors/invoice-creation-failed",
+                "Invoice creation failed",
+                str(e),
+            )
+        if not vals_list:
+            self._raise_edit_problem(
+                422,
+                "/errors/invoice-creation-failed",
+                "Invoice creation failed",
+                "No invoice could be built from the provided composition.",
+            )
+        if len(vals_list) > 1:
+            self._raise_edit_problem(
+                422,
+                "/errors/multiple-invoices-created",
+                "Multiple invoices created",
+                "The provided composition could not be grouped into a single "
+                "invoice (different currency or company).",
+            )
+        return vals_list[0]
+
+    def _edit_draft_invoice(
+        self, invoice, payload, sale_lines, downpayment_lines, partner
+    ):
+        vals = self._edit_compute_invoice_vals(
+            payload, sale_lines, downpayment_lines, partner
+        )
+        invoice.invoice_line_ids.unlink()
+        write_vals = {
+            "partner_id": partner.id,
+            "narration": payload.narration,
+            "invoice_line_ids": vals["invoice_line_ids"],
+        }
+        if payload.invoiceDate:
+            write_vals["invoice_date"] = payload.invoiceDate
+        if payload.invoiceDateDue:
+            write_vals["invoice_date_due"] = payload.invoiceDateDue
+        invoice.write(write_vals)
+        return invoice
+
+    def _edit_posted_invoice(
+        self, invoice, payload, sale_lines, downpayment_lines, partner
+    ):
+        receivable_lines = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+        receivable_lines.remove_move_reconcile()
+        reversal_date = fields.Date.context_today(invoice)
+        invoice._reverse_moves(
+            default_values_list=[
+                {
+                    "ref": f"Reversal of: {invoice.name}",
+                    "date": reversal_date,
+                    "invoice_date": reversal_date,
+                    "invoice_date_due": reversal_date,
+                    "journal_id": invoice.journal_id.id,
+                }
+            ],
+            cancel=True,
+        )
+        vals = self._edit_compute_invoice_vals(
+            payload, sale_lines, downpayment_lines, partner
+        )
+        if payload.invoiceDate:
+            vals["invoice_date"] = payload.invoiceDate
+            vals["date"] = payload.invoiceDate
+        if payload.invoiceDateDue:
+            vals["invoice_date_due"] = payload.invoiceDateDue
+        vals["narration"] = payload.narration
+        vals["replaces_invoice_id"] = invoice.id
+        try:
+            new_invoice = self.env["account.move"].sudo().create(vals)
+        except UserError as e:
+            self._raise_edit_problem(
+                422,
+                "/errors/invoice-creation-failed",
+                "Invoice creation failed",
+                str(e),
+            )
+        return new_invoice
 
     def _validate_contact(self, pms_property_id: int, contact_id: int):
         partner = self.env["res.partner"].sudo().browse(contact_id)

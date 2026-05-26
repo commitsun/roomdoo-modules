@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 
 from odoo import api, models
-from odoo.exceptions import MissingError
+from odoo.exceptions import AccessError, MissingError, UserError
 from odoo.osv import expression
 
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -18,8 +18,15 @@ from odoo.addons.pms_fastapi.dependencies import (
     create_order_dependency,
 )
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
+from odoo.addons.pms_fastapi.models.folio_sale_line import (
+    FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX,
+)
 from odoo.addons.pms_fastapi.schemas.contact import ContactIdImageEmail
 from odoo.addons.pms_fastapi.schemas.folio_sale_line import FolioSaleLine
+from odoo.addons.pms_fastapi.schemas.invoice import (
+    FolioInvoiceCreate,
+    InvoiceSummary,
+)
 from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FOLIO_ORDER_MAPPING,
     FolioCountSummary,
@@ -36,6 +43,14 @@ FOLIO_REPORT_MAX_RECORDS = 5000
 folio_order = create_order_dependency(
     FolioOrderField, FOLIO_ORDER_MAPPING, ["creationDate"]
 )
+
+
+class _InvoiceCreationProblem(Exception):
+    """Control-flow exception carrying an RFC 9457 JSONResponse."""
+
+    def __init__(self, response):
+        super().__init__()
+        self.response = response
 
 
 @pms_api_router.post(
@@ -117,6 +132,24 @@ async def list_folios(
     )
 
 
+@pms_api_router.post(
+    "/folios/invoices",
+    response_model=InvoiceSummary,
+    status_code=201,
+    tags=["folio"],
+)
+async def create_folio_invoice(
+    env: AuthenticatedEnv,
+    payload: FolioInvoiceCreate,
+) -> InvoiceSummary:
+    """Create an invoice from folio sale lines.
+
+    Supports grouping lines from multiple folios of the same property.
+    Optionally validates (posts) the invoice on creation.
+    """
+    return env["pms_api_folio.folio_router.helper"].new()._create_invoice(payload)
+
+
 @pms_api_router.get(
     "/folios/{folio_id}",
     response_model=FolioDetail,
@@ -160,6 +193,27 @@ async def get_folio_sale_lines(
             detail="folio not found",
         ) from err
     return helper.get_sale_lines(folio)
+
+
+@pms_api_router.get(
+    "/folios/{folio_id}/down-payment-invoices",
+    response_model=list[InvoiceSummary],
+    tags=["folio"],
+)
+async def get_folio_down_payment_invoices(
+    env: AuthenticatedEnv,
+    folio_id: int,
+) -> list[InvoiceSummary]:
+    """Get the list of down-payment invoices associated with a folio."""
+    helper = env["pms_api_folio.folio_router.helper"].new()
+    try:
+        folio = helper.get(folio_id)
+    except MissingError as err:
+        raise HTTPException(
+            status_code=404,
+            detail="folio not found",
+        ) from err
+    return helper.get_down_payment_invoices(folio)
 
 
 @pms_api_router.get(
@@ -260,6 +314,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         )
         return [FolioSaleLine.from_folio_sale_line(line) for line in lines]
 
+    def get_down_payment_invoices(self, folio) -> list[InvoiceSummary]:
+        lines = folio.sale_line_ids.filtered("is_downpayment")
+        invoices = lines.invoice_lines.move_id
+        return [InvoiceSummary.from_account_move(inv) for inv in invoices]
+
     def get_contacts(self, folio) -> list[ContactIdImageEmail]:
         partners = folio.partner_id
         active_reservations = folio.reservation_ids.filtered(
@@ -275,6 +334,238 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     @api.model
     def extra_features(self):
         return []
+
+    # -- Invoice creation --
+
+    @staticmethod
+    def _raise_problem(status, type_, title, detail, **extra):
+        raise _InvoiceCreationProblem(
+            JSONResponse(
+                status_code=status,
+                content={
+                    "type": type_,
+                    "title": title,
+                    "status": status,
+                    "detail": detail,
+                    **extra,
+                },
+                media_type="application/problem+json",
+            )
+        )
+
+    def _create_invoice(self, payload: FolioInvoiceCreate):
+        try:
+            sale_lines = self._resolve_sale_lines(payload)
+            pms_property = self._resolve_property(sale_lines)
+            self._check_quantities(payload, sale_lines)
+            partner = self._resolve_invoice_partner(payload, pms_property)
+            if payload.customerId is None:
+                self._check_simplified_limit(payload, sale_lines, pms_property)
+            invoice = self._build_and_create_invoice(payload, sale_lines, partner)
+            self._override_invoice_due_date(invoice, payload)
+            if payload.validate_invoice:
+                self._post_invoice(invoice)
+        except _InvoiceCreationProblem as problem:
+            return problem.response
+        return InvoiceSummary.from_account_move(invoice)
+
+    def _resolve_sale_lines(self, payload: FolioInvoiceCreate):
+        sale_line_ids = [line.saleLineId for line in payload.lines]
+        if len(sale_line_ids) != len(set(sale_line_ids)):
+            self._raise_problem(
+                422,
+                "/errors/duplicate-sale-lines",
+                "Duplicate sale lines",
+                "Each sale line can only appear once in the request.",
+            )
+        sale_lines = self.env["folio.sale.line"].browse(sale_line_ids).exists()
+        missing = set(sale_line_ids) - set(sale_lines.ids)
+        if missing:
+            self._raise_problem(
+                404,
+                "/errors/sale-lines-not-found",
+                "Sale lines not found",
+                "Some sale lines could not be found.",
+                missingSaleLineIds=sorted(missing),
+            )
+        try:
+            sale_lines.check_access_rights("read")
+            sale_lines.check_access_rule("read")
+        except AccessError:
+            self._raise_problem(
+                403,
+                "/errors/access-denied",
+                "Access denied",
+                "You are not allowed to access some of the requested sale lines.",
+            )
+        invalid_kind = sale_lines.filtered(lambda r: r.display_type or r.is_downpayment)
+        if invalid_kind:
+            self._raise_problem(
+                422,
+                "/errors/invalid-sale-line",
+                "Invalid sale line",
+                "Sections, notes and down payments cannot be invoiced through "
+                "this endpoint.",
+                invalidSaleLineIds=invalid_kind.ids,
+            )
+        return sale_lines
+
+    def _resolve_property(self, sale_lines):
+        properties = sale_lines.mapped("pms_property_id")
+        if len(properties) > 1:
+            self._raise_problem(
+                422,
+                "/errors/multiple-properties",
+                "Sale lines from multiple properties",
+                "All sale lines must belong to the same property.",
+                propertyIds=properties.ids,
+            )
+        return properties
+
+    def _check_quantities(self, payload: FolioInvoiceCreate, sale_lines):
+        sale_lines_by_id = {sl.id: sl for sl in sale_lines}
+        qty_errors = []
+        for payload_line in payload.lines:
+            sale_line = sale_lines_by_id[payload_line.saleLineId]
+            if payload_line.quantityToInvoice > sale_line.qty_to_invoice:
+                qty_errors.append(
+                    {
+                        "saleLineId": sale_line.id,
+                        "requested": payload_line.quantityToInvoice,
+                        "pending": sale_line.qty_to_invoice,
+                    }
+                )
+        if qty_errors:
+            self._raise_problem(
+                422,
+                "/errors/quantity-exceeds-pending",
+                "Quantity to invoice exceeds pending quantity",
+                "One or more sale lines were asked to invoice a quantity "
+                "greater than their pending quantity.",
+                lines=qty_errors,
+            )
+
+    def _resolve_invoice_partner(self, payload: FolioInvoiceCreate, pms_property):
+        if payload.customerId is None:
+            return self.env.ref("pms.various_pms_partner")
+        partner = self.env["res.partner"].browse(payload.customerId).exists()
+        if not partner:
+            self._raise_problem(
+                404,
+                "/errors/not-found",
+                "Contact not found",
+                "Customer not found.",
+            )
+        invoice_helper = self.env["pms_api_invoice.invoice_router.helper"].new()
+        contact_errors = invoice_helper._get_contact_validation_errors(
+            partner, pms_property
+        )
+        if contact_errors:
+            self._raise_problem(
+                422,
+                "/errors/invoicing-validation-failed",
+                "Invoicing validation failed",
+                "Customer does not meet invoicing requirements.",
+                errors=contact_errors,
+            )
+        return partner
+
+    def _check_simplified_limit(
+        self, payload: FolioInvoiceCreate, sale_lines, pms_property
+    ):
+        limit = pms_property.max_amount_simplified_invoice
+        if not limit:
+            return
+        sale_lines_by_id = {sl.id: sl for sl in sale_lines}
+        invoice_total = sum(
+            line.quantityToInvoice
+            * sale_lines_by_id[line.saleLineId].price_reduce_taxinc
+            for line in payload.lines
+        )
+        if invoice_total > limit:
+            self._raise_problem(
+                422,
+                "/errors/simplified-invoice-limit-exceeded",
+                "Simplified invoice limit exceeded",
+                "The invoice total exceeds the simplified invoice limit "
+                "configured for this property.",
+                invoiceTotal=round(invoice_total, 2),
+                simplifiedInvoiceLimit=limit,
+            )
+
+    def _build_lines_to_invoice(self, payload: FolioInvoiceCreate, sale_lines) -> dict:
+        lines_to_invoice = {
+            line.saleLineId: line.quantityToInvoice for line in payload.lines
+        }
+        lines_with_sections = sale_lines
+        for line in sale_lines:
+            section = line.section_id
+            if section and section.id not in lines_with_sections.ids:
+                lines_with_sections |= section
+                lines_to_invoice[section.id] = 0
+        line_notes = sale_lines.folio_id.sale_line_ids.filtered(
+            lambda r: r.display_type == "line_note"
+            and r.section_id in lines_with_sections
+        )
+        for note in line_notes:
+            lines_to_invoice.setdefault(note.id, 0)
+        return lines_to_invoice
+
+    def _build_and_create_invoice(
+        self, payload: FolioInvoiceCreate, sale_lines, partner
+    ):
+        lines_to_invoice = self._build_lines_to_invoice(payload, sale_lines)
+        descriptions = {line.saleLineId: line.description for line in payload.lines}
+        folios = sale_lines.folio_id.with_context(
+            **{FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX: descriptions}
+        )
+        try:
+            invoices = folios._create_invoices(
+                lines_to_invoice=lines_to_invoice,
+                partner_invoice_id=partner.id,
+                date=payload.invoiceDate,
+                final=True,
+            )
+        except UserError as e:
+            self._raise_problem(
+                422,
+                "/errors/invoice-creation-failed",
+                "Invoice creation failed",
+                str(e),
+            )
+        if not invoices:
+            self._raise_problem(
+                422,
+                "/errors/invoice-creation-failed",
+                "Invoice creation failed",
+                "No invoice could be created from the provided sale lines.",
+            )
+        if len(invoices) > 1:
+            self._raise_problem(
+                422,
+                "/errors/multiple-invoices-created",
+                "Multiple invoices created",
+                "The provided sale lines could not be grouped into a single "
+                "invoice (different currency or company).",
+                invoiceIds=invoices.ids,
+            )
+        return invoices
+
+    @staticmethod
+    def _override_invoice_due_date(invoice, payload: FolioInvoiceCreate):
+        if payload.dueDate and payload.dueDate != invoice.invoice_date_due:
+            invoice.write({"invoice_date_due": payload.dueDate})
+
+    def _post_invoice(self, invoice):
+        try:
+            invoice.action_post()
+        except UserError as e:
+            self._raise_problem(
+                422,
+                "/errors/invoice-posting-failed",
+                "Invoice posting failed",
+                str(e),
+            )
 
     # -- Folio report helpers --
 
