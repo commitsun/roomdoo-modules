@@ -4,6 +4,8 @@ import re
 import tempfile
 from datetime import datetime, timedelta
 
+import pytz
+
 from odoo import SUPERUSER_ID, _, fields
 from odoo.exceptions import AccessError, MissingError
 from odoo.osv import expression
@@ -107,6 +109,10 @@ class PmsReservationService(Component):
             #             "body": re.sub(text, "", message.body),
             #         }
             #     )
+            property_tz = pytz.timezone(reservation.pms_property_id.tz or "UTC")
+            create_date_local = pytz.UTC.localize(reservation.create_date).astimezone(
+                property_tz
+            )
             res = PmsReservationInfo(
                 id=reservation.id,
                 name=reservation.name,
@@ -154,7 +160,7 @@ class PmsReservationService(Component):
                 allowedCheckout=reservation.allowed_checkout,
                 isSplitted=reservation.splitted,
                 pendingCheckinData=reservation.pending_checkin_data,
-                createDate=reservation.create_date.isoformat(),
+                createDate=create_date_local.isoformat(),
                 createdBy=reservation.create_uid.name,
                 segmentationId=reservation.segmentation_ids[0].id
                 if reservation.segmentation_ids
@@ -896,6 +902,10 @@ class PmsReservationService(Component):
             pass
         else:
             for reservation in reservations:
+                property_tz = pytz.timezone(reservation.pms_property_id.tz or "UTC")
+                create_date_local = pytz.UTC.localize(
+                    reservation.create_date
+                ).astimezone(property_tz)
                 res_reservations.append(
                     PmsReservationInfo(
                         id=reservation.id,
@@ -947,7 +957,7 @@ class PmsReservationService(Component):
                         allowedCheckout=reservation.allowed_checkout,
                         isSplitted=reservation.splitted,
                         pendingCheckinData=reservation.pending_checkin_data,
-                        createDate=reservation.create_date.isoformat(),
+                        createDate=create_date_local.isoformat(),
                         segmentationId=reservation.segmentation_ids[0].id
                         if reservation.segmentation_ids
                         else None,

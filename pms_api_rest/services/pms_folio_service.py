@@ -70,6 +70,10 @@ class PmsFolioService(Component):
                 self.env["ir.config_parameter"].sudo().get_param("web.base.url")
                 + folio.get_portal_url()
             )
+            property_tz = pytz.timezone(folio.pms_property_id.tz or "UTC")
+            create_date_local = pytz.UTC.localize(folio.create_date).astimezone(
+                property_tz
+            )
             PmsFolioInfo = self.env.datamodels["pms.folio.info"]
             return PmsFolioInfo(
                 id=folio.id,
@@ -84,7 +88,7 @@ class PmsFolioService(Component):
                 pendingAmount=folio.pending_amount,
                 firstCheckin=str(folio.first_checkin),
                 lastCheckout=str(folio.last_checkout),
-                createDate=folio.create_date.isoformat(),
+                createDate=create_date_local.isoformat(),
                 createdBy=folio.create_uid.name,
                 internalComment=folio.internal_comment
                 if folio.internal_comment
@@ -441,6 +445,10 @@ class PmsFolioService(Component):
         )
         pms_api_check_access(user=self.env.user, records=folios)
         for folio in folios:
+            property_tz = pytz.timezone(folio.pms_property_id.tz or "UTC")
+            create_date_local = pytz.UTC.localize(folio.create_date).astimezone(
+                property_tz
+            )
             reservations = []
             for reservation in folio.reservation_ids:
                 reservations.append(
@@ -521,8 +529,8 @@ class PmsFolioService(Component):
                     else None,
                     firstCheckin=str(folio.first_checkin),
                     lastCheckout=str(folio.last_checkout),
-                    createHour=folio.create_date.strftime("%H:%M"),
-                    createDate=folio.create_date.isoformat(),
+                    createHour=create_date_local.strftime("%H:%M"),
+                    createDate=create_date_local.isoformat(),
                 )
             )
         return result_folios
