@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 
 from odoo import api, models
-from odoo.exceptions import AccessError, MissingError, UserError
+from odoo.exceptions import AccessDenied, AccessError, MissingError, UserError
 from odoo.osv import expression
 
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -21,6 +21,7 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.models.folio_sale_line import (
     FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX,
 )
+from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
 from odoo.addons.pms_fastapi.schemas.contact import ContactIdImageEmail
 from odoo.addons.pms_fastapi.schemas.folio_sale_line import FolioSaleLine
 from odoo.addons.pms_fastapi.schemas.invoice import (
@@ -378,7 +379,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 "Duplicate sale lines",
                 "Each sale line can only appear once in the request.",
             )
-        sale_lines = self.env["folio.sale.line"].browse(sale_line_ids).exists()
+        sale_lines = self.env["folio.sale.line"].sudo().browse(sale_line_ids).exists()
         missing = set(sale_line_ids) - set(sale_lines.ids)
         if missing:
             self._raise_problem(
@@ -389,9 +390,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 missingSaleLineIds=sorted(missing),
             )
         try:
-            sale_lines.check_access_rights("read")
-            sale_lines.check_access_rule("read")
-        except AccessError:
+            PmsBaseModel.pms_api_check_access(self.env.user, sale_lines)
+        except (AccessError, AccessDenied):
             self._raise_problem(
                 403,
                 "/errors/access-denied",
@@ -448,7 +448,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def _resolve_invoice_partner(self, payload: FolioInvoiceCreate, pms_property):
         if payload.customerId is None:
             return self.env.ref("pms.various_pms_partner")
-        partner = self.env["res.partner"].browse(payload.customerId).exists()
+        partner = self.env["res.partner"].sudo().browse(payload.customerId).exists()
         if not partner:
             self._raise_problem(
                 404,

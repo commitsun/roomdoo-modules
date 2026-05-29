@@ -1,3 +1,4 @@
+import re
 from typing import Annotated
 
 from fastapi import Depends, Query
@@ -28,6 +29,8 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
     InvoiceOrderField,
     InvoiceSearch,
     InvoiceSummary,
+    ReconcilablePayment,
+    ReconciliationCreate,
     ReportFormatEnum,
     ShareUrl,
 )
@@ -155,6 +158,71 @@ async def validate_invoice(
 ) -> InvoiceSummary:
     """Validate a draft invoice."""
     return env["pms_api_invoice.invoice_router.helper"].new()._validate_invoice(id)
+
+
+_PAYMENT_ID_RE = re.compile(r"^payment_(\d+)$")
+
+
+@pms_api_router.post(
+    "/invoices/{invoice_id}/reconciliations",
+    response_model=InvoiceDetail,
+    tags=["invoice"],
+)
+async def create_reconciliation(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+    payload: ReconciliationCreate,
+):
+    """Reconcile an existing payment with the invoice.
+
+    The backend decides how much of the payment is applied, up to the
+    invoice's residual amount.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._create_reconciliation(invoice_id, payload)
+    )
+
+
+@pms_api_router.delete(
+    "/invoices/{invoice_id}/reconciliations/{reconciliation_id}",
+    response_model=InvoiceDetail,
+    tags=["invoice"],
+)
+async def delete_reconciliation(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+    reconciliation_id: str,
+):
+    """Undo a previously applied reconciliation between a payment and the invoice."""
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._delete_reconciliation(invoice_id, reconciliation_id)
+    )
+
+
+@pms_api_router.get(
+    "/invoices/{invoice_id}/reconcilable-payments",
+    response_model=list[ReconcilablePayment],
+    tags=["invoice"],
+)
+async def list_reconcilable_payments(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+):
+    """List payments that can be reconciled with the given invoice.
+
+    Returns payments belonging to the folio associated with the invoice,
+    or payments of the invoice's customer when the invoice has no folio.
+    Only payments with available (non-fully-reconciled) amount are returned.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._get_reconcilable_payments(invoice_id)
+    )
 
 
 @pms_api_router.get(
@@ -376,7 +444,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 "Duplicate sale lines",
                 "Each folio line can only appear once in the request.",
             )
-        sale_lines = self.env["folio.sale.line"].browse(line_ids).exists()
+        sale_lines = self.env["folio.sale.line"].sudo().browse(line_ids).exists()
         missing = set(line_ids) - set(sale_lines.ids)
         if missing:
             self._raise_edit_problem(
@@ -408,7 +476,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 "Duplicate down-payment lines",
                 "Each down-payment line can only appear once in the request.",
             )
-        dp_lines = self.env["folio.sale.line"].browse(ids).exists()
+        dp_lines = self.env["folio.sale.line"].sudo().browse(ids).exists()
         missing = set(ids) - set(dp_lines.ids)
         if missing:
             self._raise_edit_problem(
@@ -452,7 +520,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         return properties
 
     def _edit_resolve_partner(self, payload, pms_property):
-        partner = self.env["res.partner"].browse(payload.partner).exists()
+        partner = self.env["res.partner"].sudo().browse(payload.partner).exists()
         if not partner:
             self._raise_edit_problem(
                 404,
@@ -600,10 +668,14 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     def _edit_draft_invoice(
         self, invoice, payload, sale_lines, downpayment_lines, partner
     ):
+        # Release the quantity held by this draft before recomputing the
+        # composition, so folio lines fully invoiced by this very draft can be
+        # re-invoiced (otherwise their qty_to_invoice is 0 at compute time and
+        # the rewritten invoice ends up empty).
+        invoice.invoice_line_ids.unlink()
         vals = self._edit_compute_invoice_vals(
             payload, sale_lines, downpayment_lines, partner
         )
-        invoice.invoice_line_ids.unlink()
         write_vals = {
             "partner_id": partner.id,
             "narration": payload.narration,
@@ -832,6 +904,259 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         return InvoiceSummary.from_account_move(invoice)
+
+    @staticmethod
+    def _parse_payment_composite_id(composite_id):
+        """Return the int payment id from 'payment_{id}', or raise 422."""
+        match = _PAYMENT_ID_RE.match(composite_id or "")
+        if not match:
+            PmsApiInvoiceRouterHelper._raise_edit_problem(
+                422,
+                "/errors/invalid-reconciliation-id",
+                "Invalid reconciliation id",
+                (
+                    f"Reconciliation id '{composite_id}' is malformed. "
+                    "Expected 'payment_{id}'."
+                ),
+            )
+        return int(match.group(1))
+
+    def _get_reconciliation_partials(self, invoice, payment):
+        invoice_recv = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+        payment_recv = payment.move_id.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+        partials = invoice_recv.matched_debit_ids.filtered(
+            lambda p: p.debit_move_id in payment_recv
+        ) | invoice_recv.matched_credit_ids.filtered(
+            lambda p: p.credit_move_id in payment_recv
+        )
+        return invoice_recv, payment_recv, partials
+
+    def _create_reconciliation(self, invoice_id, payload):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/invoice-not-found",
+                    "title": "Invoice not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        try:
+            payment_id = self._parse_payment_composite_id(payload.paymentId)
+            if invoice.state != "posted" or invoice.payment_state in (
+                "paid",
+                "reversed",
+            ):
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-not-editable",
+                    "Invoice not editable",
+                    "The invoice state does not allow new reconciliations.",
+                )
+            payment = (
+                self.env["account.payment"]
+                .sudo()
+                .search(
+                    [
+                        ("id", "=", payment_id),
+                        ("company_id", "=", invoice.company_id.id),
+                    ],
+                    limit=1,
+                )
+            )
+            if not payment:
+                self._raise_edit_problem(
+                    404,
+                    "/errors/payment-not-found",
+                    "Payment not found",
+                    f"Payment {payment_id} not found.",
+                )
+            if invoice.folio_ids:
+                if not (payment.folio_ids & invoice.folio_ids):
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/payment-not-applicable",
+                        "Payment not applicable",
+                        ("Payment does not belong to any folio of this " "invoice."),
+                    )
+            elif (
+                payment.partner_id.commercial_partner_id
+                != invoice.commercial_partner_id
+            ):
+                self._raise_edit_problem(
+                    409,
+                    "/errors/payment-not-applicable",
+                    "Payment not applicable",
+                    "Payment does not belong to the invoice's customer.",
+                )
+            invoice_recv, payment_recv, partials = self._get_reconciliation_partials(
+                invoice, payment
+            )
+            if partials:
+                self._raise_edit_problem(
+                    409,
+                    "/errors/payment-already-reconciled",
+                    "Payment already reconciled",
+                    (
+                        f"Payment {payment.id} is already reconciled with "
+                        f"invoice {invoice.id}."
+                    ),
+                )
+            if not invoice_recv or not payment_recv:
+                self._raise_edit_problem(
+                    409,
+                    "/errors/payment-not-applicable",
+                    "Payment not applicable",
+                    "Payment is not in a reconcilable state.",
+                )
+            try:
+                (invoice_recv + payment_recv).filtered(
+                    lambda line: not line.reconciled
+                ).reconcile()
+            except UserError as e:
+                self._raise_edit_problem(
+                    409,
+                    "/errors/payment-not-applicable",
+                    "Payment not applicable",
+                    str(e),
+                )
+        except _InvoiceEditProblem as problem:
+            return problem.response
+        # Reconciling updated payment_state/amount_residual on the stored
+        # record; drop the stale cache so the response reflects the new state.
+        invoice.invalidate_recordset()
+        return InvoiceDetail.from_account_move(invoice)
+
+    def _delete_reconciliation(self, invoice_id, reconciliation_id):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/invoice-not-found",
+                    "title": "Invoice not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        try:
+            payment_id = self._parse_payment_composite_id(reconciliation_id)
+            if invoice.state != "posted":
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-not-editable",
+                    "Invoice not editable",
+                    "The invoice state does not allow undoing reconciliations.",
+                )
+            payment = (
+                self.env["account.payment"]
+                .sudo()
+                .search(
+                    [
+                        ("id", "=", payment_id),
+                        ("company_id", "=", invoice.company_id.id),
+                    ],
+                    limit=1,
+                )
+            )
+            if not payment:
+                self._raise_edit_problem(
+                    404,
+                    "/errors/reconciliation-not-found",
+                    "Reconciliation not found",
+                    (
+                        f"No reconciliation exists between invoice {invoice.id} "
+                        f"and payment {payment_id}."
+                    ),
+                )
+            _invoice_recv, _payment_recv, partials = self._get_reconciliation_partials(
+                invoice, payment
+            )
+            if not partials:
+                self._raise_edit_problem(
+                    404,
+                    "/errors/reconciliation-not-found",
+                    "Reconciliation not found",
+                    (
+                        f"No reconciliation exists between invoice {invoice.id} "
+                        f"and payment {payment.id}."
+                    ),
+                )
+            partials.unlink()
+        except _InvoiceEditProblem as problem:
+            return problem.response
+        # Undoing the reconciliation updated payment_state/amount_residual on
+        # the stored record; drop the stale cache before serializing.
+        invoice.invalidate_recordset()
+        return InvoiceDetail.from_account_move(invoice)
+
+    def _get_reconcilable_payments(self, invoice_id):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        if invoice.state != "posted":
+            return []
+        pay_term_lines = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+        if not pay_term_lines:
+            return []
+        domain = [
+            ("account_id", "in", pay_term_lines.account_id.ids),
+            ("parent_state", "=", "posted"),
+            ("reconciled", "=", False),
+            "|",
+            ("amount_residual", "!=", 0.0),
+            ("amount_residual_currency", "!=", 0.0),
+            ("payment_id", "!=", False),
+        ]
+        if invoice.is_inbound():
+            domain.append(("balance", "<", 0.0))
+        else:
+            domain.append(("balance", ">", 0.0))
+        folio_ids = invoice.folio_ids.ids
+        if folio_ids:
+            domain.append(("folio_ids", "in", folio_ids))
+        else:
+            domain.append(("partner_id", "=", invoice.commercial_partner_id.id))
+        lines = self.env["account.move.line"].sudo().search(domain)
+        items = []
+        for line in lines:
+            payment = line.payment_id
+            pay_currency = payment.currency_id or payment.company_id.currency_id
+            available_currency = abs(line.amount_residual_currency)
+            available_company = abs(line.amount_residual)
+            if pay_currency.is_zero(available_currency):
+                continue
+            items.append(
+                ReconcilablePayment.from_account_payment(
+                    payment, available_currency, available_company
+                )
+            )
+        return items
 
     def _get_invoice_share_url(self, record_id):
         try:
