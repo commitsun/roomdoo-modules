@@ -150,13 +150,24 @@ MOVE_TYPE_TO_PAYMENT_TYPE = {
 
 
 class InvoicePayment(PmsBaseModel):
+    id: str = Field(
+        description=(
+            "Composite identifier of the reconciliation entry in the form "
+            "'{type}_{id}'. Used as {reconciliation_id} when calling DELETE "
+            "/invoices/{invoice_id}/reconciliations/{reconciliation_id} "
+            "(only entries with paymentType='payment' can be removed manually)."
+        ),
+    )
     paymentType: InvoicePaymentTypeEnum = Field(alias="paymentType")
     paymentDate: date
     paymentMethod: PaymentMethodSummary | None = None
     journal: JournalSummary | None = None
+    paymentAmount: float = Field(0.0, alias="paymentAmount")
     amount: float = Field(0.0, alias="amount")
     currency_id: CurrencySummary = Field(alias="currency")
-    ref: str
+    paymentAmountCompany: float = Field(0.0, alias="paymentAmountCompany")
+    companyCurrency: CurrencySummary = Field(alias="companyCurrency")
+    ref: str = ""
 
     @classmethod
     def from_widget_item(cls, widget_item, env):
@@ -174,14 +185,46 @@ class InvoicePayment(PmsBaseModel):
                 counterpart_move.move_type, InvoicePaymentTypeEnum.entry
             )
 
+        partial = env["account.partial.reconcile"].browse(widget_item["partial_id"])
+        widget_currency = env["res.currency"].browse(widget_item["currency_id"])
+        company_currency = partial.company_currency_id
+        company = partial.company_id
+
+        if payment_id:
+            payment = env["account.payment"].browse(payment_id)
+            composite_id = f"payment_{payment.id}"
+            total_currency = payment.currency_id or company_currency
+            total_amount = payment.amount
+            total_date = payment.date
+        else:
+            composite_id = f"{payment_type.value}_{counterpart_move.id}"
+            total_currency = counterpart_move.currency_id or company_currency
+            total_amount = counterpart_move.amount_total
+            total_date = counterpart_move.invoice_date or counterpart_move.date
+
+        if total_currency == widget_currency:
+            payment_amount_widget = total_amount
+        else:
+            payment_amount_widget = total_currency._convert(
+                total_amount, widget_currency, company, total_date
+            )
+        if total_currency == company_currency:
+            payment_amount_company = total_amount
+        else:
+            payment_amount_company = total_currency._convert(
+                total_amount, company_currency, company, total_date
+            )
+
         data = {
+            "id": composite_id,
             "paymentType": payment_type,
             "paymentDate": widget_item["date"],
-            "amount": widget_item["amount"],
-            "ref": counterpart_move.name,
-            "currency_id": CurrencySummary.from_res_currency(
-                env["res.currency"].browse(widget_item["currency_id"])
-            ),
+            "paymentAmount": widget_currency.round(payment_amount_widget),
+            "amount": widget_currency.round(widget_item["amount"]),
+            "ref": counterpart_move.name or "",
+            "currency_id": CurrencySummary.from_res_currency(widget_currency),
+            "paymentAmountCompany": company_currency.round(payment_amount_company),
+            "companyCurrency": CurrencySummary.from_res_currency(company_currency),
         }
 
         if counterpart_move.journal_id:
@@ -198,6 +241,80 @@ class InvoicePayment(PmsBaseModel):
                     payment.payment_method_line_id
                 )
 
+        return cls(**data)
+
+
+class ReconciliationCreate(PmsBaseModel):
+    paymentId: str = Field(
+        alias="paymentId",
+        pattern=r"^payment_\d+$",
+        description=(
+            "Composite identifier of the reconcilable payment, in the form "
+            "'{type}_{id}'. Today only 'payment_{id}' is accepted. Obtained "
+            "from GET /invoices/{invoice_id}/reconcilable-payments."
+        ),
+    )
+
+
+class ReconcilablePayment(PmsBaseModel):
+    id: str = Field(
+        description=(
+            "Composite identifier '{type}_{id}'. Today only 'payment_{id}' "
+            "is returned. The type prefix is reserved so the contract can "
+            "grow to other reconcilable document types without breaking."
+        ),
+    )
+    paymentType: InvoicePaymentTypeEnum = Field(alias="paymentType")
+    paymentDate: date = Field(alias="paymentDate")
+    paymentMethod: PaymentMethodSummary | None = None
+    journal: JournalSummary | None = None
+    paymentAmount: float = Field(alias="paymentAmount")
+    availableAmount: float = Field(alias="availableAmount")
+    currency: CurrencySummary
+    paymentAmountCompany: float = Field(alias="paymentAmountCompany")
+    availableAmountCompany: float = Field(alias="availableAmountCompany")
+    companyCurrency: CurrencySummary = Field(alias="companyCurrency")
+    ref: str = ""
+
+    @classmethod
+    def from_account_payment(
+        cls,
+        payment,
+        available_currency: float,
+        available_company: float,
+    ):
+        company_currency = payment.company_id.currency_id
+        pay_currency = payment.currency_id or company_currency
+        payment_amount = payment.amount
+        if pay_currency == company_currency:
+            payment_amount_company = payment_amount
+        else:
+            payment_amount_company = pay_currency._convert(
+                payment_amount,
+                company_currency,
+                payment.company_id,
+                payment.date,
+            )
+        data = {
+            "id": f"payment_{payment.id}",
+            "paymentType": InvoicePaymentTypeEnum.payment,
+            "paymentDate": payment.date,
+            "paymentAmount": pay_currency.round(payment_amount),
+            "availableAmount": pay_currency.round(available_currency),
+            "currency": CurrencySummary.from_res_currency(pay_currency),
+            "paymentAmountCompany": company_currency.round(payment_amount_company),
+            "availableAmountCompany": company_currency.round(available_company),
+            "companyCurrency": CurrencySummary.from_res_currency(company_currency),
+            "ref": payment.ref or "",
+        }
+        if payment.journal_id:
+            data["journal"] = JournalSummary.from_account_journal(payment.journal_id)
+        if payment.payment_method_line_id:
+            data[
+                "paymentMethod"
+            ] = PaymentMethodSummary.from_account_payment_method_line(
+                payment.payment_method_line_id
+            )
         return cls(**data)
 
 
@@ -333,6 +450,7 @@ class InvoiceDetail(PmsBaseModel):
     folioLines: list[FolioLineDetail] = Field(default_factory=list)
     downpaymentLines: list[int] = Field(default_factory=list)
     lines: list[InvoiceLine] = Field(default_factory=list)
+    payments: list[InvoicePayment] = Field(default_factory=list)
     refundedInvoice: InvoiceRef | None = None
     refundedBy: InvoiceRef | None = None
     replaces: InvoiceRef | None = None
@@ -366,7 +484,7 @@ class InvoiceDetail(PmsBaseModel):
                 account_move.payment_state, InvoicePaymentStateEnum.not_paid
             )
         invoice_lines = account_move.invoice_line_ids.filtered(
-            lambda line: not line.display_type
+            lambda line: line.display_type == "product"
         )
         folio_lines = invoice_lines.mapped("folio_line_ids").filtered(
             lambda fl: not fl.is_downpayment
@@ -386,6 +504,11 @@ class InvoiceDetail(PmsBaseModel):
         data["lines"] = [
             InvoiceLine.from_account_move_line(line) for line in invoice_lines
         ]
+        if account_move.invoice_payments_widget:
+            data["payments"] = [
+                InvoicePayment.from_widget_item(item, account_move.env)
+                for item in account_move.invoice_payments_widget["content"]
+            ]
         if account_move.reversed_entry_id:
             data["refundedInvoice"] = InvoiceRef.from_account_move(
                 account_move.reversed_entry_id
