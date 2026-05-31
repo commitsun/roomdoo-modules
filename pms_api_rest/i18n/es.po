@@ -26,3 +26,29 @@ msgstr ""
 "No es posible modificar el cliente anónimo. "
 "Modifica el contacto en la factura para poder elegir "
 "o crear otro diferente."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/models/res_partner.py:0
+#, python-format
+msgid ""
+"The system contact '%(name)s' is reserved for simplified invoices and "
+"cannot be modified. Blocked fields: %(fields)s. If this is triggered "
+"from the REST API, create a new contact for the guest instead of "
+"writing on the anonymous one."
+msgstr ""
+"El contacto de sistema '%(name)s' está reservado para facturas "
+"simplificadas y no se puede modificar. Campos bloqueados: %(fields)s. "
+"Si esto se produce desde la API REST, crea un contacto nuevo para el "
+"huésped en lugar de escribir sobre el contacto anónimo."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/models/res_partner.py:0
+#, python-format
+msgid ""
+"Cannot attach a child contact to the system contact '%s'. This partner "
+"is reserved for simplified invoices. Create the contact as an "
+"independent partner instead."
+msgstr ""
+"No se puede asociar un contacto hijo al contacto de sistema '%s'. Este "
+"contacto está reservado para facturas simplificadas. Crea el contacto "
+"como un contacto independiente."
