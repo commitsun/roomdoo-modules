@@ -12,7 +12,8 @@ SELECT
     folio.name as "Reservation",
     room.name as "Room",
     reservation.partner_name as "Customer",
-    folio.pending_amount as "Pending Amount"
+    folio.pending_amount as "Pending Amount",
+    agency.name as "Agency"
 FROM pms_reservation reservation
     LEFT JOIN pms_reservation_line night
         ON reservation.id = night.reservation_id AND night.date = reservation.checkout - interval '1' day
@@ -20,6 +21,8 @@ FROM pms_reservation reservation
         ON room.id = night.room_id
     LEFT JOIN pms_folio folio
         ON folio.id = reservation.folio_id
+    LEFT JOIN res_partner agency
+        ON agency.id = folio.agency_id
 WHERE (reservation.pms_property_id = %(x_pms_property_id)s)
     AND (reservation.checkout = %(x_date_from)s)
     AND (night.occupies_availability = True)
@@ -50,7 +53,8 @@ SELECT
     folio.name as "Reservation",
     room.name as "Room",
     reservation.partner_name as "Customer",
-    folio.pending_amount as "Pending Amount"
+    folio.pending_amount as "Pending Amount",
+    agency.name as "Agency"
 FROM pms_reservation reservation
     LEFT JOIN pms_reservation_line night
         ON reservation.id = night.reservation_id AND night.date = reservation.checkin
@@ -58,6 +62,8 @@ FROM pms_reservation reservation
         ON room.id = night.room_id
     LEFT JOIN pms_folio folio
         ON folio.id = reservation.folio_id
+    LEFT JOIN res_partner agency
+        ON agency.id = folio.agency_id
 WHERE (reservation.pms_property_id = %(x_pms_property_id)s)
     AND (reservation.checkin = %(x_date_from)s)
     AND (night.occupies_availability = True)
