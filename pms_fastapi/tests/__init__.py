@@ -2,7 +2,9 @@ from . import common
 from . import test_contacts
 from . import test_countries
 from . import test_folios
+from . import test_folio_billing
 from . import test_invoices
+from . import test_invoice_contact_validation
 from . import test_journals
 from . import test_languages
 from . import test_payment_methods
