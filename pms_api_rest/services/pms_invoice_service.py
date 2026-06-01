@@ -154,9 +154,7 @@ class PmsInvoiceService(Component):
                     if d
                 ]
                 display_date = (
-                    max(autoinvoice_dates)
-                    if autoinvoice_dates
-                    else fields.Date.today()
+                    max(autoinvoice_dates) if autoinvoice_dates else fields.Date.today()
                 )
                 invoice_date = datetime.combine(
                     display_date, datetime.min.time()
@@ -241,8 +239,12 @@ class PmsInvoiceService(Component):
             raise UserError(_("You can't update a refund invoice"))
         if invoice.payment_state == "reversed":
             raise UserError(_("You can't update a reversed invoice"))
-        # TODO: _check_fiscalyear_lock_date with sudo is unsafe, we need to check the access
-        # invoice._check_fiscalyear_lock_date()
+        # Re-run the fiscal year lock check in the caller's context so the
+        # ``.sudo()`` browse above doesn't bypass it. Accounting managers
+        # (``account.group_account_manager``) can still edit closed periods,
+        # which is the standard Odoo behaviour; regular users hit the same
+        # ``UserError`` they would get from the back-office.
+        invoice.with_user(self.env.user)._check_fiscalyear_lock_date()
         new_vals = {}
         if (
             pms_invoice_info.partnerId
@@ -339,8 +341,8 @@ class PmsInvoiceService(Component):
             lambda l: l.display_type == "line_section"
         ):
             if (
-                not folio_line.id
-                in folio_lines_invoiced.filtered(
+                folio_line.id
+                not in folio_lines_invoiced.filtered(
                     lambda l: l.display_type != "line_section"
                 ).section_id.ids
             ):
@@ -376,6 +378,9 @@ class PmsInvoiceService(Component):
         if invoice:
             if invoice.state != "draft" and invoice.name not in ["/", False]:
                 raise UserError(_("Only draft invoices can be deleted"))
+            # Same lock-date safety net as in ``update_invoice``: prevent
+            # deletions on closed periods even when called via ``sudo()``.
+            invoice.with_user(self.env.user)._check_fiscalyear_lock_date()
             invoice.unlink()
         else:
             raise MissingError(_("Invoice not found"))
@@ -444,7 +449,11 @@ class PmsInvoiceService(Component):
                         "quantity"
                     ):
                         return True
-                if line[0] == 0 and not line[2].get("display_type") or line[2].get("display_type") == "product":
+                if (
+                    line[0] == 0
+                    and not line[2].get("display_type")
+                    or line[2].get("display_type") == "product"
+                ):
                     return True
         return False
 
