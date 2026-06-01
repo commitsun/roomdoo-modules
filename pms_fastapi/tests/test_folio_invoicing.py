@@ -62,6 +62,20 @@ class TestFolioInvoicing(CommonTestPmsApi):
         cls.sale_channel = cls.env["pms.sale.channel"].create(
             {"name": "Direct Test", "channel_type": "direct"}
         )
+        # Simplified invoices need a dedicated sale journal; linking it as the
+        # property's simplified journal flags it as such (is_simplified_invoice).
+        cls.journal_simplified = cls.env["account.journal"].create(
+            {
+                "name": "Simplified Sales",
+                "code": "SIMP",
+                "type": "sale",
+                "company_id": company.id,
+                "pms_property_ids": [(6, 0, [cls.test_property.id])],
+            }
+        )
+        cls.test_property.write(
+            {"journal_simplified_invoice_id": cls.journal_simplified.id}
+        )
         cls.guest = cls.env["res.partner"].create(
             {"firstname": "John", "lastname": "Doe"}
         )
@@ -151,6 +165,17 @@ class TestFolioInvoicing(CommonTestPmsApi):
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
         self.assertEqual(response.json()["state"], "posted")
+
+    def test_create_simplified_invoice_without_customer(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(
+                test_client, self._create_payload(line, customer_id=None)
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        self.assertEqual(response.json()["invoiceType"], "outInvoice")
 
     # ------------------------------------------------------------------
     # POST /folios/invoices — validation branches
