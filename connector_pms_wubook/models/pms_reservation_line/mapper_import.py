@@ -55,23 +55,17 @@ class ChannelWubookPmsReservationLineMapperImport(Component):
             board_service_room = get_board_service_room_type(
                 self, room_type, record["board"], pricelist_id
             )
-            # occupancy is the adults in the reservation
-            board_day_price_adults = (
-                sum(
-                    board_service_room.board_service_line_ids.with_context(
-                        property=self.backend_record.pms_property_id.id
-                    )
-                    .filtered(lambda line: line.adults)
-                    .mapped("amount")
-                )
-                * record["occupancy"]
+            board_day_price = board_service_room._get_billed_day_price(
+                pricelist=self.env["product.pricelist"].browse(pricelist_id),
+                consumption_date=record["day"],
+                pms_property_id=self.backend_record.pms_property_id.id,
+                adults=record["occupancy"],
+                children=record.get("children") or 0,
+                partner_id=agency.id if agency else False,
+                fiscal_position=agency.property_account_position_id
+                if agency
+                else False,
+                company=self.backend_record.pms_property_id.company_id,
             )
-            board_day_price_children = sum(
-                board_service_room.board_service_line_ids.with_context(
-                    property=self.backend_record.pms_property_id.id
-                )
-                .filtered(lambda line: line.children)
-                .mapped("amount")
-            ) * (record.get("children") or 0)
-            price -= board_day_price_adults + board_day_price_children
+            price -= board_day_price
         return {"price": price}
