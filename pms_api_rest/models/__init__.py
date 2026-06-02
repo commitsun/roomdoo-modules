@@ -7,6 +7,7 @@ from . import account_bank_statement
 from . import product_template
 from . import ota_property_settings
 from . import pms_api_log
+from . import pms_board_service_room_type
 from . import pms_folio
 from . import pms_checkin_partner
 from . import pms_reservation

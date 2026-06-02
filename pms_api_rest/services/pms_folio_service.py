@@ -977,9 +977,13 @@ class PmsFolioService(Component):
                     vals["preferred_room_id"] = reservation.preferredRoomId
                 if reservation.reservationLines:
                     vals_lines = []
-                    board_day_price = 0
-                    # The service price is included in day price
-                    # when it is a board service (external api)
+                    # When a board service is set via external api, the
+                    # incoming reservation price represents the full
+                    # package (room + board). Compute the board portion
+                    # per date with the same pricing logic the auto-
+                    # computed pms.service.line will use, so we can
+                    # subtract it cleanly and leave the room price.
+                    board_day_prices = {}
                     if external_app and vals.get("board_service_room_id"):
                         board = (
                             self.env["pms.board.service.room.type"]
@@ -987,27 +991,18 @@ class PmsFolioService(Component):
                             .browse(vals["board_service_room_id"])
                         )
                         pms_api_check_access(user=self.env.user, records=board)
-                        if reservation.adults:
-                            board_day_price += (
-                                sum(
-                                    board.board_service_line_ids.with_context(
-                                        property=folio.pms_property_id.id
-                                    )
-                                    .filtered(lambda line: line.adults)
-                                    .mapped("amount")
-                                )
-                                * reservation.adults
-                            )
-                        if reservation.children:
-                            board_day_price += (
-                                sum(
-                                    board.board_service_line_ids.with_context(
-                                        property=folio.pms_property_id.id
-                                    )
-                                    .filtered(lambda line: line.children)
-                                    .mapped("amount")
-                                )
-                                * reservation.children
+                        for rline in reservation.reservationLines:
+                            board_day_prices[rline.date] = board._get_billed_day_price(
+                                pricelist=folio.pricelist_id,
+                                consumption_date=rline.date,
+                                pms_property_id=folio.pms_property_id.id,
+                                adults=reservation.adults,
+                                children=reservation.children,
+                                partner_id=folio.partner_id.id
+                                if folio.partner_id
+                                else False,
+                                fiscal_position=folio.fiscal_position_id,
+                                company=folio.company_id,
                             )
                     for reservationLine in reservation.reservationLines:
                         price = reservationLine.price - (
@@ -1019,7 +1014,8 @@ class PmsFolioService(Component):
                                 0,
                                 {
                                     "date": reservationLine.date,
-                                    "price": price - board_day_price,
+                                    "price": price
+                                    - board_day_prices.get(reservationLine.date, 0),
                                     "discount": reservationLine.discount,
                                 },
                             )
@@ -2572,12 +2568,13 @@ class PmsFolioService(Component):
             ):
                 # The service price is included in day price
                 # when it is a board service (external api)
-                board_day_price = 0
+                board_day_prices = {}
                 if external_app:
                     # if proposed reservation and not board_service_room_id in vals,
-                    # get board_day_price from board services of proposed reservation
+                    # get board_day_price from the already-billed board services
+                    # of the proposed reservation (same value for every day).
                     if proposed_reservation and not vals.get("board_service_room_id"):
-                        board_day_price = sum(
+                        avg = sum(
                             proposed_reservation.service_ids.filtered(
                                 lambda s: s.is_board_service
                             ).mapped("price_total")
@@ -2588,6 +2585,8 @@ class PmsFolioService(Component):
                             ).days
                             or 1
                         )
+                        for rline in info_reservation.reservationLines:
+                            board_day_prices[rline.date] = avg
                     else:
                         board = (
                             self.env["pms.board.service.room.type"]
@@ -2602,31 +2601,29 @@ class PmsFolioService(Component):
                             )
                         )
                         pms_api_check_access(user=self.env.user, records=board)
-                        if info_reservation.adults:
-                            board_day_price += (
-                                sum(
-                                    board.board_service_line_ids.with_context(
-                                        property=folio.pms_property_id.id
-                                    )
-                                    .filtered(lambda line: line.adults)
-                                    .mapped("amount")
-                                )
-                                * info_reservation.adults
-                            )
-                        if info_reservation.children:
-                            board_day_price += (
-                                sum(
-                                    board.board_service_line_ids.with_context(
-                                        property=folio.pms_property_id.id
-                                    )
-                                    .filtered(lambda line: line.children)
-                                    .mapped("amount")
-                                )
-                                * info_reservation.children
+                        pricelist = (
+                            self.env["product.pricelist"]
+                            .sudo()
+                            .browse(info_reservation.pricelistId)
+                            if info_reservation.pricelistId
+                            else folio.pricelist_id
+                        )
+                        for rline in info_reservation.reservationLines:
+                            board_day_prices[rline.date] = board._get_billed_day_price(
+                                pricelist=pricelist,
+                                consumption_date=rline.date,
+                                pms_property_id=folio.pms_property_id.id,
+                                adults=info_reservation.adults,
+                                children=info_reservation.children,
+                                partner_id=folio.partner_id.id
+                                if folio.partner_id
+                                else False,
+                                fiscal_position=folio.fiscal_position_id,
+                                company=folio.company_id,
                             )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
-                    board_day_price=board_day_price,
+                    board_day_prices=board_day_prices,
                     proposed_reservation=proposed_reservation,
                     commission_percent_to_deduct=commision_percent_to_deduct,
                 )
@@ -2652,12 +2649,14 @@ class PmsFolioService(Component):
     def wrapper_reservation_lines(
         self,
         reservation,
-        board_day_price=0,
+        board_day_prices=None,
         proposed_reservation=False,
         commission_percent_to_deduct=0,
     ):
+        board_day_prices = board_day_prices or {}
         cmds = []
         for line in reservation.reservationLines:
+            board_day_price = board_day_prices.get(line.date, 0)
             if proposed_reservation:
                 # Not is necesay check new dates, becouse a if the dates change,
                 # the reservation is new
