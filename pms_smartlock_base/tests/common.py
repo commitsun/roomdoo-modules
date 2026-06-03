@@ -155,8 +155,22 @@ class CommonSmartlock(TransactionCase):
             "vendor_id": room.lock_vendor_id.id,
             "date_from": reservation.checkin_datetime,
             "date_to": reservation.checkout_datetime,
-            "vendor_code_id": "vendor-code-1",
+            "vendor_grant_ref": "vendor-grant-1",
             "pin": "1234",
         }
         vals.update(overrides)
         return self.env["lock.code"].sudo().create(vals)
+
+    def _add_common_lock(self, room, name="Main Entrance", device_id="device-common"):
+        """Create a common lock on the property and grant it to ``room``,
+        so the room's credential covers its own lock plus this shared door."""
+        common = self.env["pms.common.lock"].create(
+            {
+                "name": name,
+                "pms_property_id": room.pms_property_id.id,
+                "vendor_id": room.lock_vendor_id.id,
+                "lock_device_id": device_id,
+            }
+        )
+        room.write({"shared_lock_ids": [(4, common.id)]})
+        return common

@@ -111,11 +111,11 @@ class TestSyncingStatePriority(_StateTestBase):
         self.assertEqual(self.code.state, "syncing")
 
     def test_syncing_wins_over_pending(self):
-        """A freshly-created code with no ``vendor_code_id`` and a
+        """A freshly-created code with no ``vendor_grant_ref`` and a
         ``_sync_create`` job in flight should read ``syncing`` (we know
         something is happening) rather than ``pending`` (which now
         means "stuck without a job")."""
-        self.code.sudo().write({"vendor_code_id": False, "pin": False})
+        self.code.sudo().write({"vendor_grant_ref": False, "pin": False})
         self.assertEqual(self.code.state, "pending")
         self._make_job("enqueued", method_name="_sync_create")
         self.assertEqual(self.code.state, "syncing")
@@ -127,7 +127,7 @@ class TestSyncingStateSearch(_StateTestBase):
         return self._plant_live_code(
             self.reservation,
             room=room,
-            vendor_code_id="vendor-code-2",
+            vendor_grant_ref="vendor-code-2",
             date_from=now - timedelta(hours=1),
             date_to=now + timedelta(hours=1),
         )

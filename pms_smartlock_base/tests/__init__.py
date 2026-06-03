@@ -1,4 +1,5 @@
 from . import test_cancel
+from . import test_common_lock_targets
 from . import test_cron
 from . import test_lock_code_state
 from . import test_lock_code_sync

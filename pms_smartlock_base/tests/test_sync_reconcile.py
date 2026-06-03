@@ -43,7 +43,7 @@ class TestSyncReconcile(CommonSmartlock):
         codes = reservation.lock_code_ids
         self.assertEqual(len(codes), 1)
         self.assertEqual(codes.room_id, self.room_a)
-        self.assertFalse(codes.vendor_code_id)
+        self.assertFalse(codes.vendor_grant_ref)
         self.assertEqual(self._enqueue_for(codes), [(codes.id, "_sync_create", {})])
 
     def test_create_skipped_when_room_has_no_lock(self):
@@ -68,12 +68,12 @@ class TestSyncReconcile(CommonSmartlock):
         self.assertFalse(live.cancelled)
 
     def test_remove_branch_pending_code_cancelled_locally(self):
-        """Pending code (no ``vendor_code_id`` yet) for a room no
+        """Pending code (no ``vendor_grant_ref`` yet) for a room no
         longer in target → cancel locally, no vendor call. The
         original create job hasn't run yet, so there's nothing on
         the lock to invalidate."""
         reservation = self._create_reservation()
-        pending = self._plant_live_code(reservation, vendor_code_id=False, pin=False)
+        pending = self._plant_live_code(reservation, vendor_grant_ref=False, pin=False)
         pending.write({"room_id": self.room_no_lock.id})
         reservation._sync_lock_codes()
         self.assertFalse(self._enqueue_for(pending))
@@ -113,13 +113,13 @@ class TestSyncReconcile(CommonSmartlock):
         self.assertFalse(self._enqueue_calls)
 
     def test_modify_skipped_for_pending_code_even_if_dates_shifted(self):
-        """Pending codes (no ``vendor_code_id``) keep their original
+        """Pending codes (no ``vendor_grant_ref``) keep their original
         dates even when the reservation window shifted — the in-flight
         ``_sync_create`` job will use whatever dates were on the
         record at enqueue time. Updating them now would write
         vendor-bound state before the vendor confirmed."""
         reservation = self._create_reservation()
-        pending = self._plant_live_code(reservation, vendor_code_id=False, pin=False)
+        pending = self._plant_live_code(reservation, vendor_grant_ref=False, pin=False)
         # Shift the window — line dates move, but pending code shouldn't modify
         reservation.write(
             {

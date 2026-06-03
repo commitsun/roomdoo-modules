@@ -41,7 +41,7 @@
                             <field name="date_from" />
                             <field name="date_to" />
                             <field name="state" />
-                            <field name="vendor_code_id" optional="hide" />
+                            <field name="vendor_grant_ref" optional="hide" />
                         </tree>
                     </field>
                 </page>
