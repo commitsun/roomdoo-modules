@@ -8,9 +8,9 @@ class TestCancelLockCodes(CommonSmartlock):
     invalidate every live code under the reservation. Two paths
     depending on whether the code reached the vendor:
 
-    - ``vendor_code_id`` set → enqueue ``_sync_remove`` (vendor
+    - ``vendor_grant_ref`` set → enqueue ``_sync_remove`` (vendor
       confirms, then ``cancelled=True`` is written on success).
-    - ``vendor_code_id`` empty → set ``cancelled=True`` locally; the
+    - ``vendor_grant_ref`` empty → set ``cancelled=True`` locally; the
       ``_sync_create`` job's own guard skips already-cancelled codes
       so no vendor call ever fires for the orphaned record."""
 
@@ -42,7 +42,7 @@ class TestCancelLockCodes(CommonSmartlock):
 
     def test_pending_code_cancelled_locally(self):
         reservation = self._create_reservation()
-        pending = self._plant_live_code(reservation, vendor_code_id=False, pin=False)
+        pending = self._plant_live_code(reservation, vendor_grant_ref=False, pin=False)
         reservation._cancel_lock_codes()
         self.assertFalse(self._enqueue_for(pending))
         self.assertTrue(pending.cancelled)
@@ -72,7 +72,7 @@ class TestCancelLockCodes(CommonSmartlock):
         pending = self._plant_live_code(
             reservation,
             room=self.room_b,
-            vendor_code_id=False,
+            vendor_grant_ref=False,
             pin=False,
         )
         already_cancelled = self._plant_live_code(

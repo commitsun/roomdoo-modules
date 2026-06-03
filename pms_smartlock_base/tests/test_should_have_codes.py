@@ -98,11 +98,11 @@ class TestShouldHaveLockCodes(CommonSmartlock):
             self.assertTrue(reservation._should_have_lock_codes())
 
     def test_pending_code_counts_as_live(self):
-        """Pending codes (no ``vendor_code_id`` yet) still keep the
+        """Pending codes (no ``vendor_grant_ref`` yet) still keep the
         predicate True so the in-flight sync isn't dropped if a write
         races the vendor response."""
         reservation = self._create_reservation()
-        self._plant_live_code(reservation, vendor_code_id=False, pin=False)
+        self._plant_live_code(reservation, vendor_grant_ref=False, pin=False)
         self.assertTrue(reservation._should_have_lock_codes())
 
     def test_cancelled_code_does_not_count_as_live(self):

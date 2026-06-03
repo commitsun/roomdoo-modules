@@ -5,3 +5,9 @@ access_lock_code_manager,lock.code.manager,model_lock_code,pms.group_pms_manager
 access_lock_code_user,lock.code.user,model_lock_code,pms.group_pms_user,1,0,0,0
 access_lock_code_access_log_admin,lock.code.access.log.admin,model_lock_code_access_log,pms_smartlock_base.group_smartlock_admin,1,0,0,0
 access_lock_code_pin_viewer_user,lock.code.pin.viewer.user,model_lock_code_pin_viewer,pms.group_pms_user,1,1,1,1
+access_lock_code_target_admin,lock.code.target.admin,model_lock_code_target,pms_smartlock_base.group_smartlock_admin,1,1,1,1
+access_lock_code_target_manager,lock.code.target.manager,model_lock_code_target,pms.group_pms_manager,1,0,0,0
+access_lock_code_target_user,lock.code.target.user,model_lock_code_target,pms.group_pms_user,1,0,0,0
+access_pms_common_lock_admin,pms.common.lock.admin,model_pms_common_lock,pms_smartlock_base.group_smartlock_admin,1,1,1,1
+access_pms_common_lock_manager,pms.common.lock.manager,model_pms_common_lock,pms.group_pms_manager,1,0,0,0
+access_pms_common_lock_user,pms.common.lock.user,model_pms_common_lock,pms.group_pms_user,1,0,0,0

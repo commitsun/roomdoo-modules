@@ -21,7 +21,7 @@
                 <field name="date_from" />
                 <field name="date_to" />
                 <field name="state" />
-                <field name="vendor_code_id" optional="hide" />
+                <field name="vendor_grant_ref" optional="hide" />
                 <field name="active" invisible="1" />
             </tree>
         </field>
@@ -65,11 +65,25 @@
                         <group>
                             <field name="date_from" />
                             <field name="date_to" />
-                            <field name="vendor_code_id" readonly="1" />
+                            <field
+                name="vendor_grant_ref"
+                readonly="1"
+                groups="pms_smartlock_base.group_smartlock_admin"
+              />
                             <field name="active" />
                         </group>
                     </group>
                     <notebook>
+                        <page string="Locks" name="targets">
+                            <field name="target_ids" readonly="1">
+                                <tree>
+                                    <field name="kind" />
+                                    <field name="room_id" />
+                                    <field name="common_lock_id" />
+                                    <field name="lock_device_id" />
+                                </tree>
+                            </field>
+                        </page>
                         <page string="Sync Jobs" name="sync_jobs">
                             <field name="queue_job_ids" readonly="1">
                                 <tree
@@ -110,7 +124,7 @@
         <field name="model">lock.code</field>
         <field name="arch" type="xml">
             <search>
-                <field name="vendor_code_id" />
+                <field name="vendor_grant_ref" />
                 <field name="room_id" />
                 <field name="reservation_id" />
                 <field

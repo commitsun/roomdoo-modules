@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="pms_common_lock_view_tree" model="ir.ui.view">
+        <field name="name">pms.common.lock.tree</field>
+        <field name="model">pms.common.lock</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+                <field name="pms_property_id" />
+                <field name="vendor_id" />
+                <field name="lock_device_id" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="pms_common_lock_view_form" model="ir.ui.view">
+        <field name="name">pms.common.lock.form</field>
+        <field name="model">pms.common.lock</field>
+        <field name="arch" type="xml">
+            <form string="Common Lock">
+                <sheet>
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="pms_property_id" />
+                        </group>
+                        <group>
+                            <field name="vendor_id" />
+                            <field name="lock_device_id" />
+                            <field name="active" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pms_common_lock_view_search" model="ir.ui.view">
+        <field name="name">pms.common.lock.search</field>
+        <field name="model">pms.common.lock</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="lock_device_id" />
+                <field name="pms_property_id" />
+                <field name="vendor_id" />
+                <separator />
+                <filter
+          name="archived"
+          string="Archived"
+          domain="[('active', '=', False)]"
+        />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_property"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                    <filter
+            name="group_vendor"
+            string="Vendor"
+            context="{'group_by': 'vendor_id'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="pms_common_lock_action" model="ir.actions.act_window">
+        <field name="name">Common Locks</field>
+        <field name="res_model">pms.common.lock</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="pms_common_lock_view_search" />
+    </record>
+
+</odoo>

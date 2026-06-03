@@ -24,7 +24,9 @@ class TestActionRevealPin(CommonSmartlock):
         """Code without a PIN (vendor sync hasn't completed) → UserError.
         We must not create an access log entry for an empty reveal —
         the audit trail represents PIN disclosures, not attempted ones."""
-        code = self._plant_live_code(self.reservation, vendor_code_id=False, pin=False)
+        code = self._plant_live_code(
+            self.reservation, vendor_grant_ref=False, pin=False
+        )
         log_model = self.env["lock.code.access.log"].sudo()
         before = log_model.search_count([("lock_code_id", "=", code.id)])
         with self.assertRaises(UserError):

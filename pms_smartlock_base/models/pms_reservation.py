@@ -116,7 +116,7 @@ class PmsReservation(models.Model):
         room windows: cancel codes whose room is no longer assigned, modify
         codes whose window shifted, create codes for newly-assigned rooms.
 
-        Pending codes (no ``vendor_code_id`` yet) keep their original dates
+        Pending codes (no ``vendor_grant_ref`` yet) keep their original dates
         even if the reservation window shifted — the ``_sync_create`` job
         already enqueued will use whatever dates were on the record at
         enqueue time. Updating them here would write vendor-bound state
@@ -139,7 +139,7 @@ class PmsReservation(models.Model):
         }
         for room_id, code in live_by_room.items():
             if room_id not in target:
-                if code.vendor_code_id:
+                if code.vendor_grant_ref:
                     code._enqueue_sync("_sync_remove")
                 else:
                     code.cancelled = True
@@ -147,7 +147,7 @@ class PmsReservation(models.Model):
             _, new_from, new_to = target[room_id]
             if code.date_from == new_from and code.date_to == new_to:
                 continue
-            if code.vendor_code_id:
+            if code.vendor_grant_ref:
                 code._enqueue_sync("_sync_modify", date_from=new_from, date_to=new_to)
         for room_id, (room, date_from, date_to) in target.items():
             if room_id in live_by_room:
@@ -176,7 +176,7 @@ class PmsReservation(models.Model):
             for code in reservation.lock_code_ids.sudo().filtered(
                 lambda c: not c.cancelled and not c.failed
             ):
-                if code.vendor_code_id:
+                if code.vendor_grant_ref:
                     code._enqueue_sync("_sync_remove")
                 else:
                     code.cancelled = True
