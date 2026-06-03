@@ -133,6 +133,17 @@ class TestFolioInvoicing(CommonTestPmsApi):
             ],
         }
 
+    def _downpayment_line(self, folio, amount=50.0):
+        return self.env["folio.sale.line"].create(
+            {
+                "folio_id": folio.id,
+                "name": "Down payment",
+                "is_downpayment": True,
+                "product_uom_qty": 1,
+                "price_unit": amount,
+            }
+        )
+
     def _post_invoice(self, test_client, payload):
         return test_client.post("/folios/invoices", json=payload)
 
@@ -349,6 +360,81 @@ class TestFolioInvoicing(CommonTestPmsApi):
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/multiple-properties")
+
+    # ------------------------------------------------------------------
+    # POST /folios/invoices — downpaymentLines
+    # ------------------------------------------------------------------
+    def test_create_invoice_with_downpayment_line(self):
+        # A valid down-payment line passes resolution/validation and reaches
+        # invoice creation. The actual deduction is folio invoicing machinery
+        # (pms), not asserted here.
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        downpayment = self._downpayment_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["downpaymentLines"] = [downpayment.id]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(test_client, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        self.assertEqual(response.json()["state"], "draft")
+
+    def test_create_invoice_downpayment_not_found(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["downpaymentLines"] = [999999999]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(test_client, payload)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/downpayment-lines-not-found")
+
+    def test_create_invoice_rejects_non_downpayment_as_downpayment(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        # A regular room line is not a down payment.
+        payload["downpaymentLines"] = [line.id]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(test_client, payload)
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/invalid-downpayment-line")
+
+    def test_create_invoice_downpayment_out_of_scope(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        # Different dates so the single test room stays available.
+        other_folio = self._confirmed_folio(days_ahead=30)
+        downpayment = self._downpayment_line(other_folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["downpaymentLines"] = [downpayment.id]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(test_client, payload)
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(
+            response.json()["type"], "/errors/downpayment-line-out-of-scope"
+        )
+
+    def test_create_invoice_duplicate_downpayment_lines(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        downpayment = self._downpayment_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["downpaymentLines"] = [downpayment.id, downpayment.id]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(test_client, payload)
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/duplicate-downpayment-lines")
 
     # ------------------------------------------------------------------
     # PUT /invoices/{id} — edit

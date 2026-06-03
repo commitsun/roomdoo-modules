@@ -78,6 +78,14 @@ class FolioInvoiceCreate(PmsBaseModel):
             "sale lines from different folios."
         ),
     )
+    downpaymentLines: list[int] = Field(
+        default_factory=list,
+        description=(
+            "Ids of down-payment folio lines to subtract from the invoice. "
+            "Must belong to the same folios as the invoiced lines. Send [] "
+            "to subtract no down payment."
+        ),
+    )
 
 
 class InvoiceOrderField(str, Enum):
