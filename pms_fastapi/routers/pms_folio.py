@@ -357,12 +357,15 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def _create_invoice(self, payload: FolioInvoiceCreate):
         try:
             sale_lines = self._resolve_sale_lines(payload)
+            downpayment_lines = self._resolve_downpayment_lines(payload, sale_lines)
             pms_property = self._resolve_property(sale_lines)
             self._check_quantities(payload, sale_lines)
             partner = self._resolve_invoice_partner(payload, pms_property)
             if payload.customerId is None:
                 self._check_simplified_limit(payload, sale_lines, pms_property)
-            invoice = self._build_and_create_invoice(payload, sale_lines, partner)
+            invoice = self._build_and_create_invoice(
+                payload, sale_lines, downpayment_lines, partner
+            )
             self._override_invoice_due_date(invoice, payload)
             if payload.validate_invoice:
                 self._post_invoice(invoice)
@@ -409,6 +412,49 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 invalidSaleLineIds=invalid_kind.ids,
             )
         return sale_lines
+
+    def _resolve_downpayment_lines(self, payload: FolioInvoiceCreate, sale_lines):
+        if not payload.downpaymentLines:
+            return self.env["folio.sale.line"]
+        ids = list(set(payload.downpaymentLines))
+        if len(ids) != len(payload.downpaymentLines):
+            self._raise_problem(
+                422,
+                "/errors/duplicate-downpayment-lines",
+                "Duplicate down-payment lines",
+                "Each down-payment line can only appear once in the request.",
+            )
+        dp_lines = self.env["folio.sale.line"].sudo().browse(ids).exists()
+        missing = set(ids) - set(dp_lines.ids)
+        if missing:
+            self._raise_problem(
+                404,
+                "/errors/downpayment-lines-not-found",
+                "Down-payment lines not found",
+                "Some down-payment lines could not be found.",
+                missingDownpaymentLineIds=sorted(missing),
+            )
+        not_downpayment = dp_lines.filtered(lambda r: not r.is_downpayment)
+        if not_downpayment:
+            self._raise_problem(
+                422,
+                "/errors/invalid-downpayment-line",
+                "Invalid down-payment line",
+                "Only down-payment lines are accepted as downpaymentLines.",
+                invalidDownpaymentLineIds=not_downpayment.ids,
+            )
+        folio_ids = set(sale_lines.folio_id.ids)
+        out_of_scope = dp_lines.filtered(lambda r: r.folio_id.id not in folio_ids)
+        if out_of_scope:
+            self._raise_problem(
+                422,
+                "/errors/downpayment-line-out-of-scope",
+                "Down-payment line out of scope",
+                "Down-payment lines must belong to the same folios as the "
+                "invoiced lines.",
+                outOfScopeDownpaymentLineIds=out_of_scope.ids,
+            )
+        return dp_lines
 
     def _resolve_property(self, sale_lines):
         properties = sale_lines.mapped("pms_property_id")
@@ -493,10 +539,14 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 simplifiedInvoiceLimit=limit,
             )
 
-    def _build_lines_to_invoice(self, payload: FolioInvoiceCreate, sale_lines) -> dict:
+    def _build_lines_to_invoice(
+        self, payload: FolioInvoiceCreate, sale_lines, downpayment_lines
+    ) -> dict:
         lines_to_invoice = {
             line.saleLineId: line.quantityToInvoice for line in payload.lines
         }
+        for dp in downpayment_lines:
+            lines_to_invoice[dp.id] = dp.qty_to_invoice or 1
         lines_with_sections = sale_lines
         for line in sale_lines:
             section = line.section_id
@@ -512,9 +562,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
         return lines_to_invoice
 
     def _build_and_create_invoice(
-        self, payload: FolioInvoiceCreate, sale_lines, partner
+        self, payload: FolioInvoiceCreate, sale_lines, downpayment_lines, partner
     ):
-        lines_to_invoice = self._build_lines_to_invoice(payload, sale_lines)
+        lines_to_invoice = self._build_lines_to_invoice(
+            payload, sale_lines, downpayment_lines
+        )
         descriptions = {line.saleLineId: line.description for line in payload.lines}
         folios = sale_lines.folio_id.with_context(
             **{FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX: descriptions}
