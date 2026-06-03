@@ -142,6 +142,28 @@ class TestInvoicesEndpoints(CommonTestPmsApi):
             self.assertIn("count", response.json())
             self.assertIn("items", response.json())
 
+    def test_get_invoice_detail(self):
+        """GET /invoices/{id} returns the InvoiceDetail of a single invoice."""
+        invoice = self._create_invoice(amount=120.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get(f"/invoices/{invoice.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        data = response.json()
+        self.assertEqual(data["id"], invoice.id)
+        self.assertEqual(data["state"], "posted")
+        # InvoiceDetail-only fields absent from InvoiceSummary.
+        self.assertIn("lines", data)
+        self.assertIn("payments", data)
+
+    def test_get_invoice_detail_not_found(self):
+        """GET /invoices/{id} returns 404 (ProblemDetail) for a missing invoice."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get("/invoices/999999999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/not-found")
+
     def test_invoice_payment_type_payment(self):
         """Register a payment against an invoice and check paymentType=payment."""
         invoice = self._create_invoice(amount=150.0)

@@ -114,6 +114,20 @@ async def validate_invoice_contact(
     )
 
 
+@pms_api_router.get(
+    "/invoices/{invoice_id}",
+    response_model=InvoiceDetail,
+    tags=["invoice"],
+    responses={404: {"description": "Invoice not found"}},
+)
+async def get_invoice(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+):
+    """Get detail info of an invoice for editing purposes."""
+    return env["pms_api_invoice.invoice_router.helper"].new()._get_invoice(invoice_id)
+
+
 @pms_api_router.put(
     "/invoices/{invoice_id}",
     response_model=InvoiceDetail,
@@ -361,6 +375,24 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     @api.model
     def extra_features(self):
         return []
+
+    # -- Invoice detail (GET /invoices/{id}) --
+
+    def _get_invoice(self, invoice_id):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": "Not found",
+                    "status": 404,
+                    "detail": "Invoice not found.",
+                },
+                media_type="application/problem+json",
+            )
+        return InvoiceDetail.from_account_move(invoice)
 
     # -- Invoice edit (PUT /invoices/{id}) --
 
