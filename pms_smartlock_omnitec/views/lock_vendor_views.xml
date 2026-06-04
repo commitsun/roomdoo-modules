@@ -14,12 +14,7 @@
         >
                     <group>
                         <field
-              name="omnitec_client_id"
-              attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
-            />
-                        <field
-              name="omnitec_client_secret"
-              password="True"
+              name="omnitec_osaccess"
               attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
             />
                         <field
@@ -32,6 +27,12 @@
               attrs="{'required': [('vendor_type', '=', 'omnitec')]}"
             />
                     </group>
+                    <p class="text-muted">
+                        Client ID and secret are Roomdoo app credentials, read
+                        from the deployment environment per OsAccess version
+                        (OMNITEC_CLIENT_ID / OMNITEC_CLIENT_SECRET, or
+                        OMNITEC_LEGACY_CLIENT_ID / OMNITEC_LEGACY_CLIENT_SECRET).
+                    </p>
                 </page>
             </xpath>
         </field>

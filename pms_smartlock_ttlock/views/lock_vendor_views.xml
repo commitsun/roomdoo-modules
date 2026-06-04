@@ -14,15 +14,6 @@
         >
                     <group>
                         <field
-              name="ttlock_client_id"
-              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
-            />
-                        <field
-              name="ttlock_client_secret"
-              password="True"
-              attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
-            />
-                        <field
               name="ttlock_username"
               attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
             />
@@ -32,6 +23,11 @@
               attrs="{'required': [('vendor_type', '=', 'ttlock')]}"
             />
                     </group>
+                    <p class="text-muted">
+                        Client ID and secret are Roomdoo app credentials, read
+                        from the deployment environment (TTLOCK_CLIENT_ID /
+                        TTLOCK_CLIENT_SECRET).
+                    </p>
                 </page>
             </xpath>
         </field>
