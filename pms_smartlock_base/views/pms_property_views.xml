@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="pms_property_view_form" model="ir.ui.view">
+        <field name="name">pms.property.form.smartlock</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page
+          name="smartlock"
+          string="Smart Locks"
+          groups="pms_smartlock_base.group_smartlock_admin"
+        >
+                    <field
+            name="common_lock_ids"
+            context="{'default_pms_property_id': id}"
+          >
+                        <tree editable="bottom">
+                            <field name="sequence" widget="handle" />
+                            <field name="pms_property_id" invisible="1" />
+                            <field name="name" />
+                            <field name="vendor_id" />
+                            <field name="lock_device_id" />
+                            <field name="active" invisible="1" />
+                        </tree>
+                    </field>
+                    <p class="text-muted">
+                        Shared doors of this property (entrance, garage, pool…).
+                        Assign them to rooms from the room's Smart Lock tab so a
+                        guest's PIN also opens them.
+                    </p>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -16,14 +16,6 @@
     sequence="10"
   />
     <menuitem
-    id="pms_common_lock_menu"
-    name="Common Locks"
-    parent="smartlock_menu"
-    action="pms_common_lock_action"
-    groups="pms_smartlock_base.group_smartlock_admin"
-    sequence="15"
-  />
-    <menuitem
     id="lock_code_menu"
     name="Codes"
     parent="smartlock_menu"
