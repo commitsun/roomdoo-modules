@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector Wubook",
     "summary": "Channel PMS connector Wubook",
-    "version": "16.0.1.1.0",
+    "version": "16.0.1.2.0",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",

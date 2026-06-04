@@ -36,12 +36,15 @@ class ChannelWubookBackend(models.Model):
     ]
 
     # connection data
-    username = fields.Char(required=True)
-    password = fields.Char(required=True)
+    username = fields.Char()
+    password = fields.Char()
 
     url = fields.Char(default="https://wired.wubook.net/xrws/", required=True)
     property_code = fields.Char(required=True)
-    pkey = fields.Char(required=True)
+    pkey = fields.Char()
+    # Permanent token created in the Wired API section of the WuBook account.
+    # When set, it replaces the legacy username/password/pkey acquire_token flow.
+    permanent_token = fields.Char(string="Permanent Token")
     security_token = fields.Char(required=False)
     pricelist_external_id = fields.Integer(string="Parity Pricelist ID", required=True)
     backend_journal_ota_ids = fields.One2many(

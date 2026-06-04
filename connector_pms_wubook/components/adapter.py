@@ -90,6 +90,7 @@ class ChannelWubookAdapter(AbstractComponent):
         self.username = self.backend_record.username
         self.password = self.backend_record.password
         self.apikey = self.backend_record.pkey
+        self.permanent_token = self.backend_record.permanent_token
         self.property_code = self.backend_record.property_code
 
     def _exec(self, funcname, *args, pms_property=True):
@@ -98,11 +99,18 @@ class ChannelWubookAdapter(AbstractComponent):
             cc.add_result(1, "Export disabled")
             return False
         s = xmlrpc.client.Server(self.url)
-        res, token = s.acquire_token(self.username, self.password, self.apikey)
-        if res:
-            raise ChannelAdapterError(
-                _("Error authorizing to endpoint. %(code)s") % {"code": token}
-            )
+        # WuBook deprecated the acquire_token/release_token flow in favour of a
+        # permanent token created in the Wired API section of the account. If the
+        # backend has one configured, use it directly; otherwise fall back to the
+        # legacy temporary token flow.
+        if self.permanent_token:
+            token = self.permanent_token
+        else:
+            res, token = s.acquire_token(self.username, self.password, self.apikey)
+            if res:
+                raise ChannelAdapterError(
+                    _("Error authorizing to endpoint. %(code)s") % {"code": token}
+                )
         if pms_property:
             args = (self.property_code, *args)
         func = getattr(s, funcname)
@@ -179,13 +187,16 @@ class ChannelWubookAdapter(AbstractComponent):
                 )
             return data
         finally:
+            # Permanent tokens must not be released; only temporary tokens
+            # acquired via acquire_token are released here.
             # TODO: reutilize token on multiple calls acoording the limits
             #   https://tdocs.wubook.net/wired/policies.html#token-limits
-            res, info = s.release_token(token)
-            if res:
-                raise ChannelAdapterError(
-                    _("Error releasing token. %(value)s") % {"value": info}
-                )
+            if not self.permanent_token:
+                res, info = s.release_token(token)
+                if res:
+                    raise ChannelAdapterError(
+                        _("Error releasing token. %(value)s") % {"value": info}
+                    )
 
     def _prepare_field_type(self, field_data):
         default_values = {}
