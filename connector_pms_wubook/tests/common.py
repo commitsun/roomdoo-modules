@@ -5,12 +5,12 @@
 import json
 import logging
 
-from odoo.addons.component.tests.common import SavepointComponentCase
+from odoo.addons.component.tests.common import TransactionComponentCase
 
 _logger = logging.getLogger(__name__)
 
 
-class TestWubookConnector(SavepointComponentCase):
+class TestWubookConnector(TransactionComponentCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
