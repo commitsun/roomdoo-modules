@@ -1,15 +1,16 @@
+import os
 from unittest.mock import patch
 
+from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase
 
 
 class TestTTLockVendor(TransactionCase):
-    """``get_connector`` is the only piece of code in this module: it
-    dispatches on ``vendor_type`` and instantiates ``TTLockProvider``
-    with the four credentials stored on the vendor record. Tests
-    patch the provider class so the constructor never tries to
-    authenticate, and assert on the arguments and on the
-    not-implemented fallback."""
+    """``get_connector`` dispatches on ``vendor_type`` and instantiates
+    ``TTLockProvider``. The hotel account (username/password) lives on the
+    record; the Roomdoo app credentials (client_id/secret) are read from the
+    environment, never stored in the database. Tests patch the provider so
+    the constructor never authenticates."""
 
     @classmethod
     def setUpClass(cls):
@@ -20,24 +21,34 @@ class TestTTLockVendor(TransactionCase):
                 "name": "TTLock Test",
                 "vendor_type": "ttlock",
                 "pms_property_id": cls.pms_property.id,
-                "ttlock_client_id": "cid",
-                "ttlock_client_secret": "secret",
                 "ttlock_username": "user",
                 "ttlock_password": "pass",
             }
         )
 
-    def test_ttlock_dispatch_passes_credentials(self):
-        with patch(
+    def test_dispatch_reads_client_creds_from_env(self):
+        with patch.dict(
+            os.environ,
+            {"TTLOCK_CLIENT_ID": "env-cid", "TTLOCK_CLIENT_SECRET": "env-secret"},
+        ), patch(
             "odoo.addons.pms_smartlock_ttlock.models.lock_vendor.TTLockProvider"
         ) as provider_cls:
             self.vendor.get_connector()
             provider_cls.assert_called_once_with(
-                clientId="cid",
-                clientSecret="secret",
+                clientId="env-cid",
+                clientSecret="env-secret",
                 username="user",
                 password="pass",
             )
+
+    def test_missing_env_raises(self):
+        """A misconfigured instance (no app credentials in the environment)
+        must fail loudly rather than authenticate with empty values."""
+        with patch.dict(os.environ, {}, clear=True), patch(
+            "odoo.addons.pms_smartlock_ttlock.models.lock_vendor.TTLockProvider"
+        ):
+            with self.assertRaises(UserError):
+                self.vendor.get_connector()
 
     def test_unknown_vendor_type_falls_back_to_super(self):
         """Setting ``vendor_type`` back to a non-ttlock value must

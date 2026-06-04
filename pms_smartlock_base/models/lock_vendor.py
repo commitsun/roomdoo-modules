@@ -1,4 +1,7 @@
+import os
+
 from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 
 class LockVendor(models.Model):
@@ -41,3 +44,22 @@ class LockVendor(models.Model):
         raise NotImplementedError(
             _("No connector implementation for vendor '%s'.") % self.name
         )
+
+    def _required_env(self, name):
+        """Read a required environment variable holding a Roomdoo app
+        credential (vendor ``client_id``/``client_secret``). These identify
+        Roomdoo's integration — not the hotel — so they live in the
+        deployment environment (``.docker/*.env``), never in the database.
+        Raise a clear error when missing so a misconfigured instance fails
+        loudly instead of authenticating with empty credentials."""
+        self.ensure_one()
+        value = os.environ.get(name)
+        if not value:
+            raise UserError(
+                _(
+                    "Missing environment variable '%(var)s' required by lock "
+                    "vendor '%(vendor)s'. Set it in the deployment environment."
+                )
+                % {"var": name, "vendor": self.name}
+            )
+        return value
