@@ -60,7 +60,7 @@ class PmsPartnerInfo(Datamodel):
     pricelistId = fields.Integer(required=False, allow_none=True)
     salesReference = fields.String(required=False, allow_none=True)
     saleChannelId = fields.Integer(required=False, allow_none=True)
-    commission = fields.Integer(required=False, allow_none=True)
+    commission = fields.Float(required=False, allow_none=True)
     invoicingPolicy = fields.String(required=False, allow_none=True)
     daysAutoInvoice = fields.Integer(required=False, allow_none=True)
     invoicingMonthDay = fields.Integer(required=False, allow_none=True)
