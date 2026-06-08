@@ -10,201 +10,164 @@ msgstr ""
 "PO-Revision-Date: 2026-03-22 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
 
 #. module: pms_api_rest
-#: code:addons/pms_api_rest/services/pms_partner_service.py:0
-#, python-format
-msgid ""
-"Cannot modify the anonymous customer. "
-"Edit the contact on the invoice to select "
-"or create a different one."
-msgstr ""
-"No es posible modificar el cliente anónimo. "
-"Modifica el contacto en la factura para poder elegir "
-"o crear otro diferente."
-
-#. module: pms_api_rest
-#: code:addons/pms_api_rest/models/res_partner.py:0
-#, python-format
-msgid ""
-"The system contact '%(name)s' is reserved for simplified invoices and "
-"cannot be modified. Blocked fields: %(fields)s. If this is triggered "
-"from the REST API, create a new contact for the guest instead of "
-"writing on the anonymous one."
-msgstr ""
-"El contacto de sistema '%(name)s' está reservado para facturas "
-"simplificadas y no se puede modificar. Campos bloqueados: %(fields)s. "
-"Si esto se produce desde la API REST, crea un contacto nuevo para el "
-"huésped en lugar de escribir sobre el contacto anónimo."
-
-#. module: pms_api_rest
-#: code:addons/pms_api_rest/models/res_partner.py:0
-#, python-format
-msgid ""
-"Cannot attach a child contact to the system contact '%s'. This partner "
-"is reserved for simplified invoices. Create the contact as an "
-"independent partner instead."
-msgstr ""
-"No se puede asociar un contacto hijo al contacto de sistema '%s'. Este "
-"contacto está reservado para facturas simplificadas. Crea el contacto "
-"como un contacto independiente."
-
-#. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Overbooking"
-msgstr "Overbooking"
+msgstr "Überbuchung"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Split"
-msgstr "Divididas"
+msgstr "Aufgeteilt"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "To assign"
-msgstr "Por asignar"
+msgstr "Zuzuweisen"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "To confirm"
-msgstr "Por confirmar"
+msgstr "Zu bestätigen"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Arrival today"
-msgstr "Entrada hoy"
+msgstr "Anreise heute"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Future confirmed, unpaid and without pre-checkin"
-msgstr "Confirmadas a futuro sin pagar y sin precheckin realizado"
+msgstr "Künftig, bestätigt, unbezahlt und ohne Pre-Check-in"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Future confirmed, unpaid"
-msgstr "Confirmadas a futuro sin pagar"
+msgstr "Künftig, bestätigt, unbezahlt"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Cancelled with charges and unpaid"
-msgstr "Cancelada con cargos y sin cobrar"
+msgstr "Storniert mit Gebühren und unbezahlt"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Pending payment (in-house)"
-msgstr "Por cobrar dentro"
+msgstr "Offene Zahlung (im Haus)"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Pending payment (past stays)"
-msgstr "Por cobrar pasadas"
+msgstr "Offene Zahlung (vergangene Aufenthalte)"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Checkout"
-msgstr "Checkout"
+msgstr "Check-out"
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "It looks like a reservation came in without availability for %s."
-msgstr "Parece que ha entrado una reserva sin haber disponibilidad para %s."
+msgstr "Es sieht so aus, als sei eine Reservierung ohne Verfügbarkeit für %s eingegangen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "It looks like a reservation came in without availability for %s. Unfortunately, there does not seem to be any room available with enough capacity for this reservation."
-msgstr "Parece que ha entrado una reserva sin haber disponibilidad para %s. Por desgracia, no parece que haya ninguna habitación disponible con la capacidad suficiente para esta reserva."
+msgstr "Es sieht so aus, als sei eine Reservierung ohne Verfügbarkeit für %s eingegangen. Leider scheint kein Zimmer mit ausreichender Kapazität für diese Reservierung verfügbar zu sein."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "It looks like %s has had to sleep in different rooms, but there is no room available to assign. You can try moving other reservations to give them a single room."
-msgstr "Parece que a %s le ha tocado dormir en habitaciones diferentes, pero no hay ninguna habitación disponible para asignarle. Puedes probar a mover otras reservas para poder establecerle una única habitación."
+msgstr "Es sieht so aus, als hätte %s in verschiedenen Zimmern schlafen müssen, aber es ist kein Zimmer zur Zuweisung verfügbar. Du kannst versuchen, andere Reservierungen zu verschieben, um ein einziges Zimmer bereitzustellen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "It looks like %s has had to sleep in different rooms, but you can move them to 1 available room."
-msgstr "Parece que a %s le ha tocado dormir en habitaciones diferentes, pero tienes la posibilidad de moverlo a 1 habitación disponible."
+msgstr "Es sieht so aus, als hätte %s in verschiedenen Zimmern schlafen müssen, aber du kannst sie in 1 verfügbares Zimmer verschieben."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "It looks like %(name)s has had to sleep in different rooms, but you can move them to %(count)s available rooms."
-msgstr "Parece que a %(name)s le ha tocado dormir en habitaciones diferentes, pero tienes la posibilidad de moverlo a %(count)s habitaciones disponibles."
+msgstr "Es sieht so aus, als hätte %(name)s in verschiedenen Zimmern schlafen müssen, aber du kannst sie in %(count)s verfügbare Zimmer verschieben."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "1 guest still needs to register their details. You can open the check-in assistant to complete the data."
-msgstr "Falta 1 huésped por registrar sus datos. Puedes abrir el asistente de checkin para completar los datos."
+msgstr "Es fehlt noch 1 Gast, der seine Daten angeben muss. Du kannst den Check-in-Assistenten öffnen, um die Daten zu vervollständigen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "%s guests still need to register their details. You can open the check-in assistant to complete the data."
-msgstr "Faltan %s huéspedes por registrar sus datos. Puedes abrir el asistente de checkin para completar los datos."
+msgstr "Es fehlen noch %s Gäste, die ihre Daten angeben müssen. Du kannst den Check-in-Assistenten öffnen, um die Daten zu vervollständigen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "%(name)s's reservation has been assigned to room %(room)s. You can confirm the room or change it to another one from here."
-msgstr "La reserva de %(name)s ha sido asignada a la habitación %(room)s. Puedes confirmar la habitación o cambiar a otra desde aquí."
+msgstr "Die Reservierung von %(name)s wurde dem Zimmer %(room)s zugewiesen. Du kannst das Zimmer bestätigen oder hier ein anderes auswählen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "%s's reservation is pending confirmation. You can confirm it from here."
-msgstr "La reserva de %s está pendiente de confirmar. Puedes confirmarla desde aquí."
+msgstr "Die Reservierung von %s steht zur Bestätigung aus. Du kannst sie hier bestätigen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "All guests in this reservation have their details registered. You can check them in directly from here."
-msgstr "Todos los huéspedes de esta reserva tienen los datos registrados. Puedes marcar la entrada directamente desde aquí."
+msgstr "Alle Gäste dieser Reservierung haben ihre Daten angegeben. Du kannst sie direkt von hier aus einchecken."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Register the guests' details from the check-in assistant."
-msgstr "Registra los datos de los huéspedes desde el asistente del checkin."
+msgstr "Erfasse die Daten der Gäste über den Check-in-Assistenten."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "This reservation is pending payment and the guests still need to register their details: you can send them a reminder from here."
-msgstr "Esta reserva está pendiente de cobro y de que los huéspedes registren sus datos: puedes enviarles un recordatorio desde aquí."
+msgstr "Diese Reservierung steht zur Zahlung aus und die Gäste müssen noch ihre Daten angeben: Du kannst ihnen von hier aus eine Erinnerung senden."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "This reservation is pending payment. You can send a reminder from here."
-msgstr "Esta reserva está pendiente de cobro. Puedes enviar un recordatorio desde aquí."
+msgstr "Diese Reservierung steht zur Zahlung aus. Du kannst von hier aus eine Erinnerung senden."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "This reservation does not have the guests' details registered. You can send them a reminder from here."
-msgstr "Esta reserva no tiene los datos de los huéspedes registrados. Puedes enviarles un recordatorio desde aquí."
+msgstr "Bei dieser Reservierung sind die Daten der Gäste nicht erfasst. Du kannst ihnen von hier aus eine Erinnerung senden."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "%(name)s's reservation has been cancelled with a penalty of %(amount).2f€. You can remove the penalty if it is not going to be charged."
-msgstr "La reserva de %(name)s ha sido cancelada con una penalización de %(amount).2f€. Puedes eliminar la penalización en caso de que no se vaya a cobrar."
+msgstr "Die Reservierung von %(name)s wurde mit einer Stornogebühr von %(amount).2f€ storniert. Du kannst die Gebühr entfernen, falls sie nicht berechnet wird."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "This reservation has a pending payment of %.2f. You can register the payment from here."
-msgstr "En esta reserva tenemos un pago pendiente de %.2f. Puedes registrar el pago desde aquí."
+msgstr "Diese Reservierung hat eine offene Zahlung von %.2f. Du kannst die Zahlung von hier aus erfassen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 #, python-format
 msgid "This reservation has a pending charge of %.2f€. When you handle the payment you can register it from here."
-msgstr "Esta reserva ha quedado con un cargo pendiente de %.2f€. Cuando gestiones el cobro puedes registrarlo desde aquí."
+msgstr "Diese Reservierung hat eine offene Forderung von %.2f€. Wenn du die Zahlung bearbeitest, kannst du sie von hier aus erfassen."
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Reservation ready for checkout. You can check out directly from here."
-msgstr "Reserva lista para el checkout. Marca la salida directamente desde aquí."
+msgstr "Reservierung bereit zum Check-out. Du kannst direkt von hier aus auschecken."

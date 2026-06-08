@@ -1401,10 +1401,43 @@ class PmsReservationService(Component):
             raise MissingError(_("Reservation not found"))
         pms_api_check_access(user=self.env.user, records=reservation)
         today = datetime.now().strftime("%Y-%m-%d")
+        # Values reused across the assistant messages below.
+        partner_name = reservation.partner_name
+        room_type_name = reservation.room_type_id.name
+        room_name = reservation.preferred_room_id.name
+        alt_rooms = reservation.count_alternative_free_rooms
+        pending_checkin = reservation.pending_checkin_data
+        pending_amount = reservation.folio_pending_amount
+        penalty_amount = reservation.service_ids.filtered(
+            lambda s: s.is_cancel_penalty
+        ).price_total
+        # Messages with singular/plural forms, resolved before building the list.
+        if alt_rooms == 1:
+            splitted_with_text = (
+                _(
+                    "It looks like %s has had to sleep in different rooms, but you can move them to 1 available room."
+                )
+                % partner_name
+            )
+        else:
+            splitted_with_text = _(
+                "It looks like %(name)s has had to sleep in different rooms, but you can move them to %(count)s available rooms."
+            ) % {"name": partner_name, "count": alt_rooms}
+        if pending_checkin == 1:
+            checkin_partial_text = _(
+                "1 guest still needs to register their details. You can open the check-in assistant to complete the data."
+            )
+        else:
+            checkin_partial_text = (
+                _(
+                    "%s guests still need to register their details. You can open the check-in assistant to complete the data."
+                )
+                % pending_checkin
+            )
         wizard_states = [
             {
                 "code": "overbooking_with_availability",
-                "title": "Overbooking",
+                "title": _("Overbooking"),
                 "domain": "["
                 "('state', 'in', ['draft', 'confirm', 'arrival_delayed']), "
                 "('overbooking', '=', True), "
@@ -1412,12 +1445,15 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
-                "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}.",
+                "text": _(
+                    "It looks like a reservation came in without availability for %s."
+                )
+                % room_type_name,
                 "priority": 100,
             },
             {
                 "code": "overbooking_without_availability",
-                "title": "Overbooking",
+                "title": _("Overbooking"),
                 "domain": "["
                 "('state', 'in', ['draft', 'confirm', 'arrival_delayed']), "
                 "('overbooking', '=', True), "
@@ -1425,175 +1461,192 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
-                "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}."
-                f"Por desgracia no parece que hay ninguna "
-                f"habitación disponible con la capacidad suficiente para esta reserva",
+                "text": _(
+                    "It looks like a reservation came in without availability for %s. Unfortunately, there does not seem to be any room available with enough capacity for this reservation."
+                )
+                % room_type_name,
                 "priority": 150,
             },
             {
                 "code": "splitted_without_availability",
-                "title": "Divididas",
+                "title": _("Split"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('splitted', '=', True),"
                 f"('checkin', '>=', '{today}'),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
-                "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes "
-                f"pero no hay ninguna habitación disponible para asignarle, puedes probar a mover otras reservas "
-                f"para poder establecerle una única habitación.  ",
+                "text": _(
+                    "It looks like %s has had to sleep in different rooms, but there is no room available to assign. You can try moving other reservations to give them a single room."
+                )
+                % partner_name,
                 "priority": 200,
             },
             {
                 "code": "splitted_with_availability",
-                "title": "Divididas",
+                "title": _("Split"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('splitted', '=', True),"
                 f"('checkin', '>=', '{today}'),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
-                "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes"
-                f" pero tienes la posibilidad de moverlo a {reservation.count_alternative_free_rooms} "
-                f" {' habitación' if reservation.count_alternative_free_rooms == 1 else ' habitaciones'}.",
+                "text": splitted_with_text,
                 "priority": 220,
             },
             {
                 "code": "to_assign",
-                "title": "Por asignar",
+                "title": _("To assign"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('to_assign', '=', True),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>=', '{today}'),"
                 "]",
-                "text": f"La reserva de {reservation.partner_name} ha sido asignada a la habitación {reservation.preferred_room_id.name},"
-                " puedes confirmar la habitación o cambiar a otra desde aquí.",
+                "text": _(
+                    "%(name)s's reservation has been assigned to room %(room)s. You can confirm the room or change it to another one from here."
+                )
+                % {"name": partner_name, "room": room_name},
                 "priority": 300,
             },
             {
                 "code": "to_confirm",
-                "title": "Por confirmar",
+                "title": _("To confirm"),
                 "domain": "[('state', '=', 'draft'),"
                 f"('checkin', '>=', '{today}'),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 "]",
-                "text": f"La reserva de {reservation.partner_name} está pendiente de confirmar, puedes confirmarla desde aquí.",
+                "text": _(
+                    "%s's reservation is pending confirmation. You can confirm it from here."
+                )
+                % partner_name,
                 "priority": 400,
             },
             {
                 "code": "checkin_done_precheckin",
-                "title": "Entrada Hoy",
+                "title": _("Arrival today"),
                 "domain": "[('state', '=',  'confirm'),"
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '=', 0),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "text": "Todos los huéspedes de esta reserva tienen los datos registrados, "
-                " puedes marcar la entrada directamente desde aquí",
+                "text": _(
+                    "All guests in this reservation have their details registered. You can check them in directly from here."
+                ),
                 "priority": 500,
             },
             {
                 "code": "checkin_partial_precheckin",
-                "title": "Entrada Hoy",
+                "title": _("Arrival today"),
                 "domain": "[('state', '=',  'confirm'),"
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('checkin_partner_ids.state','=', 'precheckin'),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "text": f"Faltan {reservation.pending_checkin_data} {' huésped ' if reservation.pending_checkin_data == 1 else ' huéspedes '} "
-                f"por registrar sus datos.Puedes abrir el asistente de checkin "
-                f" para completar los datos.",
+                "text": checkin_partial_text,
                 "priority": 530,
             },
             {
                 "code": "checkin_no_precheckin",
-                "title": "Entrada Hoy",
+                "title": _("Arrival today"),
                 "domain": "[('state', '=', 'confirm'),"
                 f"('checkin', '=', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: all([c.state in ('draft','dummy') for c in r.checkin_partner_ids]) ",
-                "text": "Registra los datos de los huéspedes desde el asistente del checkin.",
+                "text": _("Register the guests' details from the check-in assistant."),
                 "priority": 580,
             },
             {
                 "code": "confirmed_without_payment_and_precheckin",
-                "title": "Confirmadas a futuro sin pagar y sin precheckin realizado",
+                "title": _("Future confirmed, unpaid and without pre-checkin"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": "Esta reserva está pendiente de cobro y de que los huéspedes "
-                " registren sus datos: puedes enviarles un recordatorio desde aquí",
+                "text": _(
+                    "This reservation is pending payment and the guests still need to register their details: you can send them a reminder from here."
+                ),
                 "priority": 600,
             },
             {
                 "code": "confirmed_without_payment",
-                "title": "Confirmadas a futuro sin pagar",
+                "title": _("Future confirmed, unpaid"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '=', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": "Esta reserva está pendiente de cobro, puedes enviarle sun recordatorio desde aquí",
+                "text": _(
+                    "This reservation is pending payment. You can send a reminder from here."
+                ),
                 "priority": 630,
             },
             {
                 "code": "confirmed_without_precheckin",
-                "title": "Confirmadas a futuro sin pagar",
+                "title": _("Future confirmed, unpaid"),
                 "domain": "[('state', 'in', ['draft', 'confirm', 'arrival_delayed']),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['paid', 'overpayment','nothing_to_pay'])"
                 "]",
-                "text": "Esta reserva no tiene los datos de los huéspedes registrados, puedes enviarles un recordatorio desde aquí",
+                "text": _(
+                    "This reservation does not have the guests' details registered. You can send them a reminder from here."
+                ),
                 "priority": 660,
             },
             {
                 "code": "cancelled",
-                "title": "Cancelada con cargos y sin cobrar",
+                "title": _("Cancelled with charges and unpaid"),
                 "domain": "[('state', '=', 'cancel'),"
                 "('cancelled_reason', 'in',['late','noshow']),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial']),"
                 "]",
                 "filtered": "lambda r: r.service_ids.filtered(lambda s: s.is_cancel_penalty and s.price_total > 0)",
-                "text": f"La reserva de {reservation.partner_name} ha sido cancelada con una penalización de {reservation.service_ids.filtered(lambda s: s.is_cancel_penalty).price_total:.2f}€, "
-                "puedes eliminar la penalización en caso de que no se vaya a cobrar.",
+                "text": _(
+                    "%(name)s's reservation has been cancelled with a penalty of %(amount).2f€. You can remove the penalty if it is not going to be charged."
+                )
+                % {"name": partner_name, "amount": penalty_amount},
                 "priority": 700,
             },
             {
                 "code": "onboard_without_payment",
-                "title": "Por cobrar dentro",
+                "title": _("Pending payment (in-house)"),
                 "domain": "[('state', 'in', ['onboard', 'departure_delayed']),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": f"En esta reserva tenemos un pago pendiente de {reservation.folio_pending_amount:.2f}. "
-                "Puedes registrar el pago desde aquí.",
+                "text": _(
+                    "This reservation has a pending payment of %.2f. You can register the payment from here."
+                )
+                % pending_amount,
                 "priority": 800,
             },
             {
                 "code": "done_without_payment",
-                "title": "Por cobrar pasadas",
+                "title": _("Pending payment (past stays)"),
                 "domain": "[('state', '=', 'done'),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": f"Esta reserva ha quedado con un cargo pendiente de {reservation.folio_pending_amount:.2f}€. "
-                "Cuando gestiones el cobro puedes registrarlo desde aquí.",
+                "text": _(
+                    "This reservation has a pending charge of %.2f€. When you handle the payment you can register it from here."
+                )
+                % pending_amount,
                 "priority": 900,
             },
             {
                 "code": "checkout",
-                "title": "Checkout",
+                "title": _("Checkout"),
                 "domain": "[('state', 'in', ['onboard', 'departure_delayed']),"
                 f"('checkout', '=', '{today}'),"
                 "]",
-                "text": "Reserva lista para el checkout, marca la salida directamente desde aquí.",
+                "text": _(
+                    "Reservation ready for checkout. You can check out directly from here."
+                ),
                 "priority": 1000,
             },
         ]
@@ -1996,10 +2049,7 @@ class PmsReservationService(Component):
             and pms_checkin_partner_info.relationship
         ):
             folio_id = (
-                self.env["pms.reservation"]
-                .sudo()
-                .browse(reservation_id)
-                .folio_id.id
+                self.env["pms.reservation"].sudo().browse(reservation_id).folio_id.id
             )
             record_checkin_partner_legal_representative = (
                 self.env["pms.checkin.partner"]
