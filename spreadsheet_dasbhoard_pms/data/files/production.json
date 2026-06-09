@@ -1148,7 +1148,8 @@
             "stacked": true,
             "fieldMatching": {
               "549a2007-bd74-4236-944d-60b4accd27f5": {
-                "chain": "day"
+                "chain": "day",
+                "type": "date"
               },
               "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
                 "chain": "pms_property_id"
@@ -1528,7 +1529,8 @@
             "stacked": true,
             "fieldMatching": {
               "549a2007-bd74-4236-944d-60b4accd27f5": {
-                "chain": "day"
+                "chain": "day",
+                "type": "date"
               },
               "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
                 "chain": "pms_property_id"
@@ -1908,7 +1910,8 @@
             "stacked": true,
             "fieldMatching": {
               "549a2007-bd74-4236-944d-60b4accd27f5": {
-                "chain": "day"
+                "chain": "day",
+                "type": "date"
               },
               "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
                 "chain": "pms_property_id"
@@ -2286,7 +2289,8 @@
             "type": "odoo_pie",
             "fieldMatching": {
               "549a2007-bd74-4236-944d-60b4accd27f5": {
-                "chain": "day"
+                "chain": "day",
+                "type": "date"
               },
               "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
                 "chain": "pms_property_id"
@@ -3796,7 +3800,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "day"
+          "chain": "day",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -3859,7 +3864,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "checkin"
+          "chain": "checkin",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -3922,7 +3928,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "checkin"
+          "chain": "checkin",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -3967,7 +3974,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "date"
+          "chain": "date",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -4023,7 +4031,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "day"
+          "chain": "day",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -4079,7 +4088,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "day"
+          "chain": "day",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
@@ -4135,7 +4145,8 @@
       "sortedColumn": null,
       "fieldMatching": {
         "549a2007-bd74-4236-944d-60b4accd27f5": {
-          "chain": "day"
+          "chain": "day",
+          "type": "date"
         },
         "942c3859-f759-4b6a-a737-e7c45cec5f9b": {
           "chain": "pms_property_id"
