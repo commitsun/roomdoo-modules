@@ -12,6 +12,9 @@ from odoo.addons.fastapi.dependencies import (
     paging,
 )
 from odoo.addons.fastapi.schemas import Paging
+from odoo.addons.pms.models.folio_sale_line import (
+    FolioSaleLine as FolioSaleLineModel,
+)
 from odoo.addons.pms.models.pms_folio import PmsFolio
 from odoo.addons.pms_fastapi.dependencies import (
     AuthenticatedEnv,
@@ -197,6 +200,27 @@ async def get_folio_sale_lines(
 
 
 @pms_api_router.get(
+    "/sale-lines/{line_id}",
+    response_model=FolioSaleLine,
+    tags=["folio"],
+)
+async def get_sale_line(
+    env: AuthenticatedEnv,
+    line_id: int,
+) -> FolioSaleLine:
+    """Get a single billable sale line by its id, with invoice state and taxes."""
+    helper = env["pms_api_folio.folio_router.helper"].new()
+    try:
+        line = helper.get_sale_line(line_id)
+    except MissingError as err:
+        raise HTTPException(
+            status_code=404,
+            detail="sale line not found",
+        ) from err
+    return FolioSaleLine.from_folio_sale_line(line)
+
+
+@pms_api_router.get(
     "/folios/{folio_id}/down-payment-invoices",
     response_model=list[InvoiceSummary],
     tags=["folio"],
@@ -267,6 +291,21 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
 
     def get(self, record_id) -> PmsFolio:
         return self.model_adapter.get(record_id)
+
+    @property
+    def sale_line_adapter(self) -> FilteredModelAdapter[FolioSaleLineModel]:
+        # Same scope as the folio sale-line listing: only billable
+        # room/service lines, excluding sections, notes and downpayments.
+        base_domain = [
+            ("display_type", "=", False),
+            ("is_downpayment", "=", False),
+        ]
+        multicompany_domain = self._get_multicompany_rule()
+        model_domain = expression.AND([base_domain, multicompany_domain])
+        return FilteredModelAdapter[FolioSaleLineModel](self.env, model_domain)
+
+    def get_sale_line(self, line_id) -> FolioSaleLineModel:
+        return self.sale_line_adapter.get(line_id)
 
     def _search(self, paging, params, order) -> tuple[int, PmsFolio]:
         return self.model_adapter.search_with_count(
