@@ -10,6 +10,7 @@ from . import test_invoice_reconciliation
 from . import test_journals
 from . import test_languages
 from . import test_payment_methods
+from . import test_payments
 from . import test_user
 from . import test_properties
 from . import test_contact_id_numbers
