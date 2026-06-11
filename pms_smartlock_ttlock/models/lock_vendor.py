@@ -1,6 +1,6 @@
 from roomdoo_locks_ttlock import TTLockProvider
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class LockVendor(models.Model):
@@ -10,6 +10,13 @@ class LockVendor(models.Model):
         selection_add=[("ttlock", "TTLock")],
         ondelete={"ttlock": "cascade"},
     )
+
+    @api.model
+    def _pin_confirm_key_defaults(self):
+        res = super()._pin_confirm_key_defaults()
+        res["ttlock"] = "#"
+        return res
+
     ttlock_username = fields.Char(string="TTLock Username")
     ttlock_password = fields.Char(string="TTLock Password")
 

@@ -1,6 +1,6 @@
 import os
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -30,9 +30,31 @@ class LockVendor(models.Model):
         store=True,
         readonly=True,
     )
+    pin_confirm_key = fields.Char(
+        string="Confirm Key",
+        help="Key the guest must press on the keypad after typing the PIN to "
+        "validate it (e.g. '#' on most keypads). It is shown to the guest but "
+        "is not part of the stored PIN. Defaults to the known key for the "
+        "selected vendor; override it for unusual lock models.",
+    )
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
     note = fields.Text()
+
+    @api.model
+    def _pin_confirm_key_defaults(self):
+        """Map ``vendor_type`` to the default keypad confirm key. Base knows
+        no vendor types; each connector module adds its own entry, so future
+        vendors (Salto '↵', Tessa '✓', …) only extend this hook."""
+        return {}
+
+    @api.onchange("vendor_type")
+    def _onchange_vendor_type_pin_confirm_key(self):
+        """Prefill the confirm key with the selected vendor's known default.
+        The field stays editable for hotels with unusual lock models."""
+        default = self._pin_confirm_key_defaults().get(self.vendor_type)
+        if default:
+            self.pin_confirm_key = default
 
     def get_connector(self):
         """Return a connector instance for this vendor.

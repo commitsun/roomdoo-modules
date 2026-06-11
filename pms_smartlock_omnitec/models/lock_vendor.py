@@ -1,6 +1,6 @@
 from roomdoo_locks_omnitec import OmnitecProvider
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class LockVendor(models.Model):
@@ -10,6 +10,13 @@ class LockVendor(models.Model):
         selection_add=[("omnitec", "Omnitec / Rent&Pass")],
         ondelete={"omnitec": "cascade"},
     )
+
+    @api.model
+    def _pin_confirm_key_defaults(self):
+        res = super()._pin_confirm_key_defaults()
+        res["omnitec"] = "#"
+        return res
+
     omnitec_osaccess = fields.Selection(
         selection=[("modern", "OsAccess"), ("legacy", "OsAccess Legacy")],
         string="OsAccess Version",
