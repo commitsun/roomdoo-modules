@@ -27,6 +27,7 @@ msgstr "Accedido el"
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__active
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__active
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__active
 #: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code__state__active
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_search
 msgid "Active"
@@ -57,15 +58,54 @@ msgid "Codes"
 msgstr "Códigos"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code_target__kind__common
+msgid "Common"
+msgstr "Común"
+
+#. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_pms_common_lock
+msgid "Common Area Lock"
+msgstr "Cerradura de zona común"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__common_lock_id
+msgid "Common Lock"
+msgstr "Cerradura común"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_property__common_lock_ids
+msgid "Common Locks"
+msgstr "Cerraduras comunes"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_room__shared_lock_ids
+msgid ""
+"Common doors (entrance, garage…) a guest of this room also gets access to. "
+"The reservation's access grant covers this room's own lock plus these shared "
+"locks, all under the same PIN."
+msgstr ""
+"Puertas comunes (entrada, garaje…) a las que también accede un huésped de "
+"esta habitación. La concesión de acceso de la reserva cubre la cerradura "
+"propia de la habitación más estas cerraduras compartidas, todas con el mismo "
+"PIN."
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__company_id
 msgid "Company"
 msgstr "Compañía"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__pin_confirm_key
+msgid "Confirm Key"
+msgstr "Tecla de confirmación"
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__create_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__create_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__create_uid
 msgid "Created by"
 msgstr "Creado por"
 
@@ -73,7 +113,9 @@ msgstr "Creado por"
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__create_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__create_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__create_date
 msgid "Created on"
 msgstr "Creado el"
 
@@ -93,6 +135,13 @@ msgid "Date To"
 msgstr "Fecha hasta"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_common_lock__lock_device_id
+msgid "Device identifier used by the vendor API to target this lock."
+msgstr ""
+"Identificador del dispositivo que utiliza la API del proveedor para "
+"localizar esta cerradura."
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_pms_room__lock_device_id
 msgid "Device identifier used by the vendor API to target this room's lock."
 msgstr ""
@@ -103,7 +152,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__display_name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__display_name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
@@ -167,18 +218,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__id
 msgid "ID"
 msgstr "ID"
-
-#. module: pms_smartlock_base
-#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__vendor_code_id
-msgid ""
-"Identifier returned by the vendor API. Required to modify or remove the code "
-"on the lock."
-msgstr ""
-"Identificador devuelto por la API del proveedor. Necesario para modificar o "
-"eliminar el código en la cerradura."
 
 #. module: pms_smartlock_base
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form
@@ -186,10 +230,30 @@ msgid "Internal notes..."
 msgstr "Notas internas..."
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_vendor__pin_confirm_key
+msgid ""
+"Key the guest must press on the keypad after typing the PIN to validate it "
+"(e.g. '#' on most keypads). It is shown to the guest but is not part of the "
+"stored PIN. Defaults to the known key for the selected vendor; override it "
+"for unusual lock models."
+msgstr ""
+"Tecla que el huésped debe pulsar en el teclado tras introducir el PIN para "
+"validarlo (p. ej. '#' en la mayoría de teclados). Se muestra al huésped pero "
+"no forma parte del PIN almacenado. Por defecto toma la tecla conocida del "
+"proveedor seleccionado; cámbiala para modelos de cerradura poco habituales."
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__kind
+msgid "Kind"
+msgstr "Tipo"
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer____last_update
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor____last_update
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock____last_update
 msgid "Last Modified on"
 msgstr "Última modificación el"
 
@@ -197,7 +261,9 @@ msgstr "Última modificación el"
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__write_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__write_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__write_uid
 msgid "Last Updated by"
 msgstr "Última actualización por"
 
@@ -205,30 +271,33 @@ msgstr "Última actualización por"
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__write_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__write_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__write_date
 msgid "Last Updated on"
 msgstr "Última actualización el"
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__state
 msgid ""
-"Lifecycle of the code, derived from sync status and validity window: pending "
-"(not synced yet, no job in flight), syncing (a vendor sync job is enqueued "
-"or running), scheduled (synced, awaiting date_from), active (within validity "
-"window), expired (past date_to), failed (sync error), cancelled "
-"(invalidated)."
+"Lifecycle of the credential, derived from sync status and validity window: "
+"pending (not granted yet, no job in flight), syncing (a vendor sync job is "
+"enqueued or running), scheduled (granted, awaiting date_from), active "
+"(within validity window), expired (past date_to), failed (sync error), "
+"cancelled (revoked)."
 msgstr ""
-"Ciclo de vida del código, derivado del estado de sincronización y de la "
-"ventana de validez: pendiente (sin sincronizar aún, sin trabajo en curso), "
-"sincronizando (hay un trabajo de sincronización en cola o ejecutándose), "
-"programado (sincronizado, esperando a la fecha de inicio), activo (dentro de "
-"la ventana de validez), expirado (pasada la fecha fin), fallido (error de "
-"sincronización), cancelado (invalidado)."
+"Ciclo de vida de la credencial, derivado del estado de sincronización y la "
+"ventana de validez: pendiente (aún sin conceder, sin trabajo en curso), "
+"sincronizando (hay un trabajo de sincronización con el proveedor encolado o "
+"en ejecución), programado (concedido, a la espera de la fecha de inicio), "
+"activo (dentro de la ventana de validez), expirado (pasada la fecha de fin), "
+"fallido (error de sincronización), cancelado (revocado)."
 
 #. module: pms_smartlock_base
 #: model:ir.model,name:pms_smartlock_base.model_lock_code
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__lock_code_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__lock_code_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__lock_code_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
 msgid "Lock Code"
 msgstr "Código de cerradura"
@@ -244,18 +313,30 @@ msgid "Lock Code PIN Viewer"
 msgstr "Visor del PIN del código"
 
 #. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_lock_code_target
+msgid "Lock Code Target"
+msgstr "Destino del código de cerradura"
+
+#. module: pms_smartlock_base
 #: model:ir.actions.act_window,name:pms_smartlock_base.lock_code_action
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_reservation__lock_code_ids
 msgid "Lock Codes"
 msgstr "Códigos de cerradura"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__lock_device_id
+msgid "Lock Device"
+msgstr "Dispositivo de cerradura"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__lock_device_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__lock_device_id
 msgid "Lock Device ID"
 msgstr "ID del dispositivo de cerradura"
 
 #. module: pms_smartlock_base
 #: model:ir.model,name:pms_smartlock_base.model_lock_vendor
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__vendor_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__lock_vendor_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form
 msgid "Lock Vendor"
@@ -267,12 +348,30 @@ msgid "Lock Vendors"
 msgstr "Proveedores de cerraduras"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__target_ids
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
+msgid "Locks"
+msgstr "Cerraduras"
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_vendor__vendor_type
 msgid "Manufacturer connector used to communicate with the lock."
 msgstr "Conector del fabricante utilizado para comunicarse con la cerradura."
 
 #. module: pms_smartlock_base
+#. odoo-python
+#: code:addons/pms_smartlock_base/models/lock_vendor.py:0
+#, python-format
+msgid ""
+"Missing environment variable '%(var)s' required by lock vendor '%(vendor)s'. "
+"Set it in the deployment environment."
+msgstr ""
+"Falta la variable de entorno '%(var)s' requerida por el proveedor de "
+"cerraduras '%(vendor)s'. Configúrala en el entorno de despliegue."
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__name
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form
 msgid "Name"
 msgstr "Nombre"
@@ -295,10 +394,19 @@ msgid "Notes"
 msgstr "Notas"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__vendor_grant_ref
+msgid ""
+"Opaque handle returned by the vendor connector for this access grant. "
+"Required to modify or revoke the grant. Not parsed by Odoo."
+msgstr ""
+"Identificador opaco devuelto por el conector del proveedor para esta "
+"concesión de acceso. Necesario para modificar o revocar la concesión. Odoo "
+"no lo interpreta."
+
+#. module: pms_smartlock_base
 #. odoo-python
 #: code:addons/pms_smartlock_base/models/lock_code.py:0
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_pin_viewer_view_form
-#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
 #, python-format
 msgid "PIN"
 msgstr "PIN"
@@ -313,17 +421,17 @@ msgstr "Registro de accesos al PIN"
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__pin
 msgid ""
-"PIN code the guest types on the keypad. Generated by the vendor library, may "
-"change after a modify. Field-level group locks down direct read for every "
+"PIN code the guest types on the keypad of every lock in the grant. Returned "
+"by the vendor connector. Field-level group locks down direct read for every "
 "internal user (admin included); the only way to surface the value is the "
 "audited ``action_reveal_pin`` button, which sudoes the read and records "
 "access in ``lock.code.access.log``."
 msgstr ""
-"Código PIN que el huésped teclea en el panel de la cerradura. Lo genera la "
-"librería del proveedor y puede cambiar tras una modificación. La restricción "
-"a nivel de campo bloquea la lectura directa a cualquier usuario interno "
-"(incluido el admin); la única forma de obtener el valor es el botón "
-"auditado ``action_reveal_pin``, que lee con sudo y registra cada acceso en "
+"Código PIN que el huésped teclea en el teclado de cada cerradura de la "
+"concesión. Lo devuelve el conector del proveedor. La restricción a nivel de "
+"campo bloquea la lectura directa para todo usuario interno (incluido el "
+"administrador); la única forma de mostrar el valor es el botón auditado "
+"``action_reveal_pin``, que lee con sudo y registra el acceso en "
 "``lock.code.access.log``."
 
 #. module: pms_smartlock_base
@@ -348,7 +456,14 @@ msgid "Pin"
 msgstr "PIN"
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__pin_confirm_key
+msgid "Pin Confirm Key"
+msgstr "Tecla de confirmación del PIN"
+
+#. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_pms_property
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__pms_property_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__pms_property_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_search
 msgid "Property"
 msgstr "Hotel"
@@ -361,10 +476,10 @@ msgstr "Habitación"
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__queue_job_ids
 msgid ""
-"Queue jobs that have synchronised this code with the vendor. Useful to "
+"Queue jobs that have synchronised this credential with the vendor. Useful to "
 "inspect retries, errors and traces from a failed sync."
 msgstr ""
-"Trabajos de la cola que han sincronizado este código con el proveedor. Útil "
+"Trabajos en cola que han sincronizado esta credencial con el proveedor. Útil "
 "para inspeccionar reintentos, errores y trazas de una sincronización fallida."
 
 #. module: pms_smartlock_base
@@ -394,6 +509,8 @@ msgstr "Muestra el PIN. Cada pulsación se registra en el log de auditoría."
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__room_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__room_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__room_id
+#: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code_target__kind__room
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_search
 msgid "Room"
 msgstr "Habitación"
@@ -401,8 +518,8 @@ msgstr "Habitación"
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__room_id
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_access_log__room_id
-msgid "Room whose lock this code belongs to."
-msgstr "Habitación a cuya cerradura pertenece este código."
+msgid "Room whose guest this credential belongs to."
+msgstr "Habitación a cuyo huésped pertenece esta credencial."
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code__state__scheduled
@@ -412,6 +529,7 @@ msgstr "Programado"
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__sequence
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__sequence
 msgid "Sequence"
 msgstr "Secuencia"
 
@@ -426,8 +544,46 @@ msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__cancelled
-msgid "Set to True when the code has been invalidated on the lock."
-msgstr "Se marca a True cuando el código ha sido invalidado en la cerradura."
+msgid "Set to True when the grant has been revoked on the locks."
+msgstr "Se marca a True cuando la concesión se ha revocado en las cerraduras."
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_target__common_lock_id
+msgid "Set when this target is a shared/common door."
+msgstr "Se establece cuando este destino es una puerta compartida/común."
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_target__room_id
+msgid "Set when this target is the guest's room lock."
+msgstr "Se establece cuando este destino es la cerradura de la habitación del huésped."
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__shared_lock_ids
+msgid "Shared Locks"
+msgstr "Cerraduras compartidas"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_property__common_lock_ids
+msgid ""
+"Shared doors of this property (entrance, garage, pool…) that rooms can grant "
+"their guests through their shared locks."
+msgstr ""
+"Puertas compartidas de este hotel (entrada, garaje, piscina…) que las "
+"habitaciones pueden conceder a sus huéspedes a través de sus cerraduras "
+"compartidas."
+
+#. module: pms_smartlock_base
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.pms_property_view_form
+msgid ""
+"Shared doors of this property (entrance, garage, pool…).\n"
+"                        Assign them to rooms from the room's Smart Lock tab "
+"so a\n"
+"                        guest's PIN also opens them."
+msgstr ""
+"Puertas compartidas de este hotel (entrada, garaje, piscina…).\n"
+"                        Asígnalas a las habitaciones desde la pestaña "
+"Cerradura inteligente de la habitación\n"
+"                        para que el PIN del huésped también las abra."
 
 #. module: pms_smartlock_base
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_pin_viewer_view_form
@@ -450,6 +606,7 @@ msgstr "Códigos de cerradura inteligente"
 
 #. module: pms_smartlock_base
 #: model:ir.ui.menu,name:pms_smartlock_base.smartlock_menu
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.pms_property_view_form
 msgid "Smart Locks"
 msgstr "Cerraduras inteligentes"
 
@@ -469,6 +626,15 @@ msgstr "Cerraduras inteligentes: Generar códigos (24h)"
 #: model:ir.cron,cron_name:pms_smartlock_base.cron_purge_access_log
 msgid "Smartlocks: Purge old PIN access logs"
 msgstr "Cerraduras inteligentes: Purgar registros antiguos de accesos al PIN"
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__target_ids
+msgid ""
+"Snapshot of the locks this credential's grant covers (room door + shared "
+"common doors)."
+msgstr ""
+"Instantánea de las cerraduras que cubre la concesión de esta credencial "
+"(cerradura de la habitación + puertas comunes compartidas)."
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__state
@@ -512,19 +678,14 @@ msgid "Vendor"
 msgstr "Proveedor"
 
 #. module: pms_smartlock_base
-#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__vendor_code_id
-msgid "Vendor Code ID"
-msgstr "ID del código en el proveedor"
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__vendor_grant_ref
+msgid "Vendor Grant Ref"
+msgstr "Referencia de concesión del proveedor"
 
 #. module: pms_smartlock_base
 #: model:ir.ui.menu,name:pms_smartlock_base.lock_vendor_menu
 msgid "Vendors"
 msgstr "Proveedores"
-
-#. module: pms_smartlock_base
-#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
-msgid "auto-generated"
-msgstr "auto-generado"
 
 #. module: pms_smartlock_base
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form

@@ -351,7 +351,13 @@ class LockCode(models.Model):
         viewer = (
             self.env["lock.code.pin.viewer"]
             .sudo()
-            .create({"lock_code_id": self.id, "pin": self.sudo().pin})
+            .create(
+                {
+                    "lock_code_id": self.id,
+                    "pin": self.sudo().pin,
+                    "pin_confirm_key": self.sudo().vendor_id.pin_confirm_key,
+                }
+            )
         )
         return {
             "type": "ir.actions.act_window",

@@ -11,7 +11,14 @@
             class="text-center"
             style="font-size: 4rem; letter-spacing: 0.5rem;"
           >
-                        <field name="pin" readonly="1" nolabel="1" />
+                        <field name="pin" readonly="1" nolabel="1" class="d-inline" />
+                        <field
+              name="pin_confirm_key"
+              readonly="1"
+              nolabel="1"
+              class="d-inline"
+              attrs="{'invisible': [('pin_confirm_key', '=', False)]}"
+            />
                     </h1>
                     <p class="text-center text-muted">
                         Show this code to the guest. Each reveal is recorded in

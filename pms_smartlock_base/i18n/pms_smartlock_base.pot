@@ -26,6 +26,7 @@ msgstr ""
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__active
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__active
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__active
 #: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code__state__active
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_search
 msgid "Active"
@@ -56,15 +57,50 @@ msgid "Codes"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code_target__kind__common
+msgid "Common"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_pms_common_lock
+msgid "Common Area Lock"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__common_lock_id
+msgid "Common Lock"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_property__common_lock_ids
+msgid "Common Locks"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_room__shared_lock_ids
+msgid ""
+"Common doors (entrance, garage…) a guest of this room also gets access to. "
+"The reservation's access grant covers this room's own lock plus these shared"
+" locks, all under the same PIN."
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__company_id
 msgid "Company"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__pin_confirm_key
+msgid "Confirm Key"
 msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__create_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__create_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__create_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -72,7 +108,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__create_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__create_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__create_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__create_date
 msgid "Created on"
 msgstr ""
 
@@ -92,6 +130,11 @@ msgid "Date To"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_common_lock__lock_device_id
+msgid "Device identifier used by the vendor API to target this lock."
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_pms_room__lock_device_id
 msgid "Device identifier used by the vendor API to target this room's lock."
 msgstr ""
@@ -100,7 +143,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__display_name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__display_name
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__display_name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -155,15 +200,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__id
 msgid "ID"
-msgstr ""
-
-#. module: pms_smartlock_base
-#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__vendor_code_id
-msgid ""
-"Identifier returned by the vendor API. Required to modify or remove the code"
-" on the lock."
 msgstr ""
 
 #. module: pms_smartlock_base
@@ -172,10 +212,26 @@ msgid "Internal notes..."
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_vendor__pin_confirm_key
+msgid ""
+"Key the guest must press on the keypad after typing the PIN to validate it "
+"(e.g. '#' on most keypads). It is shown to the guest but is not part of the "
+"stored PIN. Defaults to the known key for the selected vendor; override it "
+"for unusual lock models."
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__kind
+msgid "Kind"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer____last_update
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target____last_update
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor____last_update
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock____last_update
 msgid "Last Modified on"
 msgstr ""
 
@@ -183,7 +239,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__write_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__write_uid
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__write_uid
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -191,24 +249,27 @@ msgstr ""
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__write_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__write_date
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__write_date
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__write_date
 msgid "Last Updated on"
 msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__state
 msgid ""
-"Lifecycle of the code, derived from sync status and validity window: pending"
-" (not synced yet, no job in flight), syncing (a vendor sync job is enqueued "
-"or running), scheduled (synced, awaiting date_from), active (within validity"
-" window), expired (past date_to), failed (sync error), cancelled "
-"(invalidated)."
+"Lifecycle of the credential, derived from sync status and validity window: "
+"pending (not granted yet, no job in flight), syncing (a vendor sync job is "
+"enqueued or running), scheduled (granted, awaiting date_from), active "
+"(within validity window), expired (past date_to), failed (sync error), "
+"cancelled (revoked)."
 msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model,name:pms_smartlock_base.model_lock_code
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__lock_code_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__lock_code_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__lock_code_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
 msgid "Lock Code"
 msgstr ""
@@ -224,18 +285,30 @@ msgid "Lock Code PIN Viewer"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_lock_code_target
+msgid "Lock Code Target"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.actions.act_window,name:pms_smartlock_base.lock_code_action
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_reservation__lock_code_ids
 msgid "Lock Codes"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__lock_device_id
+msgid "Lock Device"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__lock_device_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__lock_device_id
 msgid "Lock Device ID"
 msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model,name:pms_smartlock_base.model_lock_vendor
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__vendor_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__lock_vendor_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form
 msgid "Lock Vendor"
@@ -247,12 +320,28 @@ msgid "Lock Vendors"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__target_ids
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
+msgid "Locks"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_vendor__vendor_type
 msgid "Manufacturer connector used to communicate with the lock."
 msgstr ""
 
 #. module: pms_smartlock_base
+#. odoo-python
+#: code:addons/pms_smartlock_base/models/lock_vendor.py:0
+#, python-format
+msgid ""
+"Missing environment variable '%(var)s' required by lock vendor '%(vendor)s'."
+" Set it in the deployment environment."
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__name
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__name
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_form
 msgid "Name"
 msgstr ""
@@ -275,10 +364,16 @@ msgid "Notes"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__vendor_grant_ref
+msgid ""
+"Opaque handle returned by the vendor connector for this access grant. "
+"Required to modify or revoke the grant. Not parsed by Odoo."
+msgstr ""
+
+#. module: pms_smartlock_base
 #. odoo-python
 #: code:addons/pms_smartlock_base/models/lock_code.py:0
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_pin_viewer_view_form
-#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
 #, python-format
 msgid "PIN"
 msgstr ""
@@ -293,8 +388,8 @@ msgstr ""
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__pin
 msgid ""
-"PIN code the guest types on the keypad. Generated by the vendor library, may"
-" change after a modify. Field-level group locks down direct read for every "
+"PIN code the guest types on the keypad of every lock in the grant. Returned "
+"by the vendor connector. Field-level group locks down direct read for every "
 "internal user (admin included); the only way to surface the value is the "
 "audited ``action_reveal_pin`` button, which sudoes the read and records "
 "access in ``lock.code.access.log``."
@@ -320,7 +415,14 @@ msgid "Pin"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_pin_viewer__pin_confirm_key
+msgid "Pin Confirm Key"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_pms_property
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__pms_property_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__pms_property_id
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_vendor_view_search
 msgid "Property"
 msgstr ""
@@ -333,8 +435,8 @@ msgstr ""
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__queue_job_ids
 msgid ""
-"Queue jobs that have synchronised this code with the vendor. Useful to "
-"inspect retries, errors and traces from a failed sync."
+"Queue jobs that have synchronised this credential with the vendor. Useful to"
+" inspect retries, errors and traces from a failed sync."
 msgstr ""
 
 #. module: pms_smartlock_base
@@ -364,6 +466,8 @@ msgstr ""
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__room_id
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_access_log__room_id
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code_target__room_id
+#: model:ir.model.fields.selection,name:pms_smartlock_base.selection__lock_code_target__kind__room
 #: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_search
 msgid "Room"
 msgstr ""
@@ -371,7 +475,7 @@ msgstr ""
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__room_id
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_access_log__room_id
-msgid "Room whose lock this code belongs to."
+msgid "Room whose guest this credential belongs to."
 msgstr ""
 
 #. module: pms_smartlock_base
@@ -382,6 +486,7 @@ msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_vendor__sequence
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_common_lock__sequence
 msgid "Sequence"
 msgstr ""
 
@@ -394,7 +499,37 @@ msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__cancelled
-msgid "Set to True when the code has been invalidated on the lock."
+msgid "Set to True when the grant has been revoked on the locks."
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_target__common_lock_id
+msgid "Set when this target is a shared/common door."
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code_target__room_id
+msgid "Set when this target is the guest's room lock."
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_pms_room__shared_lock_ids
+msgid "Shared Locks"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_pms_property__common_lock_ids
+msgid ""
+"Shared doors of this property (entrance, garage, pool…) that rooms can grant"
+" their guests through their shared locks."
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.pms_property_view_form
+msgid ""
+"Shared doors of this property (entrance, garage, pool…).\n"
+"                        Assign them to rooms from the room's Smart Lock tab so a\n"
+"                        guest's PIN also opens them."
 msgstr ""
 
 #. module: pms_smartlock_base
@@ -416,6 +551,7 @@ msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.ui.menu,name:pms_smartlock_base.smartlock_menu
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.pms_property_view_form
 msgid "Smart Locks"
 msgstr ""
 
@@ -434,6 +570,13 @@ msgstr ""
 #: model:ir.actions.server,name:pms_smartlock_base.cron_purge_access_log_ir_actions_server
 #: model:ir.cron,cron_name:pms_smartlock_base.cron_purge_access_log
 msgid "Smartlocks: Purge old PIN access logs"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__target_ids
+msgid ""
+"Snapshot of the locks this credential's grant covers (room door + shared "
+"common doors)."
 msgstr ""
 
 #. module: pms_smartlock_base
@@ -478,18 +621,13 @@ msgid "Vendor"
 msgstr ""
 
 #. module: pms_smartlock_base
-#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__vendor_code_id
-msgid "Vendor Code ID"
+#: model:ir.model.fields,field_description:pms_smartlock_base.field_lock_code__vendor_grant_ref
+msgid "Vendor Grant Ref"
 msgstr ""
 
 #. module: pms_smartlock_base
 #: model:ir.ui.menu,name:pms_smartlock_base.lock_vendor_menu
 msgid "Vendors"
-msgstr ""
-
-#. module: pms_smartlock_base
-#: model_terms:ir.ui.view,arch_db:pms_smartlock_base.lock_code_view_form
-msgid "auto-generated"
 msgstr ""
 
 #. module: pms_smartlock_base

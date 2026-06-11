@@ -11,3 +11,4 @@ class LockCodePinViewer(models.TransientModel):
         readonly=True,
     )
     pin = fields.Char(readonly=True)
+    pin_confirm_key = fields.Char(readonly=True)
