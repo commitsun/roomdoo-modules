@@ -80,3 +80,11 @@ class TestOmnitecVendor(TransactionCase):
         self.vendor.vendor_type = "noop"
         with self.assertRaises(NotImplementedError):
             self.vendor.get_connector()
+
+    def test_pin_confirm_key_default(self):
+        """Selecting the Omnitec vendor type prefills the keypad confirm
+        key with its known default ('#') through the onchange + hook,
+        leaving it editable for unusual lock models."""
+        vendor = self.env["lock.vendor"].new({"vendor_type": "omnitec"})
+        vendor._onchange_vendor_type_pin_confirm_key()
+        self.assertEqual(vendor.pin_confirm_key, "#")
