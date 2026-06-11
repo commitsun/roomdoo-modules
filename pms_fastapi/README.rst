@@ -1,3 +1,7 @@
+.. image:: https://odoo-community.org/readme-banner-image
+   :target: https://odoo-community.org/get-involved?utm_source=readme
+   :alt: Odoo Community Association
+
 ===========
 PMS FastAPI
 ===========
@@ -13,20 +17,14 @@ PMS FastAPI
 .. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
     :target: https://odoo-community.org/page/development-status
     :alt: Beta
-.. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
+.. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fpms-lightgray.png?logo=github
-    :target: https://github.com/OCA/pms/tree/16.0/pms_fastapi
-    :alt: OCA/pms
-.. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/pms-16-0/pms-16-0-pms_fastapi
-    :alt: Translate me on Weblate
-.. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/pms&target_branch=16.0
-    :alt: Try me on Runboat
+.. |badge3| image:: https://img.shields.io/badge/github-commitsun%2Froomdoo--modules-lightgray.png?logo=github
+    :target: https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_fastapi
+    :alt: commitsun/roomdoo-modules
 
-|badge1| |badge2| |badge3| |badge4| |badge5|
+|badge1| |badge2| |badge3|
 
 This module adds an API REST feature to property management system (PMS).
 
@@ -35,13 +33,23 @@ This module adds an API REST feature to property management system (PMS).
 .. contents::
    :local:
 
+Configuration
+=============
+
+* Go to  FastAPI > FastAPI endpoints  and create a new one with the data:
+    * Name: PMS API
+    * App: PMS API
+    * Root path: /pmsApi
+    * User: PMS Fastapi
+* After the creation push the sync registry button and restart the Odoo server.
+
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/OCA/pms/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/commitsun/roomdoo-modules/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OCA/pms/issues/new?body=module:%20pms_fastapi%0Aversion:%2016.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/commitsun/roomdoo-modules/issues/new?body=module:%20pms_fastapi%0Aversion:%2016.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -56,16 +64,6 @@ Authors
 Maintainers
 ~~~~~~~~~~~
 
-This module is maintained by the OCA.
+This module is part of the `commitsun/roomdoo-modules <https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_fastapi>`_ project on GitHub.
 
-.. image:: https://odoo-community.org/logo.png
-   :alt: Odoo Community Association
-   :target: https://odoo-community.org
-
-OCA, or the Odoo Community Association, is a nonprofit organization whose
-mission is to support the collaborative development of Odoo features and
-promote its widespread use.
-
-This module is part of the `OCA/pms <https://github.com/OCA/pms/tree/16.0/pms_fastapi>`_ project on GitHub.
-
-You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.
+You are welcome to contribute.
