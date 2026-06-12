@@ -57,10 +57,18 @@ _RULE_PLAN_FIELDS = frozenset(
 
 # Rule fields whose change must re-push the property availability.
 # ``plan_avail`` = min(real_avail, quota, max_avail) is the bookable
-# count actually shipped to Wubook. A change in ``real_avail`` does NOT
-# necessarily change ``plan_avail`` (the cap may absorb it), so we
-# trigger on ``plan_avail`` itself to avoid no-op pushes.
-_RULE_AVAIL_FIELDS = frozenset({"plan_avail"})
+# count actually shipped to Wubook, but it is a stored COMPUTED field:
+# its recompute is flushed through ``_write()`` and never fires
+# ``on_record_write`` (component_event only hooks the public
+# ``write()``), so triggering on ``plan_avail`` alone never happens in
+# practice. The public writes that drive it are ``quota`` /
+# ``max_avail`` (e.g. the front calendar sale-availability edit), so we
+# trigger on those. ``real_avail`` changes flow through the reservation
+# / line listeners instead. ``plan_avail`` is kept for the (unlikely)
+# case of an explicit write. No-op pushes are cheap: the export only
+# ships bindings whose ``sale_avail`` flush bumped ``actual_write_date``
+# (see ``pms_availability/binding.py::_write``).
+_RULE_AVAIL_FIELDS = frozenset({"plan_avail", "quota", "max_avail"})
 
 
 def _flush_plan_rules_buffer(env):
@@ -173,8 +181,9 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     of the parent plan payload. So every change on a rule may schedule:
 
     * a re-export of its parent **plan** (when business fields change),
-    * a re-export of the property **availability** (when ``plan_avail``
-      — the bookable count actually shipped to Wubook — changes).
+    * a re-export of the property **availability** (when ``quota`` /
+      ``max_avail`` change — they drive ``plan_avail``, the bookable
+      count actually shipped to Wubook — and on rule create / unlink).
 
     Both paths coalesce through per-transaction buffers so that massive
     operations (e.g. ``wizard_massive_changes`` touching hundreds of
@@ -237,6 +246,14 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
         self._stage_plan_rule(record)
+        # A rule created on a date whose ``pms.availability`` record
+        # already exists (e.g. capping a busy date from the calendar)
+        # changes ``plan_avail`` without any avail-create event firing,
+        # so the property availability must be staged here too. On
+        # fresh dates ``_compute_avail_id`` creates the availability
+        # record and its own create listener stages the same pair —
+        # the staging set deduplicates.
+        self._stage_plan_avail(record)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
@@ -252,3 +269,6 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     def on_record_unlink(self, record, fields=None):
         # Read the plan / property before the rule is gone.
         self._stage_plan_rule(record)
+        # Deleting a rule lifts its quota / max_avail cap, so the
+        # bookable count changes too.
+        self._stage_plan_avail(record)

@@ -1410,3 +1410,60 @@ class TestAvailabilityListener(TransactionComponentCase):
                 r.write({"plan_avail": 1})
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
+
+    def test_write_quota_enqueues_property_export(self):
+        # ``quota`` / ``max_avail`` are the PUBLIC writes that drive
+        # ``plan_avail`` (a stored compute whose flush never fires
+        # ``on_record_write``), so the front calendar sale-availability
+        # edit must enqueue the property export through them. The same
+        # write also re-exports the plan (restrictions payload), hence
+        # two jobs.
+        rule = self._make_rule()
+        self.env.cr.precommit.run()  # flush buffers from rule create
+        with trap_jobs() as trap:
+            rule.write({"quota": 0})
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(2)
+        trap.assert_enqueued_job(
+            self.plan_binding.export_record,
+            args=(self.backend, self.plan),
+        )
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
+
+    def test_rule_create_on_existing_avail_enqueues_property_export(self):
+        # Capping a date whose ``pms.availability`` record already
+        # exists creates a rule but no availability record, so the rule
+        # create itself must stage the property export.
+        self._make_avail()
+        self.env.cr.precommit.run()  # flush avail-create buffer
+        with trap_jobs() as trap:
+            self._make_rule(quota=0)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(2)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+        )
+
+    def test_rule_unlink_enqueues_property_export(self):
+        # Deleting a rule lifts its quota cap → the bookable count
+        # changes → property export (plus the plan re-export).
+        rule = self._make_rule()
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            rule.unlink()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(2)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+        )
