@@ -158,8 +158,16 @@ class ResPartner(models.Model):
                 )
 
     def write(self, vals):
-        if vals.get("active") and not vals["active"]:
+        res = super().write(vals)
+        # When a partner is archived, archive its identification documents too.
+        # Otherwise the documents stay active and keep reserving the
+        # (name, country, category) namespace used by the uniqueness checks,
+        # so an archived (invisible) partner blocks new contacts/check-ins that
+        # legitimately reuse the same number. The previous guard
+        # (``vals.get("active") and not vals["active"]``) could never be true,
+        # so this cascade never ran.
+        if "active" in vals and not vals["active"]:
             self.env["res.partner.id_number"].search(
                 [("partner_id", "in", self.ids)]
             ).write({"active": False})
-        return super().write(vals)
+        return res

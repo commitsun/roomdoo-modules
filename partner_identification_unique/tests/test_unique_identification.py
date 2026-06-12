@@ -27,6 +27,50 @@ class TestPms(common.TransactionCase):
         with self.assertRaises(ValidationError):
             self.partner_2.with_context(test_vat=True).write({"vat": "12345678Z"})
 
+    def test_archive_partner_archives_id_numbers(self):
+        """Archiving a partner must cascade-archive its identification documents
+        so they stop reserving the uniqueness namespace."""
+        dni_type = self.env["res.partner.id_category"].create(
+            {"name": "test_dni_type", "code": "DNI"}
+        )
+        id_number = self.env["res.partner.id_number"].create(
+            {
+                "partner_id": self.partner_1.id,
+                "category_id": dni_type.id,
+                "name": "49572983W",
+                "country_id": self.env.ref("base.es").id,
+            }
+        )
+        self.partner_1.action_archive()
+        self.assertFalse(id_number.active)
+
+    def test_archived_partner_does_not_block(self):
+        """After archiving a partner, the same document number can be created
+        on another (active) partner: the cascade archived the document, so it
+        no longer counts as a duplicate."""
+        dni_type = self.env["res.partner.id_category"].create(
+            {"name": "test_dni_type_2", "code": "DNI"}
+        )
+        self.env["res.partner.id_number"].create(
+            {
+                "partner_id": self.partner_1.id,
+                "category_id": dni_type.id,
+                "name": "49572983W",
+                "country_id": self.env.ref("base.es").id,
+            }
+        )
+        self.partner_1.action_archive()
+        # Must not raise: the previous document was archived with its partner.
+        new_id_number = self.env["res.partner.id_number"].create(
+            {
+                "partner_id": self.partner_2.id,
+                "category_id": dni_type.id,
+                "name": "49572983W",
+                "country_id": self.env.ref("base.es").id,
+            }
+        )
+        self.assertTrue(new_id_number)
+
     def test_unique_vat_identification_vat_type(self):
         """
         Check the constraints with a partner with a country code in VAT and
