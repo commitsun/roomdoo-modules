@@ -7,4 +7,5 @@
 
 roomdoo_locks_base git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-base&subdirectory=roomdoo-locks-base
 roomdoo_locks_omnitec git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-omnitec&subdirectory=roomdoo-locks-omnitec
+roomdoo_locks_salto git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-salto&subdirectory=roomdoo-locks-salto
 roomdoo_locks_ttlock git+https://github.com/commitsun/roomdoo-smartlocks.git@main#egg=roomdoo-locks-ttlock&subdirectory=roomdoo-locks-ttlock

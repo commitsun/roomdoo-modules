@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_code_view_form" model="ir.ui.view">
+        <field name="name">lock.code.form.salto</field>
+        <field name="model">lock.code</field>
+        <field name="inherit_id" ref="pms_smartlock_base.lock_code_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='vendor_grant_ref']" position="after">
+                <field
+          name="purged"
+          readonly="1"
+          groups="pms_smartlock_base.group_smartlock_admin"
+          attrs="{'invisible': [('purged', '=', False)]}"
+        />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
