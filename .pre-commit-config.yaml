@@ -96,20 +96,20 @@ repos:
     rev: 3.3.2
     hooks:
       - id: setuptools-odoo-make-default
-      - id: setuptools-odoo-get-requirements
-        args:
-          - --output
-          - requirements.txt
-          - --header
-          - "# generated from manifests external_dependencies"
   - repo: local
     hooks:
-      - id: apply-requirements-overrides
-        name: Apply requirements.txt overrides (non-PyPI packages)
-        entry: python scripts/apply_requirements_overrides.py
-        language: system
-        files: ^(requirements\.txt|requirements-overrides\.txt|scripts/apply_requirements_overrides\.py)$
+      # Generate requirements.txt from manifests AND apply the non-PyPI
+      # overrides in one idempotent step. Kept as a single hook on purpose:
+      # splitting generation and override into two hooks made them fight (the
+      # generator rewrote the override URLs back to bare names every run), so
+      # the commit never converged.
+      - id: gen-requirements
+        name: Generate requirements.txt (manifests + non-PyPI overrides)
+        entry: python scripts/gen_requirements.py
+        language: python
+        additional_dependencies: ["setuptools-odoo==3.3.2"]
         pass_filenames: false
+        always_run: true
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.3
     hooks:
