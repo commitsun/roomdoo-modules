@@ -4,11 +4,14 @@ import collections.abc
 import logging
 import uuid
 
+import requests
+
 from odoo import _, fields
 from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import AbstractComponent
 from odoo.addons.connector.components.mapper import m2o_to_external
+from odoo.addons.queue_job.exception import RetryableJobError
 
 _logger = logging.getLogger(__name__)
 
@@ -219,9 +222,25 @@ class ChannelChildMapperImport(AbstractComponent):
                     )
             if payload:
                 _logger.info("Exporting to PMS API client %s", client.login)
-                response = pms_property.pms_api_push_payload(
-                    payload=payload, endpoint=endpoint, client=client
-                )
+                try:
+                    response = pms_property.pms_api_push_payload(
+                        payload=payload, endpoint=endpoint, client=client
+                    )
+                except (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout,
+                ) as err:
+                    # Transient network failure against the API client
+                    # (read timeout, connection reset...). Do NOT let it
+                    # kill the export job permanently: the export ships
+                    # the full dirty state, so retrying the whole job
+                    # later is safe and idempotent. queue_job marks the
+                    # job failed only after max_retries.
+                    raise RetryableJobError(
+                        "PMS API client %s unreachable (%s), "
+                        "job will be retried" % (client.login, err),
+                        seconds=300,
+                    ) from err
                 self.env["pms.api.log"].sudo().create(
                     {
                         "pms_property_id": pms_property_id,

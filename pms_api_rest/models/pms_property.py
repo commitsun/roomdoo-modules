@@ -314,7 +314,7 @@ class PmsProperty(models.Model):
             endpoint,
             headers=headers,
             data=json.dumps(payload),
-            timeout=10,
+            timeout=30,
         )
         return response
 
