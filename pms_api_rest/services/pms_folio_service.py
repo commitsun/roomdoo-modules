@@ -74,6 +74,29 @@ class PmsFolioService(Component):
             create_date_local = pytz.UTC.localize(folio.create_date).astimezone(
                 property_tz
             )
+            currency_company = (
+                True if folio.currency_id == folio.company_id.currency_id else False
+            )
+            amount_total = (
+                folio.amount_total
+                if currency_company
+                else folio.currency_id._convert(
+                    folio.amount_total,
+                    folio.company_id.currency_id,
+                    folio.company_id,
+                    folio.create_date,
+                )
+            )
+            pending_amount = (
+                folio.pending_amount
+                if currency_company
+                else folio.currency_id._convert(
+                    folio.pending_amount,
+                    folio.company_id.currency_id,
+                    folio.company_id,
+                    folio.create_date,
+                )
+            )
             PmsFolioInfo = self.env.datamodels["pms.folio.info"]
             return PmsFolioInfo(
                 id=folio.id,
@@ -83,9 +106,9 @@ class PmsFolioService(Component):
                 partnerPhone=folio.mobile if folio.mobile else None,
                 partnerEmail=folio.email if folio.email else None,
                 state=folio.state,
-                amountTotal=round(folio.amount_total, 2),
+                amountTotal=round(amount_total, 2),
                 reservationType=folio.reservation_type,
-                pendingAmount=folio.pending_amount,
+                pendingAmount=round(pending_amount, 2),
                 firstCheckin=str(folio.first_checkin),
                 lastCheckout=str(folio.last_checkout),
                 createDate=create_date_local.isoformat(),
@@ -576,10 +599,18 @@ class PmsFolioService(Component):
                         None,
                     )
                     payment._compute_pms_api_transaction_type()
+                    payment_amount = payment.amount
+                    if payment.currency_id != folio.company_id.currency_id:
+                        payment_amount = payment.currency_id._convert(
+                            payment.amount,
+                            folio.company_id.currency_id,
+                            folio.company_id,
+                            payment.date,
+                        )
                     transactions.append(
                         PmsTransactionInfo(
                             id=payment.id,
-                            amount=round(payment.amount, 2),
+                            amount=round(payment_amount, 2),
                             journalId=payment.journal_id.id,
                             date=datetime.combine(
                                 payment.date, datetime.min.time()
@@ -739,6 +770,12 @@ class PmsFolioService(Component):
                     .sudo()
                     .browse(reservation.room_type_id.class_id.id)
                 )
+                company_currency = (
+                    True
+                    if reservation.pricelist_id.currency_id
+                    != reservation.company_id.currency_id
+                    else False
+                )
                 reservations.append(
                     PmsReservationShortInfo(
                         id=reservation.id,
@@ -770,7 +807,17 @@ class PmsFolioService(Component):
                         readyForCheckin=reservation.ready_for_checkin,
                         allowedCheckout=reservation.allowed_checkout,
                         isSplitted=reservation.splitted,
-                        priceTotal=round(reservation.price_room_services_set, 2),
+                        priceTotal=round(
+                            reservation.price_room_services_set
+                            if company_currency
+                            else reservation.pricelist_id.currency_id._convert(
+                                reservation.price_room_services_set,
+                                reservation.company_id.currency_id,
+                                reservation.company_id,
+                                fields.Date.today(),
+                            ),
+                            2,
+                        ),
                         folioSequence=reservation.folio_sequence
                         if reservation.folio_sequence
                         else None,
@@ -1005,6 +1052,12 @@ class PmsFolioService(Component):
                                 company=folio.company_id,
                             )
                     for reservationLine in reservation.reservationLines:
+                        # HOTFIX TO CONVERT PRICE IN PROPERTY CHANNEL CURRENCY
+                        if pms_property.channel_currency_id and external_app:
+                            reservationLine.price = (
+                                reservationLine.price
+                                / pms_property.channel_currency_id.rate
+                            )
                         price = reservationLine.price - (
                             commision_percent_to_deduct * reservationLine.price / 100
                         )
@@ -1079,6 +1132,12 @@ class PmsFolioService(Component):
                             # divided by the number of days.
                             # For per-person services, `qty` is already sent
                             # as persons per day.
+                            price_unit = service.priceUnit
+                            if pms_property.channel_currency_id:
+                                price_unit = (
+                                    price_unit
+                                    / pms_property.channel_currency_id.rate
+                                )
                             if external_app and (
                                 product.per_day
                                 and product.consumed_on in ("before", "after")
@@ -1090,9 +1149,7 @@ class PmsFolioService(Component):
                                 new_service.service_line_ids.write(
                                     {
                                         "day_qty": service.quantity,
-                                        "price_unit": round(
-                                            service.priceUnit / days, 2
-                                        ),
+                                        "price_unit": round(price_unit / days, 2),
                                         "discount": service.discount or 0,
                                     }
                                 )
@@ -1100,7 +1157,7 @@ class PmsFolioService(Component):
                                 new_service.service_line_ids.write(
                                     {
                                         "discount": service.discount or 0,
-                                        "price_unit": service.priceUnit,
+                                        "price_unit": price_unit,
                                         "day_qty": service.quantity,
                                     }
                                 )
@@ -1333,6 +1390,40 @@ class PmsFolioService(Component):
         for reservation in folio.reservation_ids:
             for service in reservation.service_ids:
                 PmsServiceLineInfo = self.env.datamodels["pms.service.line.info"]
+                company_currency = True
+                if folio.currency_id != folio.company_id.currency_id:
+                    company_currency = False
+
+                price_total = (
+                    service.price_total
+                    if company_currency
+                    else folio.currency_id._convert(
+                        service.price_total,
+                        folio.company_id.currency_id,
+                        folio.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                price_subtotal = (
+                    service.price_subtotal
+                    if company_currency
+                    else folio.currency_id._convert(
+                        service.price_subtotal,
+                        folio.company_id.currency_id,
+                        folio.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                price_tax = (
+                    service.price_tax
+                    if company_currency
+                    else folio.currency_id._convert(
+                        service.price_tax,
+                        folio.company_id.currency_id,
+                        folio.company_id,
+                        fields.Date.today(),
+                    )
+                )
                 service_lines = []
                 for line in service.service_line_ids:
                     service_lines.append(
@@ -1341,12 +1432,11 @@ class PmsFolioService(Component):
                             date=datetime.combine(
                                 line.date, datetime.min.time()
                             ).isoformat(),
-                            priceUnit=line.price_unit,
+                            priceUnit=round(line.price_unit, 2),
                             discount=line.discount,
                             quantity=line.day_qty,
                         )
                     )
-
                 result_services.append(
                     PmsServiceInfo(
                         id=service.id,
@@ -1354,9 +1444,9 @@ class PmsFolioService(Component):
                         name=service.name,
                         productId=service.product_id.id,
                         quantity=service.product_qty,
-                        priceTotal=round(service.price_total, 2),
-                        priceSubtotal=round(service.price_subtotal, 2),
-                        priceTaxes=round(service.price_tax, 2),
+                        priceTotal=round(price_total, 2),
+                        priceSubtotal=round(price_subtotal, 2),
+                        priceTaxes=round(price_tax, 2),
                         discount=round(service.discount, 2),
                         isBoardService=service.is_board_service,
                         serviceLines=service_lines,
@@ -1493,25 +1583,46 @@ class PmsFolioService(Component):
             pass
         else:
             PmsFolioSaleLineInfo = self.env.datamodels["pms.folio.sale.line.info"]
+            currency_company = True
+            if folio.currency_id != folio.company_id.currency_id:
+                currency_company = False
             if folio.sale_line_ids:
                 for sale_line in folio.sale_line_ids:
+                    price_unit = (
+                        sale_line.price_unit
+                        if currency_company
+                        else folio.currency_id._convert(
+                            sale_line.price_unit,
+                            folio.company_id.currency_id,
+                            folio.company_id,
+                            fields.Date.today(),
+                        )
+                    )
+                    price_total = (
+                        sale_line.price_total
+                        if currency_company
+                        else folio.currency_id._convert(
+                            sale_line.price_total,
+                            folio.company_id.currency_id,
+                            folio.company_id,
+                            fields.Date.today(),
+                        )
+                    )
                     sale_lines.append(
                         PmsFolioSaleLineInfo(
                             id=sale_line.id if sale_line.id else None,
                             name=sale_line.name if sale_line.name else None,
-                            priceUnit=sale_line.price_unit
-                            if sale_line.price_unit
-                            else None,
+                            priceUnit=round(price_unit, 2) if price_unit else None,
                             qtyToInvoice=self._get_section_qty_to_invoice(sale_line)
                             if sale_line.display_type == "line_section"
                             else sale_line.qty_to_invoice,
                             qtyInvoiced=sale_line.qty_invoiced
                             if sale_line.qty_invoiced
                             else None,
-                            priceTotal=sale_line.price_total
-                            if sale_line.price_total
+                            priceTotal=round(price_total, 2) if price_total else None,
+                            discount=round(sale_line.discount, 2)
+                            if sale_line.discount
                             else None,
-                            discount=sale_line.discount if sale_line.discount else None,
                             productQty=sale_line.product_uom_qty
                             if sale_line.product_uom_qty
                             else None,
@@ -1561,8 +1672,31 @@ class PmsFolioService(Component):
             PmsInvoiceLineInfo = self.env.datamodels["pms.invoice.line.info"]
             if folio.move_ids:
                 for move in folio.move_ids:
+                    currency_company = True
+                    if folio.currency_id != folio.company_id.currency_id:
+                        currency_company = False
                     move_lines = []
                     for move_line in move.invoice_line_ids:
+                        price_unit = (
+                            move_line.price_unit
+                            if currency_company
+                            else folio.currency_id._convert(
+                                move_line.price_unit,
+                                folio.company_id.currency_id,
+                                folio.company_id,
+                                fields.Date.today(),
+                            )
+                        )
+                        price_total = (
+                            move_line.price_total
+                            if currency_company
+                            else folio.currency_id._convert(
+                                move_line.price_total,
+                                folio.company_id.currency_id,
+                                folio.company_id,
+                                fields.Date.today(),
+                            )
+                        )
                         move_lines.append(
                             PmsInvoiceLineInfo(
                                 id=move_line.id,
@@ -1570,13 +1704,9 @@ class PmsFolioService(Component):
                                 quantity=move_line.quantity
                                 if move_line.quantity
                                 else None,
-                                priceUnit=move_line.price_unit
-                                if move_line.price_unit
-                                else None,
-                                total=move_line.price_total
-                                if move_line.price_total
-                                else None,
-                                discount=move_line.discount
+                                priceUnit=price_unit if price_unit else None,
+                                total=round(price_total, 2) if price_total else None,
+                                discount=round(move_line.discount, 2)
                                 if move_line.discount
                                 else None,
                                 displayType=move_line.display_type
@@ -1631,13 +1761,21 @@ class PmsFolioService(Component):
                             if move.invoice_date_due
                             else None
                         )
+                    amount_total = (
+                        move.amount_total
+                        if currency_company
+                        else folio.currency_id._convert(
+                            move.amount_total,
+                            folio.company_id.currency_id,
+                            folio.company_id,
+                            fields.Date.today(),
+                        )
+                    )
                     invoices.append(
                         PmsFolioInvoiceInfo(
                             id=move.id if move.id else None,
                             name=move.name if move.name else None,
-                            amount=round(move.amount_total, 2)
-                            if move.amount_total
-                            else None,
+                            amount=round(amount_total, 2) if amount_total else None,
                             date=invoice_date,
                             state=move.state if move.state else None,
                             paymentState=move.payment_state
@@ -2624,6 +2762,7 @@ class PmsFolioService(Component):
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
                     board_day_prices=board_day_prices,
+                    pms_property_id=folio.pms_property_id.id,
                     proposed_reservation=proposed_reservation,
                     commission_percent_to_deduct=commision_percent_to_deduct,
                 )
@@ -2650,6 +2789,7 @@ class PmsFolioService(Component):
         self,
         reservation,
         board_day_prices=None,
+        pms_property_id=None,
         proposed_reservation=False,
         commission_percent_to_deduct=0,
     ):
@@ -2657,6 +2797,7 @@ class PmsFolioService(Component):
         cmds = []
         for line in reservation.reservationLines:
             board_day_price = board_day_prices.get(line.date, 0)
+            pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
             if proposed_reservation:
                 # Not is necesay check new dates, becouse a if the dates change,
                 # the reservation is new
@@ -2664,6 +2805,8 @@ class PmsFolioService(Component):
                     lambda res_line, _line=line: res_line.date
                     == datetime.strptime(_line.date, "%Y-%m-%d").date()
                 )
+                if pms_property.channel_currency_id:
+                    line.price = line.price / pms_property.channel_currency_id.rate
                 line.price -= commission_percent_to_deduct * proposed_line.price / 100
                 if proposed_line:
                     vals = {}
@@ -2688,6 +2831,8 @@ class PmsFolioService(Component):
                         )
                     )
             else:
+                if pms_property.channel_currency_id:
+                    line.price = line.price / pms_property.channel_currency_id.rate
                 cmds.append(
                     (
                         0,

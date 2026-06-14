@@ -34,12 +34,36 @@ class PmsServiceLineService(Component):
             raise MissingError(_("Service line not found"))
         pms_api_check_access(user=self.env.user, records=service_line)
         PmsServiceLineInfo = self.env.datamodels["pms.service.line.info"]
-
+        company_currency = (
+            True
+            if service_line.currency_id == service_line.company_id.currency_id
+            else False
+        )
+        price_unit = (
+            service_line.price_unit
+            if company_currency
+            else service_line.currency_id._convert(
+                service_line.price_unit,
+                service_line.company_id.currency_id,
+                service_line.company_id,
+                service_line.date,
+            )
+        )
+        discount = (
+            service_line.discount
+            if company_currency
+            else service_line.currency_id._convert(
+                service_line.discount,
+                service_line.company_id.currency_id,
+                service_line.company_id,
+                service_line.date,
+            )
+        )
         return PmsServiceLineInfo(
             id=service_line.id,
             date=datetime.combine(service_line.date, datetime.min.time()).isoformat(),
-            priceUnit=round(service_line.price_unit, 2),
-            discount=round(service_line.discount, 2),
+            priceUnit=round(price_unit, 2),
+            discount=round(discount, 2),
             quantity=service_line.day_qty,
         )
 

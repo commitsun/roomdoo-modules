@@ -143,6 +143,11 @@ class PmsProperty(models.Model):
         help="Select ocr supplier for checkin documents",
         selection=[],
     )
+    channel_currency_id = fields.Many2one(
+        string="Channel Currency",
+        help="Currency used in the channel",
+        comodel_name="res.currency",
+    )
 
     @api.model
     def _cron_mark_rooms_dirty_daily(self):
@@ -275,8 +280,16 @@ class PmsProperty(models.Model):
             for price in product_prices:
                 previus_date = price.date_end_consumption - datetime.timedelta(days=1)
                 price_index = price_product_index.get(previus_date)
+                # HOTFIX TO CONVERT PRICE IN PROPERTY CHANNEL CURRENCY
+                fixed_price = price.fixed_price
+                if self.channel_currency_id:
+                    fixed_price = (
+                        price.fixed_price
+                        * self.channel_currency_id.rate
+                        / self.env.company.currency_id.rate
+                    )
                 if price_index and round(price_index["price"], 2) == round(
-                    price.fixed_price, 2
+                    fixed_price, 2
                 ):
                     price_product_index[price.date_end_consumption] = {
                         "date_from": price_index["date_from"],
@@ -284,7 +297,7 @@ class PmsProperty(models.Model):
                             price.date_end_consumption, "%Y-%m-%d"
                         ),
                         "roomTypeId": room_type_id,
-                        "price": price.fixed_price,
+                        "price": fixed_price,
                     }
                     price_product_index.pop(previus_date)
                 else:
@@ -296,7 +309,7 @@ class PmsProperty(models.Model):
                             price.date_end_consumption, "%Y-%m-%d"
                         ),
                         "roomTypeId": room_type_id,
-                        "price": price.fixed_price,
+                        "price": fixed_price,
                     }
             prices_dict["prices"].extend(price_product_index.values())
         return prices_dict, endpoint

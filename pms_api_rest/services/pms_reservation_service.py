@@ -113,6 +113,85 @@ class PmsReservationService(Component):
             create_date_local = pytz.UTC.localize(reservation.create_date).astimezone(
                 property_tz
             )
+            currency_company = (
+                True
+                if reservation.currency_id == reservation.company_id.currency_id
+                else False
+            )
+            price_room_services_set = (
+                reservation.price_room_services_set
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.price_room_services_set,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            price_tax = (
+                reservation.price_tax
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.price_tax,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            discount = (
+                reservation.discount
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.discount,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            services_discount = (
+                reservation.services_discount
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.services_discount,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            commission_amount = (
+                (
+                    reservation.commission_amount
+                    if currency_company
+                    else reservation.currency_id._convert(
+                        reservation.commission_amount,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                if reservation.commission_amount
+                else None
+            )
+            price_services = (
+                reservation.price_services
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.price_services,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            price_total = (
+                reservation.price_total
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation.price_total,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
             res = PmsReservationInfo(
                 id=reservation.id,
                 name=reservation.name,
@@ -167,18 +246,18 @@ class PmsReservationService(Component):
                 else None,
                 toAssign=reservation.to_assign,
                 reservationType=reservation.reservation_type,
-                priceTotal=round(reservation.price_room_services_set, 2),
-                priceTax=round(reservation.price_tax, 2),
-                discount=round(reservation.discount, 2),
-                servicesDiscount=round(reservation.services_discount, 2),
-                commissionAmount=round(reservation.commission_amount, 2)
-                if reservation.commission_amount
+                priceTotal=round(price_room_services_set, 2),
+                priceTax=round(price_tax, 2),
+                discount=round(discount, 2),
+                servicesDiscount=round(services_discount, 2),
+                commissionAmount=round(commission_amount, 2)
+                if commission_amount
                 else None,
                 commissionPercent=round(reservation.commission_percent, 2)
                 if reservation.commission_percent
                 else None,
-                priceOnlyServices=round(reservation.price_services, 2),
-                priceOnlyRoom=round(reservation.price_total, 2),
+                priceOnlyServices=round(price_services, 2),
+                priceOnlyRoom=round(price_total, 2),
                 partnerRequests=reservation.partner_requests
                 if reservation.partner_requests
                 else None,
@@ -462,16 +541,51 @@ class PmsReservationService(Component):
         pms_api_check_access(user=self.env.user, records=reservation)
         result_lines = []
         PmsReservationLineInfo = self.env.datamodels["pms.reservation.line.info"]
+        currency_company = (
+            True
+            if reservation.currency_id == reservation.company_id.currency_id
+            else False
+        )
         for reservation_line in reservation.reservation_line_ids:
+            price = (
+                reservation_line.price
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation_line.price,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            discount = (
+                reservation_line.discount
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation_line.discount,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
+            cancel_discount = (
+                reservation_line.cancel_discount
+                if currency_company
+                else reservation.currency_id._convert(
+                    reservation_line.cancel_discount,
+                    reservation.company_id.currency_id,
+                    reservation.company_id,
+                    fields.Date.today(),
+                )
+            )
             result_lines.append(
                 PmsReservationLineInfo(
                     id=reservation_line.id,
                     date=datetime.combine(
                         reservation_line.date, datetime.min.time()
                     ).isoformat(),
-                    price=round(reservation_line.price, 2),
-                    discount=round(reservation_line.discount, 2),
-                    cancelDiscount=round(reservation_line.cancel_discount, 2),
+                    price=round(price, 2),
+                    discount=round(discount, 2),
+                    cancelDiscount=round(cancel_discount, 2),
                     roomId=reservation_line.room_id.id,
                     reservationId=reservation_line.reservation_id.id,
                     pmsPropertyId=reservation_line.pms_property_id.id,
@@ -603,19 +717,81 @@ class PmsReservationService(Component):
         for service in reservation.service_ids:
             PmsServiceLineInfo = self.env.datamodels["pms.service.line.info"]
             service_lines = []
+            company_currency = (
+                True if service.currency_id == service.company_id.currency_id else False
+            )
             for line in service.service_line_ids:
+                price_unit = (
+                    line.price_unit
+                    if company_currency
+                    else service.currency_id._convert(
+                        line.price_unit,
+                        service.company_id.currency_id,
+                        service.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                discount = (
+                    line.discount
+                    if company_currency
+                    else service.currency_id._convert(
+                        line.discount,
+                        service.company_id.currency_id,
+                        service.company_id,
+                        fields.Date.today(),
+                    )
+                )
                 service_lines.append(
                     PmsServiceLineInfo(
                         id=line.id,
                         date=datetime.combine(
                             line.date, datetime.min.time()
                         ).isoformat(),
-                        priceUnit=line.price_unit,
-                        discount=line.discount,
+                        priceUnit=price_unit,
+                        discount=discount,
                         quantity=line.day_qty,
                     )
                 )
-
+            price_total = (
+                service.price_total
+                if company_currency
+                else service.currency_id._convert(
+                    service.price_total,
+                    service.company_id.currency_id,
+                    service.company_id,
+                    fields.Date.today(),
+                )
+            )
+            price_subtotal = (
+                service.price_subtotal
+                if company_currency
+                else service.currency_id._convert(
+                    service.price_subtotal,
+                    service.company_id.currency_id,
+                    service.company_id,
+                    fields.Date.today(),
+                )
+            )
+            price_tax = (
+                service.price_tax
+                if company_currency
+                else service.currency_id._convert(
+                    service.price_tax,
+                    service.company_id.currency_id,
+                    service.company_id,
+                    fields.Date.today(),
+                )
+            )
+            discount = (
+                service.discount
+                if company_currency
+                else service.currency_id._convert(
+                    service.discount,
+                    service.company_id.currency_id,
+                    service.company_id,
+                    fields.Date.today(),
+                )
+            )
             result_services.append(
                 PmsServiceInfo(
                     id=service.id,
@@ -623,10 +799,10 @@ class PmsReservationService(Component):
                     name=service.name or service.product_id.name,
                     productId=service.product_id.id,
                     quantity=service.product_qty,
-                    priceTotal=round(service.price_total, 2),
-                    priceSubtotal=round(service.price_subtotal, 2),
-                    priceTaxes=round(service.price_tax, 2),
-                    discount=round(service.discount, 2),
+                    priceTotal=round(price_total, 2),
+                    priceSubtotal=round(price_subtotal, 2),
+                    priceTaxes=round(price_tax, 2),
+                    discount=round(discount, 2),
                     isBoardService=service.is_board_service,
                     serviceLines=service_lines,
                     isCancelPenalty=service.is_cancel_penalty,
@@ -906,6 +1082,61 @@ class PmsReservationService(Component):
                 create_date_local = pytz.UTC.localize(
                     reservation.create_date
                 ).astimezone(property_tz)
+                company_currency = (
+                    True
+                    if reservation.currency_id == reservation.company_id.currency_id
+                    else False
+                )
+                price_room_services_set = (
+                    reservation.price_room_services_set
+                    if company_currency
+                    else reservation.currency_id._convert(
+                        reservation.price_room_services_set,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                discount = (
+                    reservation.discount
+                    if company_currency
+                    else reservation.currency_id._convert(
+                        reservation.discount,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                commission_amount = (
+                    reservation.commission_amount
+                    if company_currency
+                    else reservation.currency_id._convert(
+                        reservation.commission_amount,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                price_services = (
+                    reservation.price_services
+                    if company_currency
+                    else reservation.currency_id._convert(
+                        reservation.price_services,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
+                price_total = (
+                    reservation.price_total
+                    if company_currency
+                    else reservation.currency_id._convert(
+                        reservation.price_total,
+                        reservation.company_id.currency_id,
+                        reservation.company_id,
+                        fields.Date.today(),
+                    )
+                )
                 res_reservations.append(
                     PmsReservationInfo(
                         id=reservation.id,
@@ -963,13 +1194,13 @@ class PmsReservationService(Component):
                         else None,
                         toAssign=reservation.to_assign,
                         reservationType=reservation.reservation_type,
-                        priceTotal=round(reservation.price_room_services_set, 2),
-                        discount=round(reservation.discount, 2),
-                        commissionAmount=round(reservation.commission_amount, 2)
-                        if reservation.commission_amount
+                        priceTotal=round(price_room_services_set, 2),
+                        discount=round(discount, 2),
+                        commissionAmount=round(commission_amount, 2)
+                        if commission_amount
                         else None,
-                        priceOnlyServices=round(reservation.price_services, 2),
-                        priceOnlyRoom=round(reservation.price_total, 2),
+                        priceOnlyServices=round(price_services, 2),
+                        priceOnlyRoom=round(price_total, 2),
                     )
                 )
         return res_reservations

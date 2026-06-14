@@ -37,25 +37,82 @@ class PmsServiceService(Component):
             raise MissingError(_("Service not found"))
         pms_api_check_access(user=self.env.user, records=service)
         PmsServiceInfo = self.env.datamodels["pms.service.info"]
+        company_currency = (
+            True if service.currency_id == service.company_id.currency_id else False
+        )
         lines = [
             self.env.datamodels["pms.service.line.info"](
                 id=line.id,
                 date=datetime.combine(line.date, datetime.min.time()).isoformat(),
-                priceUnit=line.price_unit,
-                discount=line.discount,
+                priceUnit=line.price_unit
+                if company_currency
+                else line.currency_id._convert(
+                    line.price_unit,
+                    line.company_id.currency_id,
+                    line.company_id,
+                    line.date,
+                ),
+                discount=line.discount
+                if company_currency
+                else line.currency_id._convert(
+                    line.discount,
+                    line.company_id.currency_id,
+                    line.company_id,
+                    line.date,
+                ),
                 quantity=line.day_qty,
             )
             for line in service.service_line_ids
         ]
+        price_total = (
+            service.price_total
+            if company_currency
+            else service.currency_id._convert(
+                service.price_total,
+                service.company_id.currency_id,
+                service.company_id,
+                fields.Date.today(),
+            )
+        )
+        price_subtotal = (
+            service.price_subtotal
+            if company_currency
+            else service.currency_id._convert(
+                service.price_subtotal,
+                service.company_id.currency_id,
+                service.company_id,
+                fields.Date.today(),
+            )
+        )
+        price_tax = (
+            service.price_tax
+            if company_currency
+            else service.currency_id._convert(
+                service.price_tax,
+                service.company_id.currency_id,
+                service.company_id,
+                fields.Date.today(),
+            )
+        )
+        discount = (
+            service.discount
+            if company_currency
+            else service.currency_id._convert(
+                service.discount,
+                service.company_id.currency_id,
+                service.company_id,
+                fields.Date.today(),
+            )
+        )
         return PmsServiceInfo(
             id=service.id,
             name=service.name,
             productId=service.product_id.id,
             quantity=service.product_qty,
-            priceTotal=round(service.price_total, 2),
-            priceSubtotal=round(service.price_subtotal, 2),
-            priceTaxes=round(service.price_tax, 2),
-            discount=round(service.discount, 2),
+            priceTotal=round(price_total, 2),
+            priceSubtotal=round(price_subtotal, 2),
+            priceTaxes=round(price_tax, 2),
+            discount=round(discount, 2),
             isBoardService=service.is_board_service,
             serviceLines=lines,
         )
@@ -161,16 +218,39 @@ class PmsServiceService(Component):
             raise MissingError(_("Service not found"))
         pms_api_check_access(user=self.env.user, records=service)
         result_service_lines = []
+        company_currency = (
+            True if service.currency_id == service.company_id.currency_id else False
+        )
         PmsServiceLineInfo = self.env.datamodels["pms.service.line.info"]
         for service_line in service.service_line_ids:
+            price_unit = (
+                service_line.price_unit
+                if company_currency
+                else service_line.currency_id._convert(
+                    service_line.price_unit,
+                    service_line.company_id.currency_id,
+                    service_line.company_id,
+                    service_line.date,
+                )
+            )
+            discount = (
+                service_line.discount
+                if company_currency
+                else service_line.currency_id._convert(
+                    service_line.discount,
+                    service_line.company_id.currency_id,
+                    service_line.company_id,
+                    service_line.date,
+                )
+            )
             result_service_lines.append(
                 PmsServiceLineInfo(
                     id=service_line.id,
                     date=datetime.combine(
                         service_line.date, datetime.min.time()
                     ).isoformat(),
-                    priceUnit=round(service_line.price_unit, 2),
-                    discount=round(service_line.discount, 2),
+                    priceUnit=round(price_unit, 2),
+                    discount=round(discount, 2),
                     quantity=service_line.day_qty,
                 )
             )
