@@ -97,6 +97,15 @@ class PmsReservation(models.Model):
         self.ensure_one()
         if self.state in ("draft", "cancel", "done"):
             return False
+        # Reservations whose rooms have no lock vendor never need codes.
+        # The cron filters these out in its search domain, but the
+        # create/write precommit path (``_flush_lock_syncs``) has no such
+        # filter; mirror it here so both entry points agree. A reservation
+        # with mixed rooms (some with a vendor, some without) still qualifies
+        # here, and ``_build_lock_code_windows`` emits codes only for the
+        # rooms that actually have a vendor.
+        if not self.reservation_line_ids.room_id.lock_vendor_id:
+            return False
         # "out" reservations are room blockers without a guest. Any other
         # current or future type qualifies for codes.
         if self.reservation_type != "out":
