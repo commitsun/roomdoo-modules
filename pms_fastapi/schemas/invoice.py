@@ -417,6 +417,11 @@ class InvoiceLine(PmsBaseModel):
     discount: float = 0.0
     priceSubtotal: float = Field(0.0, alias="priceSubtotal")
     priceTotal: float = Field(0.0, alias="priceTotal")
+    folioLineIds: list[int] = Field(
+        default_factory=list,
+        alias="folioLineIds",
+        description="Ids of the folio sale lines this invoice line was billed from.",
+    )
 
     @classmethod
     def from_account_move_line(cls, line):
@@ -428,6 +433,7 @@ class InvoiceLine(PmsBaseModel):
             discount=line.discount,
             priceSubtotal=line.price_subtotal,
             priceTotal=line.price_total,
+            folioLineIds=line.folio_line_ids.ids,
         )
 
 
