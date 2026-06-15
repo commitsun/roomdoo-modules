@@ -505,39 +505,41 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/duplicate-downpayment-lines",
-                "Duplicate down-payment lines",
-                "Each down-payment line can only appear once in the request.",
+                "Duplicate down-payment invoices",
+                "Each down-payment invoice can only appear once in the request.",
             )
-        dp_lines = self.env["folio.sale.line"].sudo().browse(ids).exists()
-        missing = set(ids) - set(dp_lines.ids)
+        dp_invoices = self.env["account.move"].sudo().browse(ids).exists()
+        missing = set(ids) - set(dp_invoices.ids)
         if missing:
             self._raise_edit_problem(
                 404,
                 "/errors/downpayment-lines-not-found",
-                "Down-payment lines not found",
-                "Some down-payment lines could not be found.",
+                "Down-payment invoices not found",
+                "Some down-payment invoices could not be found.",
                 missingDownpaymentLineIds=sorted(missing),
             )
-        not_downpayment = dp_lines.filtered(lambda r: not r.is_downpayment)
+        not_downpayment = dp_invoices.filtered(lambda m: not m._is_downpayment())
         if not_downpayment:
             self._raise_edit_problem(
                 422,
                 "/errors/invalid-downpayment-line",
-                "Invalid down-payment line",
-                "Only down-payment lines are accepted as downpaymentLines.",
+                "Invalid down-payment invoice",
+                "Only down-payment invoices are accepted as downpaymentLines.",
                 invalidDownpaymentLineIds=not_downpayment.ids,
             )
         folio_ids = set(sale_lines.folio_id.ids)
-        out_of_scope = dp_lines.filtered(lambda r: r.folio_id.id not in folio_ids)
+        out_of_scope = dp_invoices.filtered(
+            lambda m: not set(m.folio_ids.ids) & folio_ids
+        )
         if out_of_scope:
             self._raise_edit_problem(
                 422,
                 "/errors/downpayment-line-out-of-scope",
-                "Down-payment line out of scope",
-                "Down-payment lines must belong to the same folios as folioLines.",
+                "Down-payment invoice out of scope",
+                "Down-payment invoices must belong to the same folios as folioLines.",
                 outOfScopeDownpaymentLineIds=out_of_scope.ids,
             )
-        return dp_lines
+        return dp_invoices.invoice_line_ids.folio_line_ids.filtered("is_downpayment")
 
     def _edit_resolve_property(self, sale_lines):
         properties = sale_lines.mapped("pms_property_id")

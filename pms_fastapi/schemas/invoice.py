@@ -81,7 +81,7 @@ class FolioInvoiceCreate(PmsBaseModel):
     downpaymentLines: list[int] = Field(
         default_factory=list,
         description=(
-            "Ids of down-payment folio lines to subtract from the invoice. "
+            "Ids of down-payment invoices to subtract from the invoice. "
             "Must belong to the same folios as the invoiced lines. Send [] "
             "to subtract no down payment."
         ),
@@ -397,7 +397,7 @@ class InvoiceInput(PmsBaseModel):
     )
     downpaymentLines: list[int] = Field(
         description=(
-            "Ids of down-payment lines to subtract. Full replacement of the "
+            "Ids of down-payment invoices to subtract. Full replacement of the "
             "previous composition."
         ),
     )
@@ -503,8 +503,10 @@ class InvoiceDetail(PmsBaseModel):
         folio_lines = invoice_lines.mapped("folio_line_ids").filtered(
             lambda fl: not fl.is_downpayment
         )
-        downpayment_lines = invoice_lines.mapped("folio_line_ids").filtered(
-            "is_downpayment"
+        downpayment_invoices = (
+            invoice_lines.mapped("folio_line_ids")
+            .filtered("is_downpayment")
+            .invoice_lines.move_id
         )
         data["folioLines"] = [
             FolioLineDetail(
@@ -514,7 +516,7 @@ class InvoiceDetail(PmsBaseModel):
             )
             for fl in folio_lines
         ]
-        data["downpaymentLines"] = downpayment_lines.ids
+        data["downpaymentLines"] = downpayment_invoices.ids
         data["lines"] = [
             InvoiceLine.from_account_move_line(line) for line in invoice_lines
         ]

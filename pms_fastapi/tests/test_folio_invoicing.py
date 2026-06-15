@@ -133,14 +133,36 @@ class TestFolioInvoicing(CommonTestPmsApi):
             ],
         }
 
-    def _downpayment_line(self, folio, amount=50.0):
-        return self.env["folio.sale.line"].create(
+    def _downpayment_invoice(self, folio, amount=50.0):
+        # Mirror the structure the down-payment wizard produces: an invoice
+        # tied to the folio whose line points at a down-payment folio.sale.line.
+        # This is what account.move._is_downpayment() keys off.
+        line = self.env["folio.sale.line"].create(
             {
                 "folio_id": folio.id,
                 "name": "Down payment",
                 "is_downpayment": True,
                 "product_uom_qty": 1,
                 "price_unit": amount,
+            }
+        )
+        return self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": self.customer.id,
+                "folio_ids": [(6, 0, folio.ids)],
+                "invoice_line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": "Down payment",
+                            "quantity": 1,
+                            "price_unit": amount,
+                            "folio_line_ids": [(6, 0, line.ids)],
+                        },
+                    )
+                ],
             }
         )
 
@@ -364,13 +386,13 @@ class TestFolioInvoicing(CommonTestPmsApi):
     # ------------------------------------------------------------------
     # POST /folios/invoices — downpaymentLines
     # ------------------------------------------------------------------
-    def test_create_invoice_with_downpayment_line(self):
-        # A valid down-payment line passes resolution/validation and reaches
+    def test_create_invoice_with_downpayment_invoice(self):
+        # A valid down-payment invoice passes resolution/validation and reaches
         # invoice creation. The actual deduction is folio invoicing machinery
         # (pms), not asserted here.
         folio = self._confirmed_folio()
         line = self._room_line(folio)
-        downpayment = self._downpayment_line(folio)
+        downpayment = self._downpayment_invoice(folio)
         payload = self._create_payload(line, customer_id=self.customer.id)
         payload["downpaymentLines"] = [downpayment.id]
         with self._create_test_client() as test_client:
@@ -393,9 +415,16 @@ class TestFolioInvoicing(CommonTestPmsApi):
     def test_create_invoice_rejects_non_downpayment_as_downpayment(self):
         folio = self._confirmed_folio()
         line = self._room_line(folio)
+        # A regular invoice (no down-payment lines) is not a down payment.
+        regular_invoice = self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": self.customer.id,
+                "folio_ids": [(6, 0, folio.ids)],
+            }
+        )
         payload = self._create_payload(line, customer_id=self.customer.id)
-        # A regular room line is not a down payment.
-        payload["downpaymentLines"] = [line.id]
+        payload["downpaymentLines"] = [regular_invoice.id]
         with self._create_test_client() as test_client:
             self._login(test_client)
             response = self._post_invoice(test_client, payload)
@@ -409,7 +438,7 @@ class TestFolioInvoicing(CommonTestPmsApi):
         line = self._room_line(folio)
         # Different dates so the single test room stays available.
         other_folio = self._confirmed_folio(days_ahead=30)
-        downpayment = self._downpayment_line(other_folio)
+        downpayment = self._downpayment_invoice(other_folio)
         payload = self._create_payload(line, customer_id=self.customer.id)
         payload["downpaymentLines"] = [downpayment.id]
         with self._create_test_client() as test_client:
@@ -425,7 +454,7 @@ class TestFolioInvoicing(CommonTestPmsApi):
     def test_create_invoice_duplicate_downpayment_lines(self):
         folio = self._confirmed_folio()
         line = self._room_line(folio)
-        downpayment = self._downpayment_line(folio)
+        downpayment = self._downpayment_invoice(folio)
         payload = self._create_payload(line, customer_id=self.customer.id)
         payload["downpaymentLines"] = [downpayment.id, downpayment.id]
         with self._create_test_client() as test_client:
