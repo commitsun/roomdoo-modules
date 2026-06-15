@@ -8,6 +8,7 @@ from . import test_invoices
 from . import test_invoice_contact_validation
 from . import test_invoice_reconciliation
 from . import test_journals
+from . import test_cash_session
 from . import test_languages
 from . import test_payment_methods
 from . import test_payments
