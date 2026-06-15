@@ -1,8 +1,7 @@
 from fastapi import Response, status
 from fastapi.responses import JSONResponse
 
-from odoo import fields, models
-from odoo.tools import get_lang
+from odoo import models
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -161,24 +160,11 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
                 if len(pms_property) == 1
                 else self.env.user.pms_property_id
             )
-            today = fields.Date.today().strftime(get_lang(self.env).date_format)
             statement = (
                 self.env["account.bank.statement"]
                 .sudo()
-                .create(
-                    {
-                        "name": f"{today} ({self.env.user.login})",
-                        "journal_id": journal.id,
-                        "pms_property_id": pms_property.id,
-                        "cash_session_closed": False,
-                    }
-                )
+                ._pms_create_cash_session(journal, payload.baseAmount, pms_property)
             )
-            # balance_start is a stored computed field (depends on create_date)
-            # that otherwise resolves to the previous statement's ending
-            # balance. The contract declares the opening balance explicitly, so
-            # we override it after create to make the value stick.
-            statement.balance_start = payload.baseAmount
         except _CashSessionProblem as problem:
             return problem.response
         return CashSessionSummary.from_account_bank_statement(statement)

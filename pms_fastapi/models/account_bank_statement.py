@@ -1,5 +1,6 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import get_lang
 
 # Maps account.payment.pms_api_transaction_type (defined in pms_api_rest) to the
 # cash-session breakdown buckets. ``internal_transfer`` is handled apart because
@@ -35,6 +36,54 @@ class AccountBankStatement(models.Model):
         help="Note left for the next shift when closing the cash session.",
         copy=False,
     )
+
+    # -- Cash session open --
+
+    @api.model
+    def _pms_create_cash_session(self, journal, base_amount, pms_property):
+        """Create an open cash session (statement) with a declared base.
+
+        ``balance_start`` is a stored computed field (depends on create_date)
+        that otherwise resolves to the previous statement's ending balance, so
+        we override it after create to make the declared base stick.
+        """
+        today = fields.Date.today().strftime(get_lang(self.env).date_format)
+        statement = self.create(
+            {
+                "name": f"{today} ({self.env.user.login})",
+                "journal_id": journal.id,
+                "pms_property_id": pms_property.id,
+                "cash_session_closed": False,
+            }
+        )
+        statement.balance_start = base_amount
+        return statement
+
+    @api.model
+    def _pms_ensure_open_cash_session(self, journal):
+        """Ensure the cash journal has an open session, auto-opening one if not.
+
+        Replicates the legacy behaviour of opening a cash session on demand
+        when a payment is registered on a cash journal. The base balance
+        continues from the previous close (or 0).
+        """
+        if journal.type != "cash":
+            return self.browse()
+        open_session = self.search(
+            [("journal_id", "=", journal.id), ("cash_session_closed", "=", False)],
+            order="create_date desc, id desc",
+            limit=1,
+        )
+        if open_session:
+            return open_session
+        last_closed = self.search(
+            [("journal_id", "=", journal.id), ("cash_session_closed", "=", True)],
+            order="cash_session_closed_date desc, id desc",
+            limit=1,
+        )
+        base_amount = last_closed.balance_end_real or 0.0
+        pms_property = journal.pms_property_ids[:1] or self.env.user.pms_property_id
+        return self._pms_create_cash_session(journal, base_amount, pms_property)
 
     # -- Cash session breakdown / close (ported from pms_api_rest
     #    pms.transaction.service: _action_close_cash_session,

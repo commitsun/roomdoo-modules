@@ -44,6 +44,47 @@ _TRANSACTION_TYPE_TO_FIELDS = {
 }
 
 
+class PaymentCreateType(str, Enum):
+    """Payment types accepted on manual creation via POST /payments.
+
+    Refunds and internal transfers are NOT created here (transfers have their
+    own endpoint); the response enum (PaymentTypeEnum) still returns all five.
+    """
+
+    customerPayment = "customerPayment"
+    supplierPayment = "supplierPayment"
+
+
+class PaymentInput(PmsBaseModel):
+    paymentType: PaymentCreateType
+    amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
+    date: date
+    paymentMethodId: int = Field(
+        description="account.payment.method.line id (the front's 'payment mode'). "
+        "The journal is derived from it."
+    )
+    partnerId: int | None = Field(
+        None,
+        description="Required for supplierPayment; for customerPayment may be "
+        "null and derived from the folio/invoice context.",
+    )
+    folioId: int | None = Field(
+        None, description="Folio context. Mutually exclusive with invoiceId."
+    )
+    invoiceId: int | None = Field(
+        None, description="Invoice context. Mutually exclusive with folioId."
+    )
+    reference: str = ""
+
+
+class InternalTransferInput(PmsBaseModel):
+    amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
+    date: date
+    originJournalId: int = Field(description="Journal the money leaves from.")
+    destinationJournalId: int = Field(description="Journal the money goes to.")
+    reason: str = ""
+
+
 class PaymentOrderField(str, Enum):
     date = "date"
 
@@ -79,7 +120,9 @@ class PaymentSummary(PmsBaseModel):
         currency = payment.currency_id or payment.company_id.currency_id
         data["_decimal_places"] = currency.decimal_places
         data["currency"] = CurrencySummary.from_res_currency(currency)
-        if payment.partner_id:
+        # Internal transfers carry the company partner internally (accounting),
+        # but the contract reports no contact for them ('Sin asignar').
+        if payment.partner_id and not payment.is_internal_transfer:
             data["partner_id"] = ContactId.from_res_partner(payment.partner_id)
         if payment.folio_ids:
             data["folio"] = FolioId.from_pms_folio(payment.folio_ids[:1])

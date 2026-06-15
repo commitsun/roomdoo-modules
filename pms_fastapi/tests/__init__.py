@@ -12,6 +12,8 @@ from . import test_cash_session
 from . import test_languages
 from . import test_payment_methods
 from . import test_payments
+from . import test_payment_creation
+from . import test_cash_payments_flow
 from . import test_user
 from . import test_properties
 from . import test_contact_id_numbers
