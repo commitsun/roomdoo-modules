@@ -26,4 +26,5 @@ from . import invoice
 from . import payment_method
 from . import payment
 from . import journal
+from . import cash_session
 from . import reservation_guest
