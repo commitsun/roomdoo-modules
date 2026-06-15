@@ -137,11 +137,14 @@ class TestFolioInvoicing(CommonTestPmsApi):
         # Mirror the structure the down-payment wizard produces: an invoice
         # tied to the folio whose line points at a down-payment folio.sale.line.
         # This is what account.move._is_downpayment() keys off.
+        product = self.room_type.product_id
         line = self.env["folio.sale.line"].create(
             {
                 "folio_id": folio.id,
                 "name": "Down payment",
                 "is_downpayment": True,
+                "product_id": product.id,
+                "product_uom": product.uom_id.id,
                 "product_uom_qty": 1,
                 "price_unit": amount,
             }
@@ -157,6 +160,7 @@ class TestFolioInvoicing(CommonTestPmsApi):
                         0,
                         {
                             "name": "Down payment",
+                            "product_id": product.id,
                             "quantity": 1,
                             "price_unit": amount,
                             "folio_line_ids": [(6, 0, line.ids)],
