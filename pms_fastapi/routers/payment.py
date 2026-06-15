@@ -4,6 +4,7 @@ from fastapi import Depends
 from fastapi.responses import JSONResponse
 
 from odoo import models
+from odoo.exceptions import AccessDenied, AccessError
 
 from odoo.addons.account.models.account_payment import AccountPayment
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -67,6 +68,19 @@ async def list_payments(
         count=count,
         items=[PaymentSummary.from_account_payment(payment) for payment in payments],
     )
+
+
+@pms_api_router.get(
+    "/payments/{payment_id}",
+    response_model=PaymentSummary,
+    tags=["payment"],
+)
+async def get_payment(
+    env: AuthenticatedEnv,
+    payment_id: int,
+) -> PaymentSummary:
+    """Get a single payment by id (same model as the listing)."""
+    return env["pms_api_payment.payment_router.helper"].new().get(payment_id)
 
 
 @pms_api_router.post(
@@ -149,6 +163,29 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def _not_found(self, detail):
         self._problem(404, "/errors/record-not-found", "Record not found", detail)
+
+    def get(self, payment_id):
+        try:
+            payment = self.env["account.payment"].sudo().browse(payment_id).exists()
+            if not payment:
+                self._problem(
+                    404,
+                    "/errors/payment-not-found",
+                    "Payment not found",
+                    f"Payment {payment_id} does not exist.",
+                )
+            try:
+                PmsBaseModel.pms_api_check_access(self.env.user, payment)
+            except (AccessError, AccessDenied):
+                self._problem(
+                    404,
+                    "/errors/payment-not-found",
+                    "Payment not found",
+                    f"Payment {payment_id} does not exist.",
+                )
+        except _PaymentProblem as problem:
+            return problem.response
+        return PaymentSummary.from_account_payment(payment)
 
     def _validation_error(self, detail):
         self._problem(422, "/errors/validation-error", "Validation error", detail)

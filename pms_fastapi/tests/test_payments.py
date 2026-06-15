@@ -240,3 +240,26 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
         # their payment method, not by sign.
         self.assertEqual(items[outbound.id]["amount"], 30000.0)
         self.assertEqual(items[inbound.id]["amount"], 30000.0)
+
+    def test_get_payment_by_id(self):
+        """GET /payments/{id} returns the single payment (same model)."""
+        payment = self._create_payment(amount=120.0, ref="206/26/026735")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get(f"/payments/{payment.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        body = response.json()
+        self.assertEqual(body["id"], payment.id)
+        self.assertEqual(body["paymentType"], "customerPayment")
+        self.assertEqual(body["amount"], 120.0)
+        self.assertEqual(body["reference"], "206/26/026735")
+        self.assertEqual(body["partner"]["id"], self.customer.id)
+        self.assertIsNotNone(body["currency"]["code"])
+
+    def test_get_unknown_payment_returns_404(self):
+        """GET /payments/{id} on a missing id returns 404 payment-not-found."""
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.get("/payments/999999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/payment-not-found")
