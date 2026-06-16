@@ -1,3 +1,4 @@
+import random
 from datetime import timezone
 
 from roomdoo_locks_base import (
@@ -13,6 +14,18 @@ from odoo.osv import expression
 from odoo.addons.queue_job.exception import RetryableJobError
 
 _TRANSIENT_RETRY_SECONDS = 300
+
+# A vendor gateway cannot service two requests at once: two jobs programming
+# the same physical lock concurrently make the second fail with "busy". We
+# serialise per ``lock_device_id`` with a PostgreSQL transaction-level advisory
+# lock taken before the vendor call. ``_GATEWAY_LOCK_CLASSID`` namespaces these
+# locks (first arg of the two-int ``pg_try_advisory_xact_lock``) so they never
+# collide with advisory locks taken elsewhere (e.g. queue_job's jobrunner).
+_GATEWAY_LOCK_CLASSID = 0x10C  # "LOCK"
+# A job that loses the race re-enqueues after this delay (base + jitter) to
+# spread retries and avoid a thundering herd on the contended gateway.
+_GATEWAY_LOCK_RETRY_BASE = 10
+_GATEWAY_LOCK_RETRY_JITTER = 20
 
 _SYNCING_JOB_STATES = ("pending", "enqueued", "started")
 
@@ -267,6 +280,37 @@ class LockCode(models.Model):
             vals["target_ids"] = [(5, 0, 0)] + [(0, 0, spec) for spec in specs]
         self.write(vals)
 
+    def _try_lock_gateways(self, device_ids):
+        """Acquire a transaction-level advisory lock per ``lock_device_id``
+        this operation will program, so no two jobs hit the same gateway at
+        once. Returns True only if every lock was acquired; False as soon as
+        one is held by another job's transaction. Locks already acquired in
+        this call are released when the job's transaction ends — which, on a
+        False result, happens immediately because the caller raises
+        ``RetryableJobError`` and queue_job rolls back. Ids are sorted for a
+        deterministic acquisition order."""
+        cr = self.env.cr
+        for device_id in sorted(set(device_ids)):
+            cr.execute(
+                "SELECT pg_try_advisory_xact_lock(%s, hashtext(%s))",
+                (_GATEWAY_LOCK_CLASSID, device_id),
+            )
+            if not cr.fetchone()[0]:
+                return False
+        return True
+
+    def _raise_gateway_busy(self):
+        """Re-enqueue the sync because another job holds a gateway it needs.
+        ``ignore_retry=True`` keeps this off the ``max_retries`` counter: a
+        credential must never end up ``failed`` just for losing a gateway
+        race, only for a real vendor error."""
+        raise RetryableJobError(
+            "Gateway busy: another sync holds one of these locks; retrying",
+            seconds=_GATEWAY_LOCK_RETRY_BASE
+            + random.randint(0, _GATEWAY_LOCK_RETRY_JITTER),
+            ignore_retry=True,
+        )
+
     def _sync_create(self):
         self.ensure_one()
         # Vendor sync jobs run under the enqueueing operator's user. ACL
@@ -276,6 +320,8 @@ class LockCode(models.Model):
         if self.cancelled:
             return
         specs = self._grant_target_specs()
+        if not self._try_lock_gateways([s["lock_device_id"] for s in specs]):
+            self._raise_gateway_busy()
         try:
             connector = self.vendor_id.get_connector()
             grant = connector.grant_access(
@@ -296,6 +342,8 @@ class LockCode(models.Model):
     def _sync_modify(self, date_from, date_to):
         self.ensure_one()
         self = self.sudo()
+        if not self._try_lock_gateways(self.target_ids.mapped("lock_device_id")):
+            self._raise_gateway_busy()
         try:
             connector = self.vendor_id.get_connector()
             grant = connector.modify_access(
@@ -313,6 +361,8 @@ class LockCode(models.Model):
     def _sync_remove(self):
         self.ensure_one()
         self = self.sudo()
+        if not self._try_lock_gateways(self.target_ids.mapped("lock_device_id")):
+            self._raise_gateway_busy()
         try:
             connector = self.vendor_id.get_connector()
             connector.revoke_access(grant_ref=self.vendor_grant_ref)
