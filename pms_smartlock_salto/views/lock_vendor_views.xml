@@ -32,10 +32,7 @@
             />
                     </group>
                     <group string="Guest Role">
-                        <field
-              name="salto_role_id"
-              attrs="{'required': [('vendor_type', '=', 'salto')]}"
-            />
+                        <field name="salto_role_id" />
                         <button
               name="action_fetch_salto_roles"
               type="object"
