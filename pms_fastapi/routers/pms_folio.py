@@ -642,6 +642,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 "invoice (different currency or company).",
                 invoiceIds=invoices.ids,
             )
+        invoices.narration = payload.narration
         return invoices
 
     @staticmethod
