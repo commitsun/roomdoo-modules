@@ -70,6 +70,7 @@ class FolioInvoiceCreate(PmsBaseModel):
             "Invoice due date. Server defaults from payment terms if null/omitted."
         ),
     )
+    narration: str = Field(description="Internal notes. May be empty.")
     lines: list[FolioInvoiceLine] = Field(
         min_length=1,
         description=(
