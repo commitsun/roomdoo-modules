@@ -65,6 +65,11 @@ class LockVendor(models.Model):
                 # library guards grant_access when it's missing.
                 "role_id": self.salto_role_id.salto_id or None,
                 "env": self.salto_env or "prod",
+                # Salto stores time-schedule datetimes as naive wall-clock and
+                # the site's IQ enforces them in the hotel's local timezone, not
+                # UTC. The caller (lock.code) puts that timezone on the context
+                # so the connector can localize the UTC window before sending.
+                "time_zone": self.env.context.get("smartlock_local_tz"),
             }
             # Salto is user-centric: the guest's name and email go on the site
             # user it creates, and a readable label on the access group, so the
@@ -86,6 +91,10 @@ class LockVendor(models.Model):
         fall back to a generic first name when it is empty. The reservation's
         ``name`` labels the access group for traceability.
 
+        Salto requires a non-empty last name too: single-word names (or none)
+        leave it blank and the API rejects the user ("Last name must be set"),
+        so fall back to a neutral placeholder.
+
         The guest email is deliberately **not** sent: Salto KS emails the
         address on file (digital-key invitations and the like), and the PIN flow
         must stay silent — guest communication is a separate concern owned
@@ -93,7 +102,7 @@ class LockVendor(models.Model):
         first, _sep, last = (reservation.partner_name or "").strip().partition(" ")
         return {
             "guest_first_name": first or "Guest",
-            "guest_last_name": last,
+            "guest_last_name": last or "-",
             "access_group_name": reservation.name or "Roomdoo Access",
         }
 

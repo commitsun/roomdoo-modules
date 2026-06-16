@@ -220,6 +220,13 @@ class LockCode(models.Model):
         """Odoo stores naive UTC datetimes; the library requires UTC aware."""
         return dt.replace(tzinfo=timezone.utc)
 
+    def _local_tz(self):
+        """IANA timezone the vendor's hardware enforces schedules against — the
+        hotel's local timezone (one hotel, one timezone). Passed to the
+        connector on the context so user-centric vendors that store naive
+        wall-clock (Salto) can localize the UTC window; others ignore it."""
+        return self.reservation_id.pms_property_id.tz or self.room_id.pms_property_id.tz
+
     @staticmethod
     def _to_naive(dt):
         """Strip tzinfo from an aware UTC datetime for Odoo storage."""
@@ -287,7 +294,8 @@ class LockCode(models.Model):
             # can name the credential after the guest. Passcode vendors ignore
             # it. Only the create path needs it; modify/revoke don't.
             connector = self.vendor_id.with_context(
-                smartlock_grant_reservation=self.reservation_id
+                smartlock_grant_reservation=self.reservation_id,
+                smartlock_local_tz=self._local_tz(),
             ).get_connector()
             grant = connector.grant_access(
                 lock_ids=[s["lock_device_id"] for s in specs],
@@ -308,7 +316,9 @@ class LockCode(models.Model):
         self.ensure_one()
         self = self.sudo()
         try:
-            connector = self.vendor_id.get_connector()
+            connector = self.vendor_id.with_context(
+                smartlock_local_tz=self._local_tz()
+            ).get_connector()
             grant = connector.modify_access(
                 grant_ref=self.vendor_grant_ref,
                 starts_at=self._to_utc(date_from),
