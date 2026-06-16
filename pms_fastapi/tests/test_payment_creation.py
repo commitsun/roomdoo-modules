@@ -359,3 +359,153 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
             )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/record-not-found")
+
+    # -- PATCH /payments/{id} --
+
+    def _create_supplier_payment(self, amount=80.0):
+        return (
+            self.env["account.payment"]
+            .sudo()
+            .create(
+                {
+                    "journal_id": self.journal_bank.id,
+                    "payment_method_line_id": self.bank_outbound.id,
+                    "partner_id": self.supplier.id,
+                    "amount": amount,
+                    "date": "2026-03-04",
+                    "payment_type": "outbound",
+                    "partner_type": "supplier",
+                }
+            )
+        )
+
+    def test_update_amount_and_date(self):
+        """Partial edit of amount and date on a registered payment."""
+        payment = self._create_supplier_payment()
+        payment.action_post()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/payments/{payment.id}",
+                json={"amount": 95.5, "date": "2026-04-10"},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        body = response.json()
+        self.assertEqual(body["id"], payment.id)
+        self.assertEqual(body["amount"], 95.5)
+        self.assertEqual(body["date"], "2026-04-10")
+        self.assertEqual(payment.state, "posted")
+        self.assertEqual(payment.amount, 95.5)
+
+    def test_update_payment_method_to_other_journal_recreates(self):
+        """Odoo forbids changing the journal of a posted payment, so a payment
+        method change that moves to another journal cancels the original and
+        creates a replacement (new id), as the legacy API did."""
+        payment = self._create_supplier_payment()
+        payment.action_post()
+        original_id = payment.id
+        new_line = self.journal_bank2.outbound_payment_method_line_ids[:1]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/payments/{original_id}",
+                json={"paymentMethodId": new_line.id},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        body = response.json()
+        self.assertNotEqual(body["id"], original_id)
+        self.assertEqual(body["paymentMethod"]["id"], new_line.id)
+        new_payment = self.env["account.payment"].browse(body["id"])
+        self.assertEqual(new_payment.journal_id, self.journal_bank2)
+        self.assertEqual(new_payment.state, "posted")
+        self.assertEqual(
+            self.env["account.payment"].browse(original_id).state, "cancel"
+        )
+
+    def test_update_amount_not_positive_returns_422(self):
+        payment = self._create_supplier_payment()
+        payment.action_post()
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/payments/{payment.id}",
+                json={"amount": 0.0},
+            )
+        # 422 literal: 422 is deprecated in
+        # newer starlette and the test runner turns the warning into an error.
+        self.assertEqual(response.status_code, 422, response.text)
+
+    def test_update_unknown_payment_returns_404(self):
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.patch("/payments/999999", json={"amount": 10.0})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/record-not-found")
+
+    def test_update_unknown_payment_method_returns_404(self):
+        payment = self._create_supplier_payment()
+        payment.action_post()
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/payments/{payment.id}",
+                json={"paymentMethodId": 999999},
+            )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/record-not-found")
+
+    def test_update_internal_transfer_syncs_both_legs(self):
+        """Editing the amount of one transfer leg updates the counterpart too
+        and keeps the pair reconciled."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            create = test_client.post(
+                "/internal-transfers",
+                json={
+                    "amount": 30000.0,
+                    "date": "2026-03-04",
+                    "originJournalId": self.journal_bank.id,
+                    "destinationJournalId": self.journal_bank2.id,
+                    "reason": "Traspaso",
+                },
+            )
+            self.assertEqual(create.status_code, status.HTTP_201_CREATED, create.text)
+            payment = self.env["account.payment"].browse(create.json()["id"])
+            counterpart = payment.paired_internal_transfer_payment_id
+            self.assertTrue(counterpart)
+            response = test_client.patch(
+                f"/payments/{payment.id}",
+                json={"amount": 25000.0},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(payment.amount, 25000.0)
+        self.assertEqual(counterpart.amount, 25000.0)
+        self.assertEqual(payment.state, "posted")
+        self.assertEqual(counterpart.state, "posted")
+        transfer_lines = (
+            payment.move_id.line_ids + counterpart.move_id.line_ids
+        ).filtered(lambda line: line.account_id == payment.destination_account_id)
+        self.assertTrue(all(transfer_lines.mapped("reconciled")))
+
+    def test_update_internal_transfer_payment_method_returns_422(self):
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            create = test_client.post(
+                "/internal-transfers",
+                json={
+                    "amount": 100.0,
+                    "date": "2026-03-04",
+                    "originJournalId": self.journal_bank.id,
+                    "destinationJournalId": self.journal_bank2.id,
+                    "reason": "",
+                },
+            )
+            payment_id = create.json()["id"]
+            response = test_client.patch(
+                f"/payments/{payment_id}",
+                json={"paymentMethodId": self.bank_inbound.id},
+            )
+        # 422 literal: 422 is deprecated in
+        # newer starlette and the test runner turns the warning into an error.
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["type"], "/errors/validation-error")
