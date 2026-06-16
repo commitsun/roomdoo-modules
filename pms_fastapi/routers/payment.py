@@ -24,6 +24,7 @@ from odoo.addons.pms_fastapi.schemas.payment import (
     PaymentOrderField,
     PaymentSearch,
     PaymentSummary,
+    PaymentUpdate,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
@@ -81,6 +82,28 @@ async def get_payment(
 ) -> PaymentSummary:
     """Get a single payment by id (same model as the listing)."""
     return env["pms_api_payment.payment_router.helper"].new().get(payment_id)
+
+
+@pms_api_router.patch(
+    "/payments/{payment_id}",
+    response_model=PaymentSummary,
+    tags=["payment"],
+)
+async def update_payment(
+    env: AuthenticatedEnv,
+    payment_id: int,
+    payload: PaymentUpdate,
+) -> PaymentSummary:
+    """Partially update a registered payment (amount, date, payment method).
+
+    Only the modified fields are sent. If the payment is reconciled against an
+    invoice, the reconciliation is recomputed automatically when the amount
+    changes."""
+    return (
+        env["pms_api_payment.payment_router.helper"]
+        .new()
+        .update_payment(payment_id, payload)
+    )
 
 
 @pms_api_router.post(
@@ -335,3 +358,121 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
+
+    # -- partial update (PATCH /payments/{id}) --
+
+    def update_payment(self, payment_id, payload: PaymentUpdate):
+        try:
+            payment = self.env["account.payment"].sudo().browse(payment_id).exists()
+            if not payment:
+                self._not_found(f"Payment {payment_id} does not exist.")
+            try:
+                PmsBaseModel.pms_api_check_access(self.env.user, payment)
+            except (AccessError, AccessDenied):
+                self._not_found(f"Payment {payment_id} does not exist.")
+            if payment.is_internal_transfer:
+                self._update_internal_transfer(payment, payload)
+            else:
+                # A journal change recreates the record (see below), so use the
+                # returned payment for the response.
+                payment = self._update_simple_payment(payment, payload)
+        except _PaymentProblem as problem:
+            return problem.response
+        return PaymentSummary.from_account_payment(payment)
+
+    def _resolve_payment_method_line(self, payment_method_id):
+        line = (
+            self.env["account.payment.method.line"]
+            .sudo()
+            .browse(payment_method_id)
+            .exists()
+        )
+        if not line:
+            self._not_found(f"Payment method {payment_method_id} does not exist.")
+        PmsBaseModel.pms_api_check_access(self.env.user, line.journal_id)
+        return line
+
+    def _common_update_vals(self, payment, payload):
+        """Vals for the fields shared by every payment type (amount, date)."""
+        vals = {}
+        currency = payment.currency_id or payment.company_id.currency_id
+        if (
+            payload.amount is not None
+            and currency.compare_amounts(payload.amount, payment.amount) != 0
+        ):
+            vals["amount"] = payload.amount
+        if payload.date is not None and payload.date != payment.date:
+            vals["date"] = payload.date
+        return vals
+
+    def _ensure_open_cash_session(self, journal):
+        if journal.type == "cash":
+            self.env["account.bank.statement"].sudo()._pms_ensure_open_cash_session(
+                journal
+            )
+
+    def _replace_payment_for_journal_change(self, payment, vals, journal):
+        """Odoo forbids changing the journal of an already-posted payment, so a
+        payment-method change that moves to another journal cancels the original
+        and recreates it (same approach as the legacy API). The id changes."""
+        self._ensure_open_cash_session(journal)
+        payment.action_draft()
+        payment.action_cancel()
+        new_payment = payment.copy({"folio_ids": [(6, 0, payment.folio_ids.ids)]})
+        new_payment.write(dict(vals, journal_id=journal.id))
+        new_payment.action_post()
+        return new_payment
+
+    def _update_simple_payment(self, payment, payload):
+        vals = self._common_update_vals(payment, payload)
+        new_journal = None
+        if payload.paymentMethodId is not None:
+            line = self._resolve_payment_method_line(payload.paymentMethodId)
+            if line.id != payment.payment_method_line_id.id:
+                vals["payment_method_line_id"] = line.id
+                if line.journal_id.id != payment.journal_id.id:
+                    new_journal = line.journal_id
+        if not vals:
+            return payment
+        if new_journal:
+            payment = self._replace_payment_for_journal_change(
+                payment, vals, new_journal
+            )
+        else:
+            self._ensure_open_cash_session(payment.journal_id)
+            payment.action_draft()
+            payment.write(vals)
+            payment.action_post()
+        # Re-posting posts the payment's own entry, not the invoice's, so the
+        # folio<->invoice reconciliation is recomputed explicitly (the same
+        # entry point do_payment uses).
+        for move in payment.folio_ids.move_ids:
+            move.sudo()._autoreconcile_folio_payments()
+        return payment
+
+    def _update_internal_transfer(self, payment, payload):
+        # An internal transfer has two journals (origin + destination), so the
+        # single 'payment mode' doesn't apply to it.
+        if payload.paymentMethodId is not None:
+            self._validation_error(
+                "paymentMethodId does not apply to an internal transfer."
+            )
+        # Both legs share amount and date; edit them together to keep the pair
+        # consistent (they are reconciled against each other).
+        counterpart = payment.paired_internal_transfer_payment_id
+        legs = payment + counterpart
+        vals = self._common_update_vals(payment, payload)
+        if not vals:
+            return
+        for leg in legs:
+            self._ensure_open_cash_session(leg.journal_id)
+        legs.action_draft()
+        legs.write(vals)
+        legs.action_post()
+        # action_post won't re-pair (the pairing already exists), so the two
+        # transfer lines stay unreconciled until we reconcile them again.
+        lines = (payment.move_id.line_ids + counterpart.move_id.line_ids).filtered(
+            lambda line: line.account_id == payment.destination_account_id
+            and not line.reconciled
+        )
+        lines.reconcile()
