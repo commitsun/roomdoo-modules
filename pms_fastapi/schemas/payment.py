@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 from enum import Enum
 from typing import Annotated
@@ -75,6 +76,25 @@ class PaymentInput(PmsBaseModel):
         None, description="Invoice context. Mutually exclusive with folioId."
     )
     reference: str = ""
+
+
+class PaymentUpdate(PmsBaseModel):
+    """Partial edit of a registered payment (amount, date, payment method).
+
+    Only the modified fields are sent; omitted fields are left untouched.
+    """
+
+    amount: CurrencyAmount | None = Field(
+        None, gt=0, description="New amount. Always positive; > 0 (422 otherwise)."
+    )
+    # `datetime.date` (not the bare `date` name) to avoid the field name
+    # shadowing the type when the default value is assigned.
+    date: datetime.date | None = Field(None, description="New payment date.")
+    paymentMethodId: int | None = Field(
+        None,
+        description="New payment method (the front's 'payment mode'). The journal "
+        "is derived from it.",
+    )
 
 
 class InternalTransferInput(PmsBaseModel):
