@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import api, models
+from odoo import _, api, models
 from odoo.exceptions import AccessDenied, AccessError, MissingError, UserError
 from odoo.osv import expression
 
@@ -168,13 +168,7 @@ async def get_folio(
     Includes totals and reservations with sale-line IDs.
     """
     helper = env["pms_api_folio.folio_router.helper"].new()
-    try:
-        folio = helper.get(folio_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="folio not found",
-        ) from err
+    folio = helper.get_or_404(folio_id)
     return FolioDetail.from_pms_folio(folio)
 
 
@@ -189,13 +183,7 @@ async def get_folio_sale_lines(
 ) -> list[FolioSaleLine]:
     """Get the billable sale lines of a folio with invoice state and tax breakdown."""
     helper = env["pms_api_folio.folio_router.helper"].new()
-    try:
-        folio = helper.get(folio_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="folio not found",
-        ) from err
+    folio = helper.get_or_404(folio_id)
     return helper.get_sale_lines(folio)
 
 
@@ -210,13 +198,7 @@ async def get_sale_line(
 ) -> FolioSaleLine:
     """Get a single billable sale line by its id, with invoice state and taxes."""
     helper = env["pms_api_folio.folio_router.helper"].new()
-    try:
-        line = helper.get_sale_line(line_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="sale line not found",
-        ) from err
+    line = helper.get_sale_line_or_404(line_id)
     return FolioSaleLine.from_folio_sale_line(line)
 
 
@@ -231,13 +213,7 @@ async def get_folio_down_payment_invoices(
 ) -> list[InvoiceSummary]:
     """Get the list of down-payment invoices associated with a folio."""
     helper = env["pms_api_folio.folio_router.helper"].new()
-    try:
-        folio = helper.get(folio_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="folio not found",
-        ) from err
+    folio = helper.get_or_404(folio_id)
     return helper.get_down_payment_invoices(folio)
 
 
@@ -255,13 +231,7 @@ async def get_folio_contacts(
     Collects unique contacts from the folio, its reservations, and guests.
     """
     helper = env["pms_api_folio.folio_router.helper"].new()
-    try:
-        folio = helper.get(folio_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="folio not found",
-        ) from err
+    folio = helper.get_or_404(folio_id)
     return helper.get_contacts(folio)
 
 
@@ -292,6 +262,15 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def get(self, record_id) -> PmsFolio:
         return self.model_adapter.get(record_id)
 
+    def get_or_404(self, folio_id) -> PmsFolio:
+        try:
+            return self.get(folio_id)
+        except MissingError as err:
+            raise HTTPException(
+                status_code=404,
+                detail=_("folio not found"),
+            ) from err
+
     @property
     def sale_line_adapter(self) -> FilteredModelAdapter[FolioSaleLineModel]:
         # Same scope as the folio sale-line listing: only billable
@@ -306,6 +285,15 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
 
     def get_sale_line(self, line_id) -> FolioSaleLineModel:
         return self.sale_line_adapter.get(line_id)
+
+    def get_sale_line_or_404(self, line_id) -> FolioSaleLineModel:
+        try:
+            return self.get_sale_line(line_id)
+        except MissingError as err:
+            raise HTTPException(
+                status_code=404,
+                detail=_("sale line not found"),
+            ) from err
 
     def _search(self, paging, params, order) -> tuple[int, PmsFolio]:
         return self.model_adapter.search_with_count(
@@ -418,8 +406,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/duplicate-sale-lines",
-                "Duplicate sale lines",
-                "Each sale line can only appear once in the request.",
+                _("Duplicate sale lines"),
+                _("Each sale line can only appear once in the request."),
             )
         sale_lines = self.env["folio.sale.line"].sudo().browse(sale_line_ids).exists()
         missing = set(sale_line_ids) - set(sale_lines.ids)
@@ -427,8 +415,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 404,
                 "/errors/sale-lines-not-found",
-                "Sale lines not found",
-                "Some sale lines could not be found.",
+                _("Sale lines not found"),
+                _("Some sale lines could not be found."),
                 missingSaleLineIds=sorted(missing),
             )
         try:
@@ -437,17 +425,19 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 403,
                 "/errors/access-denied",
-                "Access denied",
-                "You are not allowed to access some of the requested sale lines.",
+                _("Access denied"),
+                _("You are not allowed to access some of the requested sale lines."),
             )
         invalid_kind = sale_lines.filtered(lambda r: r.display_type or r.is_downpayment)
         if invalid_kind:
             self._raise_problem(
                 422,
                 "/errors/invalid-sale-line",
-                "Invalid sale line",
-                "Sections, notes and down payments cannot be invoiced through "
-                "this endpoint.",
+                _("Invalid sale line"),
+                _(
+                    "Sections, notes and down payments cannot be invoiced through "
+                    "this endpoint."
+                ),
                 invalidSaleLineIds=invalid_kind.ids,
             )
         return sale_lines
@@ -460,8 +450,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/duplicate-downpayment-lines",
-                "Duplicate down-payment invoices",
-                "Each down-payment invoice can only appear once in the request.",
+                _("Duplicate down-payment invoices"),
+                _("Each down-payment invoice can only appear once in the request."),
             )
         dp_invoices = self.env["account.move"].sudo().browse(ids).exists()
         missing = set(ids) - set(dp_invoices.ids)
@@ -469,8 +459,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 404,
                 "/errors/downpayment-lines-not-found",
-                "Down-payment invoices not found",
-                "Some down-payment invoices could not be found.",
+                _("Down-payment invoices not found"),
+                _("Some down-payment invoices could not be found."),
                 missingDownpaymentLineIds=sorted(missing),
             )
         not_downpayment = dp_invoices.filtered(lambda m: not m._is_downpayment())
@@ -478,8 +468,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/invalid-downpayment-line",
-                "Invalid down-payment invoice",
-                "Only down-payment invoices are accepted as downpaymentLines.",
+                _("Invalid down-payment invoice"),
+                _("Only down-payment invoices are accepted as downpaymentLines."),
                 invalidDownpaymentLineIds=not_downpayment.ids,
             )
         folio_ids = set(sale_lines.folio_id.ids)
@@ -490,9 +480,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/downpayment-line-out-of-scope",
-                "Down-payment invoice out of scope",
-                "Down-payment invoices must belong to the same folios as the "
-                "invoiced lines.",
+                _("Down-payment invoice out of scope"),
+                _(
+                    "Down-payment invoices must belong to the same folios as the "
+                    "invoiced lines."
+                ),
                 outOfScopeDownpaymentLineIds=out_of_scope.ids,
             )
         return dp_invoices.invoice_line_ids.folio_line_ids.filtered("is_downpayment")
@@ -503,8 +495,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/multiple-properties",
-                "Sale lines from multiple properties",
-                "All sale lines must belong to the same property.",
+                _("Sale lines from multiple properties"),
+                _("All sale lines must belong to the same property."),
                 propertyIds=properties.ids,
             )
         return properties
@@ -526,9 +518,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/quantity-exceeds-pending",
-                "Quantity to invoice exceeds pending quantity",
-                "One or more sale lines were asked to invoice a quantity "
-                "greater than their pending quantity.",
+                _("Quantity to invoice exceeds pending quantity"),
+                _(
+                    "One or more sale lines were asked to invoice a quantity "
+                    "greater than their pending quantity."
+                ),
                 lines=qty_errors,
             )
 
@@ -540,8 +534,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 404,
                 "/errors/not-found",
-                "Contact not found",
-                "Customer not found.",
+                _("Contact not found"),
+                _("Customer not found."),
             )
         invoice_helper = self.env["pms_api_invoice.invoice_router.helper"].new()
         contact_errors = invoice_helper._get_contact_validation_errors(
@@ -551,8 +545,8 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/invoicing-validation-failed",
-                "Invoicing validation failed",
-                "Customer does not meet invoicing requirements.",
+                _("Invoicing validation failed"),
+                _("Customer does not meet invoicing requirements."),
                 errors=contact_errors,
             )
         return partner
@@ -573,9 +567,11 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/simplified-invoice-limit-exceeded",
-                "Simplified invoice limit exceeded",
-                "The invoice total exceeds the simplified invoice limit "
-                "configured for this property.",
+                _("Simplified invoice limit exceeded"),
+                _(
+                    "The invoice total exceeds the simplified invoice limit "
+                    "configured for this property."
+                ),
                 invoiceTotal=round(invoice_total, 2),
                 simplifiedInvoiceLimit=limit,
             )
@@ -623,23 +619,25 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/invoice-creation-failed",
-                "Invoice creation failed",
+                _("Invoice creation failed"),
                 str(e),
             )
         if not invoices:
             self._raise_problem(
                 422,
                 "/errors/invoice-creation-failed",
-                "Invoice creation failed",
-                "No invoice could be created from the provided sale lines.",
+                _("Invoice creation failed"),
+                _("No invoice could be created from the provided sale lines."),
             )
         if len(invoices) > 1:
             self._raise_problem(
                 422,
                 "/errors/multiple-invoices-created",
-                "Multiple invoices created",
-                "The provided sale lines could not be grouped into a single "
-                "invoice (different currency or company).",
+                _("Multiple invoices created"),
+                _(
+                    "The provided sale lines could not be grouped into a single "
+                    "invoice (different currency or company)."
+                ),
                 invoiceIds=invoices.ids,
             )
         invoices.narration = payload.narration
@@ -657,7 +655,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             self._raise_problem(
                 422,
                 "/errors/invoice-posting-failed",
-                "Invoice posting failed",
+                _("Invoice posting failed"),
                 str(e),
             )
 
@@ -673,9 +671,9 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/mutually-exclusive-params",
-                    "title": "Mutually exclusive parameters",
+                    "title": _("Mutually exclusive parameters"),
                     "status": 400,
-                    "detail": (
+                    "detail": _(
                         "Cannot specify both 'ids' and filter parameters. "
                         "Use one or the other."
                     ),
@@ -694,12 +692,13 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/record-limit-exceeded",
-                    "title": "Record limit exceeded",
+                    "title": _("Record limit exceeded"),
                     "status": 400,
-                    "detail": (
-                        f"The export requested {count} records, "
-                        f"but the maximum allowed is {FOLIO_REPORT_MAX_RECORDS}."
-                    ),
+                    "detail": _(
+                        "The export requested %s records, "
+                        "but the maximum allowed is %s."
+                    )
+                    % (count, FOLIO_REPORT_MAX_RECORDS),
                     "requestedCount": count,
                     "maxAllowed": FOLIO_REPORT_MAX_RECORDS,
                 },

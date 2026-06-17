@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 
-from odoo import api, models
+from odoo import _, api, models
 from odoo.exceptions import MissingError
 from odoo.osv import expression
 
@@ -77,13 +77,7 @@ async def contactDetail(
 ) -> ContactDetail:
     """Get detail info of a contact"""
     helper = env["pms_api_contact.contact_router.helper"].new()
-    try:
-        partner = helper.get(contact_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="contact not found",
-        ) from err
+    partner = helper.get_or_404(contact_id)
     return ContactDetail.from_res_partner(partner)
 
 
@@ -113,13 +107,7 @@ async def update_contact(
     contactData: ContactUpdate,
 ) -> ContactDetail:
     helper = env["pms_api_contact.contact_router.helper"].new()
-    try:
-        contact = helper.get(contact_id)
-    except MissingError as err:
-        raise HTTPException(
-            status_code=404,
-            detail="contact not found",
-        ) from err
+    contact = helper.get_or_404(contact_id)
     helper.update_contact(contactData, contact_id)
     return ContactDetail.from_res_partner(contact)
 
@@ -150,6 +138,15 @@ class PmsApiContactRouterHelper(models.AbstractModel):
 
     def get(self, record_id) -> Partner:
         return self.model_adapter.get(record_id)
+
+    def get_or_404(self, contact_id) -> Partner:
+        try:
+            return self.get(contact_id)
+        except MissingError as err:
+            raise HTTPException(
+                status_code=404,
+                detail=_("contact not found"),
+            ) from err
 
     def _search(self, paging, params, order) -> tuple[int, Partner]:
         return self.model_adapter.search_with_count(

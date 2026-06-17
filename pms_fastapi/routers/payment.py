@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.responses import JSONResponse
 
-from odoo import models
+from odoo import _, models
 from odoo.exceptions import AccessDenied, AccessError
 
 from odoo.addons.account.models.account_payment import AccountPayment
@@ -185,7 +185,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         )
 
     def _not_found(self, detail):
-        self._problem(404, "/errors/record-not-found", "Record not found", detail)
+        self._problem(404, "/errors/record-not-found", _("Record not found"), detail)
 
     def get(self, payment_id):
         try:
@@ -194,8 +194,8 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 self._problem(
                     404,
                     "/errors/payment-not-found",
-                    "Payment not found",
-                    f"Payment {payment_id} does not exist.",
+                    _("Payment not found"),
+                    _("Payment %s does not exist.") % payment_id,
                 )
             try:
                 PmsBaseModel.pms_api_check_access(self.env.user, payment)
@@ -203,26 +203,28 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 self._problem(
                     404,
                     "/errors/payment-not-found",
-                    "Payment not found",
-                    f"Payment {payment_id} does not exist.",
+                    _("Payment not found"),
+                    _("Payment %s does not exist.") % payment_id,
                 )
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
 
     def _validation_error(self, detail):
-        self._problem(422, "/errors/validation-error", "Validation error", detail)
+        self._problem(422, "/errors/validation-error", _("Validation error"), detail)
 
     def _resolve_partner(self, partner_id):
         partner = self.env["res.partner"].sudo().browse(partner_id).exists()
         if not partner:
-            self._not_found(f"Partner {partner_id} does not exist.")
+            self._not_found(_("Partner %s does not exist.") % partner_id)
         return partner
 
     def create_payment(self, payload: PaymentInput):
         try:
             if payload.folioId and payload.invoiceId:
-                self._validation_error("folioId and invoiceId are mutually exclusive.")
+                self._validation_error(
+                    _("folioId and invoiceId are mutually exclusive.")
+                )
             line = (
                 self.env["account.payment.method.line"]
                 .sudo()
@@ -231,7 +233,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             )
             if not line:
                 self._not_found(
-                    f"Payment method {payload.paymentMethodId} does not exist."
+                    _("Payment method %s does not exist.") % payload.paymentMethodId
                 )
             journal = line.journal_id
             PmsBaseModel.pms_api_check_access(self.env.user, journal)
@@ -242,7 +244,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 else self.env["res.partner"]
             )
             if payload.paymentType == PaymentCreateType.supplierPayment and not partner:
-                self._validation_error("supplierPayment requires partnerId.")
+                self._validation_error(_("supplierPayment requires partnerId."))
 
             if journal.type == "cash":
                 self.env["account.bank.statement"].sudo()._pms_ensure_open_cash_session(
@@ -266,15 +268,15 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         if payload.folioId:
             folio = self.env["pms.folio"].sudo().browse(payload.folioId).exists()
             if not folio:
-                self._not_found(f"Folio {payload.folioId} does not exist.")
+                self._not_found(_("Folio %s does not exist.") % payload.folioId)
         else:
             invoice = self.env["account.move"].sudo().browse(payload.invoiceId).exists()
             if not invoice:
-                self._not_found(f"Invoice {payload.invoiceId} does not exist.")
+                self._not_found(_("Invoice %s does not exist.") % payload.invoiceId)
             folio = invoice.folio_ids[:1]
             if not folio:
                 self._validation_error(
-                    f"Invoice {payload.invoiceId} has no associated folio."
+                    _("Invoice %s has no associated folio.") % payload.invoiceId
                 )
         PmsBaseModel.pms_api_check_access(self.env.user, folio)
         return folio
@@ -321,16 +323,18 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         try:
             if payload.originJournalId == payload.destinationJournalId:
                 self._validation_error(
-                    "El diario de origen y el de destino no pueden ser el mismo."
+                    _("Origin and destination journals cannot be the same.")
                 )
             journals = self.env["account.journal"].sudo()
             origin = journals.browse(payload.originJournalId).exists()
             destination = journals.browse(payload.destinationJournalId).exists()
             if not origin:
-                self._not_found(f"Journal {payload.originJournalId} does not exist.")
+                self._not_found(
+                    _("Journal %s does not exist.") % payload.originJournalId
+                )
             if not destination:
                 self._not_found(
-                    f"Journal {payload.destinationJournalId} does not exist."
+                    _("Journal %s does not exist.") % payload.destinationJournalId
                 )
             PmsBaseModel.pms_api_check_access(self.env.user, origin + destination)
             statement_model = self.env["account.bank.statement"].sudo()
@@ -365,11 +369,11 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         try:
             payment = self.env["account.payment"].sudo().browse(payment_id).exists()
             if not payment:
-                self._not_found(f"Payment {payment_id} does not exist.")
+                self._not_found(_("Payment %s does not exist.") % payment_id)
             try:
                 PmsBaseModel.pms_api_check_access(self.env.user, payment)
             except (AccessError, AccessDenied):
-                self._not_found(f"Payment {payment_id} does not exist.")
+                self._not_found(_("Payment %s does not exist.") % payment_id)
             if payment.is_internal_transfer:
                 self._update_internal_transfer(payment, payload)
             else:
@@ -388,7 +392,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             .exists()
         )
         if not line:
-            self._not_found(f"Payment method {payment_method_id} does not exist.")
+            self._not_found(_("Payment method %s does not exist.") % payment_method_id)
         PmsBaseModel.pms_api_check_access(self.env.user, line.journal_id)
         return line
 
@@ -455,7 +459,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         # single 'payment mode' doesn't apply to it.
         if payload.paymentMethodId is not None:
             self._validation_error(
-                "paymentMethodId does not apply to an internal transfer."
+                _("paymentMethodId does not apply to an internal transfer.")
             )
         # Both legs share amount and date; edit them together to keep the pair
         # consistent (they are reconciled against each other).

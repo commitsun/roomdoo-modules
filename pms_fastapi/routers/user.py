@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import File, HTTPException, UploadFile
 
-from odoo import api, models
+from odoo import _, api, models
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -42,12 +42,9 @@ async def update_user_image(
     image: Annotated[UploadFile, File(description="User image")],
 ):
     contents = await image.read()
-    if not contents:
-        raise HTTPException(
-            status_code=400,
-            detail="Empty image file uploaded. Use DELETE to remove image.",
-        )
     helper = env["pms_api.user_router.helper"].new()
+    if not contents:
+        helper._raise_empty_image()
     helper.update_user_image(env.user.id, base64.b64encode(contents))
     return User.from_res_users(env.user)
 
@@ -85,10 +82,15 @@ class PmsApiUserRouterHelper(models.AbstractModel):
             if vals["lang"] not in available_langs:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Language '{vals['lang']}' is not available."
-                    f" Choose from {available_langs}",
+                    detail=_("Language %s is not available.") % vals["lang"],
                 )
         return self.env["res.users"].sudo().browse(user_id).write(vals)
+
+    def _raise_empty_image(self):
+        raise HTTPException(
+            status_code=400,
+            detail=_("Empty image file uploaded. Use DELETE to remove image."),
+        )
 
     def update_user_image(self, user_id: int, image_data: bytes):
         user = self.env["res.users"].sudo().browse(user_id)
