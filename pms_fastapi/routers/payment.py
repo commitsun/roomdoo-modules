@@ -336,6 +336,17 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 self._not_found(
                     _("Journal %s does not exist.") % payload.destinationJournalId
                 )
+            invalid = (origin + destination).filtered(
+                lambda journal: journal.type not in ("bank", "cash")
+            )
+            if invalid:
+                self._validation_error(
+                    _(
+                        "Internal transfers only allow bank or cash journals. "
+                        "Invalid journals: %s."
+                    )
+                    % ", ".join(invalid.mapped("display_name"))
+                )
             PmsBaseModel.pms_api_check_access(self.env.user, origin + destination)
             statement_model = self.env["account.bank.statement"].sudo()
             statement_model._pms_ensure_open_cash_session(origin)
