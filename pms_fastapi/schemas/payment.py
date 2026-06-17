@@ -201,6 +201,10 @@ class PaymentSearch(BaseSearch):
             default=None,
             description="Filter exclusively by reference.",
         ),
+        contact: str | None = Query(
+            default=None,
+            description="Filter by the name of the contact (partner) of the payment.",
+        ),
         createdBy: str | None = Query(
             default=None,
             description="Filter by the name of the user who registered the payment.",
@@ -236,6 +240,7 @@ class PaymentSearch(BaseSearch):
         self.paymentType = paymentType
         self.paymentMethod = paymentMethod
         self.reference = reference
+        self.contact = contact
         self.createdBy = createdBy
         self.amountEq = amountEq
         self.amountGt = amountGt
@@ -306,6 +311,10 @@ class PaymentSearch(BaseSearch):
             )
         if self.reference:
             domain = expression.AND([domain, [("ref", "ilike", self.reference)]])
+        if self.contact:
+            domain = expression.AND(
+                [domain, [("partner_id.display_name", "ilike", self.contact)]]
+            )
         if self.createdBy:
             domain = expression.AND(
                 [domain, [("create_uid.name", "ilike", self.createdBy)]]
