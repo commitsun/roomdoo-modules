@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Response, status
 
-from odoo import models
+from odoo import _, models
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -103,12 +103,8 @@ async def contact_id_numbers(
     contact_id: int,
 ) -> list[ContactIdNumberSummary]:
     """Get identification numbers of a contact"""
-    partner = env["res.partner"].sudo().search([("id", "=", contact_id)])
-    if not partner:
-        raise HTTPException(
-            status_code=404,
-            detail="contact not found",
-        )
+    helper = env["pms_api_contact.contact_id_number_router.helper"].new()
+    partner = helper._get_partner_or_404(contact_id)
     id_numbers = []
     for id_number in partner.id_numbers:
         id_numbers.append(ContactIdNumberSummary.from_res_partner_id_number(id_number))
@@ -142,16 +138,8 @@ async def update_contact_id_number(
     idNumber_id: int,
     idNumberData: ContactIdNumberUpdate,
 ) -> ContactIdNumberSummary:
-    id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
-    if id_number.partner_id.id != contact_id:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"The id number {idNumber_id} does not belong "
-                f"to the contact {contact_id}"
-            ),
-        )
     helper = env["pms_api_contact.contact_id_number_router.helper"].new()
+    id_number = helper._get_id_number_for_contact(contact_id, idNumber_id)
     helper.write_id_number(id_number, idNumberData)
     return ContactIdNumberSummary.from_res_partner_id_number(id_number)
 
@@ -166,15 +154,8 @@ async def set_fiscal_number_contact_id_number(
     contact_id: int,
     idNumber_id: int,
 ) -> ContactIdNumberSummary:
-    id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
-    if id_number.partner_id.id != contact_id:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"The id number {idNumber_id} does not belong "
-                f"to the contact {contact_id}"
-            ),
-        )
+    helper = env["pms_api_contact.contact_id_number_router.helper"].new()
+    id_number = helper._get_id_number_for_contact(contact_id, idNumber_id)
     id_number.sudo().set_partner_id_field()
     return ContactIdNumberSummary.from_res_partner_id_number(id_number)
 
@@ -189,21 +170,33 @@ async def delete_contact_id_number(
     contact_id: int,
     idNumber_id: int,
 ):
-    id_number = env["res.partner.id_number"].sudo().browse(idNumber_id)
-    if id_number.partner_id.id != contact_id:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"The id number {idNumber_id} does not belong "
-                f"to the contact {contact_id}"
-            ),
-        )
+    helper = env["pms_api_contact.contact_id_number_router.helper"].new()
+    id_number = helper._get_id_number_for_contact(contact_id, idNumber_id)
     id_number.sudo().unlink()
 
 
 class PmsApiContactIdNumberRouterHelper(models.AbstractModel):
     _name = "pms_api_contact.contact_id_number_router.helper"
     _description = "Pms api contact  id number Service Helper"
+
+    def _get_partner_or_404(self, contact_id: int):
+        partner = self.env["res.partner"].sudo().search([("id", "=", contact_id)])
+        if not partner:
+            raise HTTPException(
+                status_code=404,
+                detail=_("contact not found"),
+            )
+        return partner
+
+    def _get_id_number_for_contact(self, contact_id: int, id_number_id: int):
+        id_number = self.env["res.partner.id_number"].sudo().browse(id_number_id)
+        if id_number.partner_id.id != contact_id:
+            raise HTTPException(
+                status_code=400,
+                detail=_("The id number %s does not belong to the contact %s")
+                % (id_number_id, contact_id),
+            )
+        return id_number
 
     def get_duplicate_fiscal_number(
         self, fiscal_number: str, document_type: str, country_id: int | None = None

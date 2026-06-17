@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import SUPERUSER_ID, api, fields, models
+from odoo import SUPERUSER_ID, _, api, fields, models
 from odoo.exceptions import MissingError, UserError
 from odoo.osv import expression
 
@@ -386,9 +386,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -420,9 +420,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -431,15 +431,15 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/invoice-not-editable",
-                    "Invoice not editable",
-                    "Cancelled invoices cannot be edited.",
+                    _("Invoice not editable"),
+                    _("Cancelled invoices cannot be edited."),
                 )
             if invoice.state == "posted" and not confirm_refund:
                 self._raise_edit_problem(
                     409,
                     "/errors/invoice-refund-confirmation-required",
-                    "Refund confirmation required",
-                    (
+                    _("Refund confirmation required"),
+                    _(
                         "This invoice is validated. Editing it will generate "
                         "a refund and a new corrected invoice. Confirm by "
                         "passing confirmRefund=true."
@@ -473,8 +473,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/duplicate-sale-lines",
-                "Duplicate sale lines",
-                "Each folio line can only appear once in the request.",
+                _("Duplicate sale lines"),
+                _("Each folio line can only appear once in the request."),
             )
         sale_lines = self.env["folio.sale.line"].sudo().browse(line_ids).exists()
         missing = set(line_ids) - set(sale_lines.ids)
@@ -482,8 +482,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 404,
                 "/errors/sale-lines-not-found",
-                "Sale lines not found",
-                "Some folio lines could not be found.",
+                _("Sale lines not found"),
+                _("Some folio lines could not be found."),
                 missingFolioLineIds=sorted(missing),
             )
         invalid_kind = sale_lines.filtered(lambda r: r.display_type or r.is_downpayment)
@@ -491,8 +491,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/invalid-folio-line",
-                "Invalid folio line",
-                "Sections, notes and down payments cannot be sent as folioLines.",
+                _("Invalid folio line"),
+                _("Sections, notes and down payments cannot be sent as folioLines."),
                 invalidFolioLineIds=invalid_kind.ids,
             )
         return sale_lines
@@ -505,8 +505,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/duplicate-downpayment-lines",
-                "Duplicate down-payment invoices",
-                "Each down-payment invoice can only appear once in the request.",
+                _("Duplicate down-payment invoices"),
+                _("Each down-payment invoice can only appear once in the request."),
             )
         dp_invoices = self.env["account.move"].sudo().browse(ids).exists()
         missing = set(ids) - set(dp_invoices.ids)
@@ -514,8 +514,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 404,
                 "/errors/downpayment-lines-not-found",
-                "Down-payment invoices not found",
-                "Some down-payment invoices could not be found.",
+                _("Down-payment invoices not found"),
+                _("Some down-payment invoices could not be found."),
                 missingDownpaymentLineIds=sorted(missing),
             )
         not_downpayment = dp_invoices.filtered(lambda m: not m._is_downpayment())
@@ -523,8 +523,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/invalid-downpayment-line",
-                "Invalid down-payment invoice",
-                "Only down-payment invoices are accepted as downpaymentLines.",
+                _("Invalid down-payment invoice"),
+                _("Only down-payment invoices are accepted as downpaymentLines."),
                 invalidDownpaymentLineIds=not_downpayment.ids,
             )
         folio_ids = set(sale_lines.folio_id.ids)
@@ -535,8 +535,11 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/downpayment-line-out-of-scope",
-                "Down-payment invoice out of scope",
-                "Down-payment invoices must belong to the same folios as folioLines.",
+                _("Down-payment invoice out of scope"),
+                _(
+                    "Down-payment invoices must belong to the same folios as"
+                    " folioLines."
+                ),
                 outOfScopeDownpaymentLineIds=out_of_scope.ids,
             )
         return dp_invoices.invoice_line_ids.folio_line_ids.filtered("is_downpayment")
@@ -547,8 +550,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/multiple-properties",
-                "Folio lines from multiple properties",
-                "All folio lines must belong to the same property.",
+                _("Folio lines from multiple properties"),
+                _("All folio lines must belong to the same property."),
                 propertyIds=properties.ids,
             )
         return properties
@@ -559,8 +562,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 404,
                 "/errors/not-found",
-                "Contact not found",
-                "Customer not found.",
+                _("Contact not found"),
+                _("Customer not found."),
             )
         various = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
         if various and partner.id == various.id:
@@ -570,8 +573,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/invoicing-validation-failed",
-                "Invoicing validation failed",
-                "Customer does not meet invoicing requirements.",
+                _("Invoicing validation failed"),
+                _("Customer does not meet invoicing requirements."),
                 errors=errors,
             )
         return partner
@@ -605,9 +608,11 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/quantity-exceeds-pending",
-                "Quantity to invoice exceeds pending quantity",
-                "One or more folio lines were asked to invoice more "
-                "than their pending quantity.",
+                _("Quantity to invoice exceeds pending quantity"),
+                _(
+                    "One or more folio lines were asked to invoice more "
+                    "than their pending quantity."
+                ),
                 lines=qty_errors,
             )
 
@@ -622,19 +627,17 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 composition_errors.append(
                     {
                         "type": "/errors/folio-line-already-invoiced",
-                        "title": "Folio line already invoiced",
-                        "detail": (
-                            f"Folio line {sl.id} is already included in "
-                            f"invoice {other_moves[0].id}."
-                        ),
+                        "title": _("Folio line already invoiced"),
+                        "detail": _("Folio line %s is already included in invoice %s.")
+                        % (sl.id, other_moves[0].id),
                     }
                 )
         if composition_errors:
             self._raise_edit_problem(
                 422,
                 "/errors/invoice-composition-invalid",
-                "Invalid invoice composition",
-                "Some folio lines cannot be invoiced.",
+                _("Invalid invoice composition"),
+                _("Some folio lines cannot be invoiced."),
                 errors=composition_errors,
             )
 
@@ -679,23 +682,25 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/invoice-creation-failed",
-                "Invoice creation failed",
+                _("Invoice creation failed"),
                 str(e),
             )
         if not vals_list:
             self._raise_edit_problem(
                 422,
                 "/errors/invoice-creation-failed",
-                "Invoice creation failed",
-                "No invoice could be built from the provided composition.",
+                _("Invoice creation failed"),
+                _("No invoice could be built from the provided composition."),
             )
         if len(vals_list) > 1:
             self._raise_edit_problem(
                 422,
                 "/errors/multiple-invoices-created",
-                "Multiple invoices created",
-                "The provided composition could not be grouped into a single "
-                "invoice (different currency or company).",
+                _("Multiple invoices created"),
+                _(
+                    "The provided composition could not be grouped into a single "
+                    "invoice (different currency or company)."
+                ),
             )
         return vals_list[0]
 
@@ -759,7 +764,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             self._raise_edit_problem(
                 422,
                 "/errors/invoice-creation-failed",
-                "Invoice creation failed",
+                _("Invoice creation failed"),
                 str(e),
             )
         return new_invoice
@@ -771,9 +776,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Contact not found.",
+                    "detail": _("Contact not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -783,9 +788,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Property not found.",
+                    "detail": _("Property not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -795,9 +800,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=422,
                 content={
                     "type": "/errors/invoicing-validation-failed",
-                    "title": "Invoicing validation failed",
+                    "title": _("Invoicing validation failed"),
                     "status": 422,
-                    "detail": "Contact does not meet invoicing requirements.",
+                    "detail": _("Contact does not meet invoicing requirements."),
                     "errors": errors,
                 },
                 media_type="application/problem+json",
@@ -822,10 +827,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             return [
                 {
                     "type": "/errors/missing-fiscal-id",
-                    "title": "Missing fiscal identification number",
-                    "detail": (
-                        "El contacto no tiene número de identificación"
-                        " fiscal configurado."
+                    "title": _("Missing fiscal identification number"),
+                    "detail": _(
+                        "The contact has no fiscal identification number" " configured."
                     ),
                 }
             ]
@@ -845,9 +849,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/mutually-exclusive-params",
-                    "title": "Mutually exclusive parameters",
+                    "title": _("Mutually exclusive parameters"),
                     "status": 400,
-                    "detail": (
+                    "detail": _(
                         "Cannot specify both 'ids' and filter parameters. "
                         "Use one or the other."
                     ),
@@ -870,12 +874,13 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/record-limit-exceeded",
-                    "title": "Record limit exceeded",
+                    "title": _("Record limit exceeded"),
                     "status": 400,
-                    "detail": (
-                        f"The export requested {count} records, "
-                        f"but the maximum allowed is {max_records}."
-                    ),
+                    "detail": _(
+                        "The export requested %s records, "
+                        "but the maximum allowed is %s."
+                    )
+                    % (count, max_records),
                     "requestedCount": count,
                     "maxAllowed": max_records,
                 },
@@ -904,9 +909,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -915,12 +920,10 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/invoice-not-draft",
-                    "title": "Invoice not in draft state",
+                    "title": _("Invoice not in draft state"),
                     "status": 400,
-                    "detail": (
-                        f"Invoice {invoice.name} is in state "
-                        f'"{invoice.state}" and cannot be validated.'
-                    ),
+                    "detail": _('Invoice %s is in state "%s" and cannot be validated.')
+                    % (invoice.name, invoice.state),
                 },
                 media_type="application/problem+json",
             )
@@ -931,7 +934,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=400,
                 content={
                     "type": "/errors/validation-error",
-                    "title": "Validation error",
+                    "title": _("Validation error"),
                     "status": 400,
                     "detail": str(e),
                 },
@@ -947,11 +950,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             PmsApiInvoiceRouterHelper._raise_edit_problem(
                 422,
                 "/errors/invalid-reconciliation-id",
-                "Invalid reconciliation id",
-                (
-                    f"Reconciliation id '{composite_id}' is malformed. "
-                    "Expected 'payment_{id}'."
-                ),
+                _("Invalid reconciliation id"),
+                _("Reconciliation id '%s' is malformed. Expected 'payment_{id}'.")
+                % composite_id,
             )
         return int(match.group(1))
 
@@ -979,9 +980,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/invoice-not-found",
-                    "title": "Invoice not found",
+                    "title": _("Invoice not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -994,8 +995,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/invoice-not-editable",
-                    "Invoice not editable",
-                    "The invoice state does not allow new reconciliations.",
+                    _("Invoice not editable"),
+                    _("The invoice state does not allow new reconciliations."),
                 )
             payment = (
                 self.env["account.payment"]
@@ -1012,16 +1013,16 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     404,
                     "/errors/payment-not-found",
-                    "Payment not found",
-                    f"Payment {payment_id} not found.",
+                    _("Payment not found"),
+                    _("Payment %s not found.") % payment_id,
                 )
             if invoice.folio_ids:
                 if not (payment.folio_ids & invoice.folio_ids):
                     self._raise_edit_problem(
                         409,
                         "/errors/payment-not-applicable",
-                        "Payment not applicable",
-                        ("Payment does not belong to any folio of this " "invoice."),
+                        _("Payment not applicable"),
+                        _("Payment does not belong to any folio of this " "invoice."),
                     )
             elif (
                 payment.partner_id.commercial_partner_id
@@ -1030,8 +1031,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/payment-not-applicable",
-                    "Payment not applicable",
-                    "Payment does not belong to the invoice's customer.",
+                    _("Payment not applicable"),
+                    _("Payment does not belong to the invoice's customer."),
                 )
             invoice_recv, payment_recv, partials = self._get_reconciliation_partials(
                 invoice, payment
@@ -1040,18 +1041,16 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/payment-already-reconciled",
-                    "Payment already reconciled",
-                    (
-                        f"Payment {payment.id} is already reconciled with "
-                        f"invoice {invoice.id}."
-                    ),
+                    _("Payment already reconciled"),
+                    _("Payment %s is already reconciled with invoice %s.")
+                    % (payment.id, invoice.id),
                 )
             if not invoice_recv or not payment_recv:
                 self._raise_edit_problem(
                     409,
                     "/errors/payment-not-applicable",
-                    "Payment not applicable",
-                    "Payment is not in a reconcilable state.",
+                    _("Payment not applicable"),
+                    _("Payment is not in a reconcilable state."),
                 )
             try:
                 (invoice_recv + payment_recv).filtered(
@@ -1061,7 +1060,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/payment-not-applicable",
-                    "Payment not applicable",
+                    _("Payment not applicable"),
                     str(e),
                 )
         except _InvoiceEditProblem as problem:
@@ -1079,9 +1078,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/invoice-not-found",
-                    "title": "Invoice not found",
+                    "title": _("Invoice not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -1091,8 +1090,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     409,
                     "/errors/invoice-not-editable",
-                    "Invoice not editable",
-                    "The invoice state does not allow undoing reconciliations.",
+                    _("Invoice not editable"),
+                    _("The invoice state does not allow undoing reconciliations."),
                 )
             payment = (
                 self.env["account.payment"]
@@ -1109,11 +1108,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     404,
                     "/errors/reconciliation-not-found",
-                    "Reconciliation not found",
-                    (
-                        f"No reconciliation exists between invoice {invoice.id} "
-                        f"and payment {payment_id}."
-                    ),
+                    _("Reconciliation not found"),
+                    _("No reconciliation exists between invoice %s and payment %s.")
+                    % (invoice.id, payment_id),
                 )
             _invoice_recv, _payment_recv, partials = self._get_reconciliation_partials(
                 invoice, payment
@@ -1122,11 +1119,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 self._raise_edit_problem(
                     404,
                     "/errors/reconciliation-not-found",
-                    "Reconciliation not found",
-                    (
-                        f"No reconciliation exists between invoice {invoice.id} "
-                        f"and payment {payment.id}."
-                    ),
+                    _("Reconciliation not found"),
+                    _("No reconciliation exists between invoice %s and payment %s.")
+                    % (invoice.id, payment.id),
                 )
             partials.unlink()
         except _InvoiceEditProblem as problem:
@@ -1144,9 +1139,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -1200,9 +1195,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -1221,9 +1216,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 status_code=404,
                 content={
                     "type": "/errors/not-found",
-                    "title": "Not found",
+                    "title": _("Not found"),
                     "status": 404,
-                    "detail": "Invoice not found.",
+                    "detail": _("Invoice not found."),
                 },
                 media_type="application/problem+json",
             )
@@ -1287,9 +1282,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             status_code=501,
             content={
                 "type": "/errors/not-implemented",
-                "title": "Not implemented",
+                "title": _("Not implemented"),
                 "status": 501,
-                "detail": "PDF report generation is not yet implemented.",
+                "detail": _("PDF report generation is not yet implemented."),
             },
             media_type="application/problem+json",
         )
