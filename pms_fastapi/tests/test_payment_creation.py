@@ -360,6 +360,36 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/record-not-found")
 
+    def test_internal_transfer_non_bank_cash_journal_returns_422(self):
+        """A transfer to/from a journal that is not bank or cash (e.g. a sale
+        journal) is rejected with a specific validation error instead of the
+        generic 400 Odoo raises when posting it."""
+        journal_sale = self.env["account.journal"].create(
+            {
+                "name": "Sales PMS",
+                "type": "sale",
+                "code": "SALP",
+                "company_id": self.test_company.id,
+                "pms_property_ids": [Command.set([self.test_property.id])],
+            }
+        )
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/internal-transfers",
+                json={
+                    "amount": 100.0,
+                    "date": "2026-03-04",
+                    "originJournalId": self.journal_bank.id,
+                    "destinationJournalId": journal_sale.id,
+                    "reason": "",
+                },
+            )
+        # 422 literal: 422 is deprecated in
+        # newer starlette and the test runner turns the warning into an error.
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["type"], "/errors/validation-error")
+
     # -- PATCH /payments/{id} --
 
     def _create_supplier_payment(self, amount=80.0):
