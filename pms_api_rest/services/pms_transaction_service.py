@@ -331,12 +331,12 @@ class PmsTransactionService(Component):
             # Review this in pms_folio_service (/charge & /refund)
             # and in pms_transaction_service (POST)
             last_session = self._get_last_cash_session(journal_id=journal.id)
-            if not last_session or last_session.balance_end:
+            if not last_session or last_session.is_complete:
                 self._action_open_cash_session(
                     pms_property_id=journal.pms_property_ids[0].id
                     if journal.pms_property_ids
                     else False,
-                    amount=last_session.balance_end,
+                    amount=last_session.balance_end_real,
                     journal_id=journal.id,
                     force=False,
                 )
@@ -353,12 +353,12 @@ class PmsTransactionService(Component):
                 # Review this in pms_folio_service (/charge & /refund)
                 # and in pms_transaction_service (POST)
                 last_session = self._get_last_cash_session(journal_id=journal.id)
-                if not last_session or last_session.balance_end:
+                if not last_session or last_session.is_complete:
                     self._action_open_cash_session(
                         pms_property_id=journal.pms_property_ids[0].id
                         if journal.pms_property_ids
                         else False,
-                        amount=last_session.balance_end,
+                        amount=last_session.balance_end_real,
                         journal_id=pms_transaction_info.destinationJournalId,
                         force=False,
                     )
@@ -525,6 +525,11 @@ class PmsTransactionService(Component):
             journal_id=journal_id,
             pms_property_id=pms_property_id,
         )
+        # If a cash session is already open, do not create a duplicate one: a
+        # second open statement would steal the day's payments and lead to a
+        # double count of those payments when closing. Just reuse the open one.
+        if last_statement and not last_statement.is_complete:
+            return {"result": True, "diff": 0}
         compute_end_balance = (
             round(last_statement.balance_end_real, 2) if last_statement else 0
         )
@@ -750,7 +755,10 @@ class PmsTransactionService(Component):
             .sudo()
             .search(
                 domain,
-                order="date desc, id desc",
+                # Order by create_date, not date: an open session without lines
+                # has date=NULL, which sorts first (NULLS FIRST) on "date desc"
+                # and would shadow a more recent, already completed session.
+                order="create_date desc, id desc",
                 limit=1,
             )
         )
