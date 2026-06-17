@@ -1,7 +1,7 @@
 from fastapi import Response, status
 from fastapi.responses import JSONResponse
 
-from odoo import models
+from odoo import _, models
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -123,9 +123,12 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
             self._problem(
                 409,
                 "/errors/journal-not-cash",
-                "Journal is not a cash journal",
-                f"Journal {journal_id} is not of type cash; cannot operate a "
-                "cash session on it.",
+                _("Journal is not a cash journal"),
+                _(
+                    "Journal %s is not of type cash; cannot operate a "
+                    "cash session on it."
+                )
+                % journal_id,
             )
         PmsBaseModel.pms_api_check_access(self.env.user, journal)
         return journal
@@ -151,8 +154,8 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
                 self._problem(
                     409,
                     "/errors/cash-session-already-open",
-                    "Cash session already open",
-                    f"Journal {journal.id} already has an open cash session.",
+                    _("Cash session already open"),
+                    _("Journal %s already has an open cash session.") % journal.id,
                 )
             pms_property = journal.pms_property_ids
             pms_property = (
@@ -209,15 +212,15 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
                 self._problem(
                     404,
                     "/errors/cash-session-not-found",
-                    "Cash session not found",
-                    f"Cash session {session_id} does not exist.",
+                    _("Cash session not found"),
+                    _("Cash session %s does not exist.") % session_id,
                 )
             if statement.cash_session_closed:
                 self._problem(
                     409,
                     "/errors/cash-session-already-closed",
-                    "Cash session already closed",
-                    f"Cash session {session_id} is already closed.",
+                    _("Cash session already closed"),
+                    _("Cash session %s is already closed.") % session_id,
                 )
             PmsBaseModel.pms_api_check_access(self.env.user, statement)
             statement._pms_close_cash_session(payload.countedCash, payload.note)

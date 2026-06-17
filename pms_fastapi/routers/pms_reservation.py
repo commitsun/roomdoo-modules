@@ -1,7 +1,7 @@
 from fastapi import Response
 from fastapi.responses import JSONResponse
 
-from odoo import fields, models
+from odoo import _, fields, models
 from odoo.exceptions import MissingError
 from odoo.osv import expression
 
@@ -132,9 +132,9 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
             status_code=404,
             content={
                 "type": "/errors/reservation-not-found",
-                "title": "Reservation not found",
+                "title": _("Reservation not found"),
                 "status": 404,
-                "detail": f"Reservation {reservation_id} does not exist.",
+                "detail": _("Reservation %s does not exist.") % reservation_id,
                 "instance": f"/reservations/{reservation_id}/{action}",
             },
             media_type="application/problem+json",
@@ -169,12 +169,12 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
                 status_code=409,
                 content={
                     "type": "/errors/reservation-state-invalid",
-                    "title": ("Reservation state does not allow reverting arrival"),
+                    "title": _("Reservation state does not allow reverting arrival"),
                     "status": 409,
-                    "detail": (
-                        f"Reservation {reservation_id} cannot revert "
-                        f"arrival in its current state."
-                    ),
+                    "detail": _(
+                        "Reservation %s cannot revert " "arrival in its current state."
+                    )
+                    % reservation_id,
                     "instance": f"/reservations/{reservation_id}/onboarding",
                 },
                 media_type="application/problem+json",
@@ -194,15 +194,15 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
                 status_code=409,
                 content={
                     "type": "/errors/reservation-state-invalid",
-                    "title": (
+                    "title": _(
                         "Reservation state does not allow " "confirming departures"
                     ),
                     "status": 409,
-                    "detail": (
-                        f"Reservation {reservation_id} is in "
-                        f"'{reservation.state}' state and cannot be "
-                        f"confirmed as departed."
-                    ),
+                    "detail": _(
+                        "Reservation %s cannot be confirmed as departed in "
+                        "its current state."
+                    )
+                    % reservation_id,
                     "instance": (f"/reservations/{reservation_id}/offboarding"),
                 },
                 media_type="application/problem+json",

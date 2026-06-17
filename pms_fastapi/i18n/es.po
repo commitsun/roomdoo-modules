@@ -1,0 +1,1419 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Access denied"
+msgstr "Acceso denegado"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_needaction
+msgid "Action Needed"
+msgstr "Acción requerida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "All folio lines must belong to the same property."
+msgstr "Todas las líneas del folio deben pertenecer al mismo hotel."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "All sale lines must belong to the same property."
+msgstr "Todas las líneas de venta deben pertenecer al mismo hotel."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_journal__allowed_on_pms
+msgid "Allowed on PMS"
+msgstr "Permitido en PMS"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_folio__amount_to_invoice
+#: model:ir.model.fields,field_description:pms_fastapi.field_folio_sale_line__amount_to_invoice
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_folio__amount_to_invoice
+msgid "Amount To Invoice"
+msgstr "Importe a facturar"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_fastapi_endpoint__app
+msgid "App"
+msgstr "Aplicación"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_attachment_count
+msgid "Attachment Count"
+msgstr "Número de adjuntos"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_bank_statement
+msgid "Bank Statement"
+msgstr "Extracto bancario"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__mobile_blacklisted
+msgid "Blacklisted Phone Is Mobile"
+msgstr "Teléfono en lista negra es móvil"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__phone_blacklisted
+msgid "Blacklisted Phone is Phone"
+msgstr "Teléfono en lista negra es fijo"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Cancelled invoices cannot be edited."
+msgstr "Las facturas canceladas no se pueden editar."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Cannot specify both 'ids' and filter parameters. Use one or the other."
+msgstr "No se pueden indicar a la vez 'ids' y parámetros de filtro. Use uno u otro."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_bank_statement.py:0
+#, python-format
+msgid "Cash difference observed during the counting (Loss) - closing"
+msgstr "Diferencia de caja observada durante el recuento (pérdida) - cierre"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_bank_statement.py:0
+#, python-format
+msgid "Cash difference observed during the counting (Profit) - closing"
+msgstr "Diferencia de caja observada durante el recuento (ganancia) - cierre"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Cash session %s does not exist."
+msgstr "La sesión de caja %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Cash session %s is already closed."
+msgstr "La sesión de caja %s ya está cerrada."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Cash session already closed"
+msgstr "Sesión de caja ya cerrada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Cash session already open"
+msgstr "Sesión de caja ya abierta"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement__cash_session_closed
+msgid "Cash session closed"
+msgstr "Sesión de caja cerrada"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement__cash_session_closed_uid
+msgid "Cash session closed by"
+msgstr "Sesión de caja cerrada por"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement__cash_session_closed_date
+msgid "Cash session closed on"
+msgstr "Sesión de caja cerrada el"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Cash session not found"
+msgstr "Sesión de caja no encontrada"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement__cash_session_note
+msgid "Cash session note"
+msgstr "Nota de la sesión de caja"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Contact does not meet invoicing requirements."
+msgstr "El contacto no cumple los requisitos de facturación."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Contact not found"
+msgstr "Contacto no encontrado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Contact not found."
+msgstr "Contacto no encontrado."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_partial_reconcile__credit_move_id
+msgid "Credit Move"
+msgstr "Apunte de haber"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_journal.py:0
+#, python-format
+msgid "Currency"
+msgstr "Moneda"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Customer does not meet invoicing requirements."
+msgstr "El cliente no cumple los requisitos de facturación."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Customer not found."
+msgstr "Cliente no encontrado."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_partial_reconcile__debit_move_id
+msgid "Debit Move"
+msgstr "Apunte de debe"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Down-payment invoice out of scope"
+msgstr "Factura de anticipo fuera de alcance"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Down-payment invoices must belong to the same folios as folioLines."
+msgstr "Las facturas de anticipo deben pertenecer a los mismos folios que folioLines."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid ""
+"Down-payment invoices must belong to the same folios as the invoiced lines."
+msgstr "Las facturas de anticipo deben pertenecer a los mismos folios que las líneas facturadas."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Down-payment invoices not found"
+msgstr "Facturas de anticipo no encontradas"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Duplicate down-payment invoices"
+msgstr "Facturas de anticipo duplicadas"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Duplicate sale lines"
+msgstr "Líneas de venta duplicadas"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Each down-payment invoice can only appear once in the request."
+msgstr "Cada factura de anticipo solo puede aparecer una vez en la petición."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Each folio line can only appear once in the request."
+msgstr "Cada línea del folio solo puede aparecer una vez en la petición."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Each sale line can only appear once in the request."
+msgstr "Cada línea de venta solo puede aparecer una vez en la petición."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/user.py:0
+#, python-format
+msgid "Empty image file uploaded. Use DELETE to remove image."
+msgstr "El archivo de imagen está vacío. Use DELETE para eliminar la imagen."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_fastapi_endpoint
+msgid "FastAPI Endpoint"
+msgstr "Endpoint FastAPI"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_property_availability__fastapi_total_invoiced
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__fastapi_total_invoiced
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__fastapi_total_invoiced
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_users__fastapi_total_invoiced
+msgid "Fastapi Total Invoiced"
+msgstr "Total facturado (FastAPI)"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__phone_sanitized
+msgid ""
+"Field used to store sanitized phone number. Helps speeding up searches and "
+"comparisons."
+msgstr "Campo para almacenar el número de teléfono normalizado. Acelera las búsquedas y comparaciones."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Folio %s does not exist."
+msgstr "El folio %s no existe."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_folio_sale_line
+msgid "Folio Sale Line"
+msgstr "Línea de venta del folio"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Folio line %s is already included in invoice %s."
+msgstr "La línea del folio %s ya está incluida en la factura %s."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Folio line already invoiced"
+msgstr "Línea del folio ya facturada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Folio lines from multiple properties"
+msgstr "Líneas del folio de varios hoteles"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_follower_ids
+msgid "Followers"
+msgstr "Seguidores"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Seguidores (contactos)"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__has_message
+msgid "Has Message"
+msgstr "Tiene mensaje"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement_line__has_overdue_payments
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move__has_overdue_payments
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment__has_overdue_payments
+#: model:ir.model.fields,field_description:pms_fastapi.field_docuware_account_move__has_overdue_payments
+msgid "Has Overdue Payments"
+msgstr "Tiene pagos vencidos"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_property_availability__identification_number
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__identification_number
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__identification_number
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_users__identification_number
+msgid "Identification Number"
+msgstr "Número de identificación"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Si está marcado, los mensajes nuevos requieren su atención."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_has_error
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Si está marcado, algunos mensajes tienen un error de entrega."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_account_journal__allowed_on_pms
+msgid ""
+"If checked, this journal is available for PMS folio invoices and exposes the"
+" hotel/room configuration. Also gates PMS API behaviors that depend on the "
+"journal."
+msgstr "Si está marcado, este diario está disponible para las facturas de folio PMS y expone la configuración de hotel/habitación. También condiciona los comportamientos de la PMS API que dependen del diario."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__phone_sanitized_blacklisted
+msgid ""
+"If the sanitized phone number is on the blacklist, the contact won't receive"
+" mass mailing sms anymore, from any list"
+msgstr "Si el número de teléfono normalizado está en la lista negra, el contacto dejará de recibir SMS de envíos masivos, de cualquier lista"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_property_availability__in_house
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__in_house
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__in_house
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_users__in_house
+msgid "In House"
+msgstr "Alojado"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__mobile_blacklisted
+msgid ""
+"Indicates if a blacklisted sanitized phone number is a mobile number. Helps "
+"distinguish which number is blacklisted             when there is both a "
+"mobile and phone field in a model."
+msgstr "Indica si un número normalizado en lista negra es un número móvil. Ayuda a distinguir qué número está en lista negra cuando un modelo tiene a la vez un campo de móvil y otro de teléfono."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__phone_blacklisted
+msgid ""
+"Indicates if a blacklisted sanitized phone number is a phone number. Helps "
+"distinguish which number is blacklisted             when there is both a "
+"mobile and phone field in a model."
+msgstr "Indica si un número normalizado en lista negra es un número de teléfono. Ayuda a distinguir qué número está en lista negra cuando un modelo tiene a la vez un campo de móvil y otro de teléfono."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid ""
+"Internal transfers only allow bank or cash journals. Invalid journals: %s."
+msgstr "Las transferencias internas solo permiten diarios de banco o caja. Diarios no válidos: %s."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Invalid down-payment invoice"
+msgstr "Factura de anticipo no válida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invalid folio line"
+msgstr "Línea del folio no válida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invalid invoice composition"
+msgstr "Composición de factura no válida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invalid reconciliation id"
+msgstr "Id de conciliación no válido"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Invalid sale line"
+msgstr "Línea de venta no válida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Invoice %s does not exist."
+msgstr "La factura %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Invoice %s has no associated folio."
+msgstr "La factura %s no tiene folio asociado."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice %s is in state \"%s\" and cannot be validated."
+msgstr "La factura %s está en estado \"%s\" y no se puede validar."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Invoice creation failed"
+msgstr "Error al crear la factura"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice not editable"
+msgstr "Factura no editable"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice not found"
+msgstr "Factura no encontrada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice not found."
+msgstr "Factura no encontrada."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice not in draft state"
+msgstr "La factura no está en estado borrador"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Invoice posting failed"
+msgstr "Error al validar la factura"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Invoicing validation failed"
+msgstr "La validación de facturación ha fallado"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_is_follower
+msgid "Is Follower"
+msgstr "Es seguidor"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move_line__is_overdue
+msgid "Is Overdue"
+msgstr "Está vencido"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner_id_category__validable_document
+msgid "Is Validable Document"
+msgstr "Documento validable"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_journal
+msgid "Journal"
+msgstr "Diario"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Journal %s already has an open cash session."
+msgstr "El diario %s ya tiene una sesión de caja abierta."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Journal %s does not exist."
+msgstr "El diario %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Journal %s is not of type cash; cannot operate a cash session on it."
+msgstr "El diario %s no es de tipo caja; no se puede operar una sesión de caja en él."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_move_line
+msgid "Journal Item"
+msgstr "Apunte contable"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/cash_session.py:0
+#, python-format
+msgid "Journal is not a cash journal"
+msgstr "El diario no es de caja"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/user.py:0
+#, python-format
+msgid "Language %s is not available."
+msgstr "El idioma %s no está disponible."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_property_availability__last_reservation_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__last_reservation_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__last_reservation_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_users__last_reservation_id
+msgid "Last Reservation"
+msgstr "Última reserva"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_main_attachment_id
+msgid "Main Attachment"
+msgstr "Adjunto principal"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_content
+msgid "Message Content"
+msgstr "Contenido del mensaje"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_has_error
+msgid "Message Delivery error"
+msgstr "Error de entrega del mensaje"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_content
+msgid "Message content, to be used only in searches"
+msgstr "Contenido del mensaje, para usar solo en búsquedas"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_ids
+msgid "Messages"
+msgstr "Mensajes"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement_line__min_overdue_date
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move__min_overdue_date
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment__min_overdue_date
+#: model:ir.model.fields,field_description:pms_fastapi.field_docuware_account_move__min_overdue_date
+msgid "Minimum Overdue Payment Date"
+msgstr "Fecha mínima de pago vencido"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Missing fiscal identification number"
+msgstr "Falta el número de identificación fiscal"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Multiple invoices created"
+msgstr "Se han creado varias facturas"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Mutually exclusive parameters"
+msgstr "Parámetros mutuamente excluyentes"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "No invoice could be built from the provided composition."
+msgstr "No se ha podido construir ninguna factura con la composición indicada."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "No invoice could be created from the provided sale lines."
+msgstr "No se ha podido crear ninguna factura con las líneas de venta indicadas."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "No reconciliation exists between invoice %s and payment %s."
+msgstr "No existe conciliación entre la factura %s y el pago %s."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Not found"
+msgstr "No encontrado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Not implemented"
+msgstr "No implementado"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_account_bank_statement__cash_session_note
+msgid "Note left for the next shift when closing the cash session."
+msgstr "Nota dejada para el siguiente turno al cerrar la sesión de caja."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Número de acciones"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_has_error_counter
+msgid "Number of errors"
+msgstr "Número de errores"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Número de mensajes que requieren una acción"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Número de mensajes con error de entrega"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"One or more folio lines were asked to invoice more than their pending "
+"quantity."
+msgstr "Se ha solicitado facturar más de la cantidad pendiente en una o más líneas del folio."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid ""
+"One or more sale lines were asked to invoice a quantity greater than their "
+"pending quantity."
+msgstr "Se ha solicitado facturar una cantidad mayor que la pendiente en una o más líneas de venta."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Only down-payment invoices are accepted as downpaymentLines."
+msgstr "Solo se aceptan facturas de anticipo como downpaymentLines."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Origin and destination journals cannot be the same."
+msgstr "El diario de origen y el de destino no pueden ser el mismo."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "PDF report generation is not yet implemented."
+msgstr "La generación de informes PDF aún no está implementada."
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__fastapi_endpoint__app__pms_api
+msgid "PMS API"
+msgstr "PMS API"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_cash_session_cash_session_router_helper
+msgid "PMS API Cash Session Router Helper"
+msgstr "Helper del router de sesiones de caja (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_contact_contact_fiscal_document_type_router_helper
+msgid "PMS API Fiscal Document Type Router Helper"
+msgstr "Helper del router de tipos de documento fiscal (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_invoice_invoice_router_helper
+msgid "PMS API Invoice Router Helper"
+msgstr "Helper del router de facturas (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_journal_journal_router_helper
+msgid "PMS API Journal Router Helper"
+msgstr "Helper del router de diarios (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_payment_method_payment_method_router_helper
+msgid "PMS API Payment Method Router Helper"
+msgstr "Helper del router de métodos de pago (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_payment_payment_router_helper
+msgid "PMS API Payment Router Helper"
+msgstr "Helper del router de pagos (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_reservation_guest_router_helper
+msgid "PMS API Reservation Guest Router Helper"
+msgstr "Helper del router de huéspedes de reserva (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_reservation_router_helper
+msgid "PMS API Reservation Router Helper"
+msgstr "Helper del router de reservas (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_folio
+msgid "PMS Folio"
+msgstr "Folio PMS"
+
+#. module: pms_fastapi
+#: model:res.groups,name:pms_fastapi.pms_fastapi_group
+msgid "PMS endpoint group"
+msgstr "Grupo de endpoints PMS"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_partial_reconcile
+msgid "Partial Reconcile"
+msgstr "Conciliación parcial"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Partner %s does not exist."
+msgstr "El contacto %s no existe."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_res_partner_id_category
+msgid "Partner ID Category"
+msgstr "Categoría de documento de identidad"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Payment %s does not exist."
+msgstr "El pago %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment %s is already reconciled with invoice %s."
+msgstr "El pago %s ya está conciliado con la factura %s."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment %s not found."
+msgstr "Pago %s no encontrado."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment_method_line__payment_method_id
+msgid "Payment Method"
+msgstr "Método de pago"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_account_payment_method_line
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement_line__payment_method_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move__payment_method_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment__payment_method_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_docuware_account_move__payment_method_ids
+msgid "Payment Methods"
+msgstr "Métodos de pago"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment already reconciled"
+msgstr "Pago ya conciliado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment does not belong to any folio of this invoice."
+msgstr "El pago no pertenece a ningún folio de esta factura."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment does not belong to the invoice's customer."
+msgstr "El pago no pertenece al cliente de la factura."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment is not in a reconcilable state."
+msgstr "El pago no está en un estado conciliable."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Payment method %s does not exist."
+msgstr "El método de pago %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Payment not applicable"
+msgstr "Pago no aplicable"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Payment not found"
+msgstr "Pago no encontrado"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__phone_sanitized_blacklisted
+msgid "Phone Blacklisted"
+msgstr "Teléfono en lista negra"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__phone_mobile_search
+msgid "Phone/Mobile"
+msgstr "Teléfono/Móvil"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_bank_statement.py:0
+#, python-format
+msgid ""
+"Please go on the %s journal and define a Loss Account. This account will be "
+"used to record cash difference."
+msgstr "Vaya al diario %s y defina una cuenta de pérdidas. Esta cuenta se usará para registrar la diferencia de caja."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_bank_statement.py:0
+#, python-format
+msgid ""
+"Please go on the %s journal and define a Profit Account. This account will "
+"be used to record cash difference."
+msgstr "Vaya al diario %s y defina una cuenta de ganancias. Esta cuenta se usará para registrar la diferencia de caja."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_agency_agency_router_helper
+msgid "Pms api agency Service Helper"
+msgstr "Helper de servicio de agencias (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_contact_contact_id_number_router_helper
+msgid "Pms api contact  id number Service Helper"
+msgstr "Helper de servicio de documentos de identidad de contacto (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_contact_contact_router_helper
+#: model:ir.model,name:pms_fastapi.model_pms_api_user_router_helper
+msgid "Pms api contact Service Helper"
+msgstr "Helper de servicio de contactos (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_customer_customer_router_helper
+msgid "Pms api customer Service Helper"
+msgstr "Helper de servicio de clientes (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_folio_folio_router_helper
+msgid "Pms api folio Service Helper"
+msgstr "Helper de servicio de folios (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_guest_guest_router_helper
+msgid "Pms api guest Service Helper"
+msgstr "Helper de servicio de huéspedes (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_supplier_supplier_router_helper
+msgid "Pms api supplier Service Helper"
+msgstr "Helper de servicio de proveedores (PMS API)"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Property not found."
+msgstr "Hotel no encontrado."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Quantity to invoice exceeds pending quantity"
+msgstr "La cantidad a facturar supera la cantidad pendiente"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Reconciliation id '%s' is malformed. Expected 'payment_{id}'."
+msgstr "El id de conciliación '%s' tiene un formato incorrecto. Se esperaba 'payment_{id}'."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Reconciliation not found"
+msgstr "Conciliación no encontrada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Record limit exceeded"
+msgstr "Límite de registros superado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Record not found"
+msgstr "Registro no encontrado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Refund confirmation required"
+msgstr "Se requiere confirmación del abono"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_channel_wubook_pms_folio__amount_to_invoice
+#: model:ir.model.fields,help:pms_fastapi.field_pms_folio__amount_to_invoice
+msgid "Remaining amount to invoice on the folio (taxes included)"
+msgstr "Importe pendiente de facturar en el folio (impuestos incluidos)"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_folio_sale_line__amount_to_invoice
+msgid "Remaining amount to invoice on the folio line (taxes included)"
+msgstr "Importe pendiente de facturar en la línea del folio (impuestos incluidos)"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement_line__replaced_by_invoice_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move__replaced_by_invoice_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment__replaced_by_invoice_ids
+#: model:ir.model.fields,field_description:pms_fastapi.field_docuware_account_move__replaced_by_invoice_ids
+msgid "Replaced By Invoices"
+msgstr "Reemplazado por facturas"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_bank_statement_line__replaces_invoice_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_move__replaces_invoice_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_account_payment__replaces_invoice_id
+#: model:ir.model.fields,field_description:pms_fastapi.field_docuware_account_move__replaces_invoice_id
+msgid "Replaces Invoice"
+msgstr "Reemplaza a la factura"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation %s cannot be confirmed as departed in its current state."
+msgstr "La reserva %s no se puede confirmar como salida en su estado actual."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation %s cannot revert arrival in its current state."
+msgstr "La reserva %s no puede revertir la llegada en su estado actual."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation %s does not exist."
+msgstr "La reserva %s no existe."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation not found"
+msgstr "Reserva no encontrada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation state does not allow confirming departures"
+msgstr "El estado de la reserva no permite confirmar salidas"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_reservation.py:0
+#, python-format
+msgid "Reservation state does not allow reverting arrival"
+msgstr "El estado de la reserva no permite revertir la llegada"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "Error de entrega de SMS"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Sale lines from multiple properties"
+msgstr "Líneas de venta de varios hoteles"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Sale lines not found"
+msgstr "Líneas de venta no encontradas"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__phone_sanitized
+msgid "Sanitized Number"
+msgstr "Número normalizado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid ""
+"Sections, notes and down payments cannot be invoiced through this endpoint."
+msgstr "Las secciones, notas y anticipos no se pueden facturar a través de este endpoint."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Sections, notes and down payments cannot be sent as folioLines."
+msgstr "Las secciones, notas y anticipos no se pueden enviar como folioLines."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Simplified invoice limit exceeded"
+msgstr "Límite de factura simplificada superado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Some down-payment invoices could not be found."
+msgstr "No se han encontrado algunas facturas de anticipo."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Some folio lines cannot be invoiced."
+msgstr "Algunas líneas del folio no se pueden facturar."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Some folio lines could not be found."
+msgstr "No se han encontrado algunas líneas del folio."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "Some sale lines could not be found."
+msgstr "No se han encontrado algunas líneas de venta."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_folio__fastapi_sort_state
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_folio__fastapi_sort_state
+msgid "Sort State"
+msgstr "Estado de ordenación"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "The contact has no fiscal identification number configured."
+msgstr "El contacto no tiene configurado un número de identificación fiscal."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "The export requested %s records, but the maximum allowed is %s."
+msgstr "La exportación solicitó %s registros, pero el máximo permitido es %s."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/contact_id_number.py:0
+#, python-format
+msgid "The id number %s does not belong to the contact %s"
+msgstr "El número de identificación %s no pertenece al contacto %s"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "The invoice state does not allow new reconciliations."
+msgstr "El estado de la factura no permite nuevas conciliaciones."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "The invoice state does not allow undoing reconciliations."
+msgstr "El estado de la factura no permite deshacer conciliaciones."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid ""
+"The invoice total exceeds the simplified invoice limit configured for this "
+"property."
+msgstr "El total de la factura supera el límite de factura simplificada configurado para este hotel."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"The provided composition could not be grouped into a single invoice "
+"(different currency or company)."
+msgstr "La composición indicada no se pudo agrupar en una sola factura (moneda o compañía distintas)."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid ""
+"The provided sale lines could not be grouped into a single invoice "
+"(different currency or company)."
+msgstr "Las líneas de venta indicadas no se pudieron agrupar en una sola factura (moneda o compañía distintas)."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/utils.py:0
+#, python-format
+msgid "The record do not exist"
+msgstr "El registro no existe"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice is validated. Editing it will generate a refund and a new "
+"corrected invoice. Confirm by passing confirmRefund=true."
+msgstr "Esta factura está validada. Editarla generará un abono y una nueva factura rectificada. Confirme pasando confirmRefund=true."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_journal.py:0
+#, python-format
+msgid "Type"
+msgstr "Tipo"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Validation error"
+msgstr "Error de validación"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__website_message_ids
+msgid "Website Messages"
+msgstr "Mensajes del sitio web"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_res_partner__website_message_ids
+msgid "Website communication history"
+msgstr "Historial de comunicación del sitio web"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "You are not allowed to access some of the requested sale lines."
+msgstr "No tiene permiso para acceder a algunas de las líneas de venta solicitadas."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/schemas/base.py:0
+#, python-format
+msgid "You are not allowed to access these properties. %s"
+msgstr "No tiene permiso para acceder a estos hoteles. %s"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/schemas/base.py:0
+#: code:addons/pms_fastapi/schemas/base.py:0
+#, python-format
+msgid "You are not allowed to access this properties. %s"
+msgstr "No tiene permiso para acceder a estos hoteles. %s"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/account_journal.py:0
+#, python-format
+msgid ""
+"You cannot change %(fields)s on journal '%(journal)s' because it has "
+"payments linked to its payment method lines. Changing these fields would "
+"orphan those lines and break payment traceability."
+msgstr "No puede cambiar %(fields)s en el diario '%(journal)s' porque tiene pagos vinculados a sus líneas de método de pago. Cambiar estos campos dejaría huérfanas esas líneas y rompería la trazabilidad de los pagos."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/contact.py:0
+#: code:addons/pms_fastapi/routers/contact_id_number.py:0
+#, python-format
+msgid "contact not found"
+msgstr "contacto no encontrado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "folio not found"
+msgstr "folio no encontrado"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "folioId and invoiceId are mutually exclusive."
+msgstr "folioId e invoiceId son mutuamente excluyentes."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_fastapi_login_endpoint
+msgid "login endpoint helper"
+msgstr "Helper del endpoint de login"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "paymentMethodId does not apply to an internal transfer."
+msgstr "paymentMethodId no aplica a una transferencia interna."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/pms_folio.py:0
+#, python-format
+msgid "sale line not found"
+msgstr "línea de venta no encontrada"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "supplierPayment requires partnerId."
+msgstr "supplierPayment requiere partnerId."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/login.py:0
+#, python-format
+msgid "wrong user/pass"
+msgstr "usuario/contraseña incorrectos"
