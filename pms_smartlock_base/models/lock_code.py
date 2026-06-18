@@ -262,10 +262,24 @@ class LockCode(models.Model):
             "vendor_grant_ref": grant.ref,
             "date_from": self._to_naive(grant.starts_at),
             "date_to": self._to_naive(grant.ends_at),
+            # A successful sync clears any prior permanent failure.
+            "failed": False,
         }
         if specs is not None:
             vals["target_ids"] = [(5, 0, 0)] + [(0, 0, spec) for spec in specs]
         self.write(vals)
+
+    def _persist_failed(self):
+        """Mark the code as permanently failed in an independent transaction.
+
+        The sync methods re-raise after a non-retryable ``LockError`` so
+        queue_job records the traceback, but that rollback also discards any
+        write made in the job cursor. Writing ``failed`` through a separate
+        cursor keeps the flag and prevents the code from falling back to
+        ``pending``."""
+        self.ensure_one()
+        with self.env.registry.cursor() as failed_cr:
+            self.with_env(self.env(cr=failed_cr)).sudo().failed = True
 
     def _sync_create(self):
         self.ensure_one()
@@ -286,7 +300,7 @@ class LockCode(models.Model):
         except (LockConnectionError, LockOfflineError) as exc:
             raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
-            self.failed = True
+            self._persist_failed()
             raise
         self._apply_grant(grant, specs=specs)
         self.invalidate_recordset(["cancelled"])
@@ -306,7 +320,7 @@ class LockCode(models.Model):
         except (LockConnectionError, LockOfflineError) as exc:
             raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
-            self.failed = True
+            self._persist_failed()
             raise
         self._apply_grant(grant)
 
@@ -319,7 +333,7 @@ class LockCode(models.Model):
         except (LockConnectionError, LockOfflineError) as exc:
             raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
-            self.failed = True
+            self._persist_failed()
             raise
         self.cancelled = True
 
@@ -328,6 +342,11 @@ class LockCode(models.Model):
         ``queue.job`` so the hotel can inspect retries and errors from the
         ``lock.code`` form."""
         self.ensure_one()
+        # A fresh sync supersedes any prior permanent failure: clear the flag
+        # so the code reflects the new attempt (syncing → active/failed) instead
+        # of staying stuck in ``failed``.
+        if self.sudo().failed:
+            self.sudo().failed = False
         delayed = getattr(self.with_delay(), method_name)(**kwargs)
         job = self.env["queue.job"].search([("uuid", "=", delayed.uuid)], limit=1)
         if job:
