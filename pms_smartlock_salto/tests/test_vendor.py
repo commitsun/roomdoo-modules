@@ -49,6 +49,7 @@ class TestSaltoVendor(TransactionCase):
                 siteId="site-1",
                 role_id="role-1",
                 env="acc",
+                time_zone=None,
             )
 
     def test_missing_env_raises(self):
@@ -87,12 +88,14 @@ class TestSaltoVendor(TransactionCase):
         self.assertNotIn("guest_email", kwargs)
 
     def test_guest_kwargs_empty_name_fallback(self):
+        # Salto requires a non-empty last name; an empty (or single-word)
+        # partner_name falls back to a placeholder so the user is accepted.
         reservation = SimpleNamespace(partner_name="", email=False, name=False)
         self.assertEqual(
             self.vendor._salto_guest_kwargs(reservation),
             {
                 "guest_first_name": "Guest",
-                "guest_last_name": "",
+                "guest_last_name": "-",
                 "access_group_name": "Roomdoo Access",
             },
         )
