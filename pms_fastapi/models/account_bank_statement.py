@@ -12,8 +12,12 @@ class AccountBankStatement(models.Model):
     _inherit = "account.bank.statement"
 
     # A cash session (turno de caja) is backed by an account.bank.statement.
-    # The accounting model has no open/closed state, so we track it explicitly
-    # instead of inferring it from balances.
+    # The accounting model has no open/closed state, so we track it explicitly.
+    # This (surviving) API owns these fields. While the legacy pms_api_rest API
+    # still coexists behind feature flags, it also stamps cash_session_closed
+    # (via its temporary _mark_cash_session_closed bridge) so a session closed
+    # there is not seen as open here. That bridge lives in the legacy module and
+    # disappears with it; these fields stay here.
     cash_session_closed = fields.Boolean(
         string="Cash session closed",
         default=False,
@@ -140,11 +144,19 @@ class AccountBankStatement(models.Model):
         Posts the difference as a profit/loss line, creates and reconciles the
         statement lines for the shift payments, and stamps the closing
         metadata. The mismatch never blocks the close.
+
+        A shift closed without any movement (no payments and the count matching
+        the declared base) leaves no accounting trace, so the empty statement is
+        discarded instead of being kept as an empty closed session. Returns True
+        when the session is actually closed and False when it is discarded.
         """
         self.ensure_one()
         breakdown = self._pms_cash_session_breakdown()
         difference = round(counted_cash - breakdown["expected"], 2)
         session_payments = self._pms_cash_session_payments()
+        if not session_payments and not difference:
+            self.unlink()
+            return False
         if difference:
             self._pms_post_statement_difference(difference)
         self._pms_create_statement_lines(session_payments, counted_cash)
@@ -157,7 +169,7 @@ class AccountBankStatement(models.Model):
                 "cash_session_note": note or "",
             }
         )
-        return difference
+        return True
 
     def _pms_post_statement_difference(self, amount):
         """Create the profit/loss statement line for the cash mismatch."""
