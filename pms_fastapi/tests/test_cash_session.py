@@ -189,6 +189,29 @@ class TestCashSessionEndpoints(CommonTestPmsApi):
             response.status_code, status.HTTP_204_NO_CONTENT, response.text
         )
 
+    def test_last_closing_with_missing_metadata_does_not_500(self):
+        """A legacy session flagged closed without closing date/uid must not
+        break last-closing; it falls back to the write metadata."""
+        statement = self.env["account.bank.statement"].create(
+            {
+                "journal_id": self.journal_cash.id,
+                "cash_session_closed": True,
+                "balance_end_real": 100.0,
+            }
+        )
+        self.assertFalse(statement.cash_session_closed_date)
+        self.assertFalse(statement.cash_session_closed_uid)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.get(
+                f"/cash-sessions/last-closing?journalId={self.journal_cash.id}"
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        body = response.json()
+        self.assertEqual(body["closingAmount"], 100.0)
+        self.assertIsNotNone(body["closedAt"])
+        self.assertIsNotNone(body["closedBy"]["id"])
+
     # -- close --
 
     def test_close_records_difference_and_transitions(self):
@@ -241,13 +264,36 @@ class TestCashSessionEndpoints(CommonTestPmsApi):
         with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
             session_id = self._open(test_client, base_amount=200.0).json()["id"]
+            # Close with a mismatch so the statement persists; a movement-less
+            # close would be discarded (see test_close_without_movements_*).
             test_client.post(
                 f"/cash-sessions/{session_id}/closing",
-                json={"countedCash": 200.0, "note": ""},
+                json={"countedCash": 180.0, "note": ""},
             )
             response = test_client.post(
                 f"/cash-sessions/{session_id}/closing",
-                json={"countedCash": 200.0, "note": ""},
+                json={"countedCash": 180.0, "note": ""},
             )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
         self.assertEqual(response.json()["type"], "/errors/cash-session-already-closed")
+
+    def test_close_without_movements_discards_and_returns_204(self):
+        """A shift with no payments and a count matching the base leaves no
+        accounting trace, so the empty statement is discarded and the close
+        responds 204."""
+        Statement = self.env["account.bank.statement"]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            session_id = self._open(test_client, base_amount=200.0).json()["id"]
+            close = test_client.post(
+                f"/cash-sessions/{session_id}/closing",
+                json={"countedCash": 200.0, "note": "nothing happened"},
+            )
+            current_after = test_client.get(
+                f"/cash-sessions/current?journalId={self.journal_cash.id}"
+            )
+        self.assertEqual(close.status_code, status.HTTP_204_NO_CONTENT, close.text)
+        self.assertFalse(Statement.browse(session_id).exists())
+        self.assertEqual(
+            current_after.status_code, status.HTTP_204_NO_CONTENT, current_after.text
+        )

@@ -81,16 +81,24 @@ async def get_last_cash_closing(
 @pms_api_router.post(
     "/cash-sessions/{session_id}/closing",
     response_model=CashClosing,
+    responses={
+        204: {
+            "description": "Cash session closed without movements; "
+            "the empty statement was discarded"
+        }
+    },
     tags=["account"],
 )
 async def close_cash_session(
     env: AuthenticatedEnv,
     session_id: int,
     payload: CashSessionCloseInput,
-) -> CashClosing:
+) -> CashClosing | Response:
     """Close the cash session recording the physically counted cash and an
     optional note. The backend recomputes the mismatch and closing balance.
-    The mismatch is recorded but never blocks the close."""
+    The mismatch is recorded but never blocks the close. A close with no
+    movements (no payments and the count matching the base) is discarded and
+    responds 204."""
     return (
         env["pms_api_cash_session.cash_session_router.helper"]
         .new()
@@ -223,7 +231,10 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
                     _("Cash session %s is already closed.") % session_id,
                 )
             PmsBaseModel.pms_api_check_access(self.env.user, statement)
-            statement._pms_close_cash_session(payload.countedCash, payload.note)
+            if not statement._pms_close_cash_session(
+                payload.countedCash, payload.note
+            ):
+                return Response(status_code=status.HTTP_204_NO_CONTENT)
         except _CashSessionProblem as problem:
             return problem.response
         return CashClosing.from_account_bank_statement(statement)

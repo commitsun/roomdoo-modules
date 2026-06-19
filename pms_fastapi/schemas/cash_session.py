@@ -115,10 +115,15 @@ class CashLastClosing(PmsBaseModel):
     @classmethod
     def from_account_bank_statement(cls, statement):
         currency = _currency_of(statement)
+        # Legacy cash sessions may carry the closed flag without the closing
+        # user/date recorded; fall back to the write metadata so the required
+        # closedBy/closedAt never break the response.
+        closed_uid = statement.cash_session_closed_uid or statement.write_uid
+        closed_at = statement.cash_session_closed_date or statement.write_date
         return cls(
             _decimal_places=currency.decimal_places,
-            closedBy=UserId.from_res_users(statement.cash_session_closed_uid),
-            closedAt=statement.cash_session_closed_date,
+            closedBy=UserId.from_res_users(closed_uid),
+            closedAt=closed_at,
             closingAmount=statement.balance_end_real,
             note=statement.cash_session_note or "",
             currency=CurrencySummary.from_res_currency(currency),
