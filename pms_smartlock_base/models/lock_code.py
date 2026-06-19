@@ -385,6 +385,12 @@ class LockCode(models.Model):
                 grant_ref=self.vendor_grant_ref,
                 starts_at=self._to_utc(date_from),
                 ends_at=self._to_utc(date_to),
+                # Pass the known PIN so vendors whose ref handle can go stale
+                # (TESA pre-assignment auto-activating into a check-in) can
+                # re-resolve live state and confirm the credential is ours. We
+                # are under sudo; the PIN stays in the restricted field and is
+                # never written to vendor_grant_ref.
+                pin=self.pin,
             )
         except (LockConnectionError, LockOfflineError) as exc:
             raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
@@ -400,7 +406,10 @@ class LockCode(models.Model):
             self._raise_gateway_busy()
         try:
             connector = self.vendor_id.get_connector()
-            connector.revoke_access(grant_ref=self.vendor_grant_ref)
+            # PIN passed for the same reason as in _sync_modify: let vendors
+            # with stale-prone ref handles confirm the stay is ours before
+            # clearing it, so we never revoke a stranger's access.
+            connector.revoke_access(grant_ref=self.vendor_grant_ref, pin=self.pin)
         except (LockConnectionError, LockOfflineError) as exc:
             raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
         except LockError:
