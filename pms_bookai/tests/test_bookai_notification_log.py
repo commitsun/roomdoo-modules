@@ -3,8 +3,11 @@ from unittest.mock import MagicMock, patch
 
 from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
 from .common import TestBookaiCommon
+
+PREPARE_LOGGER = "odoo.addons.pms_bookai.models.pms_notification_log"
 
 
 @tagged("post_install", "-at_install")
@@ -226,6 +229,7 @@ class TestBookaiNotificationLog(TestBookaiCommon):
         folio = log._bookai_resolve_origin_folio(self.bookai_template, self.folio)
         self.assertEqual(folio.id, self.folio.id)
 
+    @mute_logger(PREPARE_LOGGER)
     def test_resolve_origin_folio_empty_raises(self):
         tmpl = self.env["pms.notification.template"].create(
             {
@@ -239,6 +243,7 @@ class TestBookaiNotificationLog(TestBookaiCommon):
         with self.assertRaises(ValidationError):
             log._bookai_resolve_origin_folio(tmpl, self.folio)
 
+    @mute_logger(PREPARE_LOGGER)
     def test_resolve_origin_folio_not_found_raises(self):
         tmpl = self.env["pms.notification.template"].create(
             {

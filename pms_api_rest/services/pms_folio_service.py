@@ -2600,27 +2600,30 @@ class PmsFolioService(Component):
                                 )
                             )
                         )
-                        pms_api_check_access(user=self.env.user, records=board)
-                        pricelist = (
-                            self.env["product.pricelist"]
-                            .sudo()
-                            .browse(info_reservation.pricelistId)
-                            if info_reservation.pricelistId
-                            else folio.pricelist_id
-                        )
-                        for rline in info_reservation.reservationLines:
-                            board_day_prices[rline.date] = board._get_billed_day_price(
-                                pricelist=pricelist,
-                                consumption_date=rline.date,
-                                pms_property_id=folio.pms_property_id.id,
-                                adults=info_reservation.adults,
-                                children=info_reservation.children,
-                                partner_id=folio.partner_id.id
-                                if folio.partner_id
-                                else False,
-                                fiscal_position=folio.fiscal_position_id,
-                                company=folio.company_id,
+                        if board:
+                            pms_api_check_access(user=self.env.user, records=board)
+                            pricelist = (
+                                self.env["product.pricelist"]
+                                .sudo()
+                                .browse(info_reservation.pricelistId)
+                                if info_reservation.pricelistId
+                                else folio.pricelist_id
                             )
+                            for rline in info_reservation.reservationLines:
+                                board_day_prices[
+                                    rline.date
+                                ] = board._get_billed_day_price(
+                                    pricelist=pricelist,
+                                    consumption_date=rline.date,
+                                    pms_property_id=folio.pms_property_id.id,
+                                    adults=info_reservation.adults,
+                                    children=info_reservation.children,
+                                    partner_id=folio.partner_id.id
+                                    if folio.partner_id
+                                    else False,
+                                    fiscal_position=folio.fiscal_position_id,
+                                    company=folio.company_id,
+                                )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
                     board_day_prices=board_day_prices,

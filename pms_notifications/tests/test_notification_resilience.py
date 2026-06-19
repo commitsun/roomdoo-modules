@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from odoo import fields
 from odoo.exceptions import ValidationError
+from odoo.tools import mute_logger
 
 from odoo.addons.pms.tests.common import TestPms
 from odoo.addons.pms_notifications.models.pms_property_notification_rule import (
@@ -89,6 +90,7 @@ class TestPmsNotificationResilience(TestPms):
         )
         self.assertFalse(logs)
 
+    @mute_logger("odoo.addons.pms_notifications.models.pms_property_notification_rule")
     def test_scheduled_log_failure_does_not_block_other_records(self):
         rule = self._create_scheduled_rule("Scheduled resilience")
         folio_1 = self._create_folio("Scheduled Resilience 1")
@@ -133,6 +135,7 @@ class TestPmsNotificationResilience(TestPms):
         self.assertEqual(first_logs, 0)
         self.assertEqual(second_logs, 1)
 
+    @mute_logger("odoo.addons.pms_notifications.models.pms_property_notification_rule")
     def test_run_scheduled_rules_continues_when_one_rule_crashes(self):
         rule_1 = self._create_scheduled_rule("Scheduled rule crash")
         rule_2 = self._create_scheduled_rule("Scheduled rule continue")
