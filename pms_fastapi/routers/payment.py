@@ -385,6 +385,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 PmsBaseModel.pms_api_check_access(self.env.user, payment)
             except (AccessError, AccessDenied):
                 self._not_found(_("Payment %s does not exist.") % payment_id)
+            self._ensure_not_bank_matched(payment)
             if payment.is_internal_transfer:
                 self._update_internal_transfer(payment, payload)
             else:
@@ -394,6 +395,22 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
+
+    def _ensure_not_bank_matched(self, payment):
+        """A payment reconciled against a bank statement cannot be modified:
+        editing it would break the bank reconciliation. Internal transfers move
+        both legs together, so the counterpart is checked as well."""
+        legs = payment + payment.paired_internal_transfer_payment_id
+        if any(legs.mapped("is_matched")):
+            self._problem(
+                409,
+                "/errors/payment-bank-matched",
+                _("Payment cannot be modified"),
+                _(
+                    "This payment is reconciled against a bank statement and "
+                    "cannot be modified."
+                ),
+            )
 
     def _resolve_payment_method_line(self, payment_method_id):
         line = (
