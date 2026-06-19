@@ -214,6 +214,7 @@ class TestSyncRemove(_SyncTestBase):
         self.code._sync_remove()
         self.connector.revoke_access.assert_called_once_with(
             grant_ref=self.code.vendor_grant_ref,
+            pin=self.code.pin,
         )
         # The cancelled flag gets written **after** vendor confirmation
         # — the safety-first invariant from the design memo.
