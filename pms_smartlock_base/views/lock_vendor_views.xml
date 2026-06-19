@@ -21,6 +21,15 @@
         <field name="model">lock.vendor</field>
         <field name="arch" type="xml">
             <form string="Lock Vendor">
+                <header>
+                    <button
+            name="action_fetch_locks"
+            type="object"
+            string="Fetch Locks"
+            class="btn-primary"
+            attrs="{'invisible': [('vendor_type', '=', False)]}"
+          />
+                </header>
                 <sheet>
                     <widget
             name="web_ribbon"

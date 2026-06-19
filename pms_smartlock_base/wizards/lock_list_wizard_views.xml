@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_list_wizard_view_form" model="ir.ui.view">
+        <field name="name">lock.list.wizard.form</field>
+        <field name="model">lock.list.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Locks">
+                <field name="lock_listing" readonly="1" nolabel="1" widget="text" />
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
