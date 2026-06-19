@@ -1,6 +1,6 @@
-==========================================================
-AEAT Identification type and partner documents integration
-==========================================================
+======================
+PMS Notifications Base
+======================
 
 ..
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -10,14 +10,17 @@ AEAT Identification type and partner documents integration
    !! source digest: sha256:5b6a87d398ef56482d8dbfd8d087cd58f748470c6716dfe5c534e8ac3783eeca
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-.. |badge_devstat| image:: https://img.shields.io/badge/maturity-beta-brightgreen.png
+.. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
     :target: https://odoo-community.org/page/development-status
     :alt: Beta
+.. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
+    :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
+    :alt: License: AGPL-3
+.. |badge3| image:: https://img.shields.io/badge/github-commitsun%2Froomdoo--modules-lightgray.png?logo=github
+    :target: https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_notifications
+    :alt: commitsun/roomdoo-modules
 
-.. |badge_license| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
-    :alt: AGPL-3
-
-|badge_devstat| |badge_license|
+|badge1| |badge2| |badge3|
 
 Set automatically partner vat, aeat document type/number fields from
 document numbers mapping
@@ -34,6 +37,16 @@ You can set the aeat documentation type in Contacts -> Configuration ->
 Partner ID Categories. When you add a new partner document,
 automatically set it in vat or aeat documents according to the
 configured mapping
+
+Bug Tracker
+===========
+
+Bugs are tracked on `GitHub Issues <https://github.com/commitsun/roomdoo-modules/issues>`_.
+In case of trouble, please check there if your issue has already been reported.
+If you spotted it first, help us to smash it by providing a detailed and welcomed
+`feedback <https://github.com/commitsun/roomdoo-modules/issues/new?body=module:%20pms_notifications%0Aversion:%2016.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+
+Do not contact contributors directly about support or help with technical issues.
 
 Credits
 =======
@@ -53,7 +66,6 @@ Contributors
 Maintainers
 -----------
 
-This module is maintained by Commitsun.
+This module is part of the `commitsun/roomdoo-modules <https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_notifications>`_ project on GitHub.
 
-Contact the maintainer through their official support channels in case you find
-any issues with this module.
+You are welcome to contribute.

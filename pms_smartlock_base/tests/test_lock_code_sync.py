@@ -10,6 +10,13 @@ from roomdoo_locks_base import (
     LockOfflineError,
 )
 
+from odoo.sql_db import db_connect
+
+from odoo.addons.pms_smartlock_base.models.lock_code import (
+    _GATEWAY_LOCK_CLASSID,
+    _GATEWAY_LOCK_RETRY_BASE,
+    _GATEWAY_LOCK_RETRY_JITTER,
+)
 from odoo.addons.queue_job.exception import RetryableJobError
 
 from .common import CommonSmartlock
@@ -17,14 +24,9 @@ from .common import CommonSmartlock
 
 @contextmanager
 def expect_raises(test, exc_type):
-    """Like ``assertRaises`` but **without** the cursor-savepoint wrap
-    that ``odoo.tests.common.BaseCase.assertRaises`` adds. The
-    ``except LockError: self.failed = True`` write inside our model
-    happens **before** the re-raise; ``assertRaises``' implicit
-    savepoint rollback would erase that write, defeating the
-    assertion. In production the call site has no such savepoint —
-    queue_job's job runner catches the exception without rolling
-    back the in-progress writes."""
+    """Assert that the block raises ``exc_type`` (or a subclass), failing
+    with a helpful message otherwise. A thin wrapper kept for readability
+    across the sync tests."""
     try:
         yield
     except exc_type:
@@ -158,13 +160,18 @@ class TestSyncCreate(_SyncTestBase):
         with expect_raises(self, RetryableJobError):
             self.code._sync_create()
 
-    def test_lock_error_marks_failed_and_reraises(self):
-        """Non-transient vendor errors mark the credential as failed (so
-        the UI can surface it) and re-raise."""
+    def test_lock_error_persists_failed_and_reraises(self):
+        """Non-transient vendor errors persist the failure via
+        ``_persist_failed`` (which writes in its own transaction so the flag
+        survives the job rollback) and re-raise so queue_job records the
+        traceback. The cross-transaction persistence cannot be observed from a
+        TransactionCase (single, never-committed transaction), so we assert the
+        contract: the error path invokes ``_persist_failed`` and propagates."""
         self.connector.grant_access.side_effect = LockAuthError("bad creds")
-        with expect_raises(self, LockError):
-            self.code._sync_create()
-        self.assertTrue(self.code.failed)
+        with patch.object(type(self.code), "_persist_failed") as persist:
+            with expect_raises(self, LockError):
+                self.code._sync_create()
+        persist.assert_called_once()
 
 
 class TestSyncModify(_SyncTestBase):
@@ -190,14 +197,15 @@ class TestSyncModify(_SyncTestBase):
             )
         self.assertFalse(self.code.failed)
 
-    def test_lock_error_marks_failed(self):
+    def test_lock_error_persists_failed(self):
         self.connector.modify_access.side_effect = LockAuthError("bad creds")
-        with expect_raises(self, LockError):
-            self.code._sync_modify(
-                date_from=datetime(2026, 6, 2, 13, 0),
-                date_to=datetime(2026, 6, 5, 10, 0),
-            )
-        self.assertTrue(self.code.failed)
+        with patch.object(type(self.code), "_persist_failed") as persist:
+            with expect_raises(self, LockError):
+                self.code._sync_modify(
+                    date_from=datetime(2026, 6, 2, 13, 0),
+                    date_to=datetime(2026, 6, 5, 10, 0),
+                )
+        persist.assert_called_once()
 
 
 class TestSyncRemove(_SyncTestBase):
@@ -222,12 +230,124 @@ class TestSyncRemove(_SyncTestBase):
         self.assertFalse(self.code.cancelled)
         self.assertFalse(self.code.failed)
 
-    def test_lock_error_marks_failed_not_cancelled(self):
-        """Non-transient remove failure → ``failed=True``, ``cancelled``
-        stays False. The UI should surface this loudly: revoke failed,
-        grant still valid on the locks."""
+    def test_lock_error_persists_failed_not_cancelled(self):
+        """Non-transient remove failure → ``_persist_failed`` is invoked and
+        ``cancelled`` stays False. The UI must surface this loudly: revoke
+        failed, the grant is still valid on the locks."""
         self.connector.revoke_access.side_effect = LockAuthError("bad creds")
-        with expect_raises(self, LockError):
-            self.code._sync_remove()
-        self.assertTrue(self.code.failed)
+        with patch.object(type(self.code), "_persist_failed") as persist:
+            with expect_raises(self, LockError):
+                self.code._sync_remove()
+        persist.assert_called_once()
         self.assertFalse(self.code.cancelled)
+
+
+class TestFailedFlagClearing(_SyncTestBase):
+    """A previously failed credential must recover: a successful sync, or
+    simply enqueuing a fresh one, clears ``failed`` so the state stops
+    being stuck on ``failed``."""
+
+    def test_successful_sync_clears_failed(self):
+        """``_apply_grant`` runs on the happy path of a modify; it must wipe
+        a prior failure flag in the same (committing) transaction."""
+        self.code.sudo().failed = True
+        self.connector.modify_access.return_value = _grant(ref="recovered")
+        self.code._sync_modify(
+            date_from=datetime(2026, 6, 2, 13, 0),
+            date_to=datetime(2026, 6, 5, 10, 0),
+        )
+        self.assertFalse(self.code.failed)
+
+    def test_enqueue_sync_clears_failed(self):
+        """Enqueuing a new sync supersedes the prior failure up front, so the
+        code shows ``syncing`` instead of staying on ``failed``."""
+        self.code.sudo().failed = True
+        self.code._enqueue_sync("_sync_remove")
+        self.assertFalse(self.code.failed)
+
+
+class TestGatewaySerialization(_SyncTestBase):
+    """A vendor gateway can't service two requests at once. Before any
+    vendor call the sync grabs a transaction-level advisory lock per
+    ``lock_device_id``; if another job holds it the sync re-enqueues
+    instead of hitting the busy gateway. The contention retry must not
+    count against ``max_retries`` (``ignore_retry``), so a credential
+    never ends up ``failed`` just for losing a gateway race."""
+
+    @contextmanager
+    def _hold_gateway_lock(self, device_id):
+        """Hold the same advisory lock the model takes, from a *separate*
+        DB connection (advisory locks are connection/transaction scoped),
+        so the code under test — running on the test cursor — sees it as
+        held by someone else. Released on rollback when the block exits."""
+        connection = db_connect(self.env.cr.dbname)
+        cr2 = connection.cursor()
+        try:
+            cr2.execute(
+                "SELECT pg_try_advisory_xact_lock(%s, hashtext(%s))",
+                (_GATEWAY_LOCK_CLASSID, device_id),
+            )
+            self.assertTrue(
+                cr2.fetchone()[0], "test setup: external lock should acquire"
+            )
+            yield
+        finally:
+            cr2.rollback()
+            cr2.close()
+
+    def test_try_lock_gateways_true_when_free(self):
+        self.assertTrue(self.code._try_lock_gateways(["device-unused"]))
+
+    def test_try_lock_gateways_false_when_held_elsewhere(self):
+        with self._hold_gateway_lock("device-A"):
+            self.assertFalse(self.code._try_lock_gateways(["device-A"]))
+        # External holder gone → the device is acquirable again.
+        self.assertTrue(self.code._try_lock_gateways(["device-A"]))
+
+    def test_empty_device_list_acquires(self):
+        """No devices to program → nothing to serialise on."""
+        self.assertTrue(self.code._try_lock_gateways([]))
+
+    def test_raise_gateway_busy_off_retry_counter(self):
+        with self.assertRaises(RetryableJobError) as cm:
+            self.code._raise_gateway_busy()
+        # ``ignore_retry`` keeps contention off ``max_retries`` (job.py
+        # decrements ``retry`` for these), so no ``failed`` from a race.
+        self.assertTrue(cm.exception.ignore_retry)
+        self.assertGreaterEqual(cm.exception.seconds, _GATEWAY_LOCK_RETRY_BASE)
+        self.assertLessEqual(
+            cm.exception.seconds,
+            _GATEWAY_LOCK_RETRY_BASE + _GATEWAY_LOCK_RETRY_JITTER,
+        )
+
+    def test_create_skips_vendor_when_gateway_busy(self):
+        """The bottleneck scenario: many checkins share the main entrance.
+        While another job holds that gateway, this create must re-enqueue
+        without calling the vendor and without dirtying its state."""
+        self.code.sudo().write({"vendor_grant_ref": False, "pin": False})
+        with self._hold_gateway_lock(self.code.room_id.lock_device_id):
+            with expect_raises(self, RetryableJobError):
+                self.code._sync_create()
+        self.connector.grant_access.assert_not_called()
+        self.assertFalse(self.code.failed)
+        self.assertFalse(self.code.vendor_grant_ref)
+
+    def test_remove_skips_vendor_when_gateway_busy(self):
+        """Remove reads the locks from the grant snapshot. While the
+        shared door is busy, revoke must not run — and crucially
+        ``cancelled`` must stay False (safety-first invariant)."""
+        common = self._add_common_lock(self.code.room_id)
+        self.env["lock.code.target"].sudo().create(
+            {
+                "lock_code_id": self.code.id,
+                "kind": "common",
+                "lock_device_id": common.lock_device_id,
+                "common_lock_id": common.id,
+            }
+        )
+        with self._hold_gateway_lock(common.lock_device_id):
+            with expect_raises(self, RetryableJobError):
+                self.code._sync_remove()
+        self.connector.revoke_access.assert_not_called()
+        self.assertFalse(self.code.cancelled)
+        self.assertFalse(self.code.failed)

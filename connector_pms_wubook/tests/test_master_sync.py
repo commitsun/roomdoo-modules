@@ -6,6 +6,7 @@ from unittest import mock
 
 from odoo.exceptions import UserError
 from odoo.tests.common import tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.component.tests.common import TransactionComponentCase
 from odoo.addons.queue_job.tests.common import trap_jobs
@@ -102,6 +103,10 @@ class TestWubookConnectMixin(TransactionComponentCase):
         self.room_type_a.invalidate_recordset()
         self.assertEqual(self.room_type_a.wubook_connection_state, "connected")
 
+    @mute_logger(
+        "odoo.addons.connector_pms_wubook.wizards.wizard_connect",
+        "odoo.addons.connector_pms_wubook.models.common.wubook_connect_mixin",
+    )
     def test_action_open_wizard_creates_pre_saved_wizard(self):
         action = self.room_type_a.action_open_wubook_connect_wizard()
         self.assertEqual(action["res_model"], "channel.wubook.connect.wizard")
