@@ -1,0 +1,243 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_smartlock_salto
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields.selection,name:pms_smartlock_salto.selection__lock_vendor__salto_env__acc
+msgid "Acceptance"
+msgstr "Aceptación"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_role_ids
+msgid "Available Salto Roles"
+msgstr "Roles de Salto disponibles"
+
+#. module: pms_smartlock_salto
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_salto.lock_vendor_view_form
+msgid ""
+"Client ID and secret are Roomdoo app credentials, read\n"
+"                        from the deployment environment (SALTO_CLIENT_ID /\n"
+"                        SALTO_CLIENT_SECRET). Fetch the roles, then assign the\n"
+"                        basic <b>User</b> role (only opens doors) — never an\n"
+"                        admin role."
+msgstr ""
+"El Client ID y el secret son credenciales de la app de Roomdoo, leídas\n"
+"                        del entorno de despliegue (SALTO_CLIENT_ID /\n"
+"                        SALTO_CLIENT_SECRET). Trae los roles y luego asigna el\n"
+"                        rol básico <b>User</b> (solo abre puertas) — nunca un\n"
+"                        rol de administrador."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: pms_smartlock_salto
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_salto.lock_vendor_view_form
+msgid "Fetch Salto roles"
+msgstr "Obtener roles de Salto"
+
+#. module: pms_smartlock_salto
+#. odoo-python
+#: code:addons/pms_smartlock_salto/models/lock_vendor.py:0
+#, python-format
+msgid "Fetched %s Salto role(s)."
+msgstr "Obtenidos %s rol(es) de Salto."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_role_id
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_salto.lock_vendor_view_form
+msgid "Guest Role"
+msgstr "Rol del huésped"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__id
+msgid "ID"
+msgstr "ID"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_vendor__salto_site_id
+msgid "ID of the Salto KS site this vendor configuration operates on."
+msgstr ""
+"ID del sitio de Salto KS sobre el que opera esta configuración de proveedor."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_salto_role__salto_id
+msgid "Identifier of the role on the Salto KS site."
+msgstr "Identificador del rol en el sitio de Salto KS."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: pms_smartlock_salto
+#: model:ir.model,name:pms_smartlock_salto.model_lock_code
+msgid "Lock Code"
+msgstr "Código de cerradura"
+
+#. module: pms_smartlock_salto
+#: model:ir.model,name:pms_smartlock_salto.model_lock_vendor
+msgid "Lock Vendor"
+msgstr "Proveedor de cerradura"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_vendor__vendor_type
+msgid "Manufacturer connector used to communicate with the lock."
+msgstr "Conector del fabricante utilizado para comunicarse con la cerradura."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields.selection,name:pms_smartlock_salto.selection__lock_vendor__salto_env__prod
+msgid "Production"
+msgstr "Producción"
+
+#. module: pms_smartlock_salto
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_salto.lock_vendor_view_form
+msgid "Pull the site's roles from Salto, then pick the basic 'User' role."
+msgstr ""
+"Trae los roles del sitio desde Salto y luego selecciona el rol básico 'User'."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_code__purged
+msgid "Purged"
+msgstr "Purgado"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_vendor__salto_role_id
+msgid ""
+"Role assigned to each guest user created for an access grant. Use the basic "
+"'User' role (only opens doors); never an admin role. Populate the list with "
+"'Fetch Salto roles' first."
+msgstr ""
+"Rol asignado a cada usuario huésped creado para una concesión de acceso. Usa "
+"el rol básico 'User' (solo abre puertas); nunca un rol de administrador. "
+"Rellena antes la lista con 'Obtener roles de Salto'."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_vendor__salto_role_ids
+msgid ""
+"Roles fetched from the Salto KS site. Refresh them with the 'Fetch Salto "
+"roles' button."
+msgstr ""
+"Roles traídos del sitio de Salto KS. Actualízalos con el botón 'Obtener "
+"roles de Salto'."
+
+#. module: pms_smartlock_salto
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_salto.lock_vendor_view_form
+msgid "Salto Credentials"
+msgstr "Credenciales de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_env
+msgid "Salto Environment"
+msgstr "Entorno de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields.selection,name:pms_smartlock_salto.selection__lock_vendor__vendor_type__salto
+msgid "Salto KS"
+msgstr "Salto KS"
+
+#. module: pms_smartlock_salto
+#: model:ir.model,name:pms_smartlock_salto.model_salto_role
+msgid "Salto KS Role"
+msgstr "Rol de Salto KS"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_vendor__salto_env
+msgid ""
+"Salto KS environment this hotel's account operates on. Acceptance is Salto's"
+" sandbox; production is the live system."
+msgstr ""
+"Entorno de Salto KS sobre el que opera la cuenta de este hotel. Aceptación "
+"es el sandbox de Salto; producción es el sistema en vivo."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_password
+msgid "Salto Password"
+msgstr "Contraseña de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__salto_id
+msgid "Salto Role ID"
+msgstr "ID de rol de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_site_id
+msgid "Salto Site ID"
+msgstr "ID de sitio de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__salto_username
+msgid "Salto Username"
+msgstr "Usuario de Salto"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,help:pms_smartlock_salto.field_lock_code__purged
+msgid ""
+"Salto only: the guest user and access group behind this credential's grant "
+"have been hard-deleted on the vendor, reclaiming the per-user license. Set "
+"by the retention cron once the dispute window has passed; the record itself "
+"is kept for audit."
+msgstr ""
+"Solo Salto: el usuario huésped y el grupo de acceso tras la concesión de "
+"esta credencial se han borrado definitivamente en el proveedor, liberando la "
+"licencia por usuario. Lo marca el cron de retención una vez pasada la "
+"ventana de disputa; el registro en sí se conserva para auditoría."
+
+#. module: pms_smartlock_salto
+#: model:ir.actions.server,name:pms_smartlock_salto.cron_purge_salto_grants_ir_actions_server
+#: model:ir.cron,cron_name:pms_smartlock_salto.cron_purge_salto_grants
+msgid "Smartlocks: Purge revoked Salto grants (retention)"
+msgstr "Smartlocks: Purgar concesiones de Salto revocadas (retención)"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.constraint,message:pms_smartlock_salto.constraint_salto_role_vendor_salto_id_uniq
+msgid "This Salto role is already registered for the vendor."
+msgstr "Este rol de Salto ya está registrado para el proveedor."
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_lock_vendor__vendor_type
+msgid "Type"
+msgstr "Tipo"
+
+#. module: pms_smartlock_salto
+#: model:ir.model.fields,field_description:pms_smartlock_salto.field_salto_role__vendor_id
+msgid "Vendor"
+msgstr "Proveedor"

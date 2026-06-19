@@ -233,6 +233,13 @@ class LockCode(models.Model):
         """Odoo stores naive UTC datetimes; the library requires UTC aware."""
         return dt.replace(tzinfo=timezone.utc)
 
+    def _local_tz(self):
+        """IANA timezone the vendor's hardware enforces schedules against — the
+        hotel's local timezone (one hotel, one timezone). Passed to the
+        connector on the context so user-centric vendors that store naive
+        wall-clock (Salto) can localize the UTC window; others ignore it."""
+        return self.reservation_id.pms_property_id.tz or self.room_id.pms_property_id.tz
+
     @staticmethod
     def _to_naive(dt):
         """Strip tzinfo from an aware UTC datetime for Odoo storage."""
@@ -268,16 +275,22 @@ class LockCode(models.Model):
     def _apply_grant(self, grant, specs=None):
         """Persist the credential from a vendor ``AccessGrant``. When ``specs``
         is given (initial grant) the ``target_ids`` snapshot is rebuilt; on a
-        modify the targets are unchanged and only the PIN/ref/window move."""
+        modify the targets are unchanged and only the PIN/ref/window move.
+
+        A ``grant.pin`` of ``None`` means *unchanged*: the vendor kept the same
+        credential (and may be unable to read it back, e.g. Salto on a window
+        change), so we keep the stored PIN instead of overwriting it. An empty
+        string would be a real value and is persisted as such."""
         self.ensure_one()
         vals = {
-            "pin": grant.pin,
             "vendor_grant_ref": grant.ref,
             "date_from": self._to_naive(grant.starts_at),
             "date_to": self._to_naive(grant.ends_at),
             # A successful sync clears any prior permanent failure.
             "failed": False,
         }
+        if grant.pin is not None:
+            vals["pin"] = grant.pin
         if specs is not None:
             vals["target_ids"] = [(5, 0, 0)] + [(0, 0, spec) for spec in specs]
         self.write(vals)
@@ -337,7 +350,13 @@ class LockCode(models.Model):
         if not self._try_lock_gateways([s["lock_device_id"] for s in specs]):
             self._raise_gateway_busy()
         try:
-            connector = self.vendor_id.get_connector()
+            # Pass the reservation on the context so user-centric vendors (Salto)
+            # can name the credential after the guest. Passcode vendors ignore
+            # it. Only the create path needs it; modify/revoke don't.
+            connector = self.vendor_id.with_context(
+                smartlock_grant_reservation=self.reservation_id,
+                smartlock_local_tz=self._local_tz(),
+            ).get_connector()
             grant = connector.grant_access(
                 lock_ids=[s["lock_device_id"] for s in specs],
                 starts_at=self._to_utc(self.date_from),
@@ -359,7 +378,9 @@ class LockCode(models.Model):
         if not self._try_lock_gateways(self.target_ids.mapped("lock_device_id")):
             self._raise_gateway_busy()
         try:
-            connector = self.vendor_id.get_connector()
+            connector = self.vendor_id.with_context(
+                smartlock_local_tz=self._local_tz()
+            ).get_connector()
             grant = connector.modify_access(
                 grant_ref=self.vendor_grant_ref,
                 starts_at=self._to_utc(date_from),

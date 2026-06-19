@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_vendor_view_form" model="ir.ui.view">
+        <field name="name">lock.vendor.form.salto</field>
+        <field name="model">lock.vendor</field>
+        <field name="inherit_id" ref="pms_smartlock_base.lock_vendor_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="before">
+                <page
+          name="salto_credentials"
+          string="Salto Credentials"
+          attrs="{'invisible': [('vendor_type', '!=', 'salto')]}"
+        >
+                    <group>
+                        <field
+              name="salto_env"
+              attrs="{'required': [('vendor_type', '=', 'salto')]}"
+            />
+                        <field
+              name="salto_username"
+              attrs="{'required': [('vendor_type', '=', 'salto')]}"
+            />
+                        <field
+              name="salto_password"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'salto')]}"
+            />
+                        <field
+              name="salto_site_id"
+              attrs="{'required': [('vendor_type', '=', 'salto')]}"
+            />
+                    </group>
+                    <group string="Guest Role">
+                        <field name="salto_role_id" />
+                        <button
+              name="action_fetch_salto_roles"
+              type="object"
+              string="Fetch Salto roles"
+              icon="fa-refresh"
+              help="Pull the site's roles from Salto, then pick the basic 'User' role."
+            />
+                        <field name="salto_role_ids" readonly="1">
+                            <tree>
+                                <field name="name" />
+                                <field name="salto_id" />
+                            </tree>
+                        </field>
+                    </group>
+                    <p class="text-muted">
+                        Client ID and secret are Roomdoo app credentials, read
+                        from the deployment environment (SALTO_CLIENT_ID /
+                        SALTO_CLIENT_SECRET). Fetch the roles, then assign the
+                        basic <b>User</b> role (only opens doors) — never an
+                        admin role.
+                    </p>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
