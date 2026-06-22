@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="paperformat_payments_landscape" model="report.paperformat">
+        <field name="name">Payments Report (Landscape)</field>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">40</field>
+        <field name="margin_bottom">23</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">35</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_payments_pdf" model="ir.actions.report">
+        <field name="name">Payments (PDF)</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">roomdoo_payments_exporter.report_payments</field>
+        <field name="report_file">roomdoo_payments_exporter.report_payments</field>
+        <field name="binding_model_id" ref="account.model_account_payment" />
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_payments_landscape" />
+    </record>
+
+    <record id="action_report_payments_xlsx" model="ir.actions.report">
+        <field name="name">Payments (Excel)</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">roomdoo_payments_exporter.payment_report</field>
+        <field name="report_file">payment_report</field>
+        <field name="binding_model_id" ref="account.model_account_payment" />
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

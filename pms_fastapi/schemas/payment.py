@@ -105,6 +105,11 @@ class InternalTransferInput(PmsBaseModel):
     reason: str = ""
 
 
+class ReportFormatEnum(str, Enum):
+    pdf = "pdf"
+    xlsx = "xlsx"
+
+
 class PaymentOrderField(str, Enum):
     date = "date"
 
