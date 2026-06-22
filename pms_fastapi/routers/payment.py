@@ -102,6 +102,23 @@ async def get_payment_report(
     )
 
 
+@pms_api_router.post(
+    "/payments/{payment_id}/cancel",
+    response_model=PaymentSummary,
+    tags=["payment"],
+)
+async def cancel_payment(
+    env: AuthenticatedEnv,
+    payment_id: int,
+) -> PaymentSummary:
+    """Cancel a registered payment.
+
+    Cancelling is a state transition (not a deletion): the related accounting
+    entry is reversed. It is blocked when the payment date falls within a
+    locked fiscal period."""
+    return env["pms_api_payment.payment_router.helper"].new().cancel_payment(payment_id)
+
+
 @pms_api_router.patch(
     "/payments/{payment_id}",
     response_model=PaymentSummary,
@@ -250,6 +267,43 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 "Content-Disposition": f'attachment; filename="{filename}"',
             },
         )
+
+    def _ensure_not_locked(self, payments):
+        """A payment whose date falls within a locked fiscal period cannot be
+        cancelled: resetting it to draft would modify a locked entry. The
+        cancellation runs as superuser, so the effective lock date is the one
+        Odoo will enforce on the draft transition."""
+        for payment in payments:
+            lock_date = payment.company_id._get_user_fiscal_lock_date()
+            if payment.date and payment.date <= lock_date:
+                self._problem(
+                    409,
+                    "/errors/fiscal-lock-date",
+                    _("Fiscal lock date"),
+                    _(
+                        "The payment date falls within a locked fiscal period "
+                        "and cannot be cancelled."
+                    ),
+                )
+
+    def cancel_payment(self, payment_id):
+        try:
+            payment = self._resolve_payment_or_404(payment_id)
+            # An internal transfer is two paired payments reconciled against
+            # each other; both legs must move together.
+            legs = payment
+            if payment.is_internal_transfer:
+                legs = payment + payment.paired_internal_transfer_payment_id
+            self._ensure_not_bank_matched(payment)
+            self._ensure_not_locked(legs)
+            for leg in legs:
+                self._ensure_open_cash_session(leg.journal_id)
+            # draft first (un-reconciles and reopens the entry), then cancel.
+            legs.action_draft()
+            legs.action_cancel()
+        except _PaymentProblem as problem:
+            return problem.response
+        return PaymentSummary.from_account_payment(payment)
 
     def _validation_error(self, detail):
         self._problem(422, "/errors/validation-error", _("Validation error"), detail)
