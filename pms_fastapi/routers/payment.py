@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import _, models
+from odoo import SUPERUSER_ID, _, models
 from odoo.exceptions import AccessDenied, AccessError
 
 from odoo.addons.account.models.account_payment import AccountPayment
@@ -25,12 +25,15 @@ from odoo.addons.pms_fastapi.schemas.payment import (
     PaymentSearch,
     PaymentSummary,
     PaymentUpdate,
+    ReportFormatEnum,
 )
 from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
 
 PaymentOrderDependency = create_order_dependency(
     PaymentOrderField, PAYMENT_ORDER_MAPPING, ["-date"]
 )
+
+PAYMENT_REPORT_MAX_RECORDS = 5000
 
 # (payment_type, partner_type) per creatable payment type.
 _CREATE_TYPE_FIELDS = {
@@ -99,6 +102,45 @@ async def get_payment_report(
     """Download the PDF report for a specific payment."""
     return (
         env["pms_api_payment.payment_router.helper"].new().get_payment_pdf(payment_id)
+    )
+
+
+@pms_api_router.post(
+    "/payments/report",
+    tags=["payment"],
+    responses={
+        200: {
+            "content": {
+                "application/pdf": {},
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
+            }
+        },
+    },
+    response_class=Response,
+)
+async def payments_report(
+    env: AuthenticatedEnv,
+    report_format: Annotated[
+        ReportFormatEnum,
+        Query(alias="format", description="Output file format."),
+    ],
+    filters: Annotated[PaymentSearch, Depends()],
+    ids: Annotated[
+        list[int] | None,
+        Query(
+            description="Payment IDs to include in the report. "
+            "Mutually exclusive with filter parameters.",
+        ),
+    ] = None,
+) -> Response:
+    """Generate and download a payments report in PDF or Excel format.
+
+    Pass either an explicit list of `ids` or filter parameters (the same ones
+    accepted by GET /payments). They are mutually exclusive."""
+    return (
+        env["pms_api_payment.payment_router.helper"]
+        .new()
+        ._generate_report(report_format, filters, ids)
     )
 
 
@@ -265,6 +307,108 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+
+    # -- report (POST /payments/report) --
+
+    @staticmethod
+    def _has_report_filters(filters):
+        return any(v is not None for v in filters.__dict__.values())
+
+    def _resolve_report_payments(self, filters, ids):
+        if ids and self._has_report_filters(filters):
+            return (
+                JSONResponse(
+                    status_code=400,
+                    content={
+                        "type": "/errors/mutually-exclusive-params",
+                        "title": _("Mutually exclusive parameters"),
+                        "status": 400,
+                        "detail": _(
+                            "Cannot specify both 'ids' and filter parameters. "
+                            "Use one or the other."
+                        ),
+                    },
+                    media_type="application/problem+json",
+                ),
+                None,
+            )
+        if ids:
+            domain = [("id", "in", ids)]
+            context = None
+        else:
+            domain = filters.to_odoo_domain(self.env)
+            context = filters.to_odoo_context(self.env)
+        count = (
+            self.model_adapter.count(domain)
+            if context is None
+            else self.model_adapter.count(domain, context=context)
+        )
+        if count > PAYMENT_REPORT_MAX_RECORDS:
+            return (
+                JSONResponse(
+                    status_code=400,
+                    content={
+                        "type": "/errors/record-limit-exceeded",
+                        "title": _("Record limit exceeded"),
+                        "status": 400,
+                        "detail": _(
+                            "The export requested %s records, "
+                            "but the maximum allowed is %s."
+                        )
+                        % (count, PAYMENT_REPORT_MAX_RECORDS),
+                        "requestedCount": count,
+                        "maxAllowed": PAYMENT_REPORT_MAX_RECORDS,
+                    },
+                    media_type="application/problem+json",
+                ),
+                None,
+            )
+        payments = (
+            self.model_adapter.search(domain)
+            if context is None
+            else self.model_adapter.search(domain, context=context)
+        )
+        return None, payments
+
+    def _generate_report(self, report_format, filters, ids):
+        error, payments = self._resolve_report_payments(filters, ids)
+        if error is not None:
+            return error
+        if report_format == ReportFormatEnum.xlsx:
+            return self._render_payments_xlsx(payments)
+        return self._render_payments_pdf(payments)
+
+    def _render_payments_pdf(self, payments):
+        content, _report_type = (
+            self.env["ir.actions.report"]
+            .sudo()
+            ._render_qweb_pdf("roomdoo_payments_exporter.report_payments", payments.ids)
+        )
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="payments_report.pdf"',
+            },
+        )
+
+    def _render_payments_xlsx(self, payments):
+        # `report_xlsx._render_xlsx` forces `.sudo(False)` on the report model,
+        # so `.sudo()` here would not bypass ACL inside the export.
+        content, _report_type = (
+            self.env["ir.actions.report"]
+            .with_user(SUPERUSER_ID)
+            ._render("roomdoo_payments_exporter.payment_report", payments.ids)
+        )
+        return Response(
+            content=content,
+            media_type=(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
+            headers={
+                "Content-Disposition": 'attachment; filename="payments_report.xlsx"',
             },
         )
 
