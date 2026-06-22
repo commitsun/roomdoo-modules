@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from fastapi import status
 
@@ -261,5 +262,31 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
         with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
             response = test_client.get("/payments/999999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/payment-not-found")
+
+    def test_payment_report_pdf(self):
+        """GET /payments/{id}/report returns the PDF for a posted payment."""
+        payment = self._create_payment(amount=120.0)
+        fake_pdf = b"%PDF-1.4 fake"
+        with patch(
+            "odoo.addons.base.models.ir_actions_report.IrActionsReport"
+            "._render_qweb_pdf",
+            return_value=(fake_pdf, "pdf"),
+        ):
+            with self._create_test_client() as test_client:
+                self._login(test_client)
+                response = test_client.get(f"/payments/{payment.id}/report")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.headers["content-type"], "application/pdf")
+        self.assertIn("attachment", response.headers["content-disposition"])
+        self.assertIn(".pdf", response.headers["content-disposition"])
+        self.assertEqual(response.content, fake_pdf)
+
+    def test_payment_report_pdf_not_found(self):
+        """GET /payments/{id}/report on a missing id returns 404."""
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.get("/payments/999999/report")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/payment-not-found")
