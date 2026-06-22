@@ -18,6 +18,7 @@
         "partner_identification_unique",
         "pms_folio_report",
         "roomdoo_invoices_exporter",
+        "roomdoo_payments_exporter",
         "pms_autoreconcile_folio_payments",
     ],
     "external_dependencies": {

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <template id="report_payments">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Payments report</h2>
+                    <table class="table table-sm o_main_table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Contact</th>
+                                <th>Payment Method</th>
+                                <th>Folio</th>
+                                <th>Reference</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="rows" t-as="row">
+                                <td t-out="row['name']" />
+                                <td
+                  t-out="row['date']"
+                  t-options='{"widget": "date"}'
+                />
+                                <td t-out="row['type_label']" />
+                                <td t-out="row['partner_name']" />
+                                <td t-out="row['payment_method']" />
+                                <td t-out="row['folio_name']" />
+                                <td t-out="row['ref']" />
+                                <td
+                  class="text-end"
+                  t-out="row['amount']"
+                  t-options-widget="'monetary'"
+                  t-options-display_currency="row['currency']"
+                />
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>
