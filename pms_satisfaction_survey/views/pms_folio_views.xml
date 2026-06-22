@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="pms_folio_view_form_satisfaction_survey" model="ir.ui.view">
+        <field name="name">pms.folio.form.satisfaction.survey</field>
+        <field name="model">pms.folio</field>
+        <field name="inherit_id" ref="pms.pms_folio_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button
+          type="object"
+          class="oe_stat_button"
+          name="action_view_satisfaction_survey"
+          icon="fa-star-o"
+          attrs="{'invisible': [('satisfaction_survey_user_input_count', '=', 0)]}"
+        >
+                    <field
+            name="satisfaction_survey_user_input_count"
+            widget="statinfo"
+            string="Survey"
+          />
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

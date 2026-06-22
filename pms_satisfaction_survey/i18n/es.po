@@ -1,0 +1,245 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_satisfaction_survey
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model,name:pms_satisfaction_survey.model_pms_folio
+msgid "Folio"
+msgstr "Folio"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model,name:pms_satisfaction_survey.model_pms_property
+msgid "Property"
+msgstr "Propiedad"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model,name:pms_satisfaction_survey.model_pms_reservation
+msgid "Reservation"
+msgstr "Reserva"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model,name:pms_satisfaction_survey.model_survey_user_input
+msgid "Survey User Input"
+msgstr "Respuesta de encuesta"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_pms_property__satisfaction_survey_enabled
+msgid "Send satisfaction survey"
+msgstr "Enviar encuesta de satisfacción"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,help:pms_satisfaction_survey.field_pms_property__satisfaction_survey_enabled
+msgid ""
+"If enabled, a satisfaction survey will be sent to the main folio partner "
+"once every reservation in the folio is checked out."
+msgstr ""
+"Si se activa, se enviará una encuesta de satisfacción al cliente principal "
+"del folio cuando se haga el checkout de todas las reservas del folio."
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_pms_property__satisfaction_survey_id
+msgid "Satisfaction survey"
+msgstr "Encuesta de satisfacción"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,help:pms_satisfaction_survey.field_pms_property__satisfaction_survey_id
+msgid ""
+"Survey sent to guests after checkout. Defaults to the survey shipped by this "
+"module."
+msgstr ""
+"Encuesta enviada a los huéspedes tras el checkout. Por defecto, la encuesta "
+"incluida en este módulo."
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_pms_property__satisfaction_survey_send_moment
+msgid "Send moment"
+msgstr "Momento de envío"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields.selection,name:pms_satisfaction_survey.selection__pms_property__satisfaction_survey_send_moment__on_checkout
+msgid "On checkout"
+msgstr "Al hacer el checkout"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields.selection,name:pms_satisfaction_survey.selection__pms_property__satisfaction_survey_send_moment__after_checkout
+msgid "Hours after checkout"
+msgstr "Horas después del checkout"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_pms_property__satisfaction_survey_send_delay_hours
+msgid "Delay (hours)"
+msgstr "Retraso (horas)"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,help:pms_satisfaction_survey.field_pms_property__satisfaction_survey_send_delay_hours
+msgid ""
+"Hours to wait after checkout before scheduling the survey email. Only used "
+"when 'Send moment' is 'Hours after checkout'."
+msgstr ""
+"Horas a esperar tras el checkout antes de programar el envío de la encuesta. "
+"Solo se aplica cuando 'Momento de envío' es 'Horas después del checkout'."
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_pms_folio__satisfaction_survey_user_input_id
+msgid "Satisfaction survey response"
+msgstr "Respuesta de encuesta de satisfacción"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_survey_user_input__folio_id
+msgid "Folio"
+msgstr "Folio"
+
+#. module: pms_satisfaction_survey
+#: model:ir.model.fields,field_description:pms_satisfaction_survey.field_survey_user_input__pms_property_id
+msgid "Property"
+msgstr "Propiedad"
+
+#. module: pms_satisfaction_survey
+#: code:addons/pms_satisfaction_survey/models/pms_folio.py:0
+#, python-format
+msgid "Satisfaction Survey"
+msgstr "Encuesta de satisfacción"
+
+#. module: pms_satisfaction_survey
+#: code:addons/pms_satisfaction_survey/models/pms_property.py:0
+#, python-format
+msgid ""
+"Property %s has satisfaction surveys enabled but no survey is selected."
+msgstr ""
+"La propiedad %s tiene activadas las encuestas de satisfacción pero no hay "
+"ninguna encuesta seleccionada."
+
+#. module: pms_satisfaction_survey
+#: code:addons/pms_satisfaction_survey/models/pms_property.py:0
+#, python-format
+msgid ""
+"Property %s: delay must be greater than zero when sending the survey after "
+"checkout."
+msgstr ""
+"Propiedad %s: el retraso debe ser mayor que cero cuando la encuesta se "
+"envía después del checkout."
+
+#. module: pms_satisfaction_survey
+#: model_terms:ir.ui.view,arch_db:pms_satisfaction_survey.pms_property_view_form_satisfaction_survey
+msgid "Satisfaction Survey"
+msgstr "Encuesta de satisfacción"
+
+#. module: pms_satisfaction_survey
+#: model_terms:ir.ui.view,arch_db:pms_satisfaction_survey.pms_folio_view_form_satisfaction_survey
+msgid "Survey"
+msgstr "Encuesta"
+
+#. module: pms_satisfaction_survey
+#: model_terms:ir.ui.view,arch_db:pms_satisfaction_survey.survey_user_input_view_search_pms
+msgid "Folio"
+msgstr "Folio"
+
+#. module: pms_satisfaction_survey
+#: model_terms:ir.ui.view,arch_db:pms_satisfaction_survey.survey_user_input_view_search_pms
+msgid "Property"
+msgstr "Propiedad"
+
+#
+# Default survey content translations
+#
+
+#. module: pms_satisfaction_survey
+#: model:survey.survey,title:pms_satisfaction_survey.survey_pms_satisfaction_default
+msgid "Stay Satisfaction Survey"
+msgstr "Encuesta de satisfacción de la estancia"
+
+#. module: pms_satisfaction_survey
+#: model:survey.survey,description:pms_satisfaction_survey.survey_pms_satisfaction_default
+msgid ""
+"<p>Thank you for staying with us! Please take a minute to tell us about your "
+"experience. Your feedback helps us improve.</p>"
+msgstr ""
+"<p>¡Gracias por alojarse con nosotros! Tómese un minuto para contarnos su "
+"experiencia. Sus comentarios nos ayudan a mejorar.</p>"
+
+#. module: pms_satisfaction_survey
+#: model:survey.survey,description_done:pms_satisfaction_survey.survey_pms_satisfaction_default
+msgid "<p>Thank you for your feedback. We hope to welcome you back soon!</p>"
+msgstr ""
+"<p>Gracias por sus comentarios. ¡Esperamos volver a verle pronto!</p>"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,title:pms_satisfaction_survey.survey_pms_satisfaction_q_overall
+msgid "How would you rate your overall stay?"
+msgstr "¿Cómo valoraría su estancia en general?"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,title:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness
+msgid "How would you rate the cleanliness of the room?"
+msgstr "¿Cómo valoraría la limpieza de la habitación?"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,title:pms_satisfaction_survey.survey_pms_satisfaction_q_staff
+msgid "How friendly and helpful was our staff?"
+msgstr "¿Qué tal fue el trato y la amabilidad de nuestro personal?"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,title:pms_satisfaction_survey.survey_pms_satisfaction_q_nps
+msgid ""
+"How likely are you to recommend us to a friend or colleague? (0 = not at "
+"all, 10 = extremely likely)"
+msgstr ""
+"¿Qué probabilidad hay de que nos recomiende a un amigo o compañero? (0 = "
+"nada probable, 10 = totalmente probable)"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,title:pms_satisfaction_survey.survey_pms_satisfaction_q_comments
+msgid "Any additional comments or suggestions?"
+msgstr "¿Algún comentario o sugerencia adicional?"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question,validation_error_msg:pms_satisfaction_survey.survey_pms_satisfaction_q_nps
+msgid "Please enter a value between 0 and 10."
+msgstr "Por favor, introduzca un valor entre 0 y 10."
+
+#. module: pms_satisfaction_survey
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_overall_a1
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness_a1
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_staff_a1
+msgid "Excellent"
+msgstr "Excelente"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_overall_a2
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness_a2
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_staff_a2
+msgid "Good"
+msgstr "Bien"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_overall_a3
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness_a3
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_staff_a3
+msgid "Average"
+msgstr "Regular"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_overall_a4
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness_a4
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_staff_a4
+msgid "Poor"
+msgstr "Mal"
+
+#. module: pms_satisfaction_survey
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_overall_a5
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_cleanliness_a5
+#: model:survey.question.answer,value:pms_satisfaction_survey.survey_pms_satisfaction_q_staff_a5
+msgid "Very poor"
+msgstr "Muy mal"
