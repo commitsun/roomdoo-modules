@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from odoo import _, models
 from odoo.exceptions import AccessDenied, AccessError
@@ -82,6 +82,24 @@ async def get_payment(
 ) -> PaymentSummary:
     """Get a single payment by id (same model as the listing)."""
     return env["pms_api_payment.payment_router.helper"].new().get(payment_id)
+
+
+@pms_api_router.get(
+    "/payments/{payment_id}/report",
+    tags=["payment"],
+    responses={
+        200: {"content": {"application/pdf": {}}},
+    },
+    response_class=Response,
+)
+async def get_payment_report(
+    env: AuthenticatedEnv,
+    payment_id: int,
+) -> Response:
+    """Download the PDF report for a specific payment."""
+    return (
+        env["pms_api_payment.payment_router.helper"].new().get_payment_pdf(payment_id)
+    )
 
 
 @pms_api_router.patch(
@@ -189,26 +207,49 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def get(self, payment_id):
         try:
-            payment = self.env["account.payment"].sudo().browse(payment_id).exists()
-            if not payment:
-                self._problem(
-                    404,
-                    "/errors/payment-not-found",
-                    _("Payment not found"),
-                    _("Payment %s does not exist.") % payment_id,
-                )
-            try:
-                PmsBaseModel.pms_api_check_access(self.env.user, payment)
-            except (AccessError, AccessDenied):
-                self._problem(
-                    404,
-                    "/errors/payment-not-found",
-                    _("Payment not found"),
-                    _("Payment %s does not exist.") % payment_id,
-                )
+            payment = self._resolve_payment_or_404(payment_id)
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
+
+    def _resolve_payment_or_404(self, payment_id):
+        payment = self.env["account.payment"].sudo().browse(payment_id).exists()
+        if not payment:
+            self._problem(
+                404,
+                "/errors/payment-not-found",
+                _("Payment not found"),
+                _("Payment %s does not exist.") % payment_id,
+            )
+        try:
+            PmsBaseModel.pms_api_check_access(self.env.user, payment)
+        except (AccessError, AccessDenied):
+            self._problem(
+                404,
+                "/errors/payment-not-found",
+                _("Payment not found"),
+                _("Payment %s does not exist.") % payment_id,
+            )
+        return payment
+
+    def get_payment_pdf(self, payment_id):
+        try:
+            payment = self._resolve_payment_or_404(payment_id)
+        except _PaymentProblem as problem:
+            return problem.response
+        content, _report_type = (
+            self.env["ir.actions.report"]
+            .sudo()
+            ._render_qweb_pdf("account.action_report_payment_receipt", [payment.id])
+        )
+        filename = "%s.pdf" % (payment.name or _("payment")).replace("/", "-")
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
 
     def _validation_error(self, detail):
         self._problem(422, "/errors/validation-error", _("Validation error"), detail)
