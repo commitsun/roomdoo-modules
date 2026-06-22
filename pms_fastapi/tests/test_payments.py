@@ -290,3 +290,60 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
             response = test_client.get("/payments/999999/report")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/payment-not-found")
+
+    def test_cancel_payment(self):
+        """POST /payments/{id}/cancel cancels the payment and returns it."""
+        payment = self._create_payment(amount=150.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(f"/payments/{payment.id}/cancel")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.json()["id"], payment.id)
+        self.assertEqual(payment.state, "cancel")
+
+    def test_cancel_payment_drops_it_from_listing(self):
+        """A cancelled payment leaves the (posted-only) listing."""
+        payment = self._create_payment(amount=150.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            test_client.post(f"/payments/{payment.id}/cancel")
+            items = self._items_by_id(
+                test_client.get(f"/payments?pmsPropertyId={self.test_property.id}")
+            )
+        self.assertNotIn(payment.id, items)
+
+    def test_cancel_unknown_payment_returns_404(self):
+        """POST /payments/{id}/cancel on a missing id returns 404."""
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post("/payments/999999/cancel")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["type"], "/errors/payment-not-found")
+
+    def test_cancel_payment_in_locked_period_returns_409(self):
+        """A payment dated within a locked fiscal period cannot be cancelled."""
+        payment = self._create_payment(amount=150.0, pay_date=date(2025, 12, 22))
+        self.test_company.sudo().write({"fiscalyear_lock_date": date(2025, 12, 31)})
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post(f"/payments/{payment.id}/cancel")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
+        self.assertEqual(payment.state, "posted")
+
+    def test_cancel_internal_transfer_cancels_both_legs(self):
+        """Cancelling one leg of an internal transfer cancels its pair too."""
+        outbound = self._create_payment(
+            amount=500.0,
+            payment_type="outbound",
+            is_internal_transfer=True,
+            destination_journal=self.journal_bank2,
+        )
+        paired = outbound.paired_internal_transfer_payment_id
+        self.assertTrue(paired)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(f"/payments/{outbound.id}/cancel")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(outbound.state, "cancel")
+        self.assertEqual(paired.state, "cancel")
