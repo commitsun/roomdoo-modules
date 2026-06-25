@@ -210,7 +210,10 @@ async def create_internal_transfer(
     env: AuthenticatedEnv,
     payload: InternalTransferInput,
 ) -> PaymentSummary:
-    """Register an internal transfer between two journals."""
+    """Register an internal transfer between two payment methods.
+
+    Takes an outbound origin and an inbound destination payment method (their
+    journals must differ); the journals are derived from them."""
     return (
         env["pms_api_payment.payment_router.helper"]
         .new()
@@ -560,33 +563,24 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def create_internal_transfer(self, payload: InternalTransferInput):
         try:
-            if payload.originJournalId == payload.destinationJournalId:
+            # Payment method lines only exist on bank/cash journals, so resolving
+            # the journal from the line implicitly guarantees a valid journal type.
+            origin_line = self._resolve_payment_method_line(
+                payload.originPaymentMethodId
+            )
+            destination_line = self._resolve_payment_method_line(
+                payload.destinationPaymentMethodId
+            )
+            origin = origin_line.journal_id
+            destination = destination_line.journal_id
+            if origin == destination:
                 self._validation_error(
                     _("Origin and destination journals cannot be the same.")
                 )
-            journals = self.env["account.journal"].sudo()
-            origin = journals.browse(payload.originJournalId).exists()
-            destination = journals.browse(payload.destinationJournalId).exists()
-            if not origin:
-                self._not_found(
-                    _("Journal %s does not exist.") % payload.originJournalId
-                )
-            if not destination:
-                self._not_found(
-                    _("Journal %s does not exist.") % payload.destinationJournalId
-                )
-            invalid = (origin + destination).filtered(
-                lambda journal: journal.type not in ("bank", "cash")
-            )
-            if invalid:
-                self._validation_error(
-                    _(
-                        "Internal transfers only allow bank or cash journals. "
-                        "Invalid journals: %s."
-                    )
-                    % ", ".join(invalid.mapped("display_name"))
-                )
-            PmsBaseModel.pms_api_check_access(self.env.user, origin + destination)
+            if origin_line.payment_type != "outbound":
+                self._validation_error(_("Origin payment method must be outbound."))
+            if destination_line.payment_type != "inbound":
+                self._validation_error(_("Destination payment method must be inbound."))
             statement_model = self.env["account.bank.statement"].sudo()
             statement_model._pms_ensure_open_cash_session(origin)
             statement_model._pms_ensure_open_cash_session(destination)
@@ -597,6 +591,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                     {
                         "amount": payload.amount,
                         "journal_id": origin.id,
+                        "payment_method_line_id": origin_line.id,
                         "date": payload.date,
                         "partner_id": origin.company_id.partner_id.id,
                         "ref": payload.reason,
@@ -609,9 +604,33 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 )
             )
             payment.action_post()
+            self._apply_destination_method_line(payment, destination_line)
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
+
+    def _apply_destination_method_line(self, payment, destination_line):
+        """Force the chosen inbound method line onto the auto-created counterpart.
+
+        Odoo pairs the transfer on post and assigns the destination journal's
+        default inbound line. When the front picked a different one, reassign it.
+        An internal transfer only reconciles its two legs against each other (no
+        invoice/folio reconciliation), so re-posting the counterpart is contained:
+        we just re-reconcile the pair afterwards (same as _update_internal_transfer).
+        """
+        counterpart = payment.paired_internal_transfer_payment_id
+        if counterpart.payment_method_line_id == destination_line:
+            return
+        counterpart.action_draft()
+        counterpart.write({"payment_method_line_id": destination_line.id})
+        counterpart.action_post()
+        # Re-posting won't re-pair (the pairing already exists), so reconcile the
+        # two transfer lines again.
+        lines = (payment.move_id.line_ids + counterpart.move_id.line_ids).filtered(
+            lambda line: line.account_id == payment.destination_account_id
+            and not line.reconciled
+        )
+        lines.reconcile()
 
     # -- partial update (PATCH /payments/{id}) --
 

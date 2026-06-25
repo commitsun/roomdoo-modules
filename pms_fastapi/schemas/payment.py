@@ -100,8 +100,14 @@ class PaymentUpdate(PmsBaseModel):
 class InternalTransferInput(PmsBaseModel):
     amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
     date: date
-    originJournalId: int = Field(description="Journal the money leaves from.")
-    destinationJournalId: int = Field(description="Journal the money goes to.")
+    originPaymentMethodId: int = Field(
+        description="account.payment.method.line id (outbound) the money leaves "
+        "from. The origin journal is derived from it."
+    )
+    destinationPaymentMethodId: int = Field(
+        description="account.payment.method.line id (inbound) the money goes to. "
+        "The destination journal is derived from it."
+    )
     reason: str = ""
 
 
