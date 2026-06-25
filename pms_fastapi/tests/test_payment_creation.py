@@ -59,6 +59,8 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         )
         cls.bank_inbound = cls.journal_bank.inbound_payment_method_line_ids[:1]
         cls.bank_outbound = cls.journal_bank.outbound_payment_method_line_ids[:1]
+        cls.bank2_inbound = cls.journal_bank2.inbound_payment_method_line_ids[:1]
+        cls.bank2_outbound = cls.journal_bank2.outbound_payment_method_line_ids[:1]
         cls.cash_outbound = cls.journal_cash.outbound_payment_method_line_ids[:1]
         cls.customer = cls.env["res.partner"].create({"name": "Pay Customer"})
         cls.supplier = cls.env["res.partner"].create({"name": "Pay Supplier"})
@@ -304,7 +306,7 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
     # -- POST /internal-transfers --
 
     def test_internal_transfer(self):
-        """internalTransfer creates a transfer between two journals."""
+        """internalTransfer creates a transfer between two payment methods."""
         with self._create_test_client() as test_client:
             self._login(test_client)
             response = test_client.post(
@@ -312,8 +314,8 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 30000.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": self.journal_bank2.id,
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": self.bank2_inbound.id,
                     "reason": "Traspaso cierre de caja",
                 },
             )
@@ -325,6 +327,46 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         payment = self.env["account.payment"].browse(body["id"])
         self.assertTrue(payment.is_internal_transfer)
         self.assertEqual(payment.journal_id, self.journal_bank)
+        self.assertEqual(payment.payment_method_line_id, self.bank_outbound)
+        self.assertEqual(
+            payment.paired_internal_transfer_payment_id.journal_id, self.journal_bank2
+        )
+
+    def test_internal_transfer_honors_destination_method_line(self):
+        """When the destination journal exposes more than one inbound method
+        line, the counterpart ends up with the one sent in the payload (not the
+        default Odoo would pick)."""
+        # Add a second inbound line to the destination journal and select it.
+        manual = self.bank2_inbound.payment_method_id
+        extra_inbound = self.env["account.payment.method.line"].create(
+            {
+                "name": "Bank PMS 2 inbound alt",
+                "payment_method_id": manual.id,
+                "journal_id": self.journal_bank2.id,
+            }
+        )
+        self.assertNotEqual(extra_inbound, self.bank2_inbound)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/internal-transfers",
+                json={
+                    "amount": 500.0,
+                    "date": "2026-03-04",
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": extra_inbound.id,
+                    "reason": "",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        payment = self.env["account.payment"].browse(response.json()["id"])
+        counterpart = payment.paired_internal_transfer_payment_id
+        self.assertEqual(counterpart.payment_method_line_id, extra_inbound)
+        self.assertEqual(counterpart.state, "posted")
+        transfer_lines = (
+            payment.move_id.line_ids + counterpart.move_id.line_ids
+        ).filtered(lambda line: line.account_id == payment.destination_account_id)
+        self.assertTrue(all(transfer_lines.mapped("reconciled")))
 
     def test_internal_transfer_same_journal_returns_422(self):
         with self._create_test_client(raise_server_exceptions=False) as test_client:
@@ -334,8 +376,8 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 100.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": self.journal_bank.id,
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": self.bank_inbound.id,
                     "reason": "",
                 },
             )
@@ -344,7 +386,7 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         self.assertEqual(response.status_code, 422, response.text)
         self.assertEqual(response.json()["type"], "/errors/validation-error")
 
-    def test_internal_transfer_unknown_journal_returns_404(self):
+    def test_internal_transfer_unknown_method_returns_404(self):
         with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
             response = test_client.post(
@@ -352,27 +394,15 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 100.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": 999999,
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": 999999,
                     "reason": "",
                 },
             )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/record-not-found")
 
-    def test_internal_transfer_non_bank_cash_journal_returns_422(self):
-        """A transfer to/from a journal that is not bank or cash (e.g. a sale
-        journal) is rejected with a specific validation error instead of the
-        generic 400 Odoo raises when posting it."""
-        journal_sale = self.env["account.journal"].create(
-            {
-                "name": "Sales PMS",
-                "type": "sale",
-                "code": "SALP",
-                "company_id": self.test_company.id,
-                "pms_property_ids": [Command.set([self.test_property.id])],
-            }
-        )
+    def test_internal_transfer_origin_not_outbound_returns_422(self):
         with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
             response = test_client.post(
@@ -380,8 +410,26 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 100.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": journal_sale.id,
+                    "originPaymentMethodId": self.bank_inbound.id,
+                    "destinationPaymentMethodId": self.bank2_inbound.id,
+                    "reason": "",
+                },
+            )
+        # 422 literal: 422 is deprecated in
+        # newer starlette and the test runner turns the warning into an error.
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["type"], "/errors/validation-error")
+
+    def test_internal_transfer_destination_not_inbound_returns_422(self):
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/internal-transfers",
+                json={
+                    "amount": 100.0,
+                    "date": "2026-03-04",
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": self.bank2_outbound.id,
                     "reason": "",
                 },
             )
@@ -494,8 +542,8 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 30000.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": self.journal_bank2.id,
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": self.bank2_inbound.id,
                     "reason": "Traspaso",
                 },
             )
@@ -525,8 +573,8 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                 json={
                     "amount": 100.0,
                     "date": "2026-03-04",
-                    "originJournalId": self.journal_bank.id,
-                    "destinationJournalId": self.journal_bank2.id,
+                    "originPaymentMethodId": self.bank_outbound.id,
+                    "destinationPaymentMethodId": self.bank2_inbound.id,
                     "reason": "",
                 },
             )
