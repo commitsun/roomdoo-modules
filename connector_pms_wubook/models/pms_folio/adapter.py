@@ -272,20 +272,29 @@ class ChannelWubookPmsFolioAdapter(Component):
                 # TODO: move the following code to method and
                 #  remove boards_d
                 board = boards_d.get(room_id)
+                # Default per-room occupancy/children from the room_id-keyed
+                # dicts. NOTE: when a booking has several rooms of the SAME room
+                # type they share room_id, so these dicts collapse to a single
+                # entry and can no longer hold per-room guest counts. The
+                # Booking.com branch below overrides them with the authoritative
+                # per-room ancillary data.
+                occupancy = occupancies_d.get(room_id)
+                children = occupancies_d_children.get(room_id)
                 if id_channel == 2:  # Booking.com
                     # Board services can be included in the rate
                     # plan and detected by the WuBook API
                     detected_board = value.get("ancillary", {}).get("Detected Board")
                     board = detected_board != "nb" and detected_board or None
-                    # Guests can differ from the Wubook ones???
+                    # Booking.com sends the real per-room guest counts in each
+                    # booked_room's ancillary. Read them directly instead of the
+                    # room_id-keyed dict, which collapses rooms of the same type
+                    # (e.g. 2 rooms with 1 and 2 adults would both end up as 1).
                     guests_adults = room.get("ancillary", {}).get("guests_adults")
                     if guests_adults:
-                        occupancies_d[room_id] = min(
-                            occupancies_d[room_id], guests_adults
-                        )
+                        occupancy = guests_adults
                     guests_children = room.get("ancillary", {}).get("guests_children")
                     if guests_children:
-                        occupancies_d_children[room_id] = guests_children
+                        children = guests_children
                 if id_channel == 43:  # AirBnb
                     # Add commission in price
                     self.apply_gross_prices_airbnb(
@@ -316,8 +325,8 @@ class ChannelWubookPmsFolioAdapter(Component):
                             "day": days["day"],
                             "room_id": room_id,
                             "board": board,
-                            "occupancy": occupancies_d.get(room_id) or 1,
-                            "children": occupancies_d_children.get(room_id) or 0,
+                            "occupancy": occupancy or 1,
+                            "children": children or 0,
                             "board_included": id_channel != 0,
                             "vat_included": vat_included,
                             "agency_id": agency.id if agency else False,
@@ -331,8 +340,8 @@ class ChannelWubookPmsFolioAdapter(Component):
                         "arrival_hour": value["arrival_hour"],
                         "ota_reservation_code": value["channel_reservation_code"],
                         "board": board,
-                        "occupancy": occupancies_d.get(room_id) or 1,
-                        "children": occupancies_d_children.get(room_id) or 0,
+                        "occupancy": occupancy or 1,
+                        "children": children or 0,
                         "rate_id": room_rate_id,
                         "customer_notes": customer_notes,
                         "lines": lines,
