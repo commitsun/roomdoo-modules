@@ -125,6 +125,35 @@ PAYMENT_ORDER_MAPPING = {
 }
 
 
+class ReconciledInvoiceTypeEnum(str, Enum):
+    outInvoice = "outInvoice"
+    outRefund = "outRefund"
+    inInvoice = "inInvoice"
+    inRefund = "inRefund"
+
+
+ODOO_MOVE_TYPE_TO_RECONCILED_ENUM = {
+    "out_invoice": ReconciledInvoiceTypeEnum.outInvoice,
+    "out_refund": ReconciledInvoiceTypeEnum.outRefund,
+    "in_invoice": ReconciledInvoiceTypeEnum.inInvoice,
+    "in_refund": ReconciledInvoiceTypeEnum.inRefund,
+}
+
+
+class ReconciledInvoice(PmsBaseModel):
+    id: int
+    name: str = ""
+    move_type: ReconciledInvoiceTypeEnum = Field(alias="invoiceType")
+
+    @classmethod
+    def from_account_move(cls, move):
+        return cls(
+            id=move.id,
+            name=move.name or "",
+            move_type=ODOO_MOVE_TYPE_TO_RECONCILED_ENUM[move.move_type],
+        )
+
+
 class PaymentSummary(PmsBaseModel):
     id: int
     name: str = ""
@@ -137,6 +166,10 @@ class PaymentSummary(PmsBaseModel):
     paymentMethod: PaymentMethodSummary | None = None
     amount: CurrencyAmount = 0.0
     currency: CurrencySummary
+    invoices: list[ReconciledInvoice] = Field(
+        default_factory=list,
+        description="Invoices and refunds this payment is reconciled against.",
+    )
 
     @classmethod
     def from_account_payment(cls, payment):
@@ -165,6 +198,14 @@ class PaymentSummary(PmsBaseModel):
             ] = PaymentMethodSummary.from_account_payment_method_line(
                 payment.payment_method_line_id
             )
+        reconciled_invoices = (
+            payment.reconciled_invoice_ids | payment.reconciled_bill_ids
+        )
+        if reconciled_invoices:
+            data["invoices"] = [
+                ReconciledInvoice.from_account_move(move)
+                for move in reconciled_invoices
+            ]
         return cls(**data)
 
 
