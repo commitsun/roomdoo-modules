@@ -8,7 +8,7 @@ from pydantic import Field
 from odoo import api
 from odoo.osv import expression
 
-from .base import BaseSearch, CurrencyAmount, PmsBaseModel
+from .base import BaseSearch, CurrencyAmount, PmsBaseModel, SearchText
 from .contact import ContactId
 from .currency import CurrencySummary
 from .journal import JournalSummary
@@ -192,25 +192,31 @@ class InvoiceSearch(BaseSearch):
             default=None,
             description="Filter guests of the given property.",
         ),
-        globalSearch: str | None = Query(
-            default=None,
-            description="Search across number, origin, reference, "
-            "payment reference, contact(email, vat, name).",
-        ),
+        globalSearch: Annotated[
+            SearchText,
+            Query(
+                description="Search across number, origin, reference, "
+                "payment reference, contact(email, vat, name).",
+            ),
+        ] = None,
         invoiceType: Annotated[
             InvoiceTypeEnum | None,
             Query(
                 description="Filter by invoice type.",
             ),
         ] = None,
-        name: str | None = Query(
-            default=None,
-            description="Filter by invoice number.",
-        ),
-        reference: str | None = Query(
-            default=None,
-            description="Filter by invoice reference.",
-        ),
+        name: Annotated[
+            SearchText,
+            Query(
+                description="Filter by invoice number.",
+            ),
+        ] = None,
+        reference: Annotated[
+            SearchText,
+            Query(
+                description="Filter by invoice reference.",
+            ),
+        ] = None,
         totalAmountGt: Annotated[
             float | None,
             Query(
@@ -274,10 +280,12 @@ class InvoiceSearch(BaseSearch):
                 "parameters, e.g., ?paymentMethod=1&paymentMethod=2",
             ),
         ] = None,
-        partner: str | None = Query(
-            default=None,
-            description="Filter by partner name.",
-        ),
+        partner: Annotated[
+            SearchText,
+            Query(
+                description="Filter by partner name.",
+            ),
+        ] = None,
     ):
         self.pmsProperty = pmsPropertyId
         self.globalSearch = globalSearch

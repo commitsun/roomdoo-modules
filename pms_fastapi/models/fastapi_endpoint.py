@@ -1,11 +1,16 @@
+import functools
 import os
 import time
 from pathlib import Path
+from typing import Annotated, get_args, get_origin, get_type_hints
 
 from fastapi import APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from odoo import api, fields, models
+
+from ..schemas.base import MIN_SEARCH_TEXT_LENGTH, BaseSearch
 
 APP_NAME = "pms_api"
 
@@ -131,4 +136,65 @@ class FastapiEndpoint(models.Model):
         return params
 
 
-pms_api_router = APIRouter()
+def _search_text_too_short_problem(field: str) -> JSONResponse:
+    """RFC 9457 problem+json for a free-text search value below the minimum length."""
+    return JSONResponse(
+        status_code=400,
+        media_type="application/problem+json",
+        content={
+            "type": "/errors/search-text-too-short",
+            "title": "Search text too short",
+            "status": 400,
+            "detail": (
+                f"Search text must be at least {MIN_SEARCH_TEXT_LENGTH} characters."
+            ),
+            "field": field,
+            "minLength": MIN_SEARCH_TEXT_LENGTH,
+        },
+    )
+
+
+def _endpoint_search_param(endpoint) -> str | None:
+    """Name of the endpoint param typed as a BaseSearch subclass, if any."""
+    for name, hint in get_type_hints(endpoint, include_extras=True).items():
+        annotated = get_args(hint)[0] if get_origin(hint) is Annotated else hint
+        if isinstance(annotated, type) and issubclass(annotated, BaseSearch):
+            return name
+    return None
+
+
+def _guard_search_text(endpoint):
+    """Wrap an endpoint so its BaseSearch filter is checked for too-short text.
+
+    Returns the endpoint unchanged when it has no BaseSearch param. The wrapper
+    keeps the original signature (functools.wraps) so FastAPI still introspects
+    the real params.
+    """
+    search_param = _endpoint_search_param(endpoint)
+    if search_param is None:
+        return endpoint
+
+    @functools.wraps(endpoint)
+    async def wrapper(*args, **kwargs):
+        filters = kwargs.get(search_param)
+        if filters is not None:
+            field = filters.first_short_search_text()
+            if field is not None:
+                return _search_text_too_short_problem(field)
+        return await endpoint(*args, **kwargs)
+
+    return wrapper
+
+
+class PmsApiRouter(APIRouter):
+    """APIRouter that auto-applies the free-text search length guard.
+
+    Any endpoint with a BaseSearch param is wrapped at registration time, so the
+    guard needs no per-endpoint code and covers future search endpoints too.
+    """
+
+    def add_api_route(self, path, endpoint, **kwargs):
+        return super().add_api_route(path, _guard_search_text(endpoint), **kwargs)
+
+
+pms_api_router = PmsApiRouter()
