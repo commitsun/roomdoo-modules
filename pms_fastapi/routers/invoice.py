@@ -161,6 +161,31 @@ async def edit_invoice(
     )
 
 
+@pms_api_router.delete(
+    "/invoices/{invoice_id}",
+    tags=["invoice"],
+    status_code=204,
+    responses={
+        204: {"description": "Invoice deleted."},
+        404: {"description": "Invoice not found"},
+        409: {"description": "Invoice cannot be deleted in its current state"},
+    },
+    response_class=Response,
+)
+async def delete_invoice(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+) -> Response:
+    """Delete a draft invoice.
+
+    Only draft invoices can be deleted. Validated or cancelled invoices
+    return 409.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"].new()._delete_invoice(invoice_id)
+    )
+
+
 @pms_api_router.post(
     "/invoices/{id}/validate",
     response_model=InvoiceSummary,
@@ -393,6 +418,36 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         return InvoiceDetail.from_account_move(invoice)
+
+    # -- Invoice delete (DELETE /invoices/{id}) --
+
+    def _delete_invoice(self, invoice_id):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": _("Not found"),
+                    "status": 404,
+                    "detail": _("Invoice not found."),
+                },
+                media_type="application/problem+json",
+            )
+        if invoice.state != "draft":
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "type": "/errors/invoice-not-deletable",
+                    "title": _("Invoice not deletable"),
+                    "status": 409,
+                    "detail": _("Only draft invoices can be deleted."),
+                },
+                media_type="application/problem+json",
+            )
+        invoice.unlink()
+        return Response(status_code=204)
 
     # -- Invoice edit (PUT /invoices/{id}) --
 

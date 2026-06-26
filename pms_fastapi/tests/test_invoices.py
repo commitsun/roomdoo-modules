@@ -134,6 +134,36 @@ class TestInvoicesEndpoints(CommonTestPmsApi):
             response = test_client.post("/invoices/999999999/validate")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_delete_invoice(self):
+        """DELETE /invoices/{id} removes a draft invoice and returns 204."""
+        invoice = self._create_draft_invoice()
+        self.assertEqual(invoice.state, "draft")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(f"/invoices/{invoice.id}")
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertFalse(invoice.exists())
+
+    def test_delete_invoice_posted(self):
+        """DELETE /invoices/{id} returns 409 for a posted invoice."""
+        invoice = self._create_invoice()
+        self.assertEqual(invoice.state, "posted")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(f"/invoices/{invoice.id}")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/invoice-not-deletable")
+        self.assertTrue(invoice.exists())
+
+    def test_delete_invoice_not_found(self):
+        """DELETE /invoices/{id} returns 404 for a non-existent invoice."""
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete("/invoices/999999999")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_invoices_get(self):
         with self._create_test_client() as test_client:
             self._login(test_client)
