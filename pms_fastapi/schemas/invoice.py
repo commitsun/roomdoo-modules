@@ -134,7 +134,7 @@ class InvoicePaymentStateEnum(str, Enum):
 
 ODOO_PAYMENT_STATE_MAP = {
     "not_paid": InvoicePaymentStateEnum.not_paid,
-    "in_payment": InvoicePaymentStateEnum.not_paid,
+    "in_payment": InvoicePaymentStateEnum.paid,
     "paid": InvoicePaymentStateEnum.paid,
     "partial": InvoicePaymentStateEnum.partial,
     "reversed": InvoicePaymentStateEnum.reversed,
