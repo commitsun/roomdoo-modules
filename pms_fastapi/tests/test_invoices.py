@@ -146,13 +146,81 @@ class TestInvoicesEndpoints(CommonTestPmsApi):
         )
         self.assertFalse(invoice.exists())
 
-    def test_delete_invoice_posted(self):
-        """DELETE /invoices/{id} returns 409 for a posted invoice."""
+    def test_delete_invoice_posted_requires_confirmation(self):
+        """DELETE /invoices/{id} on a posted invoice without confirmRefund -> 409."""
         invoice = self._create_invoice()
         self.assertEqual(invoice.state, "posted")
         with self._create_test_client() as test_client:
             self._login(test_client)
             response = test_client.delete(f"/invoices/{invoice.id}")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(
+            response.json()["type"], "/errors/invoice-refund-confirmation-required"
+        )
+        self.assertTrue(invoice.exists())
+        self.assertEqual(invoice.state, "posted")
+
+    def test_delete_invoice_posted_with_confirm_refund(self):
+        """DELETE with confirmRefund=true reverses the posted invoice and returns
+        the credit note that cancels it.
+
+        The reversal fully reconciles against the original (cancel=True), so the
+        invoice stays posted but its payment_state becomes 'reversed'.
+        """
+        invoice = self._create_invoice(amount=100.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(f"/invoices/{invoice.id}?confirmRefund=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        data = response.json()
+        self.assertNotEqual(data["id"], invoice.id)
+        credit_note = self.env["account.move"].browse(data["id"])
+        self.assertEqual(credit_note.move_type, "out_refund")
+        invoice.invalidate_recordset(["payment_state"])
+        self.assertEqual(invoice.payment_state, "reversed")
+
+    def test_delete_invoice_posted_reason_recorded(self):
+        """DELETE with confirmRefund=true records the reason on the credit note ref."""
+        invoice = self._create_invoice(amount=100.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(
+                f"/invoices/{invoice.id}?confirmRefund=true&reason=Wrong+customer"
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        credit_note = self.env["account.move"].browse(response.json()["id"])
+        self.assertIn("Wrong customer", credit_note.ref)
+
+    def test_delete_invoice_paid_keeps_payments(self):
+        """DELETE with confirmRefund=true on a paid invoice posts an open credit
+        note and leaves the original paid (not reconciled against it)."""
+        invoice = self._create_invoice(amount=100.0)
+        self.env["account.payment.register"].with_context(
+            active_model="account.move", active_ids=invoice.ids
+        ).create({})._create_payments()
+        invoice.invalidate_recordset(["payment_state"])
+        self.assertEqual(invoice.payment_state, "paid")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(f"/invoices/{invoice.id}?confirmRefund=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        credit_note = self.env["account.move"].browse(response.json()["id"])
+        self.assertEqual(credit_note.move_type, "out_refund")
+        self.assertEqual(credit_note.state, "posted")
+        # Credit note is open (refund owed), not reconciled against the original.
+        self.assertEqual(credit_note.payment_state, "not_paid")
+        # Original keeps its payment untouched.
+        invoice.invalidate_recordset(["payment_state"])
+        self.assertEqual(invoice.payment_state, "paid")
+
+    def test_delete_invoice_cancelled(self):
+        """DELETE on an already cancelled invoice returns 409 and keeps it."""
+        invoice = self._create_invoice()
+        invoice.button_cancel()
+        self.assertEqual(invoice.state, "cancel")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.delete(f"/invoices/{invoice.id}?confirmRefund=true")
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
         self.assertEqual(response.json()["type"], "/errors/invoice-not-deletable")
         self.assertTrue(invoice.exists())
