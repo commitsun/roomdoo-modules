@@ -186,8 +186,8 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
       count actually shipped to Wubook — and on rule create / unlink).
 
     Both paths coalesce through per-transaction buffers so that massive
-    operations (e.g. ``wizard_massive_changes`` touching hundreds of
-    rules) end up enqueuing **one** job per plan binding and **one**
+    operations (e.g. the ``pms.massive.changes.wizard`` touching hundreds
+    of rules) end up enqueuing **one** job per plan binding and **one**
     job per (backend × property) pair for availability.
 
     Performance: on write/create/unlink, the listener appends to a
