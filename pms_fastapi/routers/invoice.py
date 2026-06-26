@@ -48,6 +48,8 @@ class _InvoiceEditProblem(Exception):
 INVOICE_REPORT_MAX_RECORDS = 5000
 INVOICE_PDF_REPORT_MAX_RECORDS = 100
 
+_PAYMENT_ID_RE = re.compile(r"^payment_(\d+)$")
+
 InvoiceOrderDependency = create_order_dependency(
     InvoiceOrderField, INVOICE_ORDER_MAPPING, ["-invoice_date,-name"]
 )
@@ -228,9 +230,6 @@ async def validate_invoice(
 ) -> InvoiceSummary:
     """Validate a draft invoice."""
     return env["pms_api_invoice.invoice_router.helper"].new()._validate_invoice(id)
-
-
-_PAYMENT_ID_RE = re.compile(r"^payment_(\d+)$")
 
 
 @pms_api_router.post(
