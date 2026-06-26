@@ -163,26 +163,57 @@ async def edit_invoice(
 
 @pms_api_router.delete(
     "/invoices/{invoice_id}",
+    response_model=InvoiceDetail,
     tags=["invoice"],
-    status_code=204,
     responses={
-        204: {"description": "Invoice deleted."},
+        200: {
+            "description": (
+                "Validated invoice cancelled; returns the credit note that "
+                "reverses it."
+            )
+        },
+        204: {"description": "Draft invoice deleted."},
         404: {"description": "Invoice not found"},
-        409: {"description": "Invoice cannot be deleted in its current state"},
+        409: {
+            "description": (
+                "Invoice cannot be deleted in its current state, or refund "
+                "confirmation required."
+            )
+        },
     },
-    response_class=Response,
 )
 async def delete_invoice(
     env: AuthenticatedEnv,
     invoice_id: int,
-) -> Response:
-    """Delete a draft invoice.
+    confirmRefund: Annotated[
+        bool,
+        Query(
+            description=(
+                "Required when the invoice is validated. Without this flag, "
+                "deleting a validated invoice returns 409."
+            ),
+        ),
+    ] = False,
+    reason: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Reason for the cancellation, recorded on the credit note. "
+                "Only used when the invoice is validated."
+            ),
+        ),
+    ] = None,
+):
+    """Delete a draft invoice or cancel a validated one.
 
-    Only draft invoices can be deleted. Validated or cancelled invoices
-    return 409.
+    Drafts are deleted in place and the endpoint returns 204. Validated
+    invoices, when confirmRefund=true, generate a full refund that cancels
+    the original; the endpoint returns the resulting credit note.
     """
     return (
-        env["pms_api_invoice.invoice_router.helper"].new()._delete_invoice(invoice_id)
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._delete_invoice(invoice_id, confirmRefund, reason)
     )
 
 
@@ -421,7 +452,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
 
     # -- Invoice delete (DELETE /invoices/{id}) --
 
-    def _delete_invoice(self, invoice_id):
+    def _delete_invoice(self, invoice_id, confirm_refund=False, reason=None):
         try:
             invoice = self.get(invoice_id)
         except MissingError:
@@ -435,19 +466,32 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 },
                 media_type="application/problem+json",
             )
-        if invoice.state != "draft":
-            return JSONResponse(
-                status_code=409,
-                content={
-                    "type": "/errors/invoice-not-deletable",
-                    "title": _("Invoice not deletable"),
-                    "status": 409,
-                    "detail": _("Only draft invoices can be deleted."),
-                },
-                media_type="application/problem+json",
-            )
-        invoice.unlink()
-        return Response(status_code=204)
+        try:
+            if invoice.state == "cancel":
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-not-deletable",
+                    _("Invoice not deletable"),
+                    _("Cancelled invoices cannot be deleted."),
+                )
+            if invoice.state == "draft":
+                invoice.unlink()
+                return Response(status_code=204)
+            if not confirm_refund:
+                self._raise_edit_problem(
+                    409,
+                    "/errors/invoice-refund-confirmation-required",
+                    _("Refund confirmation required"),
+                    _(
+                        "This invoice is validated. Deleting it will generate "
+                        "a refund that cancels it. Confirm by passing "
+                        "confirmRefund=true."
+                    ),
+                )
+            credit_note = self._cancel_posted_invoice(invoice, reason)
+        except _InvoiceEditProblem as problem:
+            return problem.response
+        return InvoiceDetail.from_account_move(credit_note)
 
     # -- Invoice edit (PUT /invoices/{id}) --
 
@@ -782,6 +826,55 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         invoice.write(write_vals)
         return invoice
 
+    def _reverse_invoice_move(self, invoice, reason=None, cancel=True):
+        """Create the credit note that reverses `invoice` and return it.
+
+        With cancel=True the credit note is posted and reconciled against the
+        original (full reversal). With cancel=False it is created in draft and
+        left untouched, so callers wanting it posted must post it explicitly.
+        The `ref` mirrors the account.move.reversal wizard, optionally carrying
+        the cancellation reason.
+        """
+        reversal_date = fields.Date.context_today(invoice)
+        ref = (
+            _(
+                "Reversal of: %(move_name)s, %(reason)s",
+                move_name=invoice.name,
+                reason=reason,
+            )
+            if reason
+            else _("Reversal of: %s", invoice.name)
+        )
+        return invoice._reverse_moves(
+            default_values_list=[
+                {
+                    "ref": ref,
+                    "date": reversal_date,
+                    "invoice_date": reversal_date,
+                    "invoice_date_due": reversal_date,
+                    "journal_id": invoice.journal_id.id,
+                }
+            ],
+            cancel=cancel,
+        )
+
+    def _cancel_posted_invoice(self, invoice, reason=None):
+        """Cancel a posted invoice with a credit note, returning the credit note.
+
+        An unpaid invoice is fully reversed: the credit note is reconciled
+        against the original, leaving it reversed. An invoice that already has
+        payments is left untouched with its payments; the credit note is posted
+        and left open as a refund owed to the customer (it is not reconciled
+        against the original).
+        """
+        has_payments = invoice.payment_state in ("paid", "in_payment", "partial")
+        credit_note = self._reverse_invoice_move(
+            invoice, reason=reason, cancel=not has_payments
+        )
+        if has_payments:
+            credit_note.action_post()
+        return credit_note
+
     def _edit_posted_invoice(
         self, invoice, payload, sale_lines, downpayment_lines, partner
     ):
@@ -790,19 +883,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             in ("asset_receivable", "liability_payable")
         )
         receivable_lines.remove_move_reconcile()
-        reversal_date = fields.Date.context_today(invoice)
-        invoice._reverse_moves(
-            default_values_list=[
-                {
-                    "ref": f"Reversal of: {invoice.name}",
-                    "date": reversal_date,
-                    "invoice_date": reversal_date,
-                    "invoice_date_due": reversal_date,
-                    "journal_id": invoice.journal_id.id,
-                }
-            ],
-            cancel=True,
-        )
+        self._reverse_invoice_move(invoice)
         vals = self._edit_compute_invoice_vals(
             payload, sale_lines, downpayment_lines, partner
         )
