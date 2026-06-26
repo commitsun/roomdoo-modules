@@ -145,7 +145,7 @@ class FolioSummary(PmsBaseModel):
         )
 
         # Invoice state
-        if folio.invoice_status in ("to_invoice", "to_confirm"):
+        if folio.invoice_status == "to_invoice":
             filtered_data["invoiceState"] = invoiceStateEnum.TO_INVOICE
         else:
             filtered_data["invoiceState"] = invoiceStateEnum.INVOICED
