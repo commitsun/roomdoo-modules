@@ -19,6 +19,8 @@ from . import guest
 from . import pms_folio
 from . import invoice
 from . import journal
+from . import cash_session
 from . import payment_method
+from . import payment
 from . import reservation_guest
 from . import pms_reservation

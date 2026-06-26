@@ -605,6 +605,7 @@ class PmsTransactionService(Component):
             )
             # Force to complete the statement
             statement._compute_balance_start()
+            self._mark_cash_session_closed(statement)
             return {
                 "result": True,
                 "diff": 0,
@@ -622,6 +623,7 @@ class PmsTransactionService(Component):
             )
             # Force to complete the statement
             statement._compute_balance_start()
+            self._mark_cash_session_closed(statement)
             return {
                 "result": True,
                 "diff": diff,
@@ -745,6 +747,31 @@ class PmsTransactionService(Component):
                     statement_move_line.account_id = payment_move_line.account_id
                     lines_to_reconcile = payment_move_line + statement_move_line
                     lines_to_reconcile.reconcile()
+
+    def _mark_cash_session_closed(self, statement):
+        """TEMPORARY bridge to the FastAPI cash-session state. REMOVE WITH THIS MODULE.
+
+        ``cash_session_closed`` is owned by pms_fastapi (the surviving API),
+        which keys the open/closed state off it. While both APIs coexist behind
+        feature flags a cash session may be opened on one and closed on the
+        other, so this legacy API must also stamp the flag — otherwise a session
+        closed here would still look open to pms_fastapi.
+
+        This is throwaway glue: pms_api_rest is legacy and will be retired. When
+        it is, delete this method (and its callers) outright; nothing here needs
+        to migrate, the field stays in pms_fastapi. The field only exists when
+        pms_fastapi is installed (the only case where anyone reads it), so the
+        write is guarded on its presence.
+        """
+        if "cash_session_closed" not in statement._fields:
+            return
+        statement.write(
+            {
+                "cash_session_closed": True,
+                "cash_session_closed_uid": self.env.user.id,
+                "cash_session_closed_date": fields.Datetime.now(),
+            }
+        )
 
     def _get_last_cash_session(self, journal_id, pms_property_id=False):
         domain = [("journal_id", "=", journal_id)]

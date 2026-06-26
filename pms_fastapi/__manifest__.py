@@ -1,6 +1,6 @@
 {
     "name": "PMS FastAPI",
-    "version": "16.0.1.3.0",
+    "version": "16.0.1.4.0",
     "development_status": "Beta",
     "author": "Commit [Sun], Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/pms",
@@ -18,6 +18,8 @@
         "partner_identification_unique",
         "pms_folio_report",
         "roomdoo_invoices_exporter",
+        "roomdoo_payments_exporter",
+        "pms_autoreconcile_folio_payments",
     ],
     "external_dependencies": {
         "python": ["pyinstrument"],

@@ -4,6 +4,15 @@ from .base import PmsBaseModel
 from .pms_property import PropertyId
 
 
+class UserId(PmsBaseModel):
+    id: int
+    name: str = Field(alias="name")
+
+    @classmethod
+    def from_res_users(cls, user):
+        return cls(id=user.id, name=user.name or "")
+
+
 class User(PmsBaseModel):
     id: int = Field(alias="id")
     name: str = Field(alias="name")
