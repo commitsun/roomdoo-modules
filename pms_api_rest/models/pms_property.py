@@ -675,6 +675,23 @@ class PmsProperty(models.Model):
             date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
             if date_to <= date_from:
                 date_to = date_from
+        # The api client (e.g. Neobookings) cannot process a long range in a
+        # single message: split it into windows of at most one month, pushed
+        # sequentially (records within each window are batched to <=100 below).
+        if (date_to - date_from).days > 30:
+            window_from = date_from
+            while window_from <= date_to:
+                window_to = min(window_from + timedelta(days=29), date_to)
+                self.pms_api_push_batch(
+                    call_type,
+                    window_from,
+                    window_to,
+                    filter_room_type_id=filter_room_type_id,
+                    pms_property_codes=pms_property_codes,
+                    client=client,
+                )
+                window_from = window_to + timedelta(days=1)
+            return
         for client in clients:
             if not pms_property_codes:
                 pms_properties = client.pms_property_ids
@@ -758,8 +775,11 @@ class PmsProperty(models.Model):
                             key_data = "prices"
                         else:
                             raise ValidationError(_("Invalid call type"))
-                    if data:
-                        payload[key_data] = data
+                    for batch_start in range(0, len(data), 100):
+                        payload = {
+                            "pmsPropertyId": pms_property.id,
+                            key_data: data[batch_start : batch_start + 100],
+                        }
                         response = self.pms_api_push_payload(payload, endpoint, client)
                         _logger.info(
                             f"""PMS API push batch response to
