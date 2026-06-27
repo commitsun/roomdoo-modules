@@ -2320,10 +2320,15 @@ class PmsFolioService(Component):
             and self.get_language(pms_folio_info.language) != folio.lang
         ):
             folio_vals.update({"lang": self.get_language(pms_folio_info.language)})
+        if (
+            pms_folio_info.pricelistId
+            and folio.pricelist_id.id != pms_folio_info.pricelistId
+        ):
+            folio_vals.update({"pricelist_id": pms_folio_info.pricelistId})
         reservations_vals = []
         if pms_folio_info.reservations:
             reservations_vals = self.wrapper_reservations(
-                folio, pms_folio_info.reservations
+                folio, pms_folio_info.reservations, pms_folio_info.pricelistId
             )
             if reservations_vals:
                 update_reservation_ids = []
@@ -2461,7 +2466,9 @@ class PmsFolioService(Component):
                 ]
         return pms_folio_info.transactions
 
-    def wrapper_reservations(self, folio, info_reservations):  # noqa: C901
+    def wrapper_reservations(  # noqa: C901
+        self, folio, info_reservations, folio_pricelist_id=None
+    ):
         """
         This method is used to create or update the reservations in folio
         We try to find the reservation in the folio, if it exists we update it
@@ -2517,17 +2524,24 @@ class PmsFolioService(Component):
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
                     vals.update({"checkout": info_reservation.checkout})
-            if info_reservation.pricelistId:
+            # OTAs send the pricelist at folio level on modifications, while the
+            # reservation payload may omit it. Fall back to the folio pricelist so
+            # reservations re-created by a modification keep the right rate instead
+            # of the stale one (symmetric with the create flow).
+            reservation_pricelist_id = (
+                info_reservation.pricelistId or folio_pricelist_id
+            )
+            if reservation_pricelist_id:
                 if new_res or (
-                    proposed_reservation.pricelist_id.id != info_reservation.pricelistId
+                    proposed_reservation.pricelist_id.id != reservation_pricelist_id
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
-                    vals.update({"pricelist_id": info_reservation.pricelistId})
+                    vals.update({"pricelist_id": reservation_pricelist_id})
             board_service_id = self.get_board_service_room_type_id(
                 info_reservation.roomTypeId,
                 folio.pms_property_id.id,
                 info_reservation.boardServiceId,
-                info_reservation.pricelistId,
+                reservation_pricelist_id,
             )
             if board_service_id:
                 if (
@@ -2596,7 +2610,7 @@ class PmsFolioService(Component):
                                     room_type_id=info_reservation.roomTypeId,
                                     pms_property_id=folio.pms_property_id.id,
                                     board_service_id=info_reservation.boardServiceId,
-                                    pricelist_id=info_reservation.pricelistId,
+                                    pricelist_id=reservation_pricelist_id,
                                 )
                             )
                         )
@@ -2605,8 +2619,8 @@ class PmsFolioService(Component):
                             pricelist = (
                                 self.env["product.pricelist"]
                                 .sudo()
-                                .browse(info_reservation.pricelistId)
-                                if info_reservation.pricelistId
+                                .browse(reservation_pricelist_id)
+                                if reservation_pricelist_id
                                 else folio.pricelist_id
                             )
                             for rline in info_reservation.reservationLines:
