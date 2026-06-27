@@ -1,8 +1,12 @@
+import logging
 from collections import defaultdict
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountPayment(models.Model):
@@ -20,10 +24,18 @@ class AccountPayment(models.Model):
             partner_id = (
                 payment.partner_id.id or self.env.ref("pms.various_pms_partner").id
             )
-            self._create_downpayment_invoice(
-                payment=payment,
-                partner_id=partner_id,
-            )
+            try:
+                with self.env.cr.savepoint():
+                    self._create_downpayment_invoice(
+                        payment=payment,
+                        partner_id=partner_id,
+                    )
+            except ValidationError as error:
+                _logger.warning(
+                    "Skipping downpayment invoice for payment %s: %s",
+                    payment.id,
+                    error,
+                )
         return True
 
     @api.model
@@ -66,6 +78,28 @@ class AccountPayment(models.Model):
             active_ids=payment.folio_ids.ids,
             return_invoices=True,
         ).create_invoices()
+        # A downpayment invoice issued in the simplified journal cannot exceed
+        # the property limit (mirrors PmsProperty.autoinvoice_folio). Move it to
+        # the normal journal when the customer has enough fiscal data; otherwise
+        # block it so it is not posted as an over-limit simplified invoice.
+        for invoice in move:
+            pms_property = invoice.pms_property_id
+            if (
+                pms_property
+                and invoice.journal_id.is_simplified_invoice
+                and invoice.amount_total > pms_property.max_amount_simplified_invoice
+            ):
+                if invoice.partner_id._check_enought_invoice_data():
+                    invoice.journal_id = pms_property.journal_normal_invoice_id
+                else:
+                    raise ValidationError(
+                        _(
+                            "The downpayment amount for folio(s) %s exceeds the "
+                            "maximum for simplified invoices and the customer "
+                            "lacks enough fiscal data for a normal invoice."
+                        )
+                        % ", ".join(payment.folio_ids.mapped("name"))
+                    )
         if payment.payment_type == "outbound":
             move.action_switch_invoice_into_refund_credit_note()
         move.action_post()
