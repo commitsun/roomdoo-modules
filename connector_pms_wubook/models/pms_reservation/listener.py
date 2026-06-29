@@ -21,10 +21,18 @@ from ..pms_availability.listener import (
 # down to the lines to figure out which property bindings need an avail
 # re-export.
 #
-# Other fields (dates, room_type_id, etc.) are NOT listed here: changes
-# to those propagate as line creates / unlinks / room_id writes which
-# are caught by the ``pms.reservation.line`` listener.
-_RESERVATION_RELEVANT_FIELDS = {"state"}
+# ``preferred_room_id`` / ``room_type_id`` are header fields whose write
+# REASSIGNS the reservation to a different room: that only RECOMPUTES
+# ``pms.reservation.line.room_id`` (a stored compute) through Odoo's
+# internal ``_write()``, which ``component_event`` does NOT observe, so
+# the ``pms.reservation.line`` listener never fires. Without catching
+# them here the new occupancy is never pushed to Wubook — the bug being
+# fixed: a reservation moved (via the header) into a room of a DIFFERENT
+# room_type left that room_type still sellable on the channel.
+#
+# Date changes still propagate as line create / unlink (public writes)
+# and remain caught by the ``pms.reservation.line`` listener.
+_RESERVATION_RELEVANT_FIELDS = {"state", "preferred_room_id", "room_type_id"}
 
 
 class ChannelWubookPmsReservationListener(Component):
