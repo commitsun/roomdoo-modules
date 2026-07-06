@@ -1,11 +1,12 @@
 import base64
+import json
 import logging
 from datetime import datetime, timedelta
 
 import pytz
 
 from odoo import _, fields
-from odoo.exceptions import AccessError, MissingError, ValidationError
+from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
 
@@ -2093,6 +2094,35 @@ class PmsFolioService(Component):
 
     # TEMP
 
+    def _folio_has_locked_invoiced_lines(self, folio):
+        """Return True if the folio has posted (non-reversed) customer invoices
+        or any sale line with quantity already invoiced. Callers use this to
+        surface a specific API error code when a PUT fails because the folio
+        cannot be modified due to invoicing."""
+        if not folio or not folio.exists():
+            return False
+        has_posted_invoice = any(
+            move.state == "posted"
+            and move.move_type == "out_invoice"
+            and move.payment_state != "reversed"
+            for move in folio.move_ids
+        )
+        if has_posted_invoice:
+            return True
+        return any(line.qty_invoiced > 0 for line in folio.sale_line_ids)
+
+    def _raise_folio_invoiced_error(self, error):
+        """Re-raise a UserError as a structured API error so external clients
+        can react to the specific "folio has invoiced lines" case."""
+        raise ValidationError(
+            json.dumps(
+                {
+                    "code": "FOLIO_HAS_INVOICED_LINES",
+                    "message": str(error),
+                }
+            )
+        ) from error
+
     @restapi.method(
         [
             (
@@ -2114,6 +2144,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = (
                 self.env["pms.folio"]
@@ -2178,6 +2209,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
@@ -2204,6 +2239,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = self.env["pms.folio"].sudo().browse(folio_id)
             if not folio:
@@ -2260,6 +2296,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
