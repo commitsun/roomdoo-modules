@@ -72,6 +72,12 @@ class ResPartner(models.Model):
         return {f for f in _PROTECTED_FIELDS if f in self._fields}
 
     def write(self, vals):
+        # Module data loads run with install_mode=True (see
+        # BaseModel._load_records); e.g. pms_l10n_es_sii sets
+        # aeat_anonymous_cash_customer on this partner from its data XML.
+        # The guard only targets runtime writes (REST API, UI).
+        if self.env.context.get("install_mode"):
+            return super().write(vals)
         various = self._get_various_partner()
         if various and various.id in self.ids:
             forbidden = self._get_various_partner_protected_fields().intersection(vals)
