@@ -152,6 +152,7 @@ class PmsPriceService(Component):
         product = product.with_context(
             board_service_line_id=board_service_line_id,
             property=pms_property_id,
+            consumption_date=consumption_date,
         )
         price = pricelist._get_product_price(
             product=product,
@@ -185,7 +186,6 @@ class PmsPriceService(Component):
             lines = (
                 self.env["pms.board.service.room.type.line"]
                 .sudo()
-                .browse()
                 .browse(board_service_line_id)
             )
         else:
