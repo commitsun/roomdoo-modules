@@ -34,17 +34,20 @@ def is_adult(birthdate):
 def find_opposite_relationship(relationship_code):
     inverse_relationships = {
         "PM": "HJ",  # Padre o Madre -> Hijo
+        "HJ": "PM",  # Hijo -> Padre o Madre
         "TU": "OT",  # Tutor -> Otro (sin inverso claro)
         "TI": "SB",  # Tío -> Sobrino
         "HR": "HR",  # Hermano -> Hermano
         "AB": "NI",  # Abuelo -> Nieto
+        "NI": "AB",  # Nieto -> Abuelo
         "BA": "BN",  # Bisabuelo -> Bisnieto
+        "BN": "BA",  # Bisnieto -> Bisabuelo
         "CD": "CD",  # Cuñado -> Cuñado
         "CY": "CY",  # Cónyuge -> Cónyuge
         "SB": "TI",  # Sobrino -> Tío
         "SG": "YN",  # Suegro -> Yerno o Nuera
         "YN": "SG",  # Yerno o Nuera -> Suegro
-        "OT": "OT",  # Otro -> Tutor (arbitrario)
+        "OT": "OT",  # Otro -> Otro
     }
     # Buscar la relación inversa
     related_code = inverse_relationships.get(
@@ -782,7 +785,13 @@ class PmsReservationService(Component):
                         signature=checkin_partner.signature
                         if checkin_partner.signature
                         else None,
-                        relationship=checkin_partner.ses_partners_relationship
+                        # ses_partners_relationship is stored from the guest's
+                        # own perspective (e.g. "HJ"), but the API contract
+                        # exchanges the responsible adult's perspective
+                        # (e.g. "PM"), so it is inverted back here
+                        relationship=find_opposite_relationship(
+                            checkin_partner.ses_partners_relationship
+                        )
                         if checkin_partner.ses_partners_relationship
                         else "",
                         responsibleCheckinPartnerId=checkin_partner.ses_related_checkin_partner_id.id
@@ -842,7 +851,10 @@ class PmsReservationService(Component):
                     [("id", "=", pms_checkin_partner_info.responsibleCheckinPartnerId)]
                 )
             )
-            if responsible_checkin_partner_record:
+            if (
+                responsible_checkin_partner_record
+                and pms_checkin_partner_info.relationship
+            ):
                 responsible_checkin_partner_record.ses_partners_relationship = (
                     pms_checkin_partner_info.relationship
                 )
@@ -1180,7 +1192,7 @@ class PmsReservationService(Component):
             vals.update({"signature": base64.b64encode(signature_image)})
         else:
             vals.update({"signature": False})
-        if pms_checkin_partner_info.relationship != "":
+        if pms_checkin_partner_info.relationship:
             vals.update(
                 {
                     "ses_partners_relationship": find_opposite_relationship(
