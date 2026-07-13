@@ -1,6 +1,6 @@
 {
     "name": "PMS FastAPI",
-    "version": "16.0.1.4.0",
+    "version": "16.0.1.5.0",
     "development_status": "Beta",
     "author": "Commit [Sun], Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/pms",
