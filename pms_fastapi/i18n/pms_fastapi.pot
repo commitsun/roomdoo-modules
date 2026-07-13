@@ -80,12 +80,20 @@ msgstr ""
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
+msgid "Cancelled invoices cannot be deleted."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
 msgid "Cancelled invoices cannot be edited."
 msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "Cannot specify both 'ids' and filter parameters. Use one or the other."
@@ -222,6 +230,13 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Destination payment method must be inbound."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
@@ -314,6 +329,13 @@ msgstr ""
 msgid ""
 "Field used to store sanitized phone number. Helps speeding up searches and "
 "comparisons."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Fiscal lock date"
 msgstr ""
 
 #. module: pms_fastapi
@@ -432,14 +454,6 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
-#: code:addons/pms_fastapi/routers/payment.py:0
-#, python-format
-msgid ""
-"Internal transfers only allow bank or cash journals. Invalid journals: %s."
-msgstr ""
-
-#. module: pms_fastapi
-#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
@@ -509,6 +523,13 @@ msgstr ""
 #. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Invoice not deletable"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
@@ -525,6 +546,7 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
@@ -585,14 +607,6 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/cash_session.py:0
 #, python-format
 msgid "Journal %s already has an open cash session."
-msgstr ""
-
-#. module: pms_fastapi
-#. odoo-python
-#: code:addons/pms_fastapi/routers/payment.py:0
-#: code:addons/pms_fastapi/routers/payment.py:0
-#, python-format
-msgid "Journal %s does not exist."
 msgstr ""
 
 #. module: pms_fastapi
@@ -685,6 +699,7 @@ msgstr ""
 #. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "Mutually exclusive parameters"
@@ -714,6 +729,7 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
@@ -789,6 +805,13 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/payment.py:0
 #, python-format
 msgid "Origin and destination journals cannot be the same."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Origin payment method must be outbound."
 msgstr ""
 
 #. module: pms_fastapi
@@ -913,6 +936,13 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
 msgid "Payment already reconciled"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "Payment cannot be modified"
 msgstr ""
 
 #. module: pms_fastapi
@@ -1060,6 +1090,7 @@ msgstr ""
 #. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "Record limit exceeded"
@@ -1074,6 +1105,7 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
 msgid "Refund confirmation required"
@@ -1146,6 +1178,20 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/pms_reservation.py:0
 #, python-format
 msgid "Reservation state does not allow reverting arrival"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Reversal of: %(move_name)s, %(reason)s"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Reversal of: %s"
 msgstr ""
 
 #. module: pms_fastapi
@@ -1240,6 +1286,7 @@ msgstr ""
 #. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
+#: code:addons/pms_fastapi/routers/payment.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "The export requested %s records, but the maximum allowed is %s."
@@ -1277,6 +1324,15 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid ""
+"The payment date falls within a locked fiscal period and cannot be "
+"cancelled."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
 msgid ""
@@ -1305,8 +1361,25 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
 msgid ""
+"This invoice is validated. Deleting it will generate a refund that cancels "
+"it. Confirm by passing confirmRefund=true."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
 "This invoice is validated. Editing it will generate a refund and a new "
 "corrected invoice. Confirm by passing confirmRefund=true."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid ""
+"This payment is reconciled against a bank statement and cannot be modified."
 msgstr ""
 
 #. module: pms_fastapi
@@ -1391,6 +1464,13 @@ msgstr ""
 #. module: pms_fastapi
 #: model:ir.model,name:pms_fastapi.model_pms_fastapi_login_endpoint
 msgid "login endpoint helper"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "payment"
 msgstr ""
 
 #. module: pms_fastapi
