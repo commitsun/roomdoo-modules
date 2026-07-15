@@ -1221,6 +1221,20 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/models/fastapi_endpoint.py:0
+#, python-format
+msgid "Search text must be at least %s characters."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/fastapi_endpoint.py:0
+#, python-format
+msgid "Search text too short"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid ""
