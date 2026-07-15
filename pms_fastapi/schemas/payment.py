@@ -9,7 +9,7 @@ from pydantic import Field
 from odoo import api
 from odoo.osv import expression
 
-from .base import BaseSearch, CurrencyAmount, PmsBaseModel
+from .base import BaseSearch, CurrencyAmount, PmsBaseModel, SearchText
 from .contact import ContactId
 from .currency import CurrencySummary
 from .payment_method import PaymentMethodSummary
@@ -217,10 +217,13 @@ class PaymentSearch(BaseSearch):
             description="Filter payments of the given property. Defaults to the "
             "active property of the session.",
         ),
-        globalSearch: str | None = Query(
-            default=None,
-            description="Free-text search across reference, contact and created by.",
-        ),
+        globalSearch: Annotated[
+            SearchText,
+            Query(
+                description="Free-text search across reference, contact "
+                "and created by.",
+            ),
+        ] = None,
         dateFrom: Annotated[
             date | None,
             Query(
@@ -249,18 +252,26 @@ class PaymentSearch(BaseSearch):
                 "parameters, e.g., ?paymentMethod=3&paymentMethod=9",
             ),
         ] = None,
-        reference: str | None = Query(
-            default=None,
-            description="Filter exclusively by reference.",
-        ),
-        contact: str | None = Query(
-            default=None,
-            description="Filter by the name of the contact (partner) of the payment.",
-        ),
-        createdBy: str | None = Query(
-            default=None,
-            description="Filter by the name of the user who registered the payment.",
-        ),
+        reference: Annotated[
+            SearchText,
+            Query(
+                description="Filter exclusively by reference.",
+            ),
+        ] = None,
+        contact: Annotated[
+            SearchText,
+            Query(
+                description="Filter by the name of the contact (partner) "
+                "of the payment.",
+            ),
+        ] = None,
+        createdBy: Annotated[
+            SearchText,
+            Query(
+                description="Filter by the name of the user who registered "
+                "the payment.",
+            ),
+        ] = None,
         amountEq: Annotated[
             float | None,
             Query(ge=0, description="Filter payments whose amount equals this value."),
