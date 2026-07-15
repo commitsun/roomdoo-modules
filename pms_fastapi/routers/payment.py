@@ -496,7 +496,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             if payload.paymentType == PaymentCreateType.customerPayment and (
                 payload.folioId or payload.invoiceId
             ):
-                payment = self._create_folio_payment(payload, line, partner)
+                payment = self._create_context_payment(payload, line, partner)
             else:
                 payment = self._create_simple_payment(
                     payload, line, partner, payment_type, partner_type
@@ -505,26 +505,44 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             return problem.response
         return PaymentSummary.from_account_payment(payment)
 
-    def _resolve_context_folio(self, payload):
-        """Return the folio for a customer payment context (folio or invoice)."""
-        if payload.folioId:
-            folio = self.env["pms.folio"].sudo().browse(payload.folioId).exists()
-            if not folio:
-                self._not_found(_("Folio %s does not exist.") % payload.folioId)
-        else:
-            invoice = self.env["account.move"].sudo().browse(payload.invoiceId).exists()
-            if not invoice:
-                self._not_found(_("Invoice %s does not exist.") % payload.invoiceId)
-            folio = invoice.folio_ids[:1]
-            if not folio:
-                self._validation_error(
-                    _("Invoice %s has no associated folio.") % payload.invoiceId
-                )
+    def _create_context_payment(self, payload, line, partner):
+        """Register a customer payment from a folio or an invoice context.
+
+        When the context is an invoice we know exactly which document the
+        payment settles, so we register it against the invoice and let it
+        reconcile deterministically. When it is a folio (no specific invoice)
+        we fall back to the folio-level `do_payment`, whose reconciliation is
+        best-effort (see pms_autoreconcile_folio_payments)."""
+        if payload.invoiceId:
+            return self._create_invoice_payment(payload, line)
+        return self._create_folio_payment(payload, line, partner)
+
+    def _resolve_folio(self, payload):
+        folio = self.env["pms.folio"].sudo().browse(payload.folioId).exists()
+        if not folio:
+            self._not_found(_("Folio %s does not exist.") % payload.folioId)
         PmsBaseModel.pms_api_check_access(self.env.user, folio)
         return folio
 
+    def _resolve_context_invoice(self, payload):
+        invoice = self.env["account.move"].sudo().browse(payload.invoiceId).exists()
+        if not invoice:
+            self._not_found(_("Invoice %s does not exist.") % payload.invoiceId)
+        folio = invoice.folio_ids[:1]
+        if not folio:
+            self._validation_error(
+                _("Invoice %s has no associated folio.") % payload.invoiceId
+            )
+        # Access is granted through the folio, as in the folio-context path.
+        PmsBaseModel.pms_api_check_access(self.env.user, folio)
+        if invoice.state != "posted":
+            self._validation_error(
+                _("Invoice %s is not posted and cannot be paid.") % payload.invoiceId
+            )
+        return invoice
+
     def _create_folio_payment(self, payload, line, partner):
-        folio = self._resolve_context_folio(payload)
+        folio = self._resolve_folio(payload)
         partner = partner or folio.partner_id
         before = folio.payment_ids
         self.env["pms.folio"].sudo().do_payment(
@@ -537,6 +555,33 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             ref=payload.reference,
         )
         return folio.payment_ids - before
+
+    def _create_invoice_payment(self, payload, line):
+        """Register the payment directly against the invoice.
+
+        `account.payment.register` creates, posts and reconciles the payment
+        against the invoice's receivable line in one shot. pms then recomputes
+        `folio_ids` from `reconciled_invoice_ids`
+        (account_payment._compute_folio_ids), so the folio link comes for free
+        and the payment is left properly reconciled — unlike the folio-level
+        `do_payment`, whose autoreconcile is heuristic and skips ambiguous
+        matches."""
+        invoice = self._resolve_context_invoice(payload)
+        vals = {
+            "amount": payload.amount,
+            "payment_date": payload.date,
+            "journal_id": line.journal_id.id,
+            "payment_method_line_id": line.id,
+        }
+        if payload.reference:
+            vals["communication"] = payload.reference
+        return (
+            self.env["account.payment.register"]
+            .sudo()
+            .with_context(active_model="account.move", active_ids=invoice.ids)
+            .create(vals)
+            ._create_payments()
+        )
 
     def _create_simple_payment(
         self, payload, line, partner, payment_type, partner_type

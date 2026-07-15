@@ -1,6 +1,8 @@
+import datetime
+
 from fastapi import status
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.tests import tagged
 
 from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
@@ -67,6 +69,44 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         cls.product = cls.env["product.product"].create(
             {"name": "Service", "type": "service"}
         )
+        # Room infrastructure so a folio can hold a real (invoiceable)
+        # reservation line instead of a hand-crafted folio.sale.line.
+        cls.room_type_class = cls.env["pms.room.type.class"].create(
+            {"name": "Standard", "default_code": "STD"}
+        )
+        cls.room_type = cls.env["pms.room.type"].create(
+            {
+                "pms_property_ids": [cls.test_property.id],
+                "name": "Double Test",
+                "default_code": "DBL_Test",
+                "class_id": cls.room_type_class.id,
+            }
+        )
+        cls.room1 = cls.env["pms.room"].create(
+            {
+                "pms_property_id": cls.test_property.id,
+                "name": "101",
+                "room_type_id": cls.room_type.id,
+                "capacity": 2,
+            }
+        )
+        cls.sale_channel = cls.env["pms.sale.channel"].create(
+            {"name": "Direct Test", "channel_type": "direct"}
+        )
+        # Folio invoicing with no explicit partner picks the property's
+        # simplified sale journal; without it _create_invoices() raises.
+        cls.journal_simplified = cls.env["account.journal"].create(
+            {
+                "name": "Simplified Sales",
+                "code": "SIMP",
+                "type": "sale",
+                "company_id": company.id,
+                "pms_property_ids": [Command.set([cls.test_property.id])],
+            }
+        )
+        cls.test_property.write(
+            {"journal_simplified_invoice_id": cls.journal_simplified.id}
+        )
 
     def _folio(self):
         return self.env["pms.folio"].create(
@@ -77,37 +117,34 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
             }
         )
 
-    def _invoice_for_folio(self, folio, amount=100.0):
-        line = self.env["folio.sale.line"].create(
+    def _confirmed_folio(self, nights=2, price=100.0):
+        """A folio with a confirmed, invoiceable reservation."""
+        start = fields.date.today()
+        folio = self._folio()
+        self.env["pms.reservation"].create(
             {
                 "folio_id": folio.id,
-                "name": "Stay",
-                "product_id": self.product.id,
-                "product_uom": self.product.uom_id.id,
-                "product_uom_qty": 1,
-                "price_unit": amount,
-            }
-        )
-        return self.env["account.move"].create(
-            {
-                "move_type": "out_invoice",
+                "room_type_id": self.room_type.id,
                 "partner_id": self.customer.id,
-                "folio_ids": [(6, 0, folio.ids)],
-                "invoice_line_ids": [
-                    (
-                        0,
-                        0,
-                        {
-                            "name": "Stay",
-                            "product_id": self.product.id,
-                            "quantity": 1,
-                            "price_unit": amount,
-                            "folio_line_ids": [(6, 0, line.ids)],
-                        },
-                    )
+                "adults": 1,
+                "sale_channel_origin_id": self.sale_channel.id,
+                "reservation_line_ids": [
+                    (0, False, {"date": start + datetime.timedelta(days=i)})
+                    for i in range(nights)
                 ],
             }
         )
+        folio.action_confirm()
+        folio.reservation_ids.reservation_line_ids.write({"price": price})
+        return folio
+
+    def _invoice_for_folio(self, folio, post=True):
+        """Invoice the folio the way the PMS does (real sale lines), so the
+        folio<->invoice link is genuine."""
+        invoice = folio._create_invoices()[:1]
+        if post:
+            invoice.action_post()
+        return invoice
 
     # -- POST /payments --
 
@@ -160,12 +197,69 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         self.assertEqual(body["folio"]["id"], folio.id)
         self.assertIn(body["id"], folio.payment_ids.ids)
 
-    def test_customer_payment_from_invoice(self):
-        """customerPayment with invoiceId derives the folio from the invoice."""
-        folio = self._folio()
+    def test_customer_payment_from_invoice_reconciles(self):
+        """A payment from invoiceId is registered against the invoice and
+        reconciled with it; the folio link is then derived from the reconciled
+        invoice (not from do_payment)."""
+        folio = self._confirmed_folio()
         invoice = self._invoice_for_folio(folio)
         self.assertIn(folio.id, invoice.folio_ids.ids)
+        total = invoice.amount_total
+        pay_amount = round(total / 2, 2)
+        self.assertGreater(total, pay_amount)  # ensures a partial payment
         with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/payments",
+                json={
+                    "paymentType": "customerPayment",
+                    "amount": pay_amount,
+                    "date": "2026-03-04",
+                    "paymentMethodId": self.bank_inbound.id,
+                    "invoiceId": invoice.id,
+                    "reference": "",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        body = response.json()
+        self.assertEqual(body["folio"]["id"], folio.id)
+        payment = self.env["account.payment"].browse(body["id"])
+        # Reconciled directly against the invoice ...
+        self.assertIn(invoice.id, payment.reconciled_invoice_ids.ids)
+        # ... which leaves the invoice partially paid ...
+        self.assertEqual(invoice.payment_state, "partial")
+        self.assertAlmostEqual(invoice.amount_residual, total - pay_amount, places=2)
+        # ... and the folio link is the computed one (via the reconciled invoice).
+        self.assertIn(folio.id, payment.folio_ids.ids)
+
+    def test_customer_payment_from_invoice_full_marks_paid(self):
+        """Paying the full invoice residual marks it as paid."""
+        folio = self._confirmed_folio()
+        invoice = self._invoice_for_folio(folio)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/payments",
+                json={
+                    "paymentType": "customerPayment",
+                    "amount": invoice.amount_total,
+                    "date": "2026-03-04",
+                    "paymentMethodId": self.bank_inbound.id,
+                    "invoiceId": invoice.id,
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        payment = self.env["account.payment"].browse(response.json()["id"])
+        self.assertIn(invoice.id, payment.reconciled_invoice_ids.ids)
+        self.assertEqual(invoice.payment_state, "paid")
+
+    def test_customer_payment_from_draft_invoice_returns_422(self):
+        """A not-posted invoice cannot be paid (would crash the register
+        wizard); the endpoint rejects it with 422 instead."""
+        folio = self._confirmed_folio()
+        invoice = self._invoice_for_folio(folio, post=False)
+        self.assertEqual(invoice.state, "draft")
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
             response = test_client.post(
                 "/payments",
@@ -175,11 +269,12 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
                     "date": "2026-03-04",
                     "paymentMethodId": self.bank_inbound.id,
                     "invoiceId": invoice.id,
-                    "reference": "",
                 },
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        self.assertEqual(response.json()["folio"]["id"], folio.id)
+        # 422 literal: 422 is deprecated in
+        # newer starlette and the test runner turns the warning into an error.
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["type"], "/errors/validation-error")
 
     def test_invoice_without_folio_returns_422(self):
         """invoiceId of an invoice with no folio is a validation error."""
@@ -227,7 +322,7 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         self.assertEqual(response.status_code, 422, response.text)
 
     def test_folio_and_invoice_mutually_exclusive_returns_422(self):
-        folio = self._folio()
+        folio = self._confirmed_folio()
         invoice = self._invoice_for_folio(folio)
         with self._create_test_client(raise_server_exceptions=False) as test_client:
             self._login(test_client)
