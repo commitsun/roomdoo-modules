@@ -1,6 +1,6 @@
 ---
 name: roomdoo-fastapi-conventions
-description: "Conventions and patterns for developing FastAPI endpoints and Pydantic schemas in the Roomdoo project (roomdoo-modules). Use when creating or modifying FastAPI routers, Pydantic schemas, or extending pms_fastapi modules. Covers endpoint naming, helper patterns, data model conventions, CurrencyAmount usage, and module organization."
+description: "Conventions and patterns for developing FastAPI endpoints and Pydantic schemas in the Roomdoo project (roomdoo-modules). Use when creating or modifying FastAPI routers, Pydantic schemas, error responses, or search filters, or extending pms_fastapi modules. Covers endpoint naming, helper patterns, RFC 9457 problem+json errors, free-text search guards, data model conventions, CurrencyAmount usage, and module organization."
 globs:
   - "**/roomdoo-modules/**/routers/**"
   - "**/roomdoo-modules/**/schemas/**"
@@ -42,7 +42,12 @@ Endpoints delegate ALL logic to a **helper** (Odoo `AbstractModel`), making it i
 
 ```python
 @pms_api_router.get("/invoices", response_model=PagedCollection[InvoiceSummary])
-async def list_invoices(env, filters, paging, orderBy):
+async def list_invoices(
+    env: AuthenticatedEnv,
+    filters: Annotated[InvoiceSearch, Depends()],
+    paging: Annotated[Paging, Depends(paging)],
+    orderBy: Annotated[str, Depends(ContactOrderDependency)],
+):
     count, invoices = env["pms_api_invoice.invoice_router.helper"].new()._search(paging, filters, orderBy)
     return PagedCollection[InvoiceSummary](
         count=count,
@@ -72,9 +77,56 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
 
 Helpers are inherited via `_inherit`: `_inherit = "pms_api_contact.contact_router.helper"`
 
+### Error Responses (RFC 9457)
+
+Client/business errors are returned as **RFC 9457 problem+json**, by **returning** a
+`JSONResponse` (NOT by raising). Raised exceptions go through the rest-framework handler
+(`convert_exception_to_status_body`), which wraps them as plain `{"detail": ...}` with
+`application/json` and no machine-readable code — too generic for the front to branch on.
+So for any error the front must distinguish, RETURN a problem+json:
+
+```python
+from fastapi.responses import JSONResponse
+
+return JSONResponse(
+    status_code=400,
+    media_type="application/problem+json",
+    content={
+        "type": "/errors/record-limit-exceeded",   # relative URI, kebab-case
+        "title": "Record limit exceeded",
+        "status": 400,                              # mirror status_code
+        "detail": f"The export requested {count} records, max is {max_records}.",
+        "requestedCount": count,                    # extension members: extra context
+        "maxAllowed": max_records,
+    },
+)
+```
+
+Rules:
+- An endpoint typed `-> SomeModel` may still `return` a `JSONResponse` for the error path
+  (FastAPI honours it). Keep the happy path returning the model.
+- `type` is a relative URI `/errors/<kebab-case>`; `title` is short and stable per `type`;
+  `status` mirrors `status_code`; `detail` is human-readable; add extension members for
+  machine-usable context (ids, counts, limits, offending `field`).
+- Don't leak Odoo internals (model/field/state names) in `detail`/members.
+- There's no shared problem+json builder yet; most are inline. Reuse one if present for
+  your error `type` (e.g. the search-text guard builder in
+  `pms_fastapi/models/fastapi_endpoint.py`).
+
 ## Data Models (Pydantic Schemas)
 
 All schemas inherit from `PmsBaseModel` (`odoo.addons.pms_fastapi.schemas.base`).
+
+### Reglas Pydantic (capa schema, no runtime)
+
+- Campos required: solo la anotación de tipo, **nunca** `...` (`name: str`, no
+  `name: str = Field(...)`).
+- **No usar `RootModel`**. Para listas, anotar el tipo de retorno
+  (`-> list[ServiceProduct]`) o `Annotated[list[X], Body()]` en el endpoint.
+- Preferir **anotación de tipo de retorno** para el filtrado/serialización; reservar
+  `response_model=` para cuando el tipo interno difiere del público (alinea con
+  "no exponer internos de Odoo"). Hoy conviven ambos estilos en el código — sin
+  obligación de unificar los endpoints existentes.
 
 ### Naming
 
@@ -121,3 +173,33 @@ class InvoiceSearch(BaseSearch):
             domain = expression.AND([domain, [("name", "ilike", self.name)]])
         return domain
 ```
+
+#### Free-text minimum-length guard
+
+Type every **free-text** (`ilike`) query param with `SearchText` (from `schemas.base`)
+instead of `str | None`. A value that is non-empty but shorter than
+`MIN_SEARCH_TEXT_LENGTH` (3) is rejected automatically with a problem+json
+(`type="/errors/search-text-too-short"`, `field`, `minLength`) **before** the endpoint
+runs — done by `PmsApiRouter`, which wraps any endpoint with a `BaseSearch` param. No
+per-field `if`, no per-endpoint code, and new search endpoints are covered automatically.
+
+```python
+from .base import BaseSearch, SearchText
+
+class ContactSearch(BaseSearch):
+    def __init__(
+        self,
+        # default-style: Query() as the default value
+        name: SearchText = Query(default=None, description="..."),
+        # Annotated-style also works:
+        # foo: Annotated[SearchText, Query(description="...")] = None,
+        types: list[ContactType] | None = Query(default=None),  # NOT marked
+    ):
+        ...
+```
+
+- Mark only scalar free-text fields. Do NOT mark lists, enums, ids, dates or booleans.
+- Don't use `Query(min_length=...)`: it yields a generic 422, not the structured
+  problem+json the front branches on.
+- Empty/whitespace means "no filter" (not an error). The attribute name must match the
+  `__init__` param name (the guard reads `getattr(self, param_name)`).

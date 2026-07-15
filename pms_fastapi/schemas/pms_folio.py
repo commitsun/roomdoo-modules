@@ -10,7 +10,7 @@ from odoo import api
 from odoo.osv import expression
 
 from .agency import AgencyIdImage
-from .base import BaseSearch, CurrencyAmount, PmsBaseModel
+from .base import BaseSearch, CurrencyAmount, PmsBaseModel, SearchText
 from .contact import ContactIdImage
 from .country import CountrySummary
 from .currency import CurrencySummary
@@ -261,14 +261,14 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         globalSearch: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Search across folio name, external reference, "
                 "and customer name.",
             ),
         ] = None,
         name: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Search for folios whose name contains "
                 "this value (case-insensitive).",
@@ -287,7 +287,7 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         room: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Search for folios whose room is " "this value.",
             ),
@@ -311,13 +311,13 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         saleChannel: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Search for folios whose sale channel is " "this value.",
             ),
         ] = None,
         agency: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Search for folios whose agency is " "this value.",
             ),
@@ -344,7 +344,7 @@ class FolioSearch(BaseSearch):
             ),
         ] = None,
         origin: Annotated[
-            str | None,
+            SearchText,
             Query(
                 description="Combined search of channel and agency.",
             ),

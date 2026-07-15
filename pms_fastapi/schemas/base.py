@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, get_args, get_type_hints
 
 from extendable_pydantic import StrictExtendableBaseModel
 from pydantic import ConfigDict, model_validator
@@ -13,6 +13,22 @@ class _CurrencyMarker:
 
 
 CurrencyAmount = Annotated[float, _CurrencyMarker()]
+
+
+# Minimum length a free-text search value must have before it is used to filter.
+# Shorter (but non-empty) values are rejected; empty/whitespace means "no filter".
+MIN_SEARCH_TEXT_LENGTH = 3
+
+
+class _SearchTextMarker:
+    pass
+
+
+# Type alias to declaratively mark a search query param as a guarded free-text field.
+# Annotate a *Search __init__ param with ``SearchText`` and the length guard applies
+# automatically (see PmsApiRouter in models/fastapi_endpoint.py). The marker is inert
+# for FastAPI, which only consumes FieldInfo/Query metadata.
+SearchText = Annotated[str | None, _SearchTextMarker()]
 
 
 class PmsBaseModel(StrictExtendableBaseModel):
@@ -134,9 +150,54 @@ class PmsBaseModel(StrictExtendableBaseModel):
         return data
 
 
+_search_text_fields_cache: dict[type, tuple[str, ...]] = {}
+
+
+def _has_search_text_marker(annotation) -> bool:
+    """Whether ``annotation`` carries the SearchText marker, anywhere inside.
+
+    Recurses through Union/Optional and nested Annotated because get_type_hints
+    wraps params defaulting to ``None`` in ``Optional[...]``, which hides the
+    marker from the top-level ``__metadata__``.
+    """
+    if any(
+        isinstance(meta, _SearchTextMarker)
+        for meta in getattr(annotation, "__metadata__", ())
+    ):
+        return True
+    return any(_has_search_text_marker(arg) for arg in get_args(annotation))
+
+
 class BaseSearch:
     def to_odoo_domain(self, env: api.Environment) -> list:
         return []
 
     def to_odoo_context(self, env: api.Environment) -> dict:
         return {}
+
+    @classmethod
+    def _search_text_field_names(cls) -> tuple[str, ...]:
+        """Names of the __init__ params marked as guarded free-text (``SearchText``)."""
+        cached = _search_text_fields_cache.get(cls)
+        if cached is None:
+            hints = get_type_hints(cls.__init__, include_extras=True)
+            cached = tuple(
+                name for name, hint in hints.items() if _has_search_text_marker(hint)
+            )
+            _search_text_fields_cache[cls] = cached
+        return cached
+
+    def first_short_search_text(self) -> str | None:
+        """First guarded text field whose value is non-empty but too short.
+
+        Returns the offending param name, or None when every guarded field is
+        empty/whitespace (no filter) or long enough.
+        """
+        for name in self._search_text_field_names():
+            value = getattr(self, name, None)
+            if value is None:
+                continue
+            stripped = value.strip()
+            if stripped and len(stripped) < MIN_SEARCH_TEXT_LENGTH:
+                return name
+        return None
