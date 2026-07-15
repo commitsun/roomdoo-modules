@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 from ..schemas.base import MIN_SEARCH_TEXT_LENGTH, BaseSearch
 
@@ -74,6 +74,27 @@ class FastapiEndpoint(models.Model):
         ondelete={APP_NAME: "cascade"},
     )
 
+    def _search_text_too_short_problem(self, field: str) -> JSONResponse:
+        """RFC 9457 problem+json for a free-text search value below the minimum.
+
+        Built here (and not in the ``async`` guard wrapper) so ``_()`` resolves
+        the request language through ``self.env``, which the fastapi dispatcher
+        already set from the ``Accept-Language`` header.
+        """
+        return JSONResponse(
+            status_code=400,
+            media_type="application/problem+json",
+            content={
+                "type": "/errors/search-text-too-short",
+                "title": _("Search text too short"),
+                "status": 400,
+                "detail": _("Search text must be at least %s characters.")
+                % MIN_SEARCH_TEXT_LENGTH,
+                "field": field,
+                "minLength": MIN_SEARCH_TEXT_LENGTH,
+            },
+        )
+
     @api.model
     def _get_fastapi_routers(self):
         if self.app == APP_NAME:
@@ -136,24 +157,6 @@ class FastapiEndpoint(models.Model):
         return params
 
 
-def _search_text_too_short_problem(field: str) -> JSONResponse:
-    """RFC 9457 problem+json for a free-text search value below the minimum length."""
-    return JSONResponse(
-        status_code=400,
-        media_type="application/problem+json",
-        content={
-            "type": "/errors/search-text-too-short",
-            "title": "Search text too short",
-            "status": 400,
-            "detail": (
-                f"Search text must be at least {MIN_SEARCH_TEXT_LENGTH} characters."
-            ),
-            "field": field,
-            "minLength": MIN_SEARCH_TEXT_LENGTH,
-        },
-    )
-
-
 def _endpoint_search_param(endpoint) -> str | None:
     """Name of the endpoint param typed as a BaseSearch subclass, if any."""
     for name, hint in get_type_hints(endpoint, include_extras=True).items():
@@ -180,7 +183,8 @@ def _guard_search_text(endpoint):
         if filters is not None:
             field = filters.first_short_search_text()
             if field is not None:
-                return _search_text_too_short_problem(field)
+                env = next(v for v in kwargs.values() if isinstance(v, api.Environment))
+                return env["fastapi.endpoint"]._search_text_too_short_problem(field)
         return await endpoint(*args, **kwargs)
 
     return wrapper

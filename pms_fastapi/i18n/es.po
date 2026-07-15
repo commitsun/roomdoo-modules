@@ -1218,6 +1218,20 @@ msgstr "Número normalizado"
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/models/fastapi_endpoint.py:0
+#, python-format
+msgid "Search text must be at least %s characters."
+msgstr "El texto de búsqueda debe tener al menos %s caracteres."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/models/fastapi_endpoint.py:0
+#, python-format
+msgid "Search text too short"
+msgstr "Texto de búsqueda demasiado corto"
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid ""
