@@ -1,8 +1,10 @@
 import datetime
+from unittest.mock import patch
 
 from fastapi import status
 
 from odoo import Command, fields
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
@@ -387,6 +389,43 @@ class TestFolioInvoicing(CommonTestPmsApi):
         )
         self.assertEqual(response.json()["type"], "/errors/multiple-properties")
 
+    def test_create_invoice_rolls_back_on_move_error(self):
+        # A receivable account with a wrong account_type makes the core
+        # constraint _check_payable_receivable raise while account.move is
+        # being created. Odoo constraints run after the INSERT, so without a
+        # savepoint around the attempt the move would get committed even
+        # though the endpoint returns an error. The request must fail AND
+        # leave no orphan move behind.
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        bad_account = self.env["account.account"].create(
+            {
+                "name": "Wrong Receivable",
+                "code": "TESTBADRCV",
+                "account_type": "asset_current",
+                "company_id": self.test_company.id,
+            }
+        )
+        self.customer.with_company(
+            self.test_company
+        ).property_account_receivable_id = bad_account
+        move_domain = [("folio_ids", "in", folio.ids)]
+        self.assertEqual(self.env["account.move"].search_count(move_domain), 0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(
+                test_client,
+                self._create_payload(line, customer_id=self.customer.id),
+            )
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(
+            self.env["account.move"].search_count(move_domain),
+            0,
+            "A failed invoice creation must not leave an orphan move.",
+        )
+
     # ------------------------------------------------------------------
     # POST /folios/invoices — downpaymentLines
     # ------------------------------------------------------------------
@@ -579,3 +618,102 @@ class TestFolioInvoicing(CommonTestPmsApi):
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/invoicing-validation-failed")
+
+    # ------------------------------------------------------------------
+    # Transaction safety — a failure after a mutation must roll back
+    # ------------------------------------------------------------------
+    def test_edit_draft_invoice_rolls_back_on_failure(self):
+        # _edit_draft_invoice unlinks the draft's lines and then rebuilds them.
+        # If the rebuild step fails, the savepoint must restore the lines
+        # instead of leaving the draft emptied.
+        folio = self._confirmed_folio()
+        helper_cls = type(self.env["pms_api_invoice.invoice_router.helper"])
+
+        def _boom(helper, *args, **kwargs):
+            helper._raise_edit_problem(
+                422, "/errors/injected-failure", "Injected", "boom"
+            )
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=2)
+            with patch.object(helper_cls, "_edit_compute_invoice_vals", _boom):
+                response = test_client.put(
+                    f"/invoices/{invoice_id}",
+                    json=self._edit_payload(line, quantity=1),
+                )
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        invoice = self.env["account.move"].browse(invoice_id)
+        self.assertTrue(
+            invoice.invoice_line_ids,
+            "A rolled-back edit must leave the draft's lines intact.",
+        )
+
+    def test_edit_posted_invoice_rolls_back_on_failure(self):
+        # _edit_posted_invoice reverses the invoice (posted credit note) before
+        # rebuilding. If the rebuild fails, the savepoint must roll back so no
+        # orphan credit note is committed and the original stays posted.
+        folio = self._confirmed_folio()
+        helper_cls = type(self.env["pms_api_invoice.invoice_router.helper"])
+
+        def _boom(helper, *args, **kwargs):
+            helper._raise_edit_problem(
+                422, "/errors/injected-failure", "Injected", "boom"
+            )
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=1)
+            self.assertEqual(
+                test_client.post(f"/invoices/{invoice_id}/validate").status_code,
+                status.HTTP_200_OK,
+            )
+            moves_before = self.env["account.move"].search_count(
+                [("company_id", "=", self.test_company.id)]
+            )
+            with patch.object(helper_cls, "_edit_compute_invoice_vals", _boom):
+                response = test_client.put(
+                    f"/invoices/{invoice_id}?confirmRefund=true",
+                    json=self._edit_payload(line, quantity=1),
+                )
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        invoice = self.env["account.move"].browse(invoice_id)
+        self.assertEqual(invoice.state, "posted")
+        self.assertEqual(
+            self.env["account.move"].search_count(
+                [("company_id", "=", self.test_company.id)]
+            ),
+            moves_before,
+            "The reversal credit note must be rolled back, leaving no orphan move.",
+        )
+
+    def test_validate_invoice_rolls_back_on_post_failure(self):
+        # If action_post mutates and then raises, the savepoint must roll back
+        # so the invoice is not left partially posted.
+        folio = self._confirmed_folio()
+        move_cls = type(self.env["account.move"])
+        marker = "ROLLED_BACK_MARKER"
+
+        def _boom(moves, *args, **kwargs):
+            moves.write({"narration": marker})
+            raise UserError("boom")
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, _line = self._create_draft_invoice(test_client, folio, qty=1)
+            with patch.object(move_cls, "action_post", _boom):
+                response = test_client.post(f"/invoices/{invoice_id}/validate")
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST, response.text
+        )
+        invoice = self.env["account.move"].browse(invoice_id)
+        self.assertEqual(invoice.state, "draft")
+        self.assertNotEqual(
+            invoice.narration or "",
+            marker,
+            "The write done before the post failure must be rolled back.",
+        )

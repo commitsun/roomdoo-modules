@@ -383,19 +383,27 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
 
     def _create_invoice(self, payload: FolioInvoiceCreate):
         try:
-            sale_lines = self._resolve_sale_lines(payload)
-            downpayment_lines = self._resolve_downpayment_lines(payload, sale_lines)
-            pms_property = self._resolve_property(sale_lines)
-            self._check_quantities(payload, sale_lines)
-            partner = self._resolve_invoice_partner(payload, pms_property)
-            if payload.customerId is None:
-                self._check_simplified_limit(payload, sale_lines, pms_property)
-            invoice = self._build_and_create_invoice(
-                payload, sale_lines, downpayment_lines, partner
-            )
-            self._override_invoice_due_date(invoice, payload)
-            if payload.validate_invoice:
-                self._post_invoice(invoice)
+            # Wrap the whole attempt in a savepoint so a failure after the
+            # move has been inserted does not leave an orphan invoice behind.
+            # Odoo constraints (@api.constrains) run after the INSERT, so the
+            # move is already in the cursor when they raise; without this the
+            # caught error would be returned to the caller while the partial
+            # move gets committed. The flushing savepoint also clears the ORM
+            # cache on rollback, so the dispatcher's final flush is a no-op.
+            with self.env.cr.savepoint():
+                sale_lines = self._resolve_sale_lines(payload)
+                downpayment_lines = self._resolve_downpayment_lines(payload, sale_lines)
+                pms_property = self._resolve_property(sale_lines)
+                self._check_quantities(payload, sale_lines)
+                partner = self._resolve_invoice_partner(payload, pms_property)
+                if payload.customerId is None:
+                    self._check_simplified_limit(payload, sale_lines, pms_property)
+                invoice = self._build_and_create_invoice(
+                    payload, sale_lines, downpayment_lines, partner
+                )
+                self._override_invoice_due_date(invoice, payload)
+                if payload.validate_invoice:
+                    self._post_invoice(invoice)
         except _InvoiceCreationProblem as problem:
             return problem.response
         return InvoiceSummary.from_account_move(invoice)

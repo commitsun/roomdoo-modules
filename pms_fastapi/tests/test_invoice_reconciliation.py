@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 from fastapi import status
 
 from odoo import Command
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
@@ -162,6 +165,33 @@ class TestInvoiceReconciliation(CommonTestPmsApi):
             )
         self.assertEqual(second.status_code, status.HTTP_409_CONFLICT, second.text)
         self.assertEqual(second.json()["type"], "/errors/payment-already-reconciled")
+
+    def test_create_reconciliation_rolls_back_on_failure(self):
+        # If reconcile() mutates and then raises, the savepoint must roll back
+        # so no partial reconciliation is committed while we return an error.
+        invoice = self._create_invoice(amount=100.0)
+        payment = self._create_payment(amount=100.0)
+        line_cls = type(self.env["account.move.line"])
+        marker = "ROLLED_BACK_MARKER"
+
+        def _boom(lines, *args, **kwargs):
+            lines.move_id.write({"narration": marker})
+            raise UserError("boom")
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            with patch.object(line_cls, "reconcile", _boom):
+                response = test_client.post(
+                    f"/invoices/{invoice.id}/reconciliations",
+                    json={"paymentId": self._payment_id(payment)},
+                )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertNotEqual(
+            invoice.narration or "",
+            marker,
+            "The write done before the reconcile failure must be rolled back.",
+        )
+        self.assertNotEqual(invoice.payment_state, "paid")
 
     # ------------------------------------------------------------------
     # DELETE /invoices/{id}/reconciliations/{reconciliation_id}

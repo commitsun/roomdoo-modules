@@ -398,6 +398,34 @@ class TestPaymentCreationEndpoints(CommonTestPmsApi):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
         self.assertEqual(len(Statement.search(domain)), 1)
 
+    def test_cash_payment_rolls_back_phantom_session_on_failure(self):
+        """A cash payment that fails after the session was auto-opened (here a
+        non-existent folio) must roll back the phantom empty cash session
+        instead of committing it."""
+        Statement = self.env["account.bank.statement"]
+        cash_inbound = self.journal_cash.inbound_payment_method_line_ids[:1]
+        self.assertTrue(cash_inbound)
+        domain = [("journal_id", "=", self.journal_cash.id)]
+        self.assertFalse(Statement.search(domain))
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/payments",
+                json={
+                    "paymentType": "customerPayment",
+                    "amount": 10.0,
+                    "date": "2026-03-04",
+                    "paymentMethodId": cash_inbound.id,
+                    "folioId": 999999999,
+                    "reference": "",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertFalse(
+            Statement.search(domain),
+            "A failed cash payment must not leave a phantom cash session.",
+        )
+
     # -- POST /internal-transfers --
 
     def test_internal_transfer(self):
