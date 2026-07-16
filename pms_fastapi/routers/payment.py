@@ -463,44 +463,53 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def create_payment(self, payload: PaymentInput):
         try:
-            if payload.folioId and payload.invoiceId:
-                self._validation_error(
-                    _("folioId and invoiceId are mutually exclusive.")
+            # Savepoint so that if a later step raises (e.g. a cash journal
+            # auto-opens a session and then the folio/invoice resolution
+            # fails), the already-created records — the phantom empty cash
+            # session in particular — are rolled back instead of committed
+            # alongside the error response.
+            with self.env.cr.savepoint():
+                if payload.folioId and payload.invoiceId:
+                    self._validation_error(
+                        _("folioId and invoiceId are mutually exclusive.")
+                    )
+                line = (
+                    self.env["account.payment.method.line"]
+                    .sudo()
+                    .browse(payload.paymentMethodId)
+                    .exists()
                 )
-            line = (
-                self.env["account.payment.method.line"]
-                .sudo()
-                .browse(payload.paymentMethodId)
-                .exists()
-            )
-            if not line:
-                self._not_found(
-                    _("Payment method %s does not exist.") % payload.paymentMethodId
+                if not line:
+                    self._not_found(
+                        _("Payment method %s does not exist.") % payload.paymentMethodId
+                    )
+                journal = line.journal_id
+                PmsBaseModel.pms_api_check_access(self.env.user, journal)
+                payment_type, partner_type = _CREATE_TYPE_FIELDS[payload.paymentType]
+                partner = (
+                    self._resolve_partner(payload.partnerId)
+                    if payload.partnerId
+                    else self.env["res.partner"]
                 )
-            journal = line.journal_id
-            PmsBaseModel.pms_api_check_access(self.env.user, journal)
-            payment_type, partner_type = _CREATE_TYPE_FIELDS[payload.paymentType]
-            partner = (
-                self._resolve_partner(payload.partnerId)
-                if payload.partnerId
-                else self.env["res.partner"]
-            )
-            if payload.paymentType == PaymentCreateType.supplierPayment and not partner:
-                self._validation_error(_("supplierPayment requires partnerId."))
+                if (
+                    payload.paymentType == PaymentCreateType.supplierPayment
+                    and not partner
+                ):
+                    self._validation_error(_("supplierPayment requires partnerId."))
 
-            if journal.type == "cash":
-                self.env["account.bank.statement"].sudo()._pms_ensure_open_cash_session(
-                    journal
-                )
+                if journal.type == "cash":
+                    self.env[
+                        "account.bank.statement"
+                    ].sudo()._pms_ensure_open_cash_session(journal)
 
-            if payload.paymentType == PaymentCreateType.customerPayment and (
-                payload.folioId or payload.invoiceId
-            ):
-                payment = self._create_context_payment(payload, line, partner)
-            else:
-                payment = self._create_simple_payment(
-                    payload, line, partner, payment_type, partner_type
-                )
+                if payload.paymentType == PaymentCreateType.customerPayment and (
+                    payload.folioId or payload.invoiceId
+                ):
+                    payment = self._create_context_payment(payload, line, partner)
+                else:
+                    payment = self._create_simple_payment(
+                        payload, line, partner, payment_type, partner_type
+                    )
         except _PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)

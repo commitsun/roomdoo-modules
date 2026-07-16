@@ -525,42 +525,50 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         try:
-            if invoice.state == "cancel":
-                self._raise_edit_problem(
-                    409,
-                    "/errors/invoice-not-editable",
-                    _("Invoice not editable"),
-                    _("Cancelled invoices cannot be edited."),
+            # Savepoint so a failure after lines have been rewritten (draft) or
+            # after the refund has been posted (posted) does not leave the
+            # invoice half-edited: Odoo constraints run post-write, so the
+            # mutation is already in the cursor when a later _InvoiceEditProblem
+            # is raised and would otherwise be committed alongside the error.
+            with self.env.cr.savepoint():
+                if invoice.state == "cancel":
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/invoice-not-editable",
+                        _("Invoice not editable"),
+                        _("Cancelled invoices cannot be edited."),
+                    )
+                if invoice.state == "posted" and not confirm_refund:
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/invoice-refund-confirmation-required",
+                        _("Refund confirmation required"),
+                        _(
+                            "This invoice is validated. Editing it will generate "
+                            "a refund and a new corrected invoice. Confirm by "
+                            "passing confirmRefund=true."
+                        ),
+                    )
+                sale_lines = self._edit_resolve_sale_lines(payload)
+                downpayment_lines = self._edit_resolve_downpayment_lines(
+                    payload, sale_lines
                 )
-            if invoice.state == "posted" and not confirm_refund:
-                self._raise_edit_problem(
-                    409,
-                    "/errors/invoice-refund-confirmation-required",
-                    _("Refund confirmation required"),
-                    _(
-                        "This invoice is validated. Editing it will generate "
-                        "a refund and a new corrected invoice. Confirm by "
-                        "passing confirmRefund=true."
-                    ),
+                pms_property = self._edit_resolve_property(sale_lines)
+                partner = self._edit_resolve_partner(payload, pms_property)
+                self._edit_check_quantities(
+                    payload, sale_lines, current_invoice=invoice
                 )
-            sale_lines = self._edit_resolve_sale_lines(payload)
-            downpayment_lines = self._edit_resolve_downpayment_lines(
-                payload, sale_lines
-            )
-            pms_property = self._edit_resolve_property(sale_lines)
-            partner = self._edit_resolve_partner(payload, pms_property)
-            self._edit_check_quantities(payload, sale_lines, current_invoice=invoice)
-            self._edit_check_composition(
-                sale_lines, downpayment_lines, current_invoice=invoice
-            )
-            if invoice.state == "draft":
-                result = self._edit_draft_invoice(
-                    invoice, payload, sale_lines, downpayment_lines, partner
+                self._edit_check_composition(
+                    sale_lines, downpayment_lines, current_invoice=invoice
                 )
-            else:
-                result = self._edit_posted_invoice(
-                    invoice, payload, sale_lines, downpayment_lines, partner
-                )
+                if invoice.state == "draft":
+                    result = self._edit_draft_invoice(
+                        invoice, payload, sale_lines, downpayment_lines, partner
+                    )
+                else:
+                    result = self._edit_posted_invoice(
+                        invoice, payload, sale_lines, downpayment_lines, partner
+                    )
         except _InvoiceEditProblem as problem:
             return problem.response
         return InvoiceDetail.from_account_move(result)
@@ -1063,7 +1071,12 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         try:
-            invoice.action_post()
+            # Savepoint so a failed posting does not leave the move partially
+            # posted: action_post() writes and flushes before its constraints
+            # run, so without rollback the partial state would be committed
+            # even though we return an error to the caller.
+            with self.env.cr.savepoint():
+                invoice.action_post()
         except UserError as e:
             return JSONResponse(
                 status_code=400,
@@ -1122,82 +1135,91 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         try:
-            payment_id = self._parse_payment_composite_id(payload.paymentId)
-            if invoice.state != "posted" or invoice.payment_state in (
-                "paid",
-                "reversed",
-            ):
-                self._raise_edit_problem(
-                    409,
-                    "/errors/invoice-not-editable",
-                    _("Invoice not editable"),
-                    _("The invoice state does not allow new reconciliations."),
+            # Savepoint so a reconcile() that mutates (creates partials /
+            # exchange-diff entries) and then raises does not leave a partial
+            # reconciliation committed while we return an error to the caller.
+            with self.env.cr.savepoint():
+                payment_id = self._parse_payment_composite_id(payload.paymentId)
+                if invoice.state != "posted" or invoice.payment_state in (
+                    "paid",
+                    "reversed",
+                ):
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/invoice-not-editable",
+                        _("Invoice not editable"),
+                        _("The invoice state does not allow new reconciliations."),
+                    )
+                payment = (
+                    self.env["account.payment"]
+                    .sudo()
+                    .search(
+                        [
+                            ("id", "=", payment_id),
+                            ("company_id", "=", invoice.company_id.id),
+                        ],
+                        limit=1,
+                    )
                 )
-            payment = (
-                self.env["account.payment"]
-                .sudo()
-                .search(
-                    [
-                        ("id", "=", payment_id),
-                        ("company_id", "=", invoice.company_id.id),
-                    ],
-                    limit=1,
-                )
-            )
-            if not payment:
-                self._raise_edit_problem(
-                    404,
-                    "/errors/payment-not-found",
-                    _("Payment not found"),
-                    _("Payment %s not found.") % payment_id,
-                )
-            if invoice.folio_ids:
-                if not (payment.folio_ids & invoice.folio_ids):
+                if not payment:
+                    self._raise_edit_problem(
+                        404,
+                        "/errors/payment-not-found",
+                        _("Payment not found"),
+                        _("Payment %s not found.") % payment_id,
+                    )
+                if invoice.folio_ids:
+                    if not (payment.folio_ids & invoice.folio_ids):
+                        self._raise_edit_problem(
+                            409,
+                            "/errors/payment-not-applicable",
+                            _("Payment not applicable"),
+                            _(
+                                "Payment does not belong to any folio of this "
+                                "invoice."
+                            ),
+                        )
+                elif (
+                    payment.partner_id.commercial_partner_id
+                    != invoice.commercial_partner_id
+                ):
                     self._raise_edit_problem(
                         409,
                         "/errors/payment-not-applicable",
                         _("Payment not applicable"),
-                        _("Payment does not belong to any folio of this " "invoice."),
+                        _("Payment does not belong to the invoice's customer."),
                     )
-            elif (
-                payment.partner_id.commercial_partner_id
-                != invoice.commercial_partner_id
-            ):
-                self._raise_edit_problem(
-                    409,
-                    "/errors/payment-not-applicable",
-                    _("Payment not applicable"),
-                    _("Payment does not belong to the invoice's customer."),
-                )
-            invoice_recv, payment_recv, partials = self._get_reconciliation_partials(
-                invoice, payment
-            )
-            if partials:
-                self._raise_edit_problem(
-                    409,
-                    "/errors/payment-already-reconciled",
-                    _("Payment already reconciled"),
-                    _("Payment %s is already reconciled with invoice %s.")
-                    % (payment.id, invoice.id),
-                )
-            if not invoice_recv or not payment_recv:
-                self._raise_edit_problem(
-                    409,
-                    "/errors/payment-not-applicable",
-                    _("Payment not applicable"),
-                    _("Payment is not in a reconcilable state."),
-                )
-            try:
-                (invoice_recv + payment_recv).filtered(
-                    lambda line: not line.reconciled
-                ).reconcile()
-            except UserError as e:
-                self._raise_edit_problem(
-                    409,
-                    "/errors/payment-not-applicable",
-                    _("Payment not applicable"),
-                    str(e),
-                )
+                (
+                    invoice_recv,
+                    payment_recv,
+                    partials,
+                ) = self._get_reconciliation_partials(invoice, payment)
+                if partials:
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/payment-already-reconciled",
+                        _("Payment already reconciled"),
+                        _("Payment %s is already reconciled with invoice %s.")
+                        % (payment.id, invoice.id),
+                    )
+                if not invoice_recv or not payment_recv:
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/payment-not-applicable",
+                        _("Payment not applicable"),
+                        _("Payment is not in a reconcilable state."),
+                    )
+                try:
+                    (invoice_recv + payment_recv).filtered(
+                        lambda line: not line.reconciled
+                    ).reconcile()
+                except UserError as e:
+                    self._raise_edit_problem(
+                        409,
+                        "/errors/payment-not-applicable",
+                        _("Payment not applicable"),
+                        str(e),
+                    )
         except _InvoiceEditProblem as problem:
             return problem.response
         # Reconciling updated payment_state/amount_residual on the stored
