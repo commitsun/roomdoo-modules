@@ -4,11 +4,14 @@ import collections.abc
 import logging
 import uuid
 
+import requests
+
 from odoo import _, fields
 from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import AbstractComponent
 from odoo.addons.connector.components.mapper import m2o_to_external
+from odoo.addons.queue_job.exception import RetryableJobError
 
 _logger = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ class Mapper(AbstractComponent):
                     continue
                 if not isinstance(values, dict):
                     raise ValueError(
-                        "%s: invalid return value for the "
+                        "%s: invalid return value for the "  # noqa: UP031
                         "mapping method %s" % (values, meth)
                     )
                 result.update(values)
@@ -102,6 +105,7 @@ class ChannelChildMapperImport(AbstractComponent):
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
         mapped = []
+        bound_item_ids = []
         for item in items:
             map_record = mapper.map_record(item, parent=parent)
             if self.skip_item(map_record):
@@ -110,6 +114,149 @@ class ChannelChildMapperImport(AbstractComponent):
             if item_values:
                 self._child_bind(map_record, item_values)
                 mapped.append(item_values)
+                if hasattr(items, "_name"):
+                    bound_item_ids.append(item.id)
+
+        if not hasattr(items, "_name") or not bound_item_ids:
+            return mapped
+
+        pms_property_id = self.backend_record.pms_property_id.id
+        pms_property = self.env["pms.property"].browse(pms_property_id)
+        api_clients = self.env["res.users"].search(
+            [
+                ("pms_api_client", "=", True),
+                ("pms_property_ids", "in", pms_property_id),
+            ]
+        )
+        for client in api_clients:
+            ota_settings = pms_property.ota_property_settings_ids.filtered(
+                lambda r, _c=client: r.agency_id == _c.partner_id
+            )
+            if not ota_settings:
+                continue
+            pricelist_id = ota_settings.main_pricelist_id.id
+            availability_plan_id = ota_settings.main_avail_plan_id.id
+            room_types_excluded_ids = ota_settings.excluded_room_type_ids.ids
+            payload = False
+            items_to_upload = False
+            call_type = False
+            min_date = False
+            max_date = False
+            room_type_ids = False
+            endpoint = False
+            if items._name == "channel.wubook.product.pricelist.item":
+                call_type = "prices"
+                items_to_upload = (
+                    self.env["channel.wubook.product.pricelist.item"]
+                    .browse(bound_item_ids)
+                    .filtered(
+                        lambda r, _plid=pricelist_id, _ppid=pms_property_id: (
+                            r.pricelist_id.id == _plid
+                            and _ppid in r.pms_property_ids.ids
+                        )
+                    )
+                )
+                if items_to_upload:
+                    min_date = min(items_to_upload.mapped("date_end_consumption"))
+                    max_date = max(items_to_upload.mapped("date_end_consumption"))
+                    room_type_ids = (
+                        self.env["pms.room.type"]
+                        .search(
+                            [
+                                (
+                                    "product_id",
+                                    "in",
+                                    items_to_upload.mapped("product_id").ids,
+                                ),
+                                ("id", "not in", room_types_excluded_ids),
+                            ]
+                        )
+                        .ids
+                    )
+                    payload, endpoint = pms_property.get_payload_prices(
+                        prices=items_to_upload, client=client
+                    )
+            elif items._name == "channel.wubook.pms.availability":
+                call_type = "availability"
+                items_to_upload = (
+                    self.env["channel.wubook.pms.availability"]
+                    .browse(bound_item_ids)
+                    .filtered(
+                        lambda r,
+                        _ppid=pms_property_id,
+                        _excl=room_types_excluded_ids: (
+                            r.pms_property_id.id == _ppid
+                            and r.room_type_id.id not in _excl
+                        )
+                    )
+                )
+                if items_to_upload:
+                    min_date = min(items_to_upload.mapped("date"))
+                    max_date = max(items_to_upload.mapped("date"))
+                    room_type_ids = items_to_upload.mapped("room_type_id.id")
+                    payload, endpoint = pms_property.get_payload_avail(
+                        avails=items_to_upload, client=client
+                    )
+            elif items._name == "channel.wubook.pms.availability.plan.rule":
+                call_type = "restrictions"
+                items_to_upload = (
+                    self.env["channel.wubook.pms.availability.plan.rule"]
+                    .browse(bound_item_ids)
+                    .filtered(
+                        lambda r,
+                        _apid=availability_plan_id,
+                        _ppid=pms_property_id,
+                        _excl=room_types_excluded_ids: (  # noqa: E501
+                            r.availability_plan_id.id == _apid
+                            and r.pms_property_id.id == _ppid
+                            and r.room_type_id.id not in _excl
+                        )
+                    )
+                )
+                if items_to_upload:
+                    min_date = min(items_to_upload.mapped("date"))
+                    max_date = max(items_to_upload.mapped("date"))
+                    room_type_ids = items_to_upload.mapped("room_type_id.id")
+                    payload, endpoint = pms_property.get_payload_rules(
+                        rules=items_to_upload, client=client
+                    )
+            if payload:
+                _logger.info("Exporting to PMS API client %s", client.login)
+                try:
+                    response = pms_property.pms_api_push_payload(
+                        payload=payload, endpoint=endpoint, client=client
+                    )
+                except (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout,
+                ) as err:
+                    # Transient network failure against the API client
+                    # (read timeout, connection reset...). Do NOT let it
+                    # kill the export job permanently: the export ships
+                    # the full dirty state, so retrying the whole job
+                    # later is safe and idempotent. queue_job marks the
+                    # job failed only after max_retries.
+                    raise RetryableJobError(
+                        f"PMS API client {client.login} unreachable ({err}), "
+                        "job will be retried",
+                        seconds=300,
+                    ) from err
+                self.env["pms.api.log"].sudo().create(
+                    {
+                        "pms_property_id": pms_property_id,
+                        "client_id": client.id,
+                        "request": payload,
+                        "response": str(response),
+                        "status": "success" if response.ok else "error",
+                        "request_date": fields.Datetime.now(),
+                        "method": "PUSH",
+                        "endpoint": endpoint,
+                        "target_date_from": min_date,
+                        "target_date_to": max_date,
+                        "request_type": call_type,
+                        "room_type_ids": room_type_ids,
+                    }
+                )
         return mapped
 
     def get_items(self, items, parent, to_attr, options):
