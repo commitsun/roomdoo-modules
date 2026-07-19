@@ -626,6 +626,14 @@ class PmsProperty(models.Model):
                 ),
                 2,
             )
+            # HOTFIX TO CONVERT PRICE IN PROPERTY CHANNEL CURRENCY
+            if pms_property.channel_currency_id:
+                price = round(
+                    price
+                    * pms_property.channel_currency_id.rate
+                    / pms_property.company_id.currency_id.rate,
+                    2,
+                )
             if current_price is None:
                 current_price = price
                 current_date_from = date
