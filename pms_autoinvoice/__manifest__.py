@@ -1,6 +1,6 @@
 {
     "name": "pms autoinvoice",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.0.1",
     "category": "",
     "author": "Commitsun",
     "license": "AGPL-3",

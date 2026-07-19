@@ -2,10 +2,18 @@ from . import common
 from . import test_contacts
 from . import test_countries
 from . import test_folios
+from . import test_folio_billing
+from . import test_folio_invoicing
 from . import test_invoices
+from . import test_invoice_contact_validation
+from . import test_invoice_reconciliation
 from . import test_journals
+from . import test_cash_session
 from . import test_languages
 from . import test_payment_methods
+from . import test_payments
+from . import test_payment_creation
+from . import test_cash_payments_flow
 from . import test_user
 from . import test_properties
 from . import test_contact_id_numbers
@@ -13,3 +21,4 @@ from . import test_agencies
 from . import test_customers
 from . import test_guests
 from . import test_suppliers
+from . import test_search_text_guard

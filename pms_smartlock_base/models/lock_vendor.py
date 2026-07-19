@@ -67,6 +67,34 @@ class LockVendor(models.Model):
             _("No connector implementation for vendor '%s'.") % self.name
         )
 
+    def action_fetch_locks(self):
+        """Fetch the vendor's locks and show them as plain text (name + device
+        id, one per line) so the operator can read the ids needed to configure
+        rooms. Read-only: it connects and lists, changing nothing."""
+        self.ensure_one()
+        connector = self.get_connector()
+        try:
+            locks = connector.list_locks()
+        except NotImplementedError as exc:
+            raise UserError(
+                _("Vendor '%s' does not support listing locks yet.") % self.name
+            ) from exc
+        lines = [f"{lock.get('name') or ''}\t{lock.get('id') or ''}" for lock in locks]
+        wizard = self.env["lock.list.wizard"].create(
+            {
+                "vendor_id": self.id,
+                "lock_listing": "\n".join(lines) or _("No locks returned."),
+            }
+        )
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Locks"),
+            "res_model": "lock.list.wizard",
+            "res_id": wizard.id,
+            "view_mode": "form",
+            "target": "new",
+        }
+
     def _required_env(self, name):
         """Read a required environment variable holding a Roomdoo app
         credential (vendor ``client_id``/``client_secret``). These identify

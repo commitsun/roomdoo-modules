@@ -197,6 +197,37 @@ class ChannelWubookBackend(models.Model):
         column2="availability_plan_id",
     )
 
+    def _get_wubook_availability_plan(self):
+        """Single availability plan authoritative for Wubook availability.
+
+        Wubook ships ONE bookable count per room type and date (the
+        property ``avail``), so only one ``pms.availability.plan`` can
+        drive it. That plan is the one linked to the backend's parity
+        (default) pricelist, identified by ``pricelist_external_id``.
+
+        Every other plan bound to the backend is *ignored* for
+        availability purposes: ``quota`` / ``max_avail`` are never pushed
+        per plan to Wubook (the rplan payload carries only stay
+        restrictions and ``no_ota``), so there is nothing to reconcile
+        between plans and the connector must not equalize them.
+
+        Returns an empty ``pms.availability.plan`` recordset when the
+        parity pricelist or its availability plan cannot be resolved
+        (misconfigured backend); callers fall back to the legacy,
+        non-destructive selection in that case.
+        """
+        self.ensure_one()
+        if not self.pricelist_external_id:
+            return self.env["pms.availability.plan"]
+        parity_binding = self.env["channel.wubook.product.pricelist"].search(
+            [
+                ("backend_id", "=", self.id),
+                ("external_id", "=", self.pricelist_external_id),
+            ],
+            limit=1,
+        )
+        return parity_binding.odoo_id.availability_plan_id
+
     def import_availability_plans(self):
         if self.user_id:
             self = self.with_user(self.user_id)

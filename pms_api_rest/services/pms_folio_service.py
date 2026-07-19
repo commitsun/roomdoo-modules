@@ -1,11 +1,12 @@
 import base64
+import json
 import logging
 from datetime import datetime, timedelta
 
 import pytz
 
 from odoo import _, fields
-from odoo.exceptions import AccessError, MissingError, ValidationError
+from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
 
@@ -2093,6 +2094,35 @@ class PmsFolioService(Component):
 
     # TEMP
 
+    def _folio_has_locked_invoiced_lines(self, folio):
+        """Return True if the folio has posted (non-reversed) customer invoices
+        or any sale line with quantity already invoiced. Callers use this to
+        surface a specific API error code when a PUT fails because the folio
+        cannot be modified due to invoicing."""
+        if not folio or not folio.exists():
+            return False
+        has_posted_invoice = any(
+            move.state == "posted"
+            and move.move_type == "out_invoice"
+            and move.payment_state != "reversed"
+            for move in folio.move_ids
+        )
+        if has_posted_invoice:
+            return True
+        return any(line.qty_invoiced > 0 for line in folio.sale_line_ids)
+
+    def _raise_folio_invoiced_error(self, error):
+        """Re-raise a UserError as a structured API error so external clients
+        can react to the specific "folio has invoiced lines" case."""
+        raise ValidationError(
+            json.dumps(
+                {
+                    "code": "FOLIO_HAS_INVOICED_LINES",
+                    "message": str(error),
+                }
+            )
+        ) from error
+
     @restapi.method(
         [
             (
@@ -2114,6 +2144,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = (
                 self.env["pms.folio"]
@@ -2178,6 +2209,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
@@ -2204,6 +2239,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = self.env["pms.folio"].sudo().browse(folio_id)
             if not folio:
@@ -2260,6 +2296,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
@@ -2320,10 +2360,15 @@ class PmsFolioService(Component):
             and self.get_language(pms_folio_info.language) != folio.lang
         ):
             folio_vals.update({"lang": self.get_language(pms_folio_info.language)})
+        if (
+            pms_folio_info.pricelistId
+            and folio.pricelist_id.id != pms_folio_info.pricelistId
+        ):
+            folio_vals.update({"pricelist_id": pms_folio_info.pricelistId})
         reservations_vals = []
         if pms_folio_info.reservations:
             reservations_vals = self.wrapper_reservations(
-                folio, pms_folio_info.reservations
+                folio, pms_folio_info.reservations, pms_folio_info.pricelistId
             )
             if reservations_vals:
                 update_reservation_ids = []
@@ -2461,7 +2506,9 @@ class PmsFolioService(Component):
                 ]
         return pms_folio_info.transactions
 
-    def wrapper_reservations(self, folio, info_reservations):  # noqa: C901
+    def wrapper_reservations(  # noqa: C901
+        self, folio, info_reservations, folio_pricelist_id=None
+    ):
         """
         This method is used to create or update the reservations in folio
         We try to find the reservation in the folio, if it exists we update it
@@ -2517,17 +2564,24 @@ class PmsFolioService(Component):
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
                     vals.update({"checkout": info_reservation.checkout})
-            if info_reservation.pricelistId:
+            # OTAs send the pricelist at folio level on modifications, while the
+            # reservation payload may omit it. Fall back to the folio pricelist so
+            # reservations re-created by a modification keep the right rate instead
+            # of the stale one (symmetric with the create flow).
+            reservation_pricelist_id = (
+                info_reservation.pricelistId or folio_pricelist_id
+            )
+            if reservation_pricelist_id:
                 if new_res or (
-                    proposed_reservation.pricelist_id.id != info_reservation.pricelistId
+                    proposed_reservation.pricelist_id.id != reservation_pricelist_id
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
-                    vals.update({"pricelist_id": info_reservation.pricelistId})
+                    vals.update({"pricelist_id": reservation_pricelist_id})
             board_service_id = self.get_board_service_room_type_id(
                 info_reservation.roomTypeId,
                 folio.pms_property_id.id,
                 info_reservation.boardServiceId,
-                info_reservation.pricelistId,
+                reservation_pricelist_id,
             )
             if board_service_id:
                 if (
@@ -2596,31 +2650,34 @@ class PmsFolioService(Component):
                                     room_type_id=info_reservation.roomTypeId,
                                     pms_property_id=folio.pms_property_id.id,
                                     board_service_id=info_reservation.boardServiceId,
-                                    pricelist_id=info_reservation.pricelistId,
+                                    pricelist_id=reservation_pricelist_id,
                                 )
                             )
                         )
-                        pms_api_check_access(user=self.env.user, records=board)
-                        pricelist = (
-                            self.env["product.pricelist"]
-                            .sudo()
-                            .browse(info_reservation.pricelistId)
-                            if info_reservation.pricelistId
-                            else folio.pricelist_id
-                        )
-                        for rline in info_reservation.reservationLines:
-                            board_day_prices[rline.date] = board._get_billed_day_price(
-                                pricelist=pricelist,
-                                consumption_date=rline.date,
-                                pms_property_id=folio.pms_property_id.id,
-                                adults=info_reservation.adults,
-                                children=info_reservation.children,
-                                partner_id=folio.partner_id.id
-                                if folio.partner_id
-                                else False,
-                                fiscal_position=folio.fiscal_position_id,
-                                company=folio.company_id,
+                        if board:
+                            pms_api_check_access(user=self.env.user, records=board)
+                            pricelist = (
+                                self.env["product.pricelist"]
+                                .sudo()
+                                .browse(reservation_pricelist_id)
+                                if reservation_pricelist_id
+                                else folio.pricelist_id
                             )
+                            for rline in info_reservation.reservationLines:
+                                board_day_prices[
+                                    rline.date
+                                ] = board._get_billed_day_price(
+                                    pricelist=pricelist,
+                                    consumption_date=rline.date,
+                                    pms_property_id=folio.pms_property_id.id,
+                                    adults=info_reservation.adults,
+                                    children=info_reservation.children,
+                                    partner_id=folio.partner_id.id
+                                    if folio.partner_id
+                                    else False,
+                                    fiscal_position=folio.fiscal_position_id,
+                                    company=folio.company_id,
+                                )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
                     board_day_prices=board_day_prices,

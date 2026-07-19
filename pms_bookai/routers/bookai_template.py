@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
@@ -8,6 +9,8 @@ from odoo.api import Environment
 from odoo.addons.fastapi_auth_jwt.dependencies import AuthJwtOdooEnv
 from odoo.addons.pms_bookai.schemas.bookai_template import BookaiTemplateAvailability
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
+
+_logger = logging.getLogger(__name__)
 
 
 @pms_api_router.get(
@@ -43,7 +46,17 @@ async def list_available_bookai_templates(
     rows = []
     for template in template_rows:
         if folio_ctx:
-            body_rendered, params, _lang, _tz = template._bookai_render_body(folio_ctx)
+            try:
+                body_rendered, params, _lang, _tz = template._bookai_render_body(
+                    folio_ctx
+                )
+            except Exception:
+                _logger.exception(
+                    "Skipping BookAI template %s: render against folio %s failed",
+                    template.bookai_template_code,
+                    folio_ctx.id,
+                )
+                continue
             rows.append(
                 BookaiTemplateAvailability.from_notification_template(
                     template,
@@ -126,5 +139,14 @@ class PmsApiBookaiTemplateRouterHelper(models.AbstractModel):
                 status_code=400,
                 detail="folio does not belong to requested property",
             )
-        templates = templates.filtered(lambda tpl: tpl._is_applicable_to_folio(folio))
+        # Folio-level picker can only render folio-model templates: a
+        # per-reservation template (e.g. smartlock codes) evaluates expressions
+        # like ``object.folio_id`` / ``object.preferred_room_id`` that do not
+        # exist on a ``pms.folio`` and would raise while rendering, breaking the
+        # whole list. Such templates are delivered through their own
+        # per-reservation path, not from this folio picker.
+        templates = templates.filtered(
+            lambda tpl: tpl.model_id.model in ("pms.folio", False)
+            and tpl._is_applicable_to_folio(folio)
+        )
         return templates, folio

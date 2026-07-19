@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class PmsProperty(models.Model):
@@ -74,7 +77,15 @@ class PmsProperty(models.Model):
             if with_delay:
                 self.with_delay().autoinvoice_folio(folio, delay_post=True)
             else:
-                self.autoinvoice_folio(folio)
+                # Isolate failures per folio: a single folio that cannot be
+                # invoiced (e.g. simplified invoice over the limit without
+                # enough fiscal data) must not abort the whole cron run.
+                try:
+                    self.autoinvoice_folio(folio)
+                except Exception as e:
+                    _logger.warning(
+                        "Autoinvoicing skipped folio %s: %s", folio.name, e
+                    )
         # 2- Validate draft invoices ready for posting. Invoices created
         # in step 1 schedule their own posting job from inside
         # autoinvoice_folio; this search catches orphan drafts left over
@@ -101,7 +112,14 @@ class PmsProperty(models.Model):
             if with_delay:
                 self.with_delay().autovalidate_folio_invoice(invoice)
             else:
-                self.autovalidate_folio_invoice(invoice)
+                # Isolate failures per invoice so one draft that cannot be
+                # posted does not abort posting of the remaining drafts.
+                try:
+                    self.autovalidate_folio_invoice(invoice)
+                except Exception as e:
+                    _logger.warning(
+                        "Autovalidate skipped invoice %s: %s", invoice.name, e
+                    )
 
         if not with_delay:
             # 3- Reverse the downpayment invoices not included in final invoice

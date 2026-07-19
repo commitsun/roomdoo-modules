@@ -1,6 +1,7 @@
 from psycopg2 import IntegrityError
 
 from odoo.tests.common import TransactionCase
+from odoo.tools import mute_logger
 
 
 class TestResPartnerResidence(TransactionCase):
@@ -82,6 +83,7 @@ class TestResPartnerResidence(TransactionCase):
     # unique index constraint
     # =====================
 
+    @mute_logger("odoo.sql_db")
     def test_unique_residence_per_parent(self):
         partner = self._create_partner()
         self._create_residence(partner)

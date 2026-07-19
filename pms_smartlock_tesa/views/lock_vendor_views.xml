@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="lock_vendor_view_form" model="ir.ui.view">
+        <field name="name">lock.vendor.form.tesa</field>
+        <field name="model">lock.vendor</field>
+        <field name="inherit_id" ref="pms_smartlock_base.lock_vendor_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="before">
+                <page
+          name="tesa_credentials"
+          string="TESA Credentials"
+          attrs="{'invisible': [('vendor_type', '!=', 'tesa')]}"
+        >
+                    <group>
+                        <field
+              name="tesa_host"
+              attrs="{'required': [('vendor_type', '=', 'tesa')]}"
+            />
+                        <field name="tesa_port" />
+                        <field
+              name="tesa_operator_name"
+              attrs="{'required': [('vendor_type', '=', 'tesa')]}"
+            />
+                        <field
+              name="tesa_operator_password"
+              password="True"
+              attrs="{'required': [('vendor_type', '=', 'tesa')]}"
+            />
+                        <field name="tesa_verify_ssl" />
+                    </group>
+                    <p class="text-muted">
+                        TESA has no cloud service: Odoo connects to the hotel's
+                        own on-prem Smartair server over the host above.
+                    </p>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

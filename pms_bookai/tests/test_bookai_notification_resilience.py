@@ -1,3 +1,5 @@
+from odoo.tools import mute_logger
+
 from odoo.addons.pms.tests.common import TestPms
 
 
@@ -25,6 +27,7 @@ class TestBookaiNotificationResilience(TestPms):
             }
         )
 
+    @mute_logger("odoo.addons.pms_bookai.models.pms_notification_log")
     def test_bookai_prepare_failure_does_not_block_log_create(self):
         log = self.env["pms.notification.log"].create(
             {

@@ -3,8 +3,11 @@ from unittest.mock import patch
 import requests
 
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
 from .common import TestBookaiCommon
+
+WEBHOOK_LOGGER = "odoo.addons.pms_bookai.models.bookai_webhook_mixin"
 
 
 @tagged("post_install", "-at_install")
@@ -50,6 +53,7 @@ class TestBookaiWebhookMixin(TestBookaiCommon):
         self.assertEqual(payload["action"], "delete")
         self.assertEqual(payload["type"], "agent_updated")
 
+    @mute_logger(WEBHOOK_LOGGER)
     def test_post_webhook_catches_connection_error(self):
         with patch(
             "odoo.addons.pms_bookai.models.bookai_webhook_mixin." "requests.post",
@@ -62,6 +66,7 @@ class TestBookaiWebhookMixin(TestBookaiCommon):
                 {"test": True},
             )
 
+    @mute_logger(WEBHOOK_LOGGER)
     def test_post_webhook_catches_timeout(self):
         with patch(
             "odoo.addons.pms_bookai.models.bookai_webhook_mixin." "requests.post",
