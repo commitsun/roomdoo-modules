@@ -291,6 +291,11 @@ class PmsFolioService(Component):
             target = folio_search_param.filter
             if "@" in target:
                 parts.append([("email", "ilike", target)])
+            elif len(target.replace(" ", "")) < 3:
+                # Free-text searches of 1-2 chars explode into unanchored
+                # unaccent ILIKE scans that have taken down the production
+                # database; return no results instead (hot-patch 2026-06-15).
+                parts.append(expression.FALSE_DOMAIN)
             else:
                 spaced = "%".join(target.split(" "))
                 subdomains = [
