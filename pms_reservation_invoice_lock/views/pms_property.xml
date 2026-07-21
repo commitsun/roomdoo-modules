@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_property_views_form" model="ir.ui.view">
+        <field name="name">pms.property.form.reservation.invoice.lock</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <field name="invoice_reservation_note_template" position="after">
+                <field
+          name="reservation_invoice_block_domain"
+          widget="domain"
+          options="{'model': 'pms.reservation'}"
+        />
+                <field
+          name="reservation_invoice_block_message"
+          placeholder="Ex.: Invoices cannot be validated before the guest checks out."
+        />
+            </field>
+        </field>
+    </record>
+</odoo>
