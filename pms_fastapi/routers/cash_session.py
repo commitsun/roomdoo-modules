@@ -1,5 +1,4 @@
 from fastapi import Response, status
-from fastapi.responses import JSONResponse
 
 from odoo import _, models
 
@@ -13,14 +12,11 @@ from odoo.addons.pms_fastapi.schemas.cash_session import (
     CashSessionOpenInput,
     CashSessionSummary,
 )
+from odoo.addons.pms_fastapi.utils import ApiProblem, build_problem
 
 
-class _CashSessionProblem(Exception):
-    """Control-flow exception carrying an RFC 9457 JSONResponse."""
-
-    def __init__(self, response):
-        super().__init__()
-        self.response = response
+class _CashSessionProblem(ApiProblem):
+    """Cash-session-router problem, caught by this router's local handlers."""
 
 
 @pms_api_router.post(
@@ -112,18 +108,7 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
 
     @staticmethod
     def _problem(status_code, type_, title, detail):
-        raise _CashSessionProblem(
-            JSONResponse(
-                status_code=status_code,
-                content={
-                    "type": type_,
-                    "title": title,
-                    "status": status_code,
-                    "detail": detail,
-                },
-                media_type="application/problem+json",
-            )
-        )
+        raise _CashSessionProblem(build_problem(status_code, type_, title, detail))
 
     def _resolve_cash_journal(self, journal_id):
         journal = self.env["account.journal"].sudo().browse(journal_id).exists()
@@ -231,9 +216,7 @@ class PmsApiCashSessionRouterHelper(models.AbstractModel):
                     _("Cash session %s is already closed.") % session_id,
                 )
             PmsBaseModel.pms_api_check_access(self.env.user, statement)
-            if not statement._pms_close_cash_session(
-                payload.countedCash, payload.note
-            ):
+            if not statement._pms_close_cash_session(payload.countedCash, payload.note):
                 return Response(status_code=status.HTTP_204_NO_CONTENT)
         except _CashSessionProblem as problem:
             return problem.response

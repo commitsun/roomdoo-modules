@@ -4,9 +4,10 @@ from typing import Annotated
 from fastapi import Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from odoo import SUPERUSER_ID, _, api, fields, models
+from odoo import SUPERUSER_ID, Command, _, api, fields, models, tools
 from odoo.exceptions import MissingError, UserError
 from odoo.osv import expression
+from odoo.tools.misc import get_lang
 
 from odoo.addons.account.models.account_move import AccountMove
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
@@ -22,6 +23,7 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.models.folio_sale_line import (
     FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX,
 )
+from odoo.addons.pms_fastapi.schemas.email_template import EmailCreate, EmailTemplate
 from odoo.addons.pms_fastapi.schemas.invoice import (
     INVOICE_ORDER_MAPPING,
     InvoiceDetail,
@@ -34,15 +36,15 @@ from odoo.addons.pms_fastapi.schemas.invoice import (
     ReportFormatEnum,
     ShareUrl,
 )
-from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+from odoo.addons.pms_fastapi.utils import (
+    ApiProblem,
+    FilteredModelAdapter,
+    build_problem,
+)
 
 
-class _InvoiceEditProblem(Exception):
-    """Control-flow exception carrying an RFC 9457 JSONResponse."""
-
-    def __init__(self, response):
-        super().__init__()
-        self.response = response
+class _ApiProblem(ApiProblem):
+    """Invoice-router problem, caught by this router's local handlers."""
 
 
 INVOICE_REPORT_MAX_RECORDS = 5000
@@ -295,6 +297,73 @@ async def list_reconcilable_payments(
 
 
 @pms_api_router.get(
+    "/invoices/{invoice_id}/email-template",
+    response_model=EmailTemplate,
+    tags=["invoice"],
+    responses={
+        404: {"description": "Invoice not found"},
+        422: {"description": "Invalid language code"},
+    },
+)
+async def get_invoice_email_template(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+    lang: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Language code to render the template in (see GET /languages). "
+                "Defaults to the invoice contact's language, then the "
+                "establishment's language."
+            ),
+        ),
+    ] = None,
+):
+    """Render the invoice email template (subject and HTML body).
+
+    Pure render meant to pre-fill the send modal: it persists nothing and has
+    no side effects, and returns no recipients. The body is resolved with the
+    invoice data (reference, establishment, amount, IBAN).
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._get_email_template(invoice_id, lang)
+    )
+
+
+@pms_api_router.post(
+    "/invoices/{invoice_id}/emails",
+    tags=["invoice"],
+    status_code=204,
+    responses={
+        204: {"description": "Invoice email accepted by the outgoing mail server."},
+        404: {"description": "Invoice not found"},
+        422: {"description": "No recipients, invalid email or unknown contact"},
+        502: {"description": "Outgoing mail server rejected the message"},
+    },
+    response_class=Response,
+)
+async def send_invoice_email(
+    env: AuthenticatedEnv,
+    invoice_id: int,
+    payload: EmailCreate,
+) -> Response:
+    """Send the invoice by email, synchronously, with the PDF attached.
+
+    Subject and body come final from the modal (see GET
+    /invoices/{invoice_id}/email-template). Recipients are the union of
+    contactIds and emailAddresses; at least one is required. Success means the
+    outgoing mail server accepted the message, not that it was delivered.
+    """
+    return (
+        env["pms_api_invoice.invoice_router.helper"]
+        .new()
+        ._send_email(invoice_id, payload)
+    )
+
+
+@pms_api_router.get(
     "/invoices/{id}/share",
     response_model=ShareUrl,
     tags=["invoice"],
@@ -467,7 +536,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             )
         try:
             if invoice.state == "cancel":
-                self._raise_edit_problem(
+                self._raise_problem(
                     409,
                     "/errors/invoice-not-deletable",
                     _("Invoice not deletable"),
@@ -477,7 +546,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 invoice.unlink()
                 return Response(status_code=204)
             if not confirm_refund:
-                self._raise_edit_problem(
+                self._raise_problem(
                     409,
                     "/errors/invoice-refund-confirmation-required",
                     _("Refund confirmation required"),
@@ -488,27 +557,15 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     ),
                 )
             credit_note = self._cancel_posted_invoice(invoice, reason)
-        except _InvoiceEditProblem as problem:
+        except _ApiProblem as problem:
             return problem.response
         return InvoiceDetail.from_account_move(credit_note)
 
     # -- Invoice edit (PUT /invoices/{id}) --
 
     @staticmethod
-    def _raise_edit_problem(status, type_, title, detail, **extra):
-        raise _InvoiceEditProblem(
-            JSONResponse(
-                status_code=status,
-                content={
-                    "type": type_,
-                    "title": title,
-                    "status": status,
-                    "detail": detail,
-                    **extra,
-                },
-                media_type="application/problem+json",
-            )
-        )
+    def _raise_problem(status, type_, title, detail, **extra):
+        raise _ApiProblem(build_problem(status, type_, title, detail, **extra))
 
     def _edit_invoice(self, invoice_id, payload, confirm_refund):
         try:
@@ -528,18 +585,18 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             # Savepoint so a failure after lines have been rewritten (draft) or
             # after the refund has been posted (posted) does not leave the
             # invoice half-edited: Odoo constraints run post-write, so the
-            # mutation is already in the cursor when a later _InvoiceEditProblem
+            # mutation is already in the cursor when a later _ApiProblem
             # is raised and would otherwise be committed alongside the error.
             with self.env.cr.savepoint():
                 if invoice.state == "cancel":
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/invoice-not-editable",
                         _("Invoice not editable"),
                         _("Cancelled invoices cannot be edited."),
                     )
                 if invoice.state == "posted" and not confirm_refund:
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/invoice-refund-confirmation-required",
                         _("Refund confirmation required"),
@@ -569,14 +626,14 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     result = self._edit_posted_invoice(
                         invoice, payload, sale_lines, downpayment_lines, partner
                     )
-        except _InvoiceEditProblem as problem:
+        except _ApiProblem as problem:
             return problem.response
         return InvoiceDetail.from_account_move(result)
 
     def _edit_resolve_sale_lines(self, payload):
         line_ids = [fl.id for fl in payload.folioLines]
         if len(line_ids) != len(set(line_ids)):
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/duplicate-sale-lines",
                 _("Duplicate sale lines"),
@@ -585,7 +642,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         sale_lines = self.env["folio.sale.line"].sudo().browse(line_ids).exists()
         missing = set(line_ids) - set(sale_lines.ids)
         if missing:
-            self._raise_edit_problem(
+            self._raise_problem(
                 404,
                 "/errors/sale-lines-not-found",
                 _("Sale lines not found"),
@@ -594,7 +651,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             )
         invalid_kind = sale_lines.filtered(lambda r: r.display_type or r.is_downpayment)
         if invalid_kind:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invalid-folio-line",
                 _("Invalid folio line"),
@@ -608,7 +665,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             return self.env["folio.sale.line"]
         ids = list(set(payload.downpaymentLines))
         if len(ids) != len(payload.downpaymentLines):
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/duplicate-downpayment-lines",
                 _("Duplicate down-payment invoices"),
@@ -617,7 +674,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         dp_invoices = self.env["account.move"].sudo().browse(ids).exists()
         missing = set(ids) - set(dp_invoices.ids)
         if missing:
-            self._raise_edit_problem(
+            self._raise_problem(
                 404,
                 "/errors/downpayment-lines-not-found",
                 _("Down-payment invoices not found"),
@@ -626,7 +683,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             )
         not_downpayment = dp_invoices.filtered(lambda m: not m._is_downpayment())
         if not_downpayment:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invalid-downpayment-line",
                 _("Invalid down-payment invoice"),
@@ -638,7 +695,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             lambda m: not set(m.folio_ids.ids) & folio_ids
         )
         if out_of_scope:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/downpayment-line-out-of-scope",
                 _("Down-payment invoice out of scope"),
@@ -653,7 +710,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     def _edit_resolve_property(self, sale_lines):
         properties = sale_lines.mapped("pms_property_id")
         if len(properties) > 1:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/multiple-properties",
                 _("Folio lines from multiple properties"),
@@ -665,7 +722,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
     def _edit_resolve_partner(self, payload, pms_property):
         partner = self.env["res.partner"].sudo().browse(payload.partner).exists()
         if not partner:
-            self._raise_edit_problem(
+            self._raise_problem(
                 404,
                 "/errors/not-found",
                 _("Contact not found"),
@@ -676,7 +733,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             return partner
         errors = self._get_contact_validation_errors(partner, pms_property)
         if errors:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invoicing-validation-failed",
                 _("Invoicing validation failed"),
@@ -711,7 +768,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     }
                 )
         if qty_errors:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/quantity-exceeds-pending",
                 _("Quantity to invoice exceeds pending quantity"),
@@ -739,7 +796,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     }
                 )
         if composition_errors:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invoice-composition-invalid",
                 _("Invalid invoice composition"),
@@ -785,21 +842,21 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 partner_invoice_id=partner.id,
             )
         except UserError as e:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invoice-creation-failed",
                 _("Invoice creation failed"),
                 str(e),
             )
         if not vals_list:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invoice-creation-failed",
                 _("Invoice creation failed"),
                 _("No invoice could be built from the provided composition."),
             )
         if len(vals_list) > 1:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/multiple-invoices-created",
                 _("Multiple invoices created"),
@@ -904,7 +961,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         try:
             new_invoice = self.env["account.move"].sudo().create(vals)
         except UserError as e:
-            self._raise_edit_problem(
+            self._raise_problem(
                 422,
                 "/errors/invoice-creation-failed",
                 _("Invoice creation failed"),
@@ -1095,7 +1152,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         """Return the int payment id from 'payment_{id}', or raise 422."""
         match = _PAYMENT_ID_RE.match(composite_id or "")
         if not match:
-            PmsApiInvoiceRouterHelper._raise_edit_problem(
+            PmsApiInvoiceRouterHelper._raise_problem(
                 422,
                 "/errors/invalid-reconciliation-id",
                 _("Invalid reconciliation id"),
@@ -1144,7 +1201,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     "paid",
                     "reversed",
                 ):
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/invoice-not-editable",
                         _("Invoice not editable"),
@@ -1162,7 +1219,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     )
                 )
                 if not payment:
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         404,
                         "/errors/payment-not-found",
                         _("Payment not found"),
@@ -1170,7 +1227,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     )
                 if invoice.folio_ids:
                     if not (payment.folio_ids & invoice.folio_ids):
-                        self._raise_edit_problem(
+                        self._raise_problem(
                             409,
                             "/errors/payment-not-applicable",
                             _("Payment not applicable"),
@@ -1183,7 +1240,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     payment.partner_id.commercial_partner_id
                     != invoice.commercial_partner_id
                 ):
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/payment-not-applicable",
                         _("Payment not applicable"),
@@ -1195,7 +1252,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     partials,
                 ) = self._get_reconciliation_partials(invoice, payment)
                 if partials:
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/payment-already-reconciled",
                         _("Payment already reconciled"),
@@ -1203,7 +1260,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                         % (payment.id, invoice.id),
                     )
                 if not invoice_recv or not payment_recv:
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/payment-not-applicable",
                         _("Payment not applicable"),
@@ -1214,13 +1271,13 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                         lambda line: not line.reconciled
                     ).reconcile()
                 except UserError as e:
-                    self._raise_edit_problem(
+                    self._raise_problem(
                         409,
                         "/errors/payment-not-applicable",
                         _("Payment not applicable"),
                         str(e),
                     )
-        except _InvoiceEditProblem as problem:
+        except _ApiProblem as problem:
             return problem.response
         # Reconciling updated payment_state/amount_residual on the stored
         # record; drop the stale cache so the response reflects the new state.
@@ -1244,7 +1301,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         try:
             payment_id = self._parse_payment_composite_id(reconciliation_id)
             if invoice.state != "posted":
-                self._raise_edit_problem(
+                self._raise_problem(
                     409,
                     "/errors/invoice-not-editable",
                     _("Invoice not editable"),
@@ -1262,7 +1319,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 )
             )
             if not payment:
-                self._raise_edit_problem(
+                self._raise_problem(
                     404,
                     "/errors/reconciliation-not-found",
                     _("Reconciliation not found"),
@@ -1273,7 +1330,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 invoice, payment
             )
             if not partials:
-                self._raise_edit_problem(
+                self._raise_problem(
                     404,
                     "/errors/reconciliation-not-found",
                     _("Reconciliation not found"),
@@ -1281,7 +1338,7 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     % (invoice.id, payment.id),
                 )
             partials.unlink()
-        except _InvoiceEditProblem as problem:
+        except _ApiProblem as problem:
             return problem.response
         # Undoing the reconciliation updated payment_state/amount_residual on
         # the stored record; drop the stale cache before serializing.
@@ -1343,6 +1400,190 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 )
             )
         return items
+
+    # -- Invoice email template (GET /invoices/{id}/email-template) --
+
+    def _resolve_email_template_lang(self, invoice):
+        """Language to render the template in when none is requested.
+
+        Falls back from the invoice contact to the establishment's company,
+        then to the instance default.
+        """
+        return (
+            invoice.partner_id.lang
+            or invoice.pms_property_id.company_id.partner_id.lang
+            or get_lang(self.env).code
+        )
+
+    def _get_email_template(self, invoice_id, lang=None):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": _("Not found"),
+                    "status": 404,
+                    "detail": _("Invoice not found."),
+                },
+                media_type="application/problem+json",
+            )
+        if lang is not None:
+            if not self.env["res.lang"].search_count(
+                [("code", "=", lang), ("active", "=", True)]
+            ):
+                return JSONResponse(
+                    status_code=422,
+                    content={
+                        "type": "/errors/invalid-language",
+                        "title": _("Invalid language"),
+                        "status": 422,
+                        "detail": _("The requested language is not configured."),
+                        "field": "lang",
+                    },
+                    media_type="application/problem+json",
+                )
+        else:
+            lang = self._resolve_email_template_lang(invoice)
+        # Render the two previewed fields directly instead of generate_email,
+        # which would also render the PDF report attachment. compute_lang routes
+        # through _classify_per_lang, where template substitution hooks in.
+        template = (
+            self.env.ref(invoice._get_mail_template())
+            .sudo()
+            .with_context(template_preview_lang=lang)
+        )
+        subject = template._render_field("subject", [invoice.id], compute_lang=True)[
+            invoice.id
+        ]
+        body = template._render_field(
+            "body_html", [invoice.id], compute_lang=True, post_process=True
+        )[invoice.id]
+        return EmailTemplate(subject=subject or "", body=body or "")
+
+    # -- Invoice email send (POST /invoices/{id}/emails) --
+
+    def _resolve_email_contacts(self, contact_ids):
+        if not contact_ids:
+            return self.env["res.partner"]
+        ids = list(dict.fromkeys(contact_ids))
+        partners = self.env["res.partner"].sudo().browse(ids).exists()
+        missing = set(ids) - set(partners.ids)
+        if missing:
+            self._raise_problem(
+                422,
+                "/errors/contact-not-found",
+                _("Contact not found"),
+                _("Some recipients could not be found."),
+                missingContactIds=sorted(missing),
+            )
+        return partners
+
+    def _resolve_free_emails(self, addresses):
+        valid, invalid = [], []
+        for address in addresses:
+            normalized = tools.email_normalize(address)
+            if normalized:
+                valid.append(normalized)
+            else:
+                invalid.append(address)
+        if invalid:
+            self._raise_problem(
+                422,
+                "/errors/invalid-email",
+                _("Invalid email address"),
+                _("One or more email addresses are not valid."),
+                invalidEmailAddresses=invalid,
+            )
+        return list(dict.fromkeys(valid))
+
+    def _build_invoice_mail(self, invoice, payload, partners, free_emails):
+        template = self.env.ref(invoice._get_mail_template()).sudo()
+        # generate_email always renders the report PDF and the template
+        # attachments (regardless of the requested fields), which is what the
+        # outgoing email must carry. subject/body come from the front, so only
+        # email_from is requested; attachments come for free.
+        rendered = template.generate_email(invoice.id, ["email_from"])
+        attachment_ids = list(rendered.get("attachment_ids", []))
+        attachments = self.env["ir.attachment"].sudo()
+        for name, content in rendered.get("attachments", []):
+            attachment_ids.append(
+                attachments.create(
+                    {
+                        "name": name,
+                        "datas": content,
+                        "type": "binary",
+                        "res_model": "account.move",
+                        "res_id": invoice.id,
+                    }
+                ).id
+            )
+        return (
+            self.env["mail.mail"]
+            .sudo()
+            .create(
+                {
+                    "subject": payload.subject,
+                    "body_html": tools.html_sanitize(payload.body),
+                    "email_from": rendered.get("email_from")
+                    or invoice.company_id.partner_id.email_formatted,
+                    "author_id": self.env.user.partner_id.id,
+                    "model": "account.move",
+                    "res_id": invoice.id,
+                    "message_type": "email",
+                    "subtype_id": self.env.ref("mail.mt_comment").id,
+                    "recipient_ids": [Command.set(partners.ids)],
+                    "email_to": ", ".join(free_emails) or False,
+                    "attachment_ids": [Command.set(attachment_ids)],
+                    "auto_delete": False,
+                }
+            )
+        )
+
+    def _send_email(self, invoice_id, payload):
+        try:
+            invoice = self.get(invoice_id)
+        except MissingError:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "type": "/errors/not-found",
+                    "title": _("Not found"),
+                    "status": 404,
+                    "detail": _("Invoice not found."),
+                },
+                media_type="application/problem+json",
+            )
+        try:
+            # Savepoint so a delivery failure rolls back the mail.mail and the
+            # generated attachments instead of leaving a failed send committed.
+            with self.env.cr.savepoint():
+                partners = self._resolve_email_contacts(payload.contactIds)
+                free_emails = self._resolve_free_emails(payload.emailAddresses)
+                if not partners and not free_emails:
+                    self._raise_problem(
+                        422,
+                        "/errors/no-recipients",
+                        _("No recipients"),
+                        _("At least one recipient is required."),
+                    )
+                mail = self._build_invoice_mail(invoice, payload, partners, free_emails)
+                try:
+                    mail.send(raise_exception=True)
+                except Exception:
+                    self._raise_problem(
+                        502,
+                        "/errors/email-delivery-failed",
+                        _("Email delivery failed"),
+                        _(
+                            "The outgoing mail server rejected the message or "
+                            "could not be reached."
+                        ),
+                    )
+        except _ApiProblem as problem:
+            return problem.response
+        return Response(status_code=204)
 
     def _get_invoice_share_url(self, record_id):
         try:

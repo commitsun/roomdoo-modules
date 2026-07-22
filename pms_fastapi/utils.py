@@ -6,6 +6,8 @@ import typing
 from inspect import currentframe
 from typing import Generic, TypeVar
 
+from fastapi.responses import JSONResponse
+
 from odoo import _, api, models
 from odoo.exceptions import MissingError
 from odoo.osv import expression
@@ -13,6 +15,39 @@ from odoo.osv import expression
 from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
 
 T = TypeVar("T", bound=models.BaseModel)
+
+
+class ApiProblem(Exception):
+    """Control-flow exception carrying an RFC 9457 problem+json JSONResponse.
+
+    Raised from a helper to abort the current operation and hand the router an
+    error response. Router helpers subclass it so the response is returned by
+    their local ``except`` handler.
+    """
+
+    def __init__(self, response):
+        super().__init__()
+        self.response = response
+
+
+def build_problem(status, type_, title, detail, **extra) -> JSONResponse:
+    """Build an RFC 9457 problem+json response.
+
+    ``type_`` is a relative ``/errors/<slug>`` URI, ``title`` a short stable
+    label, ``detail`` the human-readable message; ``extra`` adds machine-usable
+    extension members (ids, counts, offending field).
+    """
+    return JSONResponse(
+        status_code=status,
+        content={
+            "type": type_,
+            "title": title,
+            "status": status,
+            "detail": detail,
+            **extra,
+        },
+        media_type="application/problem+json",
+    )
 
 
 class FilteredModelAdapter(Generic[T]):

@@ -23,6 +23,7 @@ from . import folio_sale_line
 from . import pms_service
 from . import pms_room
 from . import invoice
+from . import email_template
 from . import payment_method
 from . import payment
 from . import journal
