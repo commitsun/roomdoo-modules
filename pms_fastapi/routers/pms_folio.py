@@ -40,7 +40,11 @@ from odoo.addons.pms_fastapi.schemas.pms_folio import (
     FolioSummary,
     ReportFormatEnum,
 )
-from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+from odoo.addons.pms_fastapi.utils import (
+    ApiProblem,
+    FilteredModelAdapter,
+    build_problem,
+)
 
 FOLIO_REPORT_MAX_RECORDS = 5000
 
@@ -49,12 +53,8 @@ folio_order = create_order_dependency(
 )
 
 
-class _InvoiceCreationProblem(Exception):
-    """Control-flow exception carrying an RFC 9457 JSONResponse."""
-
-    def __init__(self, response):
-        super().__init__()
-        self.response = response
+class _InvoiceCreationProblem(ApiProblem):
+    """Folio-router problem, caught by this router's local handlers."""
 
 
 @pms_api_router.post(
@@ -353,7 +353,9 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             lambda r: r.cancelled_reason != "modified"
         )
         partners |= active_reservations.mapped("partner_id").filtered("id")
-        partners |= active_reservations.mapped("agency_id").filtered("id")
+        # partners |= active_reservations.mapped("agency_id").filtered("id")
+        # Se comenta temporalmente mientras no se hace el refactor de roles en
+        # folio, para evitar errores.
         partners |= active_reservations.mapped(
             "checkin_partner_ids.partner_id"
         ).filtered("id")
@@ -368,17 +370,7 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     @staticmethod
     def _raise_problem(status, type_, title, detail, **extra):
         raise _InvoiceCreationProblem(
-            JSONResponse(
-                status_code=status,
-                content={
-                    "type": type_,
-                    "title": title,
-                    "status": status,
-                    "detail": detail,
-                    **extra,
-                },
-                media_type="application/problem+json",
-            )
+            build_problem(status, type_, title, detail, **extra)
         )
 
     def _create_invoice(self, payload: FolioInvoiceCreate):

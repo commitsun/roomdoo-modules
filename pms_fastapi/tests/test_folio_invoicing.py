@@ -630,9 +630,7 @@ class TestFolioInvoicing(CommonTestPmsApi):
         helper_cls = type(self.env["pms_api_invoice.invoice_router.helper"])
 
         def _boom(helper, *args, **kwargs):
-            helper._raise_edit_problem(
-                422, "/errors/injected-failure", "Injected", "boom"
-            )
+            helper._raise_problem(422, "/errors/injected-failure", "Injected", "boom")
 
         with self._create_test_client() as test_client:
             self._login(test_client)
@@ -659,9 +657,7 @@ class TestFolioInvoicing(CommonTestPmsApi):
         helper_cls = type(self.env["pms_api_invoice.invoice_router.helper"])
 
         def _boom(helper, *args, **kwargs):
-            helper._raise_edit_problem(
-                422, "/errors/injected-failure", "Injected", "boom"
-            )
+            helper._raise_problem(422, "/errors/injected-failure", "Injected", "boom")
 
         with self._create_test_client() as test_client:
             self._login(test_client)

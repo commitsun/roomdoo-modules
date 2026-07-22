@@ -27,7 +27,11 @@ from odoo.addons.pms_fastapi.schemas.payment import (
     PaymentUpdate,
     ReportFormatEnum,
 )
-from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+from odoo.addons.pms_fastapi.utils import (
+    ApiProblem,
+    FilteredModelAdapter,
+    build_problem,
+)
 
 PaymentOrderDependency = create_order_dependency(
     PaymentOrderField, PAYMENT_ORDER_MAPPING, ["-date"]
@@ -42,12 +46,8 @@ _CREATE_TYPE_FIELDS = {
 }
 
 
-class _PaymentProblem(Exception):
-    """Control-flow exception carrying an RFC 9457 JSONResponse."""
-
-    def __init__(self, response):
-        super().__init__()
-        self.response = response
+class _PaymentProblem(ApiProblem):
+    """Payment-router problem, caught by this router's local handlers."""
 
 
 @pms_api_router.get(
@@ -251,18 +251,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     @staticmethod
     def _problem(status_code, type_, title, detail):
-        raise _PaymentProblem(
-            JSONResponse(
-                status_code=status_code,
-                content={
-                    "type": type_,
-                    "title": title,
-                    "status": status_code,
-                    "detail": detail,
-                },
-                media_type="application/problem+json",
-            )
-        )
+        raise _PaymentProblem(build_problem(status_code, type_, title, detail))
 
     def _not_found(self, detail):
         self._problem(404, "/errors/record-not-found", _("Record not found"), detail)

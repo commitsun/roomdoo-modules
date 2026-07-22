@@ -6,6 +6,7 @@ from . import test_folio_billing
 from . import test_folio_invoicing
 from . import test_invoices
 from . import test_invoice_contact_validation
+from . import test_invoice_emails
 from . import test_invoice_reconciliation
 from . import test_journals
 from . import test_cash_session
