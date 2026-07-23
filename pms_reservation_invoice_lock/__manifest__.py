@@ -10,7 +10,7 @@
     "depends": ["pms"],
     "data": [
         "security/pms_security.xml",
-        "views/pms_property.xml",
+        "views/res_company.xml",
     ],
     "installable": True,
     "application": False,
