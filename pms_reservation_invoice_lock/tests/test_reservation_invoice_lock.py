@@ -6,7 +6,7 @@ from odoo.tests import tagged
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.addons.pms.tests.common import TestPms
 
-# Domains evaluated server-side with the helpers of _get_reservation_lock_eval_context.
+# Custom ('other') domain, evaluated with _get_reservation_lock_eval_context helpers.
 BLOCK_FUTURE_CHECKOUT = "[('checkout', '>', context_today().strftime('%Y-%m-%d'))]"
 BLOCK_PAST_CHECKOUT = "[('checkout', '<', context_today().strftime('%Y-%m-%d'))]"
 
@@ -14,8 +14,8 @@ BLOCK_PAST_CHECKOUT = "[('checkout', '<', context_today().strftime('%Y-%m-%d'))]
 @tagged("post_install", "-at_install")
 class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
     """Invoices are built through the real folio flow (_create_invoices) so the test
-    keeps exercising that path if it ever changes. AccountTestInvoicingCommon provides
-    the chart of accounts the flow needs."""
+    keeps exercising that path if it ever changes. The lock is configured per company
+    (res.company), via a policy selector."""
 
     @classmethod
     def setUpClass(cls):
@@ -101,31 +101,76 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
         self.assertTrue(invoice, "The folio flow did not create an invoice")
         return invoice
 
-    def test_blocks_future_checkout(self):
-        """A regular invoice of a reservation not yet departed cannot be posted."""
+    # --- policy: checkout -------------------------------------------------
+
+    def test_checkout_policy_blocks_not_departed(self):
+        """policy=checkout: an invoice of a stay not yet departed cannot be posted."""
         today = datetime.date.today()
         res = self._create_reservation(today, today + datetime.timedelta(days=2))
         invoice = self._invoice_for(res)
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
+        self.company.reservation_invoice_block_policy = "checkout"
         # end-to-end: the lock fires from action_post -> _post
         with self.assertRaises(UserError):
             invoice.action_post()
 
-    def test_allows_when_domain_does_not_match(self):
-        """A reservation outside the block domain is not blocked by the lock."""
+    def test_checkout_policy_allows_after_checkout(self):
+        """policy=checkout: checkout == today is not '> today', so it is allowed."""
         today = datetime.date.today()
-        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        res = self._create_reservation(today - datetime.timedelta(days=2), today)
         invoice = self._invoice_for(res)
-        # future checkout does not match "checkout < today", so it is not blocked
-        self.property.reservation_invoice_block_domain = BLOCK_PAST_CHECKOUT
+        self.company.reservation_invoice_block_policy = "checkout"
         self.assertTrue(invoice._check_reservation_invoice_lock())
 
-    def test_empty_domain_disables_lock(self):
-        """No configured domain means no lock at all."""
+    # --- policy: checkin --------------------------------------------------
+
+    def test_checkin_policy_blocks_future_arrival(self):
+        """policy=checkin: an invoice of a future arrival cannot be posted."""
+        today = datetime.date.today()
+        res = self._create_reservation(
+            today + datetime.timedelta(days=3), today + datetime.timedelta(days=5)
+        )
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkin"
+        with self.assertRaises(UserError):
+            invoice._check_reservation_invoice_lock()
+
+    def test_checkin_policy_allows_current_arrival(self):
+        """policy=checkin: checkin == today is not '> today', so it is allowed."""
         today = datetime.date.today()
         res = self._create_reservation(today, today + datetime.timedelta(days=2))
         invoice = self._invoice_for(res)
-        self.property.reservation_invoice_block_domain = ""
+        self.company.reservation_invoice_block_policy = "checkin"
+        self.assertTrue(invoice._check_reservation_invoice_lock())
+
+    # --- policy: other (custom domain) -----------------------------------
+
+    def test_other_policy_uses_custom_domain(self):
+        """policy=other: the free domain is evaluated (matching -> blocked)."""
+        today = datetime.date.today()
+        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "other"
+        self.company.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
+        with self.assertRaises(UserError):
+            invoice._check_reservation_invoice_lock()
+
+    def test_other_policy_domain_not_matching_allows(self):
+        """policy=other: a domain that no reservation matches does not block."""
+        today = datetime.date.today()
+        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "other"
+        self.company.reservation_invoice_block_domain = BLOCK_PAST_CHECKOUT
+        self.assertTrue(invoice._check_reservation_invoice_lock())
+
+    # --- disabled / exemptions -------------------------------------------
+
+    def test_no_policy_disables_lock(self):
+        """No policy set means no lock at all."""
+        today = datetime.date.today()
+        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = False
         self.assertTrue(invoice._check_reservation_invoice_lock())
 
     def test_downpayment_is_exempt(self):
@@ -134,7 +179,7 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
         res = self._create_reservation(today, today + datetime.timedelta(days=2))
         invoice = self._invoice_for(res)
         invoice.line_ids.folio_line_ids.is_downpayment = True
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
+        self.company.reservation_invoice_block_policy = "checkout"
         self.assertTrue(invoice._is_downpayment())
         self.assertTrue(invoice._check_reservation_invoice_lock())
 
@@ -143,34 +188,14 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
         today = datetime.date.today()
         res = self._create_reservation(today, today + datetime.timedelta(days=2))
         invoice = self._invoice_for(res)
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
+        self.company.reservation_invoice_block_policy = "checkout"
         self.bypass_group.users = [(4, self.env.uid)]
         self.assertTrue(invoice._check_reservation_invoice_lock())
 
-    def test_error_message_uses_configured_text(self):
-        """The hotel's configured message is shown in the error."""
-        today = datetime.date.today()
-        res = self._create_reservation(today, today + datetime.timedelta(days=2))
-        invoice = self._invoice_for(res)
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
-        self.property.reservation_invoice_block_message = "Invoice only after checkout"
-        with self.assertRaises(UserError) as cm:
-            invoice._check_reservation_invoice_lock()
-        self.assertIn("Invoice only after checkout", str(cm.exception))
-
-    def test_error_lists_blocking_reservations(self):
-        """The error lists the reservations that prevent the validation."""
-        today = datetime.date.today()
-        res = self._create_reservation(today, today + datetime.timedelta(days=2))
-        invoice = self._invoice_for(res)
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
-        with self.assertRaises(UserError) as cm:
-            invoice._check_reservation_invoice_lock()
-        self.assertIn(res.name, str(cm.exception))
+    # --- multi-reservation & error message -------------------------------
 
     def test_multi_reservation_any_blocked_blocks_invoice(self):
-        """When an invoice groups several reservations, one blocked reservation is
-        enough to block the whole invoice ("all must satisfy")."""
+        """One blocked reservation is enough to block the whole invoice."""
         today = datetime.date.today()
         res_a = self._create_reservation(today, today + datetime.timedelta(days=1))
         self._create_reservation(
@@ -180,6 +205,27 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
         )
         invoice = self._invoice_for(res_a)
         self.assertEqual(len(invoice.line_ids.folio_line_ids.reservation_id), 2)
-        self.property.reservation_invoice_block_domain = BLOCK_FUTURE_CHECKOUT
+        self.company.reservation_invoice_block_policy = "checkout"
         with self.assertRaises(UserError):
             invoice._check_reservation_invoice_lock()
+
+    def test_error_message_uses_configured_text(self):
+        """The company's configured message is shown in the error."""
+        today = datetime.date.today()
+        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkout"
+        self.company.reservation_invoice_block_message = "Invoice only after checkout"
+        with self.assertRaises(UserError) as cm:
+            invoice._check_reservation_invoice_lock()
+        self.assertIn("Invoice only after checkout", str(cm.exception))
+
+    def test_error_lists_blocking_reservations(self):
+        """The error lists the reservation codes that prevent the validation."""
+        today = datetime.date.today()
+        res = self._create_reservation(today, today + datetime.timedelta(days=2))
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkout"
+        with self.assertRaises(UserError) as cm:
+            invoice._check_reservation_invoice_lock()
+        self.assertIn(res.name, str(cm.exception))

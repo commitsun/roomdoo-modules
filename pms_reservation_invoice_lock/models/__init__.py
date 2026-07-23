@@ -1,2 +1,2 @@
-from . import pms_property
+from . import res_company
 from . import account_move

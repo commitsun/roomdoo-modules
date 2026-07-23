@@ -371,115 +371,96 @@ ul.auto-toc {
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/license-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_reservation_invoice_lock"><img alt="commitsun/roomdoo-modules" src="https://img.shields.io/badge/github-commitsun%2Froomdoo--modules-lightgray.png?logo=github" /></a></p>
 <p>Blocks the <strong>validation (posting)</strong> of a reservation’s regular invoice until a
-per-property, configurable condition is met (typically: not before checkout).</p>
+per-company, configurable condition is met (typically: not before checkout).</p>
 <p>The draft can always be created, so a proforma can still be issued; only the
 posting is guarded. This prevents receptionists from invoicing a stay too early
 while still letting them hand out a proforma on request.</p>
-<p>The condition is expressed as an Odoo domain over reservations, so each hotel
-can decide when invoicing is allowed without any code change.</p>
+<p>The condition is chosen per company with a simple policy selector (not before
+check-in / not before check-out) and, for advanced cases, a free Odoo domain
+over reservations.</p>
 <p>Down payment invoices are always allowed, and so is any move that is not a
 regular customer invoice.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><a class="reference internal" href="#configuration" id="toc-entry-1">Configuration</a><ul>
-<li><a class="reference internal" href="#error-message" id="toc-entry-2">Error message</a></li>
-<li><a class="reference internal" href="#editing-the-domain" id="toc-entry-3">Editing the domain</a></li>
-<li><a class="reference internal" href="#usable-fields" id="toc-entry-4">Usable fields</a></li>
-<li><a class="reference internal" href="#bypass-group" id="toc-entry-5">Bypass group</a></li>
+<li><a class="reference internal" href="#custom-domain" id="toc-entry-2">Custom domain</a></li>
+<li><a class="reference internal" href="#error-message" id="toc-entry-3">Error message</a></li>
+<li><a class="reference internal" href="#bypass-group" id="toc-entry-4">Bypass group</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage" id="toc-entry-6">Usage</a><ul>
-<li><a class="reference internal" href="#common-domains" id="toc-entry-7">Common domains</a></li>
+<li><a class="reference internal" href="#usage" id="toc-entry-5">Usage</a><ul>
+<li><a class="reference internal" href="#custom-domain-examples" id="toc-entry-6">Custom domain examples</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-8">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-9">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-10">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-11">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-12">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-7">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-8">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-9">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-10">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-11">Maintainers</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="configuration">
 <h1><a class="toc-backref" href="#toc-entry-1">Configuration</a></h1>
-<p>Open the property form (<strong>PMS ‣ Configuration ‣ Properties</strong>), go to the
-<strong>Invoicing</strong> tab and fill <strong>Reservation invoice block domain</strong>.</p>
-<p>The field holds an Odoo domain over <tt class="docutils literal">pms.reservation</tt> describing the
-reservations that <strong>cannot be invoiced yet</strong>. When an invoice is posted, the
-reservations it invoices are matched against this domain:</p>
+<p>Open the company form (<strong>Settings ‣ Companies ‣ Companies</strong>, or <em>Settings ‣
+Users &amp; Companies ‣ Companies</em>) and set <strong>Reservation invoice lock</strong>.</p>
+<p>It is a policy selector:</p>
 <ul class="simple">
-<li>if <strong>any</strong> invoiced reservation matches the domain, posting is blocked (all
-reservations must be outside the domain to allow posting);</li>
-<li>an <strong>empty</strong> domain disables the lock entirely.</li>
+<li><strong>Not before check-in</strong> — blocks invoices of reservations whose check-in is
+still in the future (do not invoice stays that have not arrived yet).</li>
+<li><strong>Not before check-out</strong> — blocks invoices of reservations that have not
+departed yet (the main use case).</li>
+<li><strong>Custom domain</strong> — shows a free domain field over <tt class="docutils literal">pms.reservation</tt> for any
+other rule.</li>
 </ul>
-<div class="section" id="error-message">
-<h2><a class="toc-backref" href="#toc-entry-2">Error message</a></h2>
-<p>Since the domain is free-form, the block error also uses the field <strong>Reservation
-invoice block message</strong> (same tab): write there, in plain words, why invoicing is
-not allowed yet (e.g. <em>“Invoices cannot be validated before the guest checks
-out”</em>). If left empty a generic message is used. In both cases the error lists the
-reservation codes that are blocking the validation, so reception knows exactly
-which stays to look at.</p>
-</div>
-<div class="section" id="editing-the-domain">
-<h2><a class="toc-backref" href="#toc-entry-3">Editing the domain</a></h2>
-<p>Switch the domain widget to its <strong>code editor</strong> (the <tt class="docutils literal">&lt;/&gt;</tt> icon) to use
+<p>Leave it <strong>empty</strong> to disable the lock for the company.</p>
+<p>When an invoice is posted, the reservations it invoices are matched against the
+resulting condition: if <strong>any</strong> of them matches, posting is blocked (all
+reservations must be outside the condition to allow posting).</p>
+<div class="section" id="custom-domain">
+<h2><a class="toc-backref" href="#toc-entry-2">Custom domain</a></h2>
+<p>With the <strong>Custom domain</strong> policy, fill <strong>Reservation invoice block domain</strong>.
+Switch the domain widget to its <strong>code editor</strong> (the <tt class="docutils literal">&lt;/&gt;</tt> icon) for
 date-relative expressions such as <tt class="docutils literal">context_today()</tt> — the visual editor only
-stores fixed literal values, which is not what a daily-reevaluated lock needs.</p>
-<p>These helpers are available when the domain is evaluated:</p>
-<ul class="simple">
-<li><tt class="docutils literal">context_today()</tt> — today’s date in the user’s timezone</li>
-<li><tt class="docutils literal">datetime</tt>, <tt class="docutils literal">date</tt>, <tt class="docutils literal">time</tt>, <tt class="docutils literal">timedelta</tt>, <tt class="docutils literal">relativedelta</tt></li>
-</ul>
-</div>
-<div class="section" id="usable-fields">
-<h2><a class="toc-backref" href="#toc-entry-4">Usable fields</a></h2>
+stores fixed literal values. Available helpers: <tt class="docutils literal">context_today()</tt>,
+<tt class="docutils literal">datetime</tt>, <tt class="docutils literal">date</tt>, <tt class="docutils literal">time</tt>, <tt class="docutils literal">timedelta</tt>, <tt class="docutils literal">relativedelta</tt>.</p>
 <p>Only <strong>stored</strong> reservation fields (or fields related to stored ones) can be
-used — non-stored computed fields (e.g. <tt class="docutils literal">allowed_checkout</tt>,
-<tt class="docutils literal">checkin_datetime</tt>) are not searchable and must not be used. The most useful
-stored fields are:</p>
-<ul class="simple">
-<li><tt class="docutils literal">checkout</tt> (Date) — departure date, the main use case</li>
-<li><tt class="docutils literal">checkin</tt> (Date) — arrival date</li>
-<li><tt class="docutils literal">state</tt> — <tt class="docutils literal">draft</tt>, <tt class="docutils literal">confirm</tt>, <tt class="docutils literal">onboard</tt>, <tt class="docutils literal">done</tt>, <tt class="docutils literal">cancel</tt>,
-<tt class="docutils literal">arrival_delayed</tt>, <tt class="docutils literal">departure_delayed</tt></li>
-<li><tt class="docutils literal">reservation_type</tt> — <tt class="docutils literal">normal</tt>, <tt class="docutils literal">staff</tt>, <tt class="docutils literal">out</tt></li>
-<li><tt class="docutils literal">folio_payment_state</tt> — <tt class="docutils literal">not_paid</tt>, <tt class="docutils literal">partial</tt>, <tt class="docutils literal">paid</tt>,
-<tt class="docutils literal">overpayment</tt>, <tt class="docutils literal">nothing_to_pay</tt></li>
-<li><tt class="docutils literal">invoice_status</tt> — <tt class="docutils literal">no</tt>, <tt class="docutils literal">to_invoice</tt>, <tt class="docutils literal">invoiced</tt></li>
-<li><tt class="docutils literal">nights</tt> (Integer), <tt class="docutils literal">price_total</tt> (Monetary)</li>
-<li><tt class="docutils literal">agency_id</tt>, <tt class="docutils literal">sale_channel_origin_id</tt> (Many2one)</li>
-</ul>
+used — non-stored computed fields (e.g. <tt class="docutils literal">allowed_checkout</tt>) are not searchable.
+Useful stored fields: <tt class="docutils literal">checkout</tt>, <tt class="docutils literal">checkin</tt> (Date); <tt class="docutils literal">state</tt>,
+<tt class="docutils literal">reservation_type</tt>, <tt class="docutils literal">folio_payment_state</tt>, <tt class="docutils literal">invoice_status</tt> (Selection);
+<tt class="docutils literal">nights</tt> (Integer), <tt class="docutils literal">price_total</tt> (Monetary); <tt class="docutils literal">agency_id</tt>,
+<tt class="docutils literal">sale_channel_origin_id</tt> (Many2one).</p>
+</div>
+<div class="section" id="error-message">
+<h2><a class="toc-backref" href="#toc-entry-3">Error message</a></h2>
+<p>Fill <strong>Reservation invoice block message</strong> (same form, always available) with a
+plain-words explanation of why invoicing is not allowed yet (e.g. <em>“Invoices
+cannot be validated before the guest checks out”</em>). If empty, a generic message
+is used. In both cases the error lists the reservation codes that are blocking
+the validation, so reception knows exactly which stays to look at.</p>
 </div>
 <div class="section" id="bypass-group">
-<h2><a class="toc-backref" href="#toc-entry-5">Bypass group</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-4">Bypass group</a></h2>
 <p>Users in the group <strong>PMS / Skip reservation invoice lock</strong> can post blocked
-invoices. Assign it to the managers allowed to invoice early. Consider
-restricting who can edit the property configuration so receptionists cannot
-change the domain themselves.</p>
+invoices. Assign it to the managers allowed to invoice early.</p>
 </div>
 </div>
 <div class="section" id="usage">
-<h1><a class="toc-backref" href="#toc-entry-6">Usage</a></h1>
-<p>Once a property has a block domain configured, invoices of its reservations can
+<h1><a class="toc-backref" href="#toc-entry-5">Usage</a></h1>
+<p>Once a company has a lock policy configured, invoices of its reservations can
 still be created as drafts (and printed as proforma), but posting them raises an
-error while any invoiced reservation matches the domain. When the condition is
+error while any invoiced reservation matches the condition. When the condition is
 no longer met (e.g. after checkout), the same invoice posts normally.</p>
-<div class="section" id="common-domains">
-<h2><a class="toc-backref" href="#toc-entry-7">Common domains</a></h2>
-<p>Do not invoice before checkout (main case):</p>
-<pre class="literal-block">
-[('checkout', '&gt;', context_today().strftime('%Y-%m-%d'))]
-</pre>
+<p>For the built-in policies no domain is needed: pick <em>Not before check-in</em> or
+<em>Not before check-out</em>.</p>
+<div class="section" id="custom-domain-examples">
+<h2><a class="toc-backref" href="#toc-entry-6">Custom domain examples</a></h2>
+<p>With the <em>Custom domain</em> policy you can express other rules, e.g.</p>
 <p>Do not invoice until the guest has actually checked out (state based):</p>
 <pre class="literal-block">
 [('state', '!=', 'done')]
-</pre>
-<p>Do not invoice before checkin:</p>
-<pre class="literal-block">
-[('checkin', '&gt;', context_today().strftime('%Y-%m-%d'))]
 </pre>
 <p>Do not invoice unpaid reservations:</p>
 <pre class="literal-block">
@@ -493,7 +474,7 @@ no longer met (e.g. after checkout), the same invoice posts normally.</p>
 </div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-8">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-7">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -501,15 +482,15 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-9">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-8">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-10">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-9">Authors</a></h2>
 <ul class="simple">
 <li>Commit [Sun]</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-11">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-10">Contributors</a></h2>
 <ul class="simple">
 <li>Commit [Sun] &lt;<a class="reference external" href="mailto:info&#64;commitsun.com">info&#64;commitsun.com</a>&gt;:<ul>
 <li>Jesús V. Mayor &lt;<a class="reference external" href="mailto:jesus&#64;roomdoo.com">jesus&#64;roomdoo.com</a>&gt;</li>
@@ -518,7 +499,7 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-12">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-11">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/pms_reservation_invoice_lock">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>
