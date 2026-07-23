@@ -38,6 +38,10 @@ class PmsAgencyService(Component):
         agencies = self.env["res.partner"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=agencies)
         for agency in agencies:
+            # field defined in pms_bookai (optional module)
+            exclude_payment_reminders = bool(
+                getattr(agency, "bookai_exclude_payment_reminders", False)
+            )
             result_agencies.append(
                 PmsAgencyInfo(
                     id=agency.id,
@@ -46,6 +50,7 @@ class PmsAgencyService(Component):
                         "res.partner", agency.id, "image_128"
                     ),
                     saleChannelId=agency.sale_channel_id.id,
+                    excludePaymentReminders=exclude_payment_reminders,
                 )
             )
         return result_agencies
@@ -76,11 +81,16 @@ class PmsAgencyService(Component):
         if agency:
             pms_api_check_access(user=self.env.user, records=agency)
             PmsAgencieInfo = self.env.datamodels["pms.agency.info"]
+            # field defined in pms_bookai (optional module)
+            exclude_payment_reminders = bool(
+                getattr(agency, "bookai_exclude_payment_reminders", False)
+            )
             return PmsAgencieInfo(
                 id=agency.id,
                 name=agency.name if agency.name else None,
                 imageUrl=url_image_pms_api_rest("res.partner", agency.id, "image_128"),
                 saleChannelId=agency.sale_channel_id.id,
+                excludePaymentReminders=exclude_payment_reminders,
             )
         else:
             raise MissingError(_("Agency not found"))
