@@ -1,0 +1,141 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_reservation_invoice_lock
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-23 14:54+0000\n"
+"PO-Revision-Date: 2026-07-23 14:54+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+"Language: es\n"
+
+#. module: pms_reservation_invoice_lock
+#: model_terms:ir.ui.view,arch_db:pms_reservation_invoice_lock.res_config_settings_view_form
+msgid "<span class=\"o_form_label\">Reservation invoice lock</span>"
+msgstr "<span class=\"o_form_label\">Bloqueo de facturación de reservas</span>"
+
+#. module: pms_reservation_invoice_lock
+#: model_terms:ir.ui.view,arch_db:pms_reservation_invoice_lock.res_config_settings_view_form
+msgid ""
+"Block validating reservation invoices too early. Draft\n"
+"                            invoices can still be created (proforma); down payment\n"
+"                            invoices are never blocked."
+msgstr ""
+"Impide validar demasiado pronto las facturas de reservas. Las facturas en "
+"borrador se pueden crear igualmente (proforma); las facturas de anticipo "
+"nunca se bloquean."
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields.selection,name:pms_reservation_invoice_lock.selection__res_company__reservation_invoice_block_policy__other
+msgid "Custom domain"
+msgstr "Dominio personalizado"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields.selection,name:pms_reservation_invoice_lock.selection__res_company__reservation_invoice_block_policy__disabled
+msgid "Do not block"
+msgstr "No bloquear"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_domain
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_domain
+msgid ""
+"Domain over reservations that cannot be invoiced yet (only used when the policy is 'Custom domain'). If any reservation of an invoice matches this domain, the invoice cannot be validated; all reservations must be outside the domain to post. Only stored reservation fields can be used. Use the code editor of the domain widget for date-relative conditions, e.g. not before checkout:\n"
+"[('checkout', '>', context_today().strftime('%Y-%m-%d'))]"
+msgstr ""
+"Dominio sobre reservas que aún no se pueden facturar (solo se usa con la política 'Dominio personalizado'). Si alguna reserva de la factura cumple este dominio, la factura no se puede validar; todas las reservas deben quedar fuera del dominio para poder validar. Solo se pueden usar campos almacenados de la reserva. Usa el editor de código del widget de dominio para condiciones con fecha dinámica, p. ej. no antes del checkout:\n"
+"[('checkout', '>', context_today().strftime('%Y-%m-%d'))]"
+
+#. module: pms_reservation_invoice_lock
+#: model_terms:ir.ui.view,arch_db:pms_reservation_invoice_lock.res_config_settings_view_form
+msgid "Ex.: Invoices cannot be validated before the guest checks out."
+msgstr "Ej.: No se pueden validar facturas antes de que el huésped haga el checkout."
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_message
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_message
+msgid ""
+"Message shown to the user when the lock prevents posting an invoice. Explain"
+" the rule in plain words (e.g. 'Invoices cannot be validated before the "
+"guest checks out'). If empty, a generic message is used. The blocking "
+"reservations are always listed after this message."
+msgstr ""
+"Mensaje que se muestra al usuario cuando el bloqueo impide validar una "
+"factura. Explica la regla en lenguaje claro (p. ej. 'No se pueden validar "
+"facturas antes de que el huésped haga el checkout'). Si se deja vacío, se "
+"usa un mensaje genérico. Las reservas que bloquean se listan siempre "
+"después de este mensaje."
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields.selection,name:pms_reservation_invoice_lock.selection__res_company__reservation_invoice_block_policy__checkin
+msgid "Not before check-in"
+msgstr "No antes del check-in"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields.selection,name:pms_reservation_invoice_lock.selection__res_company__reservation_invoice_block_policy__checkout
+msgid "Not before check-out"
+msgstr "No antes del check-out"
+
+#. module: pms_reservation_invoice_lock
+#: model:res.groups,name:pms_reservation_invoice_lock.group_bypass_reservation_invoice_lock
+msgid "Property Management / Skip reservation invoice lock"
+msgstr "Property Management / Saltar bloqueo de facturación de reservas"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_domain
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_domain
+msgid "Reservation invoice block domain"
+msgstr "Dominio de bloqueo de facturación de reservas"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_message
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_message
+msgid "Reservation invoice block message"
+msgstr "Mensaje de bloqueo de facturación de reservas"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_policy
+#: model:ir.model.fields,field_description:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_policy
+msgid "Reservation invoice lock"
+msgstr "Bloqueo de facturación de reservas"
+
+#. module: pms_reservation_invoice_lock
+#. odoo-python
+#: code:addons/pms_reservation_invoice_lock/models/account_move.py:0
+#, python-format
+msgid "Reservations preventing validation:"
+msgstr "Reservas que impiden la validación:"
+
+#. module: pms_reservation_invoice_lock
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_company__reservation_invoice_block_policy
+#: model:ir.model.fields,help:pms_reservation_invoice_lock.field_res_config_settings__reservation_invoice_block_policy
+msgid ""
+"When to block validating (posting) a reservation's regular invoice. 'Do not "
+"block' disables the lock; 'Not before check-in' blocks reservations arriving"
+" in the future; 'Not before check-out' blocks stays that have not departed "
+"yet; 'Custom domain' uses the domain below. Draft invoices can always be "
+"created; down payment invoices are never blocked."
+msgstr ""
+"Cuándo bloquear la validación (posteo) de la factura regular de una reserva. "
+"'No bloquear' desactiva el bloqueo; 'No antes del check-in' bloquea las "
+"reservas que llegan en el futuro; 'No antes del check-out' bloquea las "
+"estancias que aún no han salido; 'Dominio personalizado' usa el dominio de "
+"abajo. Las facturas en borrador siempre se pueden crear; las facturas de "
+"anticipo nunca se bloquean."
+
+#. module: pms_reservation_invoice_lock
+#. odoo-python
+#: code:addons/pms_reservation_invoice_lock/models/account_move.py:0
+#, python-format
+msgid ""
+"You cannot validate this invoice yet: some of the invoiced reservations do "
+"not meet the conditions set to be invoiced."
+msgstr ""
+"Todavía no puede validar esta factura: alguna de las reservas facturadas no "
+"cumple las condiciones establecidas para poder facturarse."

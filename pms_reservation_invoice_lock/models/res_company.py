@@ -11,16 +11,18 @@ class ResCompany(models.Model):
 
     reservation_invoice_block_policy = fields.Selection(
         selection=[
+            ("disabled", "Do not block"),
             ("checkin", "Not before check-in"),
             ("checkout", "Not before check-out"),
             ("other", "Custom domain"),
         ],
         string="Reservation invoice lock",
+        default="disabled",
         help="When to block validating (posting) a reservation's regular invoice. "
-        "Empty = no lock. 'Not before check-in' blocks reservations arriving in the "
-        "future; 'Not before check-out' blocks stays that have not departed yet; "
-        "'Custom domain' uses the domain below. Draft invoices can always be created; "
-        "down payment invoices are never blocked.",
+        "'Do not block' disables the lock; 'Not before check-in' blocks reservations "
+        "arriving in the future; 'Not before check-out' blocks stays that have not "
+        "departed yet; 'Custom domain' uses the domain below. Draft invoices can "
+        "always be created; down payment invoices are never blocked.",
     )
     reservation_invoice_block_domain = fields.Char(
         string="Reservation invoice block domain",
@@ -57,7 +59,7 @@ class ResCompany(models.Model):
         the lock is disabled."""
         self.ensure_one()
         policy = self.reservation_invoice_block_policy
-        if not policy:
+        if not policy or policy == "disabled":
             return []
         if policy == "checkin":
             return [("checkin", ">", fields.Date.context_today(self))]

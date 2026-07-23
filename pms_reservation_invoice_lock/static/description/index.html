@@ -404,10 +404,12 @@ regular customer invoice.</p>
 </div>
 <div class="section" id="configuration">
 <h1><a class="toc-backref" href="#toc-entry-1">Configuration</a></h1>
-<p>Open the company form (<strong>Settings ‣ Companies ‣ Companies</strong>, or <em>Settings ‣
-Users &amp; Companies ‣ Companies</em>) and set <strong>Reservation invoice lock</strong>.</p>
+<p>Go to <strong>Settings</strong>, section <strong>Reservation Invoicing</strong>, and set <strong>Reservation
+invoice lock</strong>. The setting is stored per company (use the company switcher /
+the company selector in Settings to configure each one).</p>
 <p>It is a policy selector:</p>
 <ul class="simple">
+<li><strong>Do not block</strong> — the lock is disabled for the company.</li>
 <li><strong>Not before check-in</strong> — blocks invoices of reservations whose check-in is
 still in the future (do not invoice stays that have not arrived yet).</li>
 <li><strong>Not before check-out</strong> — blocks invoices of reservations that have not
@@ -415,7 +417,6 @@ departed yet (the main use case).</li>
 <li><strong>Custom domain</strong> — shows a free domain field over <tt class="docutils literal">pms.reservation</tt> for any
 other rule.</li>
 </ul>
-<p>Leave it <strong>empty</strong> to disable the lock for the company.</p>
 <p>When an invoice is posted, the reservations it invoices are matched against the
 resulting condition: if <strong>any</strong> of them matches, posting is blocked (all
 reservations must be outside the condition to allow posting).</p>
