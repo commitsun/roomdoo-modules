@@ -165,12 +165,12 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
 
     # --- disabled / exemptions -------------------------------------------
 
-    def test_no_policy_disables_lock(self):
-        """No policy set means no lock at all."""
+    def test_disabled_policy_disables_lock(self):
+        """The 'disabled' policy means no lock at all."""
         today = datetime.date.today()
         res = self._create_reservation(today, today + datetime.timedelta(days=2))
         invoice = self._invoice_for(res)
-        self.company.reservation_invoice_block_policy = False
+        self.company.reservation_invoice_block_policy = "disabled"
         self.assertTrue(invoice._check_reservation_invoice_lock())
 
     def test_downpayment_is_exempt(self):

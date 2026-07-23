@@ -7,10 +7,10 @@
     "author": "Commit [Sun]",
     "website": "https://github.com/commitsun/roomdoo-modules",
     "license": "AGPL-3",
-    "depends": ["pms"],
+    "depends": ["account", "pms"],
     "data": [
         "security/pms_security.xml",
-        "views/res_company.xml",
+        "views/res_config_settings.xml",
     ],
     "installable": True,
     "application": False,

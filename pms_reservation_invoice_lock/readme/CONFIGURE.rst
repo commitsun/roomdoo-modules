@@ -1,16 +1,16 @@
-Open the company form (**Settings ‣ Companies ‣ Companies**, or *Settings ‣
-Users & Companies ‣ Companies*) and set **Reservation invoice lock**.
+Go to **Settings**, section **Reservation Invoicing**, and set **Reservation
+invoice lock**. The setting is stored per company (use the company switcher /
+the company selector in Settings to configure each one).
 
 It is a policy selector:
 
+* **Do not block** — the lock is disabled for the company.
 * **Not before check-in** — blocks invoices of reservations whose check-in is
   still in the future (do not invoice stays that have not arrived yet).
 * **Not before check-out** — blocks invoices of reservations that have not
   departed yet (the main use case).
 * **Custom domain** — shows a free domain field over ``pms.reservation`` for any
   other rule.
-
-Leave it **empty** to disable the lock for the company.
 
 When an invoice is posted, the reservations it invoices are matched against the
 resulting condition: if **any** of them matches, posting is blocked (all
