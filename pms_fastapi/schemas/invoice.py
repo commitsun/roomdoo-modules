@@ -347,8 +347,9 @@ class InvoiceSummary(PmsBaseModel):
     def from_account_move(cls, account_move):
         data = cls._read_odoo_record(account_move)
         data["move_type"] = ODOO_INVOICE_TYPE_REVERSE_MAP.get(account_move.move_type)
-        if account_move.partner_id:
-            data["partner_id"] = ContactId.from_res_partner(account_move.partner_id)
+        data["partner_id"] = ContactId.from_res_partner_optional(
+            account_move.partner_id
+        )
         if account_move.currency_id:
             data["_decimal_places"] = account_move.currency_id.decimal_places
             data["currency_id"] = CurrencySummary.from_res_currency(
@@ -383,7 +384,11 @@ class FolioLineInput(PmsBaseModel):
 
 
 class InvoiceInput(PmsBaseModel):
-    partner: int = Field(description="Customer id the invoice is issued to.")
+    partner: int | None = Field(
+        description=(
+            "Customer id the invoice is issued to. Null issues a simplified invoice."
+        ),
+    )
     invoiceDate: date | None = Field(
         description="Invoice date. Null lets the server set the current date.",
     )
@@ -477,8 +482,9 @@ class InvoiceDetail(PmsBaseModel):
         data["move_type"] = ODOO_INVOICE_TYPE_REVERSE_MAP.get(account_move.move_type)
         data["narration"] = account_move.narration or ""
         data["ref"] = account_move.ref or ""
-        if account_move.partner_id:
-            data["partner_id"] = ContactId.from_res_partner(account_move.partner_id)
+        data["partner_id"] = ContactId.from_res_partner_optional(
+            account_move.partner_id
+        )
         if account_move.currency_id:
             data["_decimal_places"] = account_move.currency_id.decimal_places
             data["currency_id"] = CurrencySummary.from_res_currency(
