@@ -97,6 +97,39 @@ class PaymentUpdate(PmsBaseModel):
     )
 
 
+class PaymentRefundLine(PmsBaseModel):
+    """One line of a refund operation: how much to refund from a given payment."""
+
+    paymentId: int = Field(description="Id of the original customer payment to refund.")
+    amount: CurrencyAmount = Field(
+        gt=0,
+        description="Amount to refund from this payment. Always positive; > 0.",
+    )
+
+
+class PaymentRefundInput(PmsBaseModel):
+    """Request body of POST /payments/refunds.
+
+    One operation = one single refund (one date + one method + one total amount)
+    covering N payments of the same folio.
+    """
+
+    # `datetime.date` (not the bare `date` name) to avoid the field name
+    # shadowing the type when a Field default is assigned.
+    date: datetime.date = Field(
+        description="Refund date. Applies to the whole operation."
+    )
+    paymentMethodId: int = Field(
+        description="Payment method id (the front's 'refund mode'). Must be an "
+        "outbound method; the journal is derived from it."
+    )
+    payments: list[PaymentRefundLine] = Field(
+        min_length=1,
+        description="Payments to refund with the amount per payment. Minimum 1 "
+        "item; all payments must belong to the same folio.",
+    )
+
+
 class InternalTransferInput(PmsBaseModel):
     amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
     date: date
@@ -165,6 +198,12 @@ class PaymentSummary(PmsBaseModel):
     paymentType: PaymentTypeEnum
     paymentMethod: PaymentMethodSummary | None = None
     amount: CurrencyAmount = 0.0
+    availableRefundAmount: CurrencyAmount = Field(
+        0.0,
+        description="Remaining amount available to refund: original amount minus "
+        "previous refunds. Always positive or 0; 0 for refunds, supplier payments "
+        "and internal transfers.",
+    )
     currency: CurrencySummary
     invoices: list[ReconciledInvoice] = Field(
         default_factory=list,
@@ -180,6 +219,7 @@ class PaymentSummary(PmsBaseModel):
             "ref": payment.ref or "",
             "paymentType": TRANSACTION_TYPE_TO_ENUM[payment.pms_api_transaction_type],
             "amount": abs(payment.amount),
+            "availableRefundAmount": payment.available_refund_amount,
         }
         currency = payment.currency_id or payment.company_id.currency_id
         data["_decimal_places"] = currency.decimal_places
