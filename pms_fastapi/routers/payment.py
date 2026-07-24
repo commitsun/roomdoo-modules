@@ -22,6 +22,7 @@ from odoo.addons.pms_fastapi.schemas.payment import (
     PaymentCreateType,
     PaymentInput,
     PaymentOrderField,
+    PaymentRefundInput,
     PaymentSearch,
     PaymentSummary,
     PaymentUpdate,
@@ -219,6 +220,26 @@ async def create_internal_transfer(
         .new()
         .create_internal_transfer(payload)
     )
+
+
+@pms_api_router.post(
+    "/payments/refunds",
+    response_model=PaymentSummary,
+    status_code=201,
+    tags=["payment"],
+)
+async def create_refund(
+    env: AuthenticatedEnv,
+    payload: PaymentRefundInput,
+) -> PaymentSummary:
+    """Register a refund of one or more customer payments of the same folio.
+
+    The whole operation is a single refund: one date, one payment method and one
+    customerRefund payment created for the total amount, reconciled against each
+    original payment according to the per-line breakdown of the request. A
+    payment that is already reconciled is not reconciled again; a note is left on
+    the refund instead."""
+    return env["pms_api_payment.payment_router.helper"].new().create_refund(payload)
 
 
 class PmsApiPaymentRouterHelper(models.AbstractModel):
@@ -809,3 +830,201 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             and not line.reconciled
         )
         lines.reconcile()
+
+    # -- refunds (POST /payments/refunds) --
+
+    def _not_refundable(self, detail):
+        self._problem(
+            409,
+            "/errors/payment-not-refundable",
+            _("Payment not refundable"),
+            detail,
+        )
+
+    def _resolve_refundable_payment(self, payment_id):
+        """Resolve a payment that can be refunded: it must exist, be visible to
+        the user, be a posted customer payment (not a refund/supplier payment/
+        transfer, not cancelled)."""
+        payment = self.env["account.payment"].sudo().browse(payment_id).exists()
+        if not payment:
+            self._not_found(_("Payment %s does not exist.") % payment_id)
+        try:
+            PmsBaseModel.pms_api_check_access(self.env.user, payment)
+        except (AccessError, AccessDenied):
+            self._not_found(_("Payment %s does not exist.") % payment_id)
+        if payment.pms_api_transaction_type != "customer_inbound":
+            self._not_refundable(
+                _("Payment %s is not a refundable customer payment.") % payment_id
+            )
+        if payment.state != "posted":
+            self._not_refundable(
+                _("Payment %s is cancelled and cannot be refunded.") % payment_id
+            )
+        return payment
+
+    def _ensure_refund_date_not_locked(self, company, refund_date):
+        """The refund posts (and, when applicable, reconciles) an entry dated
+        `refund_date`; a date inside a locked fiscal period is rejected, same
+        rule as cancelling a payment."""
+        lock_date = company._get_user_fiscal_lock_date()
+        if refund_date and refund_date <= lock_date:
+            self._problem(
+                409,
+                "/errors/fiscal-lock-date",
+                _("Fiscal lock date"),
+                _("The refund date falls within a locked fiscal period."),
+            )
+
+    def create_refund(self, payload: PaymentRefundInput):
+        try:
+            # Savepoint: if a later line fails validation (or posting/reconciling
+            # raises), roll back the refund and any phantom cash session already
+            # created instead of committing them alongside the error response.
+            with self.env.cr.savepoint():
+                method_line = self._resolve_payment_method_line(payload.paymentMethodId)
+                if method_line.payment_type != "outbound":
+                    self._validation_error(_("Payment method must be outbound."))
+                journal = method_line.journal_id
+                folio, origin_lines = self._resolve_refund_lines(payload)
+                self._ensure_refund_date_not_locked(journal.company_id, payload.date)
+                total = sum(amount for _payment, amount in origin_lines)
+                if journal.type == "cash":
+                    self.env[
+                        "account.bank.statement"
+                    ].sudo()._pms_ensure_open_cash_session(journal)
+                refund = self._create_refund_payment(
+                    payload, method_line, journal, folio, total
+                )
+                self._apply_refund_breakdown(refund, folio, origin_lines)
+        except _PaymentProblem as problem:
+            return problem.response
+        return PaymentSummary.from_account_payment(refund)
+
+    def _resolve_refund_lines(self, payload):
+        """Validate every line and return (folio, [(payment, amount), ...]).
+
+        All payments must belong to the same folio, and each requested amount
+        must fit the payment's available-to-refund amount."""
+        folio = None
+        origin_lines = []
+        for line in payload.payments:
+            payment = self._resolve_refundable_payment(line.paymentId)
+            line_folio = payment.folio_ids[:1]
+            if not line_folio:
+                self._not_refundable(
+                    _("Payment %s does not belong to a folio.") % line.paymentId
+                )
+            if folio is None:
+                folio = line_folio
+            elif line_folio != folio:
+                self._not_refundable(_("All payments must belong to the same folio."))
+            currency = payment.currency_id or payment.company_id.currency_id
+            if (
+                currency.compare_amounts(line.amount, payment.available_refund_amount)
+                > 0
+            ):
+                self._problem(
+                    409,
+                    "/errors/refund-exceeds-available",
+                    _("Refund exceeds available amount"),
+                    _(
+                        "The requested amount %(requested)s exceeds the amount "
+                        "available to refund %(available)s of payment %(id)s."
+                    )
+                    % {
+                        "requested": line.amount,
+                        "available": payment.available_refund_amount,
+                        "id": line.paymentId,
+                    },
+                )
+            origin_lines.append((payment, line.amount))
+        return folio, origin_lines
+
+    def _create_refund_payment(self, payload, method_line, journal, folio, total):
+        partner = folio.partner_id
+        refund = (
+            self.env["account.payment"]
+            .sudo()
+            .create(
+                {
+                    "journal_id": journal.id,
+                    "payment_method_line_id": method_line.id,
+                    "partner_id": partner.id if partner else False,
+                    "amount": total,
+                    "date": payload.date,
+                    "payment_type": "outbound",
+                    "partner_type": "customer",
+                    "folio_ids": [(6, 0, folio.ids)],
+                    "state": "draft",
+                }
+            )
+        )
+        refund.action_post()
+        return refund
+
+    def _receivable_line(self, payment):
+        """The reconcilable line of a payment move on the partner receivable
+        account (destination_account_id): a debit for the outbound refund, a
+        credit for the inbound original payment."""
+        return payment.move_id.line_ids.filtered(
+            lambda mline: mline.account_id == payment.destination_account_id
+        )[:1]
+
+    def _apply_refund_breakdown(self, refund, folio, origin_lines):
+        """Record the explicit refund->payment link per line and reconcile the
+        refund against each original payment that is still fully open. A payment
+        with any prior reconciliation is left untouched (only a chatter note),
+        for administration to handle later (credit note, loss entry...)."""
+        refund_line = self._receivable_line(refund)
+        for payment, amount in origin_lines:
+            payment_line = self._receivable_line(payment)
+            reconcilable = bool(
+                refund_line
+                and payment_line
+                and refund_line.account_id == payment_line.account_id
+                and not payment_line.matched_debit_ids
+                and not payment_line.matched_credit_ids
+            )
+            self.env["pms.payment.refund.line"].sudo().create(
+                {
+                    "refund_payment_id": refund.id,
+                    "origin_payment_id": payment.id,
+                    "amount": amount,
+                    "is_reconciled": reconcilable,
+                }
+            )
+            if reconcilable:
+                self._reconcile_refund_line(refund_line, payment_line, amount)
+            else:
+                self._note_unreconciled_refund(refund, payment, amount)
+
+    def _reconcile_refund_line(self, refund_line, payment_line, amount):
+        """Reconcile exactly `amount` of the refund against the payment by
+        creating the partial directly, so the per-line breakdown is respected
+        even for partial refunds (plain reconcile() would greedily allocate the
+        whole residual). Single-currency assumption; multi-currency is a known
+        TO-REVIEW of this provisional refund system."""
+        self.env["account.partial.reconcile"].sudo().create(
+            {
+                "debit_move_id": refund_line.id,
+                "credit_move_id": payment_line.id,
+                "amount": amount,
+                "debit_amount_currency": amount,
+                "credit_amount_currency": amount,
+            }
+        )
+
+    def _note_unreconciled_refund(self, refund, payment, amount):
+        refund.sudo().message_post(
+            body=_(
+                "Refund of %(amount)s originated from payment %(payment)s "
+                "(folio %(folio)s), which was already reconciled, so it was NOT "
+                "reconciled automatically. Administration must decide how to "
+                "settle it (credit note, loss entry...)."
+            )
+            % {
+                "amount": amount,
+                "payment": payment.name or payment.id,
+                "folio": payment.folio_ids[:1].name or "",
+            }
+        )

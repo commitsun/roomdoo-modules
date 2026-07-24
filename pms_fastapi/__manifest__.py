@@ -26,6 +26,7 @@
     },
     "data": [
         "security/pms_fastapi_groups.xml",
+        "security/ir.model.access.csv",
         "data/res_users.xml",
         "views/account_journal_views.xml",
     ],
