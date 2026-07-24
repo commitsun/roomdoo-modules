@@ -95,6 +95,19 @@ class ContactId(PmsBaseModel):
     def from_res_partner(cls, partner):
         return cls(**cls.parse_common_fields(partner))
 
+    @classmethod
+    def from_res_partner_optional(cls, partner):
+        """Serialize a partner, hiding the system 'various' simplified-invoice
+        contact. Returns None when there's no partner or it's the 'various'
+        contact, so simplified invoices/payments appear as having no contact.
+        """
+        if not partner:
+            return None
+        various = partner.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        if various and partner.commercial_partner_id.id == various.id:
+            return None
+        return cls.from_res_partner(partner)
+
 
 class ContactIdImage(ContactId):
     image: AnyHttpUrl | None = None

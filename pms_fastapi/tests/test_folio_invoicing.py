@@ -214,7 +214,35 @@ class TestFolioInvoicing(CommonTestPmsApi):
                 test_client, self._create_payload(line, customer_id=None)
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        self.assertEqual(response.json()["invoiceType"], "outInvoice")
+        data = response.json()
+        self.assertEqual(data["invoiceType"], "outInvoice")
+        # The 'various' simplified-invoice partner is an internal detail: the
+        # API must report a simplified invoice as having no contact.
+        self.assertIsNone(data["partner"])
+
+    def test_get_simplified_invoice_hides_various_partner(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            created = self._post_invoice(
+                test_client, self._create_payload(line, customer_id=None)
+            )
+            self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.text)
+            invoice_id = created.json()["id"]
+            # The stored move is billed to the 'various' partner...
+            various = self.env.ref("pms.various_pms_partner")
+            self.assertEqual(
+                self.env["account.move"].browse(invoice_id).partner_id, various
+            )
+            # ...but neither the detail nor the list endpoint leaks it.
+            detail = test_client.get(f"/invoices/{invoice_id}")
+            self.assertEqual(detail.status_code, status.HTTP_200_OK, detail.text)
+            self.assertIsNone(detail.json()["partner"])
+            listed = test_client.get("/invoices")
+            self.assertEqual(listed.status_code, status.HTTP_200_OK, listed.text)
+        row = next(item for item in listed.json()["items"] if item["id"] == invoice_id)
+        self.assertIsNone(row["partner"])
 
     # ------------------------------------------------------------------
     # POST /folios/invoices — validation branches
@@ -618,6 +646,23 @@ class TestFolioInvoicing(CommonTestPmsApi):
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/invoicing-validation-failed")
+
+    def test_edit_invoice_to_simplified_with_null_partner(self):
+        # Editing with partner=null converts the invoice to simplified (billed
+        # to the internal 'various' partner) and the response hides it.
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=1)
+            payload = self._edit_payload(line, quantity=1)
+            payload["partner"] = None
+            response = test_client.put(f"/invoices/{invoice_id}", json=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertIsNone(response.json()["partner"])
+        various = self.env.ref("pms.various_pms_partner")
+        self.assertEqual(
+            self.env["account.move"].browse(invoice_id).partner_id, various
+        )
 
     # ------------------------------------------------------------------
     # Transaction safety — a failure after a mutation must roll back

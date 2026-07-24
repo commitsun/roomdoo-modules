@@ -155,7 +155,12 @@ class FolioSummary(PmsBaseModel):
             lambda p: p.id
         )
         filtered_data["payers"] = [
-            ContactIdImage.from_res_partner(partner) for partner in payer_partners
+            c
+            for c in (
+                ContactIdImage.from_res_partner_optional(partner)
+                for partner in payer_partners
+            )
+            if c
         ]
 
         return cls(**filtered_data)
@@ -223,8 +228,9 @@ class FolioDetail(PmsBaseModel):
     @classmethod
     def from_pms_folio(cls, folio):
         filtered_data = cls._read_odoo_record(folio)
-        if folio.partner_id:
-            filtered_data["customer"] = ContactId.from_res_partner(folio.partner_id)
+        filtered_data["customer"] = ContactId.from_res_partner_optional(
+            folio.partner_id
+        )
         if folio.currency_id:
             filtered_data["_decimal_places"] = folio.currency_id.decimal_places
             filtered_data["currency"] = CurrencySummary.from_res_currency(
@@ -252,7 +258,12 @@ class FolioDetail(PmsBaseModel):
             lambda p: p.id
         )
         filtered_data["payers"] = [
-            ContactIdImage.from_res_partner(partner) for partner in payer_partners
+            c
+            for c in (
+                ContactIdImage.from_res_partner_optional(partner)
+                for partner in payer_partners
+            )
+            if c
         ]
         total_base_to_invoice = folio.untaxed_amount_to_invoice
         tax_to_invoice = sum(

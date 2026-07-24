@@ -720,6 +720,8 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
         return properties
 
     def _edit_resolve_partner(self, payload, pms_property):
+        if payload.partner is None:
+            return self.env.ref("pms.various_pms_partner")
         partner = self.env["res.partner"].sudo().browse(payload.partner).exists()
         if not partner:
             self._raise_problem(
