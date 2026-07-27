@@ -1291,6 +1291,24 @@ msgstr "Estado de ordenación"
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
+msgid ""
+"Taxes are configured as not included in the price. Contact support to "
+"configure them correctly."
+msgstr ""
+"Impuestos configurados sin incluir en el precio. Contacte con soporte para "
+"configurarlo correctamente"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Taxes not included in price"
+msgstr "Impuestos no incluidos en el precio"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
 msgid "The contact has no fiscal identification number configured."
 msgstr "El contacto no tiene configurado un número de identificación fiscal."
 

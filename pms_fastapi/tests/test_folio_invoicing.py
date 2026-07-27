@@ -87,6 +87,17 @@ class TestFolioInvoicing(CommonTestPmsApi):
         cls.customer_no_id = cls.env["res.partner"].create(
             {"firstname": "No", "lastname": "Fiscal"}
         )
+        # The invoicing API is built on the assumption that taxes are included
+        # in the price, so pin the room product to a price-included sale tax:
+        # the happy paths must exercise the supported configuration. The
+        # price-excluded guard is covered by its own tests, which flip this
+        # same tax to price-excluded.
+        cls.sale_tax = cls.env["account.tax"].search(
+            [("type_tax_use", "=", "sale"), ("company_id", "=", company.id)],
+            limit=1,
+        )
+        cls.sale_tax.price_include = True
+        cls.room_type.product_id.taxes_id = [Command.set(cls.sale_tax.ids)]
 
     # -- helpers -------------------------------------------------------
     def _confirmed_folio(self, nights=2, days_ahead=0, price=100.0):
@@ -758,3 +769,43 @@ class TestFolioInvoicing(CommonTestPmsApi):
             marker,
             "The write done before the post failure must be rolled back.",
         )
+
+    # ------------------------------------------------------------------
+    # Price-excluded taxes safeguard — a setup error we refuse to invoice
+    # ------------------------------------------------------------------
+    def test_create_invoice_rejects_price_excluded_tax(self):
+        self.sale_tax.price_include = False
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        self.assertTrue(
+            line.tax_ids and not any(t.price_include for t in line.tax_ids),
+            "Test setup must leave the line with a price-excluded tax.",
+        )
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = self._post_invoice(
+                test_client,
+                self._create_payload(line, customer_id=self.customer.id),
+            )
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/taxes-price-excluded")
+
+    def test_edit_invoice_rejects_price_excluded_tax(self):
+        # The invoice is created while the tax is price-included (happy path);
+        # flipping the tax afterwards makes the edit hit the guard, so nothing
+        # is edited: the same folio line still references the now-excluded tax.
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=2)
+            self.sale_tax.price_include = False
+            response = test_client.put(
+                f"/invoices/{invoice_id}",
+                json=self._edit_payload(line, quantity=1),
+            )
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/taxes-price-excluded")
