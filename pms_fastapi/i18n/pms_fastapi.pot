@@ -1294,6 +1294,22 @@ msgstr ""
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
+msgid ""
+"Taxes are configured as not included in the price. Contact support to "
+"configure them correctly."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "Taxes not included in price"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
 msgid "The contact has no fiscal identification number configured."
 msgstr ""
 

@@ -607,6 +607,9 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                         ),
                     )
                 sale_lines = self._edit_resolve_sale_lines(payload)
+                tax_problem = self._price_excluded_taxes_problem(sale_lines.tax_ids)
+                if tax_problem:
+                    raise _ApiProblem(tax_problem)
                 downpayment_lines = self._edit_resolve_downpayment_lines(
                     payload, sale_lines
                 )
@@ -1036,6 +1039,27 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 }
             ]
         return []
+
+    def _price_excluded_taxes_problem(self, taxes):
+        """Return an RFC 9457 problem if any tax is not included in the price.
+
+        The whole invoicing flow assumes price-included taxes. A tax configured
+        as price-excluded is a setup error we refuse to invoice against rather
+        than silently produce wrong totals. Returns the built problem dict so
+        each router can raise it with its own problem subclass, or None when
+        every tax is price-included. Shared by the create and edit flows.
+        """
+        if not taxes.filtered(lambda t: not t.price_include):
+            return None
+        return build_problem(
+            422,
+            "/errors/taxes-price-excluded",
+            _("Taxes not included in price"),
+            _(
+                "Taxes are configured as not included in the price. Contact "
+                "support to configure them correctly."
+            ),
+        )
 
     # -- Invoice report helpers --
 

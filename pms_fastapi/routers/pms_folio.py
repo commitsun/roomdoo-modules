@@ -384,6 +384,12 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
             # cache on rollback, so the dispatcher's final flush is a no-op.
             with self.env.cr.savepoint():
                 sale_lines = self._resolve_sale_lines(payload)
+                invoice_helper = self.env["pms_api_invoice.invoice_router.helper"].new()
+                tax_problem = invoice_helper._price_excluded_taxes_problem(
+                    sale_lines.tax_ids
+                )
+                if tax_problem:
+                    raise _InvoiceCreationProblem(tax_problem)
                 downpayment_lines = self._resolve_downpayment_lines(payload, sale_lines)
                 pms_property = self._resolve_property(sale_lines)
                 self._check_quantities(payload, sale_lines)
