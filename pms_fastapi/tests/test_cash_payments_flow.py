@@ -81,9 +81,8 @@ class TestCashAndPaymentsFlow(CommonTestPmsApi):
 
             # 2. Register a customer payment of 120 on the cash journal.
             paid = test_client.post(
-                "/payments",
+                "/customer-payments",
                 json={
-                    "paymentType": "customerPayment",
                     "amount": 120.0,
                     "date": "2026-03-04",
                     "paymentMethodId": self.cash_inbound.id,

@@ -18,14 +18,9 @@ from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
 from odoo.addons.pms_fastapi.schemas.payment import (
     PAYMENT_ORDER_MAPPING,
-    InternalTransferInput,
-    PaymentCreateType,
-    PaymentInput,
     PaymentOrderField,
-    PaymentRefundInput,
     PaymentSearch,
     PaymentSummary,
-    PaymentUpdate,
     ReportFormatEnum,
 )
 from odoo.addons.pms_fastapi.utils import (
@@ -40,15 +35,14 @@ PaymentOrderDependency = create_order_dependency(
 
 PAYMENT_REPORT_MAX_RECORDS = 5000
 
-# (payment_type, partner_type) per creatable payment type.
-_CREATE_TYPE_FIELDS = {
-    PaymentCreateType.customerPayment: ("inbound", "customer"),
-    PaymentCreateType.supplierPayment: ("outbound", "supplier"),
-}
 
+class PaymentProblem(ApiProblem):
+    """Problem raised by any of the payment helpers, caught by their callers.
 
-class _PaymentProblem(ApiProblem):
-    """Payment-router problem, caught by this router's local handlers."""
+    Shared by the ledger router and the per-type entity routers
+    (customer_payment, supplier_payment, internal_transfer), which all inherit
+    the base helper below.
+    """
 
 
 @pms_api_router.get(
@@ -84,7 +78,11 @@ async def get_payment(
     env: AuthenticatedEnv,
     payment_id: int,
 ) -> PaymentSummary:
-    """Get a single payment by id (same model as the listing)."""
+    """Get a single payment of any type, as it appears in the listing.
+
+    Useful when only the id is known (a deep link, a refresh): the `paymentType`
+    of the response tells which entity holds its full representation
+    (/customer-payments, /supplier-payments, /internal-transfers)."""
     return env["pms_api_payment.payment_router.helper"].new().get(payment_id)
 
 
@@ -154,7 +152,7 @@ async def cancel_payment(
     env: AuthenticatedEnv,
     payment_id: int,
 ) -> PaymentSummary:
-    """Cancel a registered payment.
+    """Cancel a registered payment of any type.
 
     Cancelling is a state transition (not a deletion): the related accounting
     entry is reversed. It is blocked when the payment date falls within a
@@ -162,87 +160,15 @@ async def cancel_payment(
     return env["pms_api_payment.payment_router.helper"].new().cancel_payment(payment_id)
 
 
-@pms_api_router.patch(
-    "/payments/{payment_id}",
-    response_model=PaymentSummary,
-    tags=["payment"],
-)
-async def update_payment(
-    env: AuthenticatedEnv,
-    payment_id: int,
-    payload: PaymentUpdate,
-) -> PaymentSummary:
-    """Partially update a registered payment (amount, date, payment method).
-
-    Only the modified fields are sent. If the payment is reconciled against an
-    invoice, the reconciliation is recomputed automatically when the amount
-    changes."""
-    return (
-        env["pms_api_payment.payment_router.helper"]
-        .new()
-        .update_payment(payment_id, payload)
-    )
-
-
-@pms_api_router.post(
-    "/payments",
-    response_model=PaymentSummary,
-    status_code=201,
-    tags=["payment"],
-)
-async def create_payment(
-    env: AuthenticatedEnv,
-    payload: PaymentInput,
-) -> PaymentSummary:
-    """Register a manual customer payment or supplier payment.
-
-    The journal is derived from the payment method (paymentMethodId). Customer
-    payments may carry a folio or invoice context (mutually exclusive)."""
-    return env["pms_api_payment.payment_router.helper"].new().create_payment(payload)
-
-
-@pms_api_router.post(
-    "/internal-transfers",
-    response_model=PaymentSummary,
-    status_code=201,
-    tags=["payment"],
-)
-async def create_internal_transfer(
-    env: AuthenticatedEnv,
-    payload: InternalTransferInput,
-) -> PaymentSummary:
-    """Register an internal transfer between two payment methods.
-
-    Takes an outbound origin and an inbound destination payment method (their
-    journals must differ); the journals are derived from them."""
-    return (
-        env["pms_api_payment.payment_router.helper"]
-        .new()
-        .create_internal_transfer(payload)
-    )
-
-
-@pms_api_router.post(
-    "/payments/refunds",
-    response_model=PaymentSummary,
-    status_code=201,
-    tags=["payment"],
-)
-async def create_refund(
-    env: AuthenticatedEnv,
-    payload: PaymentRefundInput,
-) -> PaymentSummary:
-    """Register a refund of one or more customer payments of the same folio.
-
-    The whole operation is a single refund: one date, one payment method and one
-    customerRefund payment created for the total amount, reconciled against each
-    original payment according to the per-line breakdown of the request. A
-    payment that is already reconciled is not reconciled again; a note is left on
-    the refund instead."""
-    return env["pms_api_payment.payment_router.helper"].new().create_refund(payload)
-
-
 class PmsApiPaymentRouterHelper(models.AbstractModel):
+    """Base helper of every payment router.
+
+    Holds what does not depend on the payment type: the listing and the reports
+    of the cross-type ledger, the cancellation, and the shared building blocks
+    the per-type entity helpers reuse (record resolution, payment method
+    resolution, cash sessions, posted-payment edition).
+    """
+
     _name = "pms_api_payment.payment_router.helper"
     _description = "PMS API Payment Router Helper"
 
@@ -251,6 +177,20 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         # account.payment records (inbound + outbound) and BOTH legs are
         # returned, replicating the legacy API behaviour (no dedup).
         return [("state", "=", "posted")]
+
+    def _get_record_domain(self):
+        """Domain narrowing the resolution of a single payment by id.
+
+        Empty here: the ledger addresses payments of any type. Each entity
+        helper overrides it with its own type, so that reaching a payment of
+        another type through it answers 404 instead of a representation with
+        half its fields empty.
+
+        Kept apart from `_get_domain_adapter()` on purpose: that one also
+        filters `state = posted` (the listing/report scope) and applying it to
+        item resolution would turn an already cancelled payment into a 404.
+        """
+        return []
 
     @property
     def model_adapter(self) -> FilteredModelAdapter[AccountPayment]:
@@ -267,25 +207,35 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             context=params.to_odoo_context(self.env),
         )
 
-    # -- creation (ported from pms_api_rest pms.transaction.service /
-    #    pms.folio.do_payment) --
+    # -- problems --
 
     @staticmethod
     def _problem(status_code, type_, title, detail):
-        raise _PaymentProblem(build_problem(status_code, type_, title, detail))
+        raise PaymentProblem(build_problem(status_code, type_, title, detail))
 
     def _not_found(self, detail):
         self._problem(404, "/errors/record-not-found", _("Record not found"), detail)
 
+    def _validation_error(self, detail):
+        self._problem(422, "/errors/validation-error", _("Validation error"), detail)
+
+    # -- record resolution --
+
     def get(self, payment_id):
         try:
             payment = self._resolve_payment_or_404(payment_id)
-        except _PaymentProblem as problem:
+        except PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
 
     def _resolve_payment_or_404(self, payment_id):
-        payment = self.env["account.payment"].sudo().browse(payment_id).exists()
+        payment = (
+            self.env["account.payment"]
+            .sudo()
+            .browse(payment_id)
+            .exists()
+            .filtered_domain(self._get_record_domain())
+        )
         if not payment:
             self._problem(
                 404,
@@ -304,10 +254,41 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             )
         return payment
 
+    def _resolve_partner(self, partner_id):
+        partner = self.env["res.partner"].sudo().browse(partner_id).exists()
+        if not partner:
+            self._not_found(_("Partner %s does not exist.") % partner_id)
+        return partner
+
+    def _resolve_payment_method_line(self, payment_method_id):
+        line = (
+            self.env["account.payment.method.line"]
+            .sudo()
+            .browse(payment_method_id)
+            .exists()
+        )
+        if not line:
+            self._not_found(_("Payment method %s does not exist.") % payment_method_id)
+        PmsBaseModel.pms_api_check_access(self.env.user, line.journal_id)
+        return line
+
+    def _resolve_directed_payment_method_line(self, payment_method_id, payment_type):
+        """Resolve a payment method line that must move the money in a given
+        direction (inbound to collect, outbound to pay out)."""
+        line = self._resolve_payment_method_line(payment_method_id)
+        if line.payment_type != payment_type:
+            detail = (
+                _("Payment method %s does not accept incoming payments.")
+                if payment_type == "inbound"
+                else _("Payment method %s does not accept outgoing payments.")
+            )
+            self._validation_error(detail % payment_method_id)
+        return line
+
     def get_payment_pdf(self, payment_id):
         try:
             payment = self._resolve_payment_or_404(payment_id)
-        except _PaymentProblem as problem:
+        except PaymentProblem as problem:
             return problem.response
         content, _report_type = (
             self.env["ir.actions.report"]
@@ -425,6 +406,8 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             },
         )
 
+    # -- cancellation (POST /payments/{id}/cancel) --
+
     def _ensure_not_locked(self, payments):
         """A payment whose date falls within a locked fiscal period cannot be
         cancelled: resetting it to draft would modify a locked entry. The
@@ -458,149 +441,17 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             # draft first (un-reconciles and reopens the entry), then cancel.
             legs.action_draft()
             legs.action_cancel()
-        except _PaymentProblem as problem:
+        except PaymentProblem as problem:
             return problem.response
         return PaymentSummary.from_account_payment(payment)
 
-    def _validation_error(self, detail):
-        self._problem(422, "/errors/validation-error", _("Validation error"), detail)
+    # -- creation building blocks, shared by the entity helpers --
 
-    def _resolve_partner(self, partner_id):
-        partner = self.env["res.partner"].sudo().browse(partner_id).exists()
-        if not partner:
-            self._not_found(_("Partner %s does not exist.") % partner_id)
-        return partner
-
-    def create_payment(self, payload: PaymentInput):
-        try:
-            # Savepoint so that if a later step raises (e.g. a cash journal
-            # auto-opens a session and then the folio/invoice resolution
-            # fails), the already-created records — the phantom empty cash
-            # session in particular — are rolled back instead of committed
-            # alongside the error response.
-            with self.env.cr.savepoint():
-                if payload.folioId and payload.invoiceId:
-                    self._validation_error(
-                        _("folioId and invoiceId are mutually exclusive.")
-                    )
-                line = (
-                    self.env["account.payment.method.line"]
-                    .sudo()
-                    .browse(payload.paymentMethodId)
-                    .exists()
-                )
-                if not line:
-                    self._not_found(
-                        _("Payment method %s does not exist.") % payload.paymentMethodId
-                    )
-                journal = line.journal_id
-                PmsBaseModel.pms_api_check_access(self.env.user, journal)
-                payment_type, partner_type = _CREATE_TYPE_FIELDS[payload.paymentType]
-                partner = (
-                    self._resolve_partner(payload.partnerId)
-                    if payload.partnerId
-                    else self.env["res.partner"]
-                )
-                if (
-                    payload.paymentType == PaymentCreateType.supplierPayment
-                    and not partner
-                ):
-                    self._validation_error(_("supplierPayment requires partnerId."))
-
-                if journal.type == "cash":
-                    self.env[
-                        "account.bank.statement"
-                    ].sudo()._pms_ensure_open_cash_session(journal)
-
-                if payload.paymentType == PaymentCreateType.customerPayment and (
-                    payload.folioId or payload.invoiceId
-                ):
-                    payment = self._create_context_payment(payload, line, partner)
-                else:
-                    payment = self._create_simple_payment(
-                        payload, line, partner, payment_type, partner_type
-                    )
-        except _PaymentProblem as problem:
-            return problem.response
-        return PaymentSummary.from_account_payment(payment)
-
-    def _create_context_payment(self, payload, line, partner):
-        """Register a customer payment from a folio or an invoice context.
-
-        When the context is an invoice we know exactly which document the
-        payment settles, so we register it against the invoice and let it
-        reconcile deterministically. When it is a folio (no specific invoice)
-        we fall back to the folio-level `do_payment`, whose reconciliation is
-        best-effort (see pms_autoreconcile_folio_payments)."""
-        if payload.invoiceId:
-            return self._create_invoice_payment(payload, line)
-        return self._create_folio_payment(payload, line, partner)
-
-    def _resolve_folio(self, payload):
-        folio = self.env["pms.folio"].sudo().browse(payload.folioId).exists()
-        if not folio:
-            self._not_found(_("Folio %s does not exist.") % payload.folioId)
-        PmsBaseModel.pms_api_check_access(self.env.user, folio)
-        return folio
-
-    def _resolve_context_invoice(self, payload):
-        invoice = self.env["account.move"].sudo().browse(payload.invoiceId).exists()
-        if not invoice:
-            self._not_found(_("Invoice %s does not exist.") % payload.invoiceId)
-        folio = invoice.folio_ids[:1]
-        if not folio:
-            self._validation_error(
-                _("Invoice %s has no associated folio.") % payload.invoiceId
+    def _ensure_open_cash_session(self, journal):
+        if journal.type == "cash":
+            self.env["account.bank.statement"].sudo()._pms_ensure_open_cash_session(
+                journal
             )
-        # Access is granted through the folio, as in the folio-context path.
-        PmsBaseModel.pms_api_check_access(self.env.user, folio)
-        if invoice.state != "posted":
-            self._validation_error(
-                _("Invoice %s is not posted and cannot be paid.") % payload.invoiceId
-            )
-        return invoice
-
-    def _create_folio_payment(self, payload, line, partner):
-        folio = self._resolve_folio(payload)
-        partner = partner or folio.partner_id
-        before = folio.payment_ids
-        self.env["pms.folio"].sudo().do_payment(
-            line,
-            self.env.user,
-            payload.amount,
-            folio,
-            partner=partner,
-            date=payload.date,
-            ref=payload.reference,
-        )
-        return folio.payment_ids - before
-
-    def _create_invoice_payment(self, payload, line):
-        """Register the payment directly against the invoice.
-
-        `account.payment.register` creates, posts and reconciles the payment
-        against the invoice's receivable line in one shot. pms then recomputes
-        `folio_ids` from `reconciled_invoice_ids`
-        (account_payment._compute_folio_ids), so the folio link comes for free
-        and the payment is left properly reconciled — unlike the folio-level
-        `do_payment`, whose autoreconcile is heuristic and skips ambiguous
-        matches."""
-        invoice = self._resolve_context_invoice(payload)
-        vals = {
-            "amount": payload.amount,
-            "payment_date": payload.date,
-            "journal_id": line.journal_id.id,
-            "payment_method_line_id": line.id,
-        }
-        if payload.reference:
-            vals["communication"] = payload.reference
-        return (
-            self.env["account.payment.register"]
-            .sudo()
-            .with_context(active_model="account.move", active_ids=invoice.ids)
-            .create(vals)
-            ._create_payments()
-        )
 
     def _create_simple_payment(
         self, payload, line, partner, payment_type, partner_type
@@ -625,98 +476,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         payment.action_post()
         return payment
 
-    def create_internal_transfer(self, payload: InternalTransferInput):
-        try:
-            # Payment method lines only exist on bank/cash journals, so resolving
-            # the journal from the line implicitly guarantees a valid journal type.
-            origin_line = self._resolve_payment_method_line(
-                payload.originPaymentMethodId
-            )
-            destination_line = self._resolve_payment_method_line(
-                payload.destinationPaymentMethodId
-            )
-            origin = origin_line.journal_id
-            destination = destination_line.journal_id
-            if origin == destination:
-                self._validation_error(
-                    _("Origin and destination journals cannot be the same.")
-                )
-            if origin_line.payment_type != "outbound":
-                self._validation_error(_("Origin payment method must be outbound."))
-            if destination_line.payment_type != "inbound":
-                self._validation_error(_("Destination payment method must be inbound."))
-            statement_model = self.env["account.bank.statement"].sudo()
-            statement_model._pms_ensure_open_cash_session(origin)
-            statement_model._pms_ensure_open_cash_session(destination)
-            payment = (
-                self.env["account.payment"]
-                .sudo()
-                .create(
-                    {
-                        "amount": payload.amount,
-                        "journal_id": origin.id,
-                        "payment_method_line_id": origin_line.id,
-                        "date": payload.date,
-                        "partner_id": origin.company_id.partner_id.id,
-                        "ref": payload.reason,
-                        "payment_type": "outbound",
-                        "partner_type": "customer",
-                        "is_internal_transfer": True,
-                        "destination_journal_id": destination.id,
-                        "partner_bank_id": destination.bank_account_id.id,
-                    }
-                )
-            )
-            payment.action_post()
-            self._apply_destination_method_line(payment, destination_line)
-        except _PaymentProblem as problem:
-            return problem.response
-        return PaymentSummary.from_account_payment(payment)
-
-    def _apply_destination_method_line(self, payment, destination_line):
-        """Force the chosen inbound method line onto the auto-created counterpart.
-
-        Odoo pairs the transfer on post and assigns the destination journal's
-        default inbound line. When the front picked a different one, reassign it.
-        An internal transfer only reconciles its two legs against each other (no
-        invoice/folio reconciliation), so re-posting the counterpart is contained:
-        we just re-reconcile the pair afterwards (same as _update_internal_transfer).
-        """
-        counterpart = payment.paired_internal_transfer_payment_id
-        if counterpart.payment_method_line_id == destination_line:
-            return
-        counterpart.action_draft()
-        counterpart.write({"payment_method_line_id": destination_line.id})
-        counterpart.action_post()
-        # Re-posting won't re-pair (the pairing already exists), so reconcile the
-        # two transfer lines again.
-        lines = (payment.move_id.line_ids + counterpart.move_id.line_ids).filtered(
-            lambda line: line.account_id == payment.destination_account_id
-            and not line.reconciled
-        )
-        lines.reconcile()
-
-    # -- partial update (PATCH /payments/{id}) --
-
-    def update_payment(self, payment_id, payload: PaymentUpdate):
-        try:
-            payment = self.env["account.payment"].sudo().browse(payment_id).exists()
-            if not payment:
-                self._not_found(_("Payment %s does not exist.") % payment_id)
-            try:
-                PmsBaseModel.pms_api_check_access(self.env.user, payment)
-            except (AccessError, AccessDenied):
-                self._not_found(_("Payment %s does not exist.") % payment_id)
-            self._ensure_not_bank_matched(payment)
-            if payment.is_internal_transfer:
-                self._update_internal_transfer(payment, payload)
-            else:
-                # A journal change recreates the record (see below), so use the
-                # returned payment for the response.
-                payment = self._update_simple_payment(payment, payload)
-        except _PaymentProblem as problem:
-            return problem.response
-        return PaymentSummary.from_account_payment(payment)
+    # -- edition building blocks, shared by the entity helpers --
 
     def _ensure_not_bank_matched(self, payment):
         """A payment reconciled against a bank statement cannot be modified:
@@ -734,18 +494,6 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
                 ),
             )
 
-    def _resolve_payment_method_line(self, payment_method_id):
-        line = (
-            self.env["account.payment.method.line"]
-            .sudo()
-            .browse(payment_method_id)
-            .exists()
-        )
-        if not line:
-            self._not_found(_("Payment method %s does not exist.") % payment_method_id)
-        PmsBaseModel.pms_api_check_access(self.env.user, line.journal_id)
-        return line
-
     def _common_update_vals(self, payment, payload):
         """Vals for the fields shared by every payment type (amount, date)."""
         vals = {}
@@ -759,272 +507,30 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
             vals["date"] = payload.date
         return vals
 
-    def _ensure_open_cash_session(self, journal):
-        if journal.type == "cash":
-            self.env["account.bank.statement"].sudo()._pms_ensure_open_cash_session(
-                journal
-            )
-
-    def _replace_payment_for_journal_change(self, payment, vals, journal):
-        """Odoo forbids changing the journal of an already-posted payment, so a
-        payment-method change that moves to another journal cancels the original
-        and recreates it (same approach as the legacy API). The id changes."""
-        self._ensure_open_cash_session(journal)
-        payment.action_draft()
-        payment.action_cancel()
-        new_payment = payment.copy({"folio_ids": [(6, 0, payment.folio_ids.ids)]})
-        new_payment.write(dict(vals, journal_id=journal.id))
-        new_payment.action_post()
-        return new_payment
-
-    def _update_simple_payment(self, payment, payload):
+    def _partner_payment_update_vals(self, payment, payload):
+        """Vals of a payment that has a contact (customer or supplier, as
+        opposed to an internal transfer): the common ones plus contact and
+        reference."""
         vals = self._common_update_vals(payment, payload)
-        new_journal = None
-        if payload.paymentMethodId is not None:
-            line = self._resolve_payment_method_line(payload.paymentMethodId)
-            if line.id != payment.payment_method_line_id.id:
-                vals["payment_method_line_id"] = line.id
-                if line.journal_id.id != payment.journal_id.id:
-                    new_journal = line.journal_id
-        if not vals:
-            return payment
-        if new_journal:
-            payment = self._replace_payment_for_journal_change(
-                payment, vals, new_journal
-            )
-        else:
-            self._ensure_open_cash_session(payment.journal_id)
-            payment.action_draft()
-            payment.write(vals)
-            payment.action_post()
-        # Re-posting posts the payment's own entry, not the invoice's, so the
-        # folio<->invoice reconciliation is recomputed explicitly (the same
-        # entry point do_payment uses).
-        for move in payment.folio_ids.move_ids:
-            move.sudo()._autoreconcile_folio_payments()
-        return payment
+        if payload.partnerId is not None and payload.partnerId != payment.partner_id.id:
+            vals["partner_id"] = self._resolve_partner(payload.partnerId).id
+        if payload.reference is not None and payload.reference != (payment.ref or ""):
+            vals["ref"] = payload.reference
+        return vals
 
-    def _update_internal_transfer(self, payment, payload):
-        # An internal transfer has two journals (origin + destination), so the
-        # single 'payment mode' doesn't apply to it.
-        if payload.paymentMethodId is not None:
-            self._validation_error(
-                _("paymentMethodId does not apply to an internal transfer.")
-            )
-        # Both legs share amount and date; edit them together to keep the pair
-        # consistent (they are reconciled against each other).
-        counterpart = payment.paired_internal_transfer_payment_id
-        legs = payment + counterpart
-        vals = self._common_update_vals(payment, payload)
+    def _update_partner_payment(self, payment, payload):
+        """Apply a customer/supplier payment edition in place.
+
+        The payment method is deliberately not editable (it is not part of the
+        update schemas): changing it to a method of another account is
+        impossible on an accounting entry that has been posted once, and faking
+        it by cancelling and re-creating the payment would change the id of the
+        resource a PATCH is supposed to be editing. Such a correction is a
+        cancellation plus a new registration, and the API says so."""
+        vals = self._partner_payment_update_vals(payment, payload)
         if not vals:
             return
-        for leg in legs:
-            self._ensure_open_cash_session(leg.journal_id)
-        legs.action_draft()
-        legs.write(vals)
-        legs.action_post()
-        # action_post won't re-pair (the pairing already exists), so the two
-        # transfer lines stay unreconciled until we reconcile them again.
-        lines = (payment.move_id.line_ids + counterpart.move_id.line_ids).filtered(
-            lambda line: line.account_id == payment.destination_account_id
-            and not line.reconciled
-        )
-        lines.reconcile()
-
-    # -- refunds (POST /payments/refunds) --
-
-    def _not_refundable(self, detail):
-        self._problem(
-            409,
-            "/errors/payment-not-refundable",
-            _("Payment not refundable"),
-            detail,
-        )
-
-    def _resolve_refundable_payment(self, payment_id):
-        """Resolve a payment that can be refunded: it must exist, be visible to
-        the user, be a posted customer payment (not a refund/supplier payment/
-        transfer, not cancelled)."""
-        payment = self.env["account.payment"].sudo().browse(payment_id).exists()
-        if not payment:
-            self._not_found(_("Payment %s does not exist.") % payment_id)
-        try:
-            PmsBaseModel.pms_api_check_access(self.env.user, payment)
-        except (AccessError, AccessDenied):
-            self._not_found(_("Payment %s does not exist.") % payment_id)
-        if payment.pms_api_transaction_type != "customer_inbound":
-            self._not_refundable(
-                _("Payment %s is not a refundable customer payment.") % payment_id
-            )
-        if payment.state != "posted":
-            self._not_refundable(
-                _("Payment %s is cancelled and cannot be refunded.") % payment_id
-            )
-        return payment
-
-    def _ensure_refund_date_not_locked(self, company, refund_date):
-        """The refund posts (and, when applicable, reconciles) an entry dated
-        `refund_date`; a date inside a locked fiscal period is rejected, same
-        rule as cancelling a payment."""
-        lock_date = company._get_user_fiscal_lock_date()
-        if refund_date and refund_date <= lock_date:
-            self._problem(
-                409,
-                "/errors/fiscal-lock-date",
-                _("Fiscal lock date"),
-                _("The refund date falls within a locked fiscal period."),
-            )
-
-    def create_refund(self, payload: PaymentRefundInput):
-        try:
-            # Savepoint: if a later line fails validation (or posting/reconciling
-            # raises), roll back the refund and any phantom cash session already
-            # created instead of committing them alongside the error response.
-            with self.env.cr.savepoint():
-                method_line = self._resolve_payment_method_line(payload.paymentMethodId)
-                if method_line.payment_type != "outbound":
-                    self._validation_error(_("Payment method must be outbound."))
-                journal = method_line.journal_id
-                folio, origin_lines = self._resolve_refund_lines(payload)
-                self._ensure_refund_date_not_locked(journal.company_id, payload.date)
-                total = sum(amount for _payment, amount in origin_lines)
-                if journal.type == "cash":
-                    self.env[
-                        "account.bank.statement"
-                    ].sudo()._pms_ensure_open_cash_session(journal)
-                refund = self._create_refund_payment(
-                    payload, method_line, journal, folio, total
-                )
-                self._apply_refund_breakdown(refund, folio, origin_lines)
-        except _PaymentProblem as problem:
-            return problem.response
-        return PaymentSummary.from_account_payment(refund)
-
-    def _resolve_refund_lines(self, payload):
-        """Validate every line and return (folio, [(payment, amount), ...]).
-
-        All payments must belong to the same folio, and each requested amount
-        must fit the payment's available-to-refund amount."""
-        folio = None
-        origin_lines = []
-        for line in payload.payments:
-            payment = self._resolve_refundable_payment(line.paymentId)
-            line_folio = payment.folio_ids[:1]
-            if not line_folio:
-                self._not_refundable(
-                    _("Payment %s does not belong to a folio.") % line.paymentId
-                )
-            if folio is None:
-                folio = line_folio
-            elif line_folio != folio:
-                self._not_refundable(_("All payments must belong to the same folio."))
-            currency = payment.currency_id or payment.company_id.currency_id
-            if (
-                currency.compare_amounts(line.amount, payment.available_refund_amount)
-                > 0
-            ):
-                self._problem(
-                    409,
-                    "/errors/refund-exceeds-available",
-                    _("Refund exceeds available amount"),
-                    _(
-                        "The requested amount %(requested)s exceeds the amount "
-                        "available to refund %(available)s of payment %(id)s."
-                    )
-                    % {
-                        "requested": line.amount,
-                        "available": payment.available_refund_amount,
-                        "id": line.paymentId,
-                    },
-                )
-            origin_lines.append((payment, line.amount))
-        return folio, origin_lines
-
-    def _create_refund_payment(self, payload, method_line, journal, folio, total):
-        partner = folio.partner_id
-        refund = (
-            self.env["account.payment"]
-            .sudo()
-            .create(
-                {
-                    "journal_id": journal.id,
-                    "payment_method_line_id": method_line.id,
-                    "partner_id": partner.id if partner else False,
-                    "amount": total,
-                    "date": payload.date,
-                    "payment_type": "outbound",
-                    "partner_type": "customer",
-                    "folio_ids": [(6, 0, folio.ids)],
-                    "state": "draft",
-                }
-            )
-        )
-        refund.action_post()
-        return refund
-
-    def _receivable_line(self, payment):
-        """The reconcilable line of a payment move on the partner receivable
-        account (destination_account_id): a debit for the outbound refund, a
-        credit for the inbound original payment."""
-        return payment.move_id.line_ids.filtered(
-            lambda mline: mline.account_id == payment.destination_account_id
-        )[:1]
-
-    def _apply_refund_breakdown(self, refund, folio, origin_lines):
-        """Record the explicit refund->payment link per line and reconcile the
-        refund against each original payment that is still fully open. A payment
-        with any prior reconciliation is left untouched (only a chatter note),
-        for administration to handle later (credit note, loss entry...)."""
-        refund_line = self._receivable_line(refund)
-        for payment, amount in origin_lines:
-            payment_line = self._receivable_line(payment)
-            reconcilable = bool(
-                refund_line
-                and payment_line
-                and refund_line.account_id == payment_line.account_id
-                and not payment_line.matched_debit_ids
-                and not payment_line.matched_credit_ids
-            )
-            self.env["pms.payment.refund.line"].sudo().create(
-                {
-                    "refund_payment_id": refund.id,
-                    "origin_payment_id": payment.id,
-                    "amount": amount,
-                    "is_reconciled": reconcilable,
-                }
-            )
-            if reconcilable:
-                self._reconcile_refund_line(refund_line, payment_line, amount)
-            else:
-                self._note_unreconciled_refund(refund, payment, amount)
-
-    def _reconcile_refund_line(self, refund_line, payment_line, amount):
-        """Reconcile exactly `amount` of the refund against the payment by
-        creating the partial directly, so the per-line breakdown is respected
-        even for partial refunds (plain reconcile() would greedily allocate the
-        whole residual). Single-currency assumption; multi-currency is a known
-        TO-REVIEW of this provisional refund system."""
-        self.env["account.partial.reconcile"].sudo().create(
-            {
-                "debit_move_id": refund_line.id,
-                "credit_move_id": payment_line.id,
-                "amount": amount,
-                "debit_amount_currency": amount,
-                "credit_amount_currency": amount,
-            }
-        )
-
-    def _note_unreconciled_refund(self, refund, payment, amount):
-        refund.sudo().message_post(
-            body=_(
-                "Refund of %(amount)s originated from payment %(payment)s "
-                "(folio %(folio)s), which was already reconciled, so it was NOT "
-                "reconciled automatically. Administration must decide how to "
-                "settle it (credit note, loss entry...)."
-            )
-            % {
-                "amount": amount,
-                "payment": payment.name or payment.id,
-                "folio": payment.folio_ids[:1].name or "",
-            }
-        )
+        self._ensure_open_cash_session(payment.journal_id)
+        payment.action_draft()
+        payment.write(vals)
+        payment.action_post()
