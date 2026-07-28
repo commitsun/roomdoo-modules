@@ -6,95 +6,16 @@ from fastapi import status
 from odoo import Command
 from odoo.tests import tagged
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApiPayment
 
 
 @tagged("post_install", "-at_install")
-class TestPaymentsEndpoints(CommonTestPmsApi):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        company = cls.test_company
-        if not company.chart_template_id:
-            coa = cls.env.ref("l10n_generic_coa.configurable_chart_template", False)
-            if not coa:
-                coa = cls.env["account.chart.template"].search(
-                    [("visible", "=", True)], limit=1
-                )
-            if not coa:
-                cls.skipTest(cls, "No chart of accounts available.")
-            coa.try_loading(company=company, install_demo=False)
-        cls.env.user.write(
-            {
-                "company_ids": [Command.link(company.id)],
-                "company_id": company.id,
-            }
-        )
-        cls.env = cls.env(
-            context=dict(cls.env.context, allowed_company_ids=company.ids)
-        )
-        # Journals tied to the property: only these must be in scope.
-        cls.journal_bank = cls.env["account.journal"].create(
-            {
-                "name": "Bank PMS",
-                "type": "bank",
-                "code": "BNKP",
-                "company_id": company.id,
-                "pms_property_ids": [Command.set([cls.test_property.id])],
-            }
-        )
-        cls.journal_bank2 = cls.env["account.journal"].create(
-            {
-                "name": "Bank PMS 2",
-                "type": "bank",
-                "code": "BNKP2",
-                "company_id": company.id,
-                "pms_property_ids": [Command.set([cls.test_property.id])],
-            }
-        )
-        # Journal NOT tied to any property: must stay out of scope.
-        cls.journal_no_property = cls.env["account.journal"].create(
-            {
-                "name": "Bank no property",
-                "type": "bank",
-                "code": "BNKNP",
-                "company_id": company.id,
-            }
-        )
-        cls.customer = cls.env["res.partner"].create({"name": "Payments Customer"})
-        cls.supplier = cls.env["res.partner"].create({"name": "Payments Supplier"})
+class TestPaymentsLedgerEndpoints(CommonTestPmsApiPayment):
+    """The cross-type payments ledger: listing, single read, report, cancel.
 
-    def _create_payment(
-        self,
-        amount=100.0,
-        payment_type="inbound",
-        partner_type="customer",
-        journal=None,
-        partner=None,
-        ref="",
-        pay_date=None,
-        is_internal_transfer=False,
-        destination_journal=None,
-        post=True,
-    ):
-        vals = {
-            "amount": amount,
-            "payment_type": payment_type,
-            "partner_type": partner_type,
-            "journal_id": (journal or self.journal_bank).id,
-            "partner_id": (partner or self.customer).id,
-            "ref": ref,
-            "date": pay_date or date(2025, 12, 22),
-            "is_internal_transfer": is_internal_transfer,
-        }
-        if is_internal_transfer:
-            vals["destination_journal_id"] = (
-                destination_journal or self.journal_bank2
-            ).id
-        payment = self.env["account.payment"].create(vals)
-        if post:
-            payment.action_post()
-        return payment
+    Creation and edition are per-entity and live in test_customer_payments,
+    test_supplier_payments and test_internal_transfers.
+    """
 
     def _items_by_id(self, response):
         return {item["id"]: item for item in response.json()["items"]}
@@ -243,7 +164,8 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
         self.assertEqual(items[inbound.id]["amount"], 30000.0)
 
     def test_get_payment_by_id(self):
-        """GET /payments/{id} returns the single payment (same model)."""
+        """GET /payments/{id} returns the single payment, any type, so that the
+        front can tell which entity holds its full representation."""
         payment = self._create_payment(amount=120.0, ref="206/26/026735")
         with self._create_test_client() as test_client:
             self._login(test_client)
@@ -256,6 +178,27 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
         self.assertEqual(body["reference"], "206/26/026735")
         self.assertEqual(body["partner"]["id"], self.customer.id)
         self.assertIsNotNone(body["currency"]["code"])
+
+    def test_get_payment_by_id_accepts_any_type(self):
+        """The ledger addresses payments of any type, unlike the entities."""
+        transfer = self._create_payment(
+            amount=500.0,
+            payment_type="outbound",
+            is_internal_transfer=True,
+            destination_journal=self.journal_bank2,
+        )
+        supplier_pay = self._create_payment(
+            amount=80.0,
+            payment_type="outbound",
+            partner_type="supplier",
+            partner=self.supplier,
+        )
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            transfer_body = test_client.get(f"/payments/{transfer.id}").json()
+            supplier_body = test_client.get(f"/payments/{supplier_pay.id}").json()
+        self.assertEqual(transfer_body["paymentType"], "internalTransfer")
+        self.assertEqual(supplier_body["paymentType"], "supplierPayment")
 
     def test_get_unknown_payment_returns_404(self):
         """GET /payments/{id} on a missing id returns 404 payment-not-found."""
@@ -312,6 +255,17 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
             )
         self.assertNotIn(payment.id, items)
 
+    def test_cancelled_payment_is_still_readable(self):
+        """Cancelling removes the payment from the listing but not from the
+        ledger read: item resolution does not filter by state."""
+        payment = self._create_payment(amount=150.0)
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            test_client.post(f"/payments/{payment.id}/cancel")
+            response = test_client.get(f"/payments/{payment.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.json()["id"], payment.id)
+
     def test_cancel_unknown_payment_returns_404(self):
         """POST /payments/{id}/cancel on a missing id returns 404."""
         with self._create_test_client(raise_server_exceptions=False) as test_client:
@@ -348,280 +302,12 @@ class TestPaymentsEndpoints(CommonTestPmsApi):
         self.assertEqual(outbound.state, "cancel")
         self.assertEqual(paired.state, "cancel")
 
-    # -- refunds (POST /payments/refunds) --
-
-    def _create_folio(self):
-        return self.env["pms.folio"].create(
-            {
-                "partner_id": self.customer.id,
-                "pms_property_id": self.test_property.id,
-                "pricelist_id": self.test_pricelist.id,
-            }
-        )
-
-    def _customer_payment_on_folio(self, folio, amount=100.0):
-        payment = self._create_payment(amount=amount, partner=folio.partner_id)
-        payment.folio_ids = [Command.link(folio.id)]
-        return payment
-
-    def _outbound_method_line(self):
-        return self.journal_bank.outbound_payment_method_line_ids[:1]
-
-    def _mark_payment_reconciled(self, payment):
-        """Leave the payment's receivable line reconciled (against an opposite
-        manual payment on the same account), so it is no longer fully open —
-        without depending on sale journals or taxes."""
-        opposite = self._create_payment(
-            amount=payment.amount,
-            payment_type="outbound",
-            partner_type="customer",
-            partner=payment.partner_id,
-        )
-        account = payment.destination_account_id
-        lines = (payment.move_id.line_ids + opposite.move_id.line_ids).filtered(
-            lambda mline: mline.account_id == account and not mline.reconciled
-        )
-        lines.reconcile()
-        return opposite
-
-    def _refund_body(self, method_line, payments, refund_date="2026-01-15"):
-        return {
-            "date": refund_date,
-            "paymentMethodId": method_line.id,
-            "payments": payments,
-        }
-
-    def test_refund_open_payment_reconciles(self):
-        """Refunding a fully-open payment creates one customerRefund for the
-        total, reconciles it against the payment and zeroes its available."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        method_line = self._outbound_method_line()
-        with self._create_test_client() as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line, [{"paymentId": payment.id, "amount": 100.0}]
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        body = response.json()
-        self.assertEqual(body["paymentType"], "customerRefund")
-        self.assertEqual(body["amount"], 100.0)
-        self.assertEqual(body["availableRefundAmount"], 0.0)
-        self.assertEqual(body["folio"]["id"], folio.id)
-        # The original payment is now fully refunded (nothing left available)
-        # and its receivable line reconciled against the refund.
-        self.assertEqual(payment.available_refund_amount, 0.0)
-        link = self.env["pms.payment.refund.line"].search(
-            [("origin_payment_id", "=", payment.id)]
-        )
-        self.assertEqual(len(link), 1)
-        self.assertTrue(link.is_reconciled)
-        self.assertEqual(link.refund_payment_id.id, body["id"])
-        recv = payment.move_id.line_ids.filtered(
-            lambda mline: mline.account_id == payment.destination_account_id
-        )
-        self.assertTrue(recv.reconciled)
-
-    def test_refund_multiple_payments_single_refund(self):
-        """N payments of the same folio produce ONE refund for the total."""
-        folio = self._create_folio()
-        pay_a = self._customer_payment_on_folio(folio, amount=40.0)
-        pay_b = self._customer_payment_on_folio(folio, amount=60.0)
-        method_line = self._outbound_method_line()
-        with self._create_test_client() as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line,
-                    [
-                        {"paymentId": pay_a.id, "amount": 40.0},
-                        {"paymentId": pay_b.id, "amount": 60.0},
-                    ],
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        self.assertEqual(response.json()["amount"], 100.0)
-        self.assertEqual(pay_a.available_refund_amount, 0.0)
-        self.assertEqual(pay_b.available_refund_amount, 0.0)
-        links = self.env["pms.payment.refund.line"].search(
-            [("refund_payment_id", "=", response.json()["id"])]
-        )
-        self.assertEqual(len(links), 2)
-
-    def test_refund_partial_open_payment(self):
-        """A partial refund of an open payment reduces its available amount."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        method_line = self._outbound_method_line()
-        with self._create_test_client() as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line, [{"paymentId": payment.id, "amount": 40.0}]
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        self.assertEqual(payment.available_refund_amount, 60.0)
-        recv = payment.move_id.line_ids.filtered(
-            lambda mline: mline.account_id == payment.destination_account_id
-        )
-        # Partial: still open for 60 (contract per-line breakdown respected).
-        self.assertAlmostEqual(abs(recv.amount_residual), 60.0)
-
-    def test_refund_already_reconciled_leaves_note_and_does_not_reconcile(self):
-        """Refunding an already-reconciled payment is not reconciled again; a
-        chatter note is left and the link is marked not reconciled."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        self._mark_payment_reconciled(payment)
-        method_line = self._outbound_method_line()
-        with self._create_test_client() as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line, [{"paymentId": payment.id, "amount": 100.0}]
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
-        refund = self.env["account.payment"].browse(response.json()["id"])
-        link = self.env["pms.payment.refund.line"].search(
-            [("origin_payment_id", "=", payment.id)]
-        )
-        self.assertFalse(link.is_reconciled)
-        self.assertEqual(payment.available_refund_amount, 0.0)
-        self.assertTrue(
-            any("already reconciled" in (m.body or "") for m in refund.message_ids)
-        )
-
-    def test_refund_exceeds_available_returns_409(self):
-        """Requesting more than the available amount returns 409."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        method_line = self._outbound_method_line()
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line, [{"paymentId": payment.id, "amount": 150.0}]
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
-        self.assertEqual(response.json()["type"], "/errors/refund-exceeds-available")
-        self.assertFalse(
-            self.env["pms.payment.refund.line"].search(
-                [("origin_payment_id", "=", payment.id)]
-            )
-        )
-
-    def test_refund_different_folio_returns_409(self):
-        """Payments from different folios cannot be refunded together."""
-        folio_a = self._create_folio()
-        folio_b = self._create_folio()
-        pay_a = self._customer_payment_on_folio(folio_a, amount=40.0)
-        pay_b = self._customer_payment_on_folio(folio_b, amount=40.0)
-        method_line = self._outbound_method_line()
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line,
-                    [
-                        {"paymentId": pay_a.id, "amount": 40.0},
-                        {"paymentId": pay_b.id, "amount": 40.0},
-                    ],
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
-        self.assertEqual(response.json()["type"], "/errors/payment-not-refundable")
-
-    def test_refund_non_customer_payment_returns_409(self):
-        """A supplier payment is not a refundable customer payment."""
-        folio = self._create_folio()
-        supplier_pay = self._create_payment(
-            amount=50.0,
-            payment_type="outbound",
-            partner_type="supplier",
-            partner=self.supplier,
-        )
-        supplier_pay.folio_ids = [Command.link(folio.id)]
-        method_line = self._outbound_method_line()
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line, [{"paymentId": supplier_pay.id, "amount": 50.0}]
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
-        self.assertEqual(response.json()["type"], "/errors/payment-not-refundable")
-
-    def test_refund_inbound_method_returns_422(self):
-        """The refund method must be outbound."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        inbound_line = self.journal_bank.inbound_payment_method_line_ids[:1]
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    inbound_line, [{"paymentId": payment.id, "amount": 100.0}]
-                ),
-            )
-        self.assertEqual(
-            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
-        )
-
-    def test_refund_empty_list_returns_422(self):
-        """An empty payments list is rejected by validation."""
-        method_line = self._outbound_method_line()
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds", json=self._refund_body(method_line, [])
-            )
-        self.assertEqual(
-            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
-        )
-
-    def test_refund_locked_period_returns_409(self):
-        """A refund dated within a locked fiscal period is rejected."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
-        method_line = self._outbound_method_line()
-        self.test_company.sudo().write({"fiscalyear_lock_date": date(2026, 1, 31)})
-        with self._create_test_client(raise_server_exceptions=False) as test_client:
-            self._login(test_client)
-            response = test_client.post(
-                "/payments/refunds",
-                json=self._refund_body(
-                    method_line,
-                    [{"paymentId": payment.id, "amount": 100.0}],
-                    refund_date="2026-01-15",
-                ),
-            )
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
-        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
-        self.assertFalse(
-            self.env["pms.payment.refund.line"].search(
-                [("origin_payment_id", "=", payment.id)]
-            )
-        )
-
     def test_available_refund_amount_in_listing(self):
         """availableRefundAmount is the amount for a customer payment and 0 for
         a refund."""
-        folio = self._create_folio()
-        payment = self._customer_payment_on_folio(folio, amount=100.0)
+        folio = self._folio()
+        payment = self._create_payment(amount=100.0)
+        payment.folio_ids = [Command.link(folio.id)]
         refund = self._create_payment(
             amount=50.0, payment_type="outbound", partner_type="customer"
         )

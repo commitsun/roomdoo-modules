@@ -1,4 +1,3 @@
-import datetime
 from datetime import date
 from enum import Enum
 from typing import Annotated
@@ -24,6 +23,19 @@ class PaymentTypeEnum(str, Enum):
     supplierRefund = "supplierRefund"
     internalTransfer = "internalTransfer"
 
+    @classmethod
+    def from_account_payment(cls, payment) -> "PaymentTypeEnum":
+        """Derive the API payment type from the accounting fields of a payment.
+
+        Deliberately not read from `account.payment.pms_api_transaction_type`:
+        that field is defined in pms_api_rest, the legacy API this module is
+        meant to outlive. The payment type is an API-layer concept and its
+        mapping already lives here.
+        """
+        if payment.is_internal_transfer:
+            return cls.internalTransfer
+        return _FIELDS_TO_ENUM[(payment.payment_type, payment.partner_type)]
+
 
 # Maps the API payment type to the internal `pms_api_transaction_type`
 # computed on account.payment (see pms_api_rest/models/account_payment.py).
@@ -44,104 +56,11 @@ _TRANSACTION_TYPE_TO_FIELDS = {
     "supplier_inbound": ("inbound", "supplier"),
 }
 
-
-class PaymentCreateType(str, Enum):
-    """Payment types accepted on manual creation via POST /payments.
-
-    Refunds and internal transfers are NOT created here (transfers have their
-    own endpoint); the response enum (PaymentTypeEnum) still returns all five.
-    """
-
-    customerPayment = "customerPayment"
-    supplierPayment = "supplierPayment"
-
-
-class PaymentInput(PmsBaseModel):
-    paymentType: PaymentCreateType
-    amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
-    date: date
-    paymentMethodId: int = Field(
-        description="account.payment.method.line id (the front's 'payment mode'). "
-        "The journal is derived from it."
-    )
-    partnerId: int | None = Field(
-        None,
-        description="Required for supplierPayment; for customerPayment may be "
-        "null and derived from the folio/invoice context.",
-    )
-    folioId: int | None = Field(
-        None, description="Folio context. Mutually exclusive with invoiceId."
-    )
-    invoiceId: int | None = Field(
-        None, description="Invoice context. Mutually exclusive with folioId."
-    )
-    reference: str = ""
-
-
-class PaymentUpdate(PmsBaseModel):
-    """Partial edit of a registered payment (amount, date, payment method).
-
-    Only the modified fields are sent; omitted fields are left untouched.
-    """
-
-    amount: CurrencyAmount | None = Field(
-        None, gt=0, description="New amount. Always positive; > 0 (422 otherwise)."
-    )
-    # `datetime.date` (not the bare `date` name) to avoid the field name
-    # shadowing the type when the default value is assigned.
-    date: datetime.date | None = Field(None, description="New payment date.")
-    paymentMethodId: int | None = Field(
-        None,
-        description="New payment method (the front's 'payment mode'). The journal "
-        "is derived from it.",
-    )
-
-
-class PaymentRefundLine(PmsBaseModel):
-    """One line of a refund operation: how much to refund from a given payment."""
-
-    paymentId: int = Field(description="Id of the original customer payment to refund.")
-    amount: CurrencyAmount = Field(
-        gt=0,
-        description="Amount to refund from this payment. Always positive; > 0.",
-    )
-
-
-class PaymentRefundInput(PmsBaseModel):
-    """Request body of POST /payments/refunds.
-
-    One operation = one single refund (one date + one method + one total amount)
-    covering N payments of the same folio.
-    """
-
-    # `datetime.date` (not the bare `date` name) to avoid the field name
-    # shadowing the type when a Field default is assigned.
-    date: datetime.date = Field(
-        description="Refund date. Applies to the whole operation."
-    )
-    paymentMethodId: int = Field(
-        description="Payment method id (the front's 'refund mode'). Must be an "
-        "outbound method; the journal is derived from it."
-    )
-    payments: list[PaymentRefundLine] = Field(
-        min_length=1,
-        description="Payments to refund with the amount per payment. Minimum 1 "
-        "item; all payments must belong to the same folio.",
-    )
-
-
-class InternalTransferInput(PmsBaseModel):
-    amount: CurrencyAmount = Field(gt=0, description="Always positive; > 0.")
-    date: date
-    originPaymentMethodId: int = Field(
-        description="account.payment.method.line id (outbound) the money leaves "
-        "from. The origin journal is derived from it."
-    )
-    destinationPaymentMethodId: int = Field(
-        description="account.payment.method.line id (inbound) the money goes to. "
-        "The destination journal is derived from it."
-    )
-    reason: str = ""
+# (payment_type, partner_type) -> API payment type, for PaymentTypeEnum.
+_FIELDS_TO_ENUM = {
+    odoo_fields: TRANSACTION_TYPE_TO_ENUM[transaction_type]
+    for transaction_type, odoo_fields in _TRANSACTION_TYPE_TO_FIELDS.items()
+}
 
 
 class ReportFormatEnum(str, Enum):
@@ -187,51 +106,86 @@ class ReconciledInvoice(PmsBaseModel):
         )
 
 
-class PaymentSummary(PmsBaseModel):
+class PaymentBase(PmsBaseModel):
+    """Fields every payment representation carries, whatever its type.
+
+    Base of the cross-type ledger row (PaymentSummary) and of the per-entity
+    detail schemas (CustomerPaymentDetail, SupplierPaymentDetail,
+    InternalTransferDetail), which add only what actually applies to their type.
+    """
+
     id: int
     name: str = ""
     date: date
-    partner_id: ContactId | None = Field(None, alias="partner")
     ref: str = Field("", alias="reference")
-    folio: FolioId | None = None
     createdBy: UserId | None = None
     paymentType: PaymentTypeEnum
-    paymentMethod: PaymentMethodSummary | None = None
     amount: CurrencyAmount = 0.0
+    currency: CurrencySummary
+
+    @classmethod
+    def _base_data(cls, payment) -> dict:
+        """Data dict for the inherited fields, to extend in each subclass."""
+        data = {
+            "id": payment.id,
+            "name": payment.name or "",
+            "date": payment.date,
+            "ref": payment.ref or "",
+            "paymentType": PaymentTypeEnum.from_account_payment(payment),
+            "amount": abs(payment.amount),
+        }
+        currency = payment.currency_id or payment.company_id.currency_id
+        data["_decimal_places"] = currency.decimal_places
+        data["currency"] = CurrencySummary.from_res_currency(currency)
+        if payment.create_uid:
+            data["createdBy"] = UserId.from_res_users(payment.create_uid)
+        return data
+
+
+class PaymentSummary(PaymentBase):
+    """A row of the cross-type payments ledger (GET /payments).
+
+    Being cross-type, it carries the union of what the listing shows for any
+    type, so some fields are empty depending on the type (see each
+    description). The precise, type-specific representation is the detail of
+    each entity: /customer-payments, /supplier-payments, /internal-transfers.
+    """
+
+    partner_id: ContactId | None = Field(
+        None,
+        alias="partner",
+        description="Empty for internal transfers, which have no contact.",
+    )
+    folio: FolioId | None = Field(
+        None, description="Only set for customer payments and refunds."
+    )
+    paymentMethod: PaymentMethodSummary | None = Field(
+        None,
+        description="For an internal transfer this is the origin method; the "
+        "destination one is only reported by the internal transfer detail.",
+    )
     availableRefundAmount: CurrencyAmount = Field(
         0.0,
         description="Remaining amount available to refund: original amount minus "
         "previous refunds. Always positive or 0; 0 for refunds, supplier payments "
         "and internal transfers.",
     )
-    currency: CurrencySummary
     invoices: list[ReconciledInvoice] = Field(
         default_factory=list,
-        description="Invoices and refunds this payment is reconciled against.",
+        description="Invoices and refunds this payment is reconciled against; "
+        "vendor bills in the case of a supplier payment.",
     )
 
     @classmethod
     def from_account_payment(cls, payment):
-        data = {
-            "id": payment.id,
-            "name": payment.name or "",
-            "date": payment.date,
-            "ref": payment.ref or "",
-            "paymentType": TRANSACTION_TYPE_TO_ENUM[payment.pms_api_transaction_type],
-            "amount": abs(payment.amount),
-            "availableRefundAmount": payment.available_refund_amount,
-        }
-        currency = payment.currency_id or payment.company_id.currency_id
-        data["_decimal_places"] = currency.decimal_places
-        data["currency"] = CurrencySummary.from_res_currency(currency)
+        data = cls._base_data(payment)
+        data["availableRefundAmount"] = payment.available_refund_amount
         # Internal transfers carry the company partner internally (accounting),
         # but the contract reports no contact for them ('Sin asignar').
         if payment.partner_id and not payment.is_internal_transfer:
             data["partner_id"] = ContactId.from_res_partner(payment.partner_id)
         if payment.folio_ids:
             data["folio"] = FolioId.from_pms_folio(payment.folio_ids[:1])
-        if payment.create_uid:
-            data["createdBy"] = UserId.from_res_users(payment.create_uid)
         if payment.payment_method_line_id:
             data[
                 "paymentMethod"

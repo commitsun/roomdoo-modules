@@ -23,7 +23,7 @@ class PmsPaymentRefundLine(models.Model):
         required=True,
         ondelete="cascade",
         index=True,
-        help="The customerRefund payment created by POST /payments/refunds.",
+        help="The customerRefund payment created by POST /customer-payments/refunds.",
     )
     origin_payment_id = fields.Many2one(
         comodel_name="account.payment",

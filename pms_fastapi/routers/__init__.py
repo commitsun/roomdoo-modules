@@ -22,5 +22,8 @@ from . import journal
 from . import cash_session
 from . import payment_method
 from . import payment
+from . import customer_payment
+from . import supplier_payment
+from . import internal_transfer
 from . import reservation_guest
 from . import pms_reservation
