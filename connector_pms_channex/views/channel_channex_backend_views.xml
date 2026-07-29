@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_channex_backend_view_form" model="ir.ui.view">
+        <field name="name">channel.channex.backend.form</field>
+        <field name="model">channel.channex.backend</field>
+        <field name="arch" type="xml">
+            <form string="Channex Backend">
+                <header>
+                    <button
+            name="action_test_connection"
+            type="object"
+            string="Test connection"
+            class="btn-primary"
+          />
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Identification">
+                            <field name="parent_id" />
+                            <field name="name" />
+                            <field name="pms_property_id" />
+                            <field name="backend_type_id" />
+                            <field name="export_disabled" />
+                        </group>
+                        <group string="Connection">
+                            <field name="environment" widget="radio" />
+                            <field name="url" />
+                            <field name="api_key" password="True" />
+                            <field name="page_limit" />
+                            <field name="timeout_connect" />
+                            <field name="timeout_read" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="channel_channex_backend_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.backend.tree</field>
+        <field name="model">channel.channex.backend</field>
+        <field name="arch" type="xml">
+            <tree string="Channex Backends">
+                <field name="name" />
+                <field name="pms_property_id" />
+                <field name="environment" />
+            </tree>
+        </field>
+    </record>
+</odoo>
