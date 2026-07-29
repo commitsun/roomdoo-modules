@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="product_pricelist_view" model="ir.ui.view">
+        <field name="name">product.pricelist.connector.dummy.form</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="connector_pms.product_pricelist_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='connector']">
+                <separator string="Dummy" />
+                <field name="channel_dummy_bind_ids" nolabel="1">
+                    <tree editable="bottom">
+                        <field name="backend_id" />
+                        <field name="external_id" />
+                    </tree>
+                </field>
+            </xpath>
+        </field>
+    </record>
+</odoo>

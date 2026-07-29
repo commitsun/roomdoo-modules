@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_channel_dummy_backend_manager,channel dummy backend manager,model_channel_dummy_backend,connector.group_connector_manager,1,1,1,1
+access_channel_dummy_backend_type_manager,channel dummy backend type manager,model_channel_dummy_backend_type,connector.group_connector_manager,1,1,1,1
+access_channel_dummy_pms_room_type_manager,channel dummy pms room type manager,model_channel_dummy_pms_room_type,connector.group_connector_manager,1,1,1,1
+access_channel_dummy_product_pricelist_manager,channel dummy product pricelist manager,model_channel_dummy_product_pricelist,connector.group_connector_manager,1,1,1,1
