@@ -17,6 +17,7 @@ from . import test_master_sync
 from . import test_name_search
 from . import test_ota_locator
 from . import test_pricelist_flatten
+from . import test_queue_job_property
 from . import test_reservation_mapper
 from . import test_tourist_tax_included
 from . import test_folio_mapper_lang
