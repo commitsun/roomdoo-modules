@@ -89,34 +89,34 @@ class ChannelWubookBackend(models.Model):
 
     # room type
     def import_room_types(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             rec.env["channel.wubook.pms.room.type"].with_delay().import_data(
                 backend_record=rec
             )
 
     def export_room_types(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             rec.env["channel.wubook.pms.room.type"].with_delay().export_data(
                 backend_record=rec
             )
 
     # room type class
     def import_room_type_classes(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             rec.env["channel.wubook.pms.room.type.class"].with_delay().import_data(
                 backend_record=rec
             )
 
     def export_room_types_classes(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             rec.env["channel.wubook.pms.room.type.class"].with_delay().export_data(
                 backend_record=rec
             )
@@ -150,9 +150,9 @@ class ChannelWubookBackend(models.Model):
     )
 
     def import_pricelists(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             if rec.pricelist_date_to < rec.pricelist_date_from:
                 raise UserError(_("Date to must be greater than date from"))
             rec.env["channel.wubook.product.pricelist"].with_delay().import_data(
@@ -164,13 +164,13 @@ class ChannelWubookBackend(models.Model):
             )
 
     def export_pricelists(self, *args, **kwargs):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             # Search by same jobs pending, if not exists, create a new job
             func_string = (
                 "channel.wubook.product.pricelist().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (rec.id,)
+                f"channel.wubook.backend({rec.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [("func_string", "=", func_string), ("state", "=", "pending")]
@@ -229,9 +229,9 @@ class ChannelWubookBackend(models.Model):
         return parity_binding.odoo_id.availability_plan_id
 
     def import_availability_plans(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             if rec.plan_date_to < rec.plan_date_from:
                 raise UserError(_("Date to must be greater than date from"))
             rec.env["channel.wubook.pms.availability.plan"].with_delay().import_data(
@@ -242,13 +242,13 @@ class ChannelWubookBackend(models.Model):
             )
 
     def export_availability_plans(self, *args, **kwargs):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             # Search by same jobs pending, if not, create a new one
             func_string = (
                 "channel.wubook.pms.availability.plan().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (rec.id,)
+                f"channel.wubook.backend({rec.id},))"
             )
             jobs = rec.env["queue.job"].search(
                 [
@@ -273,9 +273,9 @@ class ChannelWubookBackend(models.Model):
     )
 
     def export_availability(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             if rec.avail_date_to < rec.avail_date_from:
                 raise UserError(_("Date to must be greater than date from"))
             rec.env["channel.wubook.pms.availability"].with_delay().export_data(
@@ -287,17 +287,13 @@ class ChannelWubookBackend(models.Model):
 
     # property availability
     def export_property_availability(self, *args, **kwargs):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             # Search by same jobs pending, if not, create a new one
             func_string = (
                 "channel.wubook.pms.property.availability().export_record(channel."
-                "wubook.backend(%s,), pms.property(%s,))"
-                % (
-                    rec.id,
-                    rec.pms_property_id.id,
-                )
+                f"wubook.backend({rec.id},), pms.property({rec.pms_property_id.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [
@@ -317,9 +313,9 @@ class ChannelWubookBackend(models.Model):
     folio_reservation_code = fields.Integer(string="Reservation Code")
 
     def import_folios(self):
-        if self.user_id:
-            self = self.with_user(self.user_id)
         for rec in self:
+            if rec.user_id:
+                rec = rec.with_user(rec.user_id)
             if rec.folio_reservation_code:
                 rec.env["channel.wubook.pms.folio"].with_delay().import_record(
                     rec, rec.folio_reservation_code
@@ -344,7 +340,7 @@ class ChannelWubookBackend(models.Model):
         ):
             backend = binding.backend_id
             if backend.user_id:
-                backend = backend.with_user(self.user_id)
+                backend = backend.with_user(backend.user_id)
             with backend.work_on(binding._name) as work:
                 exporter_delay = work.component(usage="delayed.batch.exporter")
                 exporter_delay._export_record(binding.odoo_id)
@@ -359,7 +355,7 @@ class ChannelWubookBackend(models.Model):
             backend = binding.backend_id
             func_string = (
                 "channel.wubook.pms.property.availability().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (backend.id,)
+                f"channel.wubook.backend({backend.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [
@@ -370,7 +366,7 @@ class ChannelWubookBackend(models.Model):
             if jobs:
                 continue
             if backend.user_id:
-                backend = backend.with_user(self.user_id)
+                backend = backend.with_user(backend.user_id)
             with backend.work_on(binding._name) as work:
                 exporter_delay = work.component(usage="delayed.batch.exporter")
                 exporter_delay._export_record(binding.odoo_id)
@@ -384,7 +380,7 @@ class ChannelWubookBackend(models.Model):
         ):
             backend = binding.backend_id
             if backend.user_id:
-                backend = backend.with_user(self.user_id)
+                backend = backend.with_user(backend.user_id)
             with backend.work_on(binding._name) as work:
                 exporter_delay = work.component(usage="delayed.batch.exporter")
                 exporter_delay._export_record(binding.odoo_id)
