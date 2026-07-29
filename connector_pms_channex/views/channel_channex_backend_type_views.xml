@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_channex_backend_type_view_form" model="ir.ui.view">
+        <field name="name">channel.channex.backend.type.form</field>
+        <field name="model">channel.channex.backend.type</field>
+        <field name="arch" type="xml">
+            <form string="Channex Backend Type">
+                <sheet>
+                    <group>
+                        <field name="parent_id" />
+                        <field name="name" />
+                        <field name="default_property_type" />
+                    </group>
+                    <group string="Channex group">
+                        <field name="group_id" />
+                        <field name="group_title" />
+                    </group>
+                    <notebook>
+                        <page string="Room type classes" name="room_kinds">
+                            <field name="room_kind_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="room_type_class_id" />
+                                    <field name="room_kind" />
+                                    <field name="excluded" />
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="OTAs" name="otas">
+                            <field name="ota_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="ota_name" />
+                                    <field name="agency_id" />
+                                    <field name="channel_external_id" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

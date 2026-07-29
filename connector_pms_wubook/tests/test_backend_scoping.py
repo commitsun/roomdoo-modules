@@ -107,6 +107,17 @@ class TestConnectBackendScoping(TransactionComponentCase):
         wizard = self.env["channel.connect.wizard"].browse(action["res_id"])
         self.assertEqual(wizard.backend_id, self.other_backend.parent_id)
 
+    def test_property_only_sees_its_own_backends(self):
+        """A property has no property field of its own; treated as global, it
+        would be offered the backends of every hotel."""
+        self.assertEqual(
+            self.pms_property._channel_candidate_backends(), self.backend.parent_id
+        )
+        self.assertEqual(
+            self.other_property._channel_candidate_backends(),
+            self.other_backend.parent_id,
+        )
+
     def test_wizard_refuses_when_no_backend_for_the_property(self):
         orphan_property = self.env["pms.property"].create(
             {
