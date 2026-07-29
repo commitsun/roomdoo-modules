@@ -10,6 +10,9 @@ from . import test_auth
 # from . import test_product_pricelist
 # from . import test_availability_plan
 # from . import test_folio
+from . import test_backend_scoping
 from . import test_listener_batching
 from . import test_master_sync
+from . import test_name_search
 from . import test_pricelist_flatten
+from . import test_queue_job_property
