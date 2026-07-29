@@ -1,0 +1,73 @@
+# Copyright 2026 Roomdoo
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+
+"""``queue.job.pms_property_id`` feeds a column, a filter and a group-by of the
+job views, and was never populated: the field was declared as stored computed
+without a ``compute`` method."""
+
+from odoo.tests.common import new_test_user, tagged
+
+from odoo.addons.component.tests.common import TransactionComponentCase
+
+from .test_master_sync import _make_backend_environment
+
+
+@tagged("post_install", "-at_install")
+class TestQueueJobProperty(TransactionComponentCase):
+    """``queue.job.pms_property_id`` feeds a column, a filter and a group-by of
+    the job views, and was never populated."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        _make_backend_environment(cls)
+
+    def test_property_stamped_from_backend_argument(self):
+        job = (
+            self.env["channel.wubook.pms.room.type"]
+            .with_delay()
+            .import_data(backend_record=self.backend)
+        )
+        self.assertEqual(job.db_record().pms_property_id, self.pms_property)
+
+    def test_property_stamped_from_binding_recordset(self):
+        binding = self.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": self.room_type_a.id,
+                "backend_id": self.backend.id,
+                "external_id": 4321,
+            }
+        )
+        job = binding.with_delay().export_record()
+        self.assertEqual(job.db_record().pms_property_id, self.pms_property)
+
+    def test_property_empty_for_unrelated_job(self):
+        partner = self.env["res.partner"].create({"name": "Unrelated"})
+        job = partner.with_delay().write({"comment": "touched"})
+        self.assertFalse(job.db_record().pms_property_id)
+
+    def test_enqueuing_user_who_cannot_read_backends(self):
+        """What the Wubook push does when the backend has a user outside the
+        connector managers. Reading the property must not refuse the job."""
+        user = new_test_user(
+            self.env, login="queue_job_property_user", groups="base.group_user"
+        )
+        job = (
+            self.env["channel.wubook.pms.folio"]
+            .with_user(user)
+            .with_delay()
+            .import_record(self.backend.with_user(user), 12345)
+        )
+        self.assertEqual(job.db_record().pms_property_id, self.pms_property)
+
+    def test_job_on_a_deleted_record_is_still_enqueued(self):
+        binding = self.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": self.room_type_a.id,
+                "backend_id": self.backend.id,
+                "external_id": 4322,
+            }
+        )
+        binding.unlink()
+        job = binding.with_delay().export_record()
+        self.assertFalse(job.db_record().pms_property_id)
