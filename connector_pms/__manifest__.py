@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector",
     "summary": "Channel PMS connector Base",
-    "version": "16.0.1.0.0",
+    "version": "16.0.2.0.0",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",
@@ -33,5 +33,6 @@
         "views/pms_availability_plan_views.xml",
         "views/pms_availability_plan_rule_views.xml",
         "views/queue_job_views.xml",
+        "wizards/wizard_connect.xml",
     ],
 }
