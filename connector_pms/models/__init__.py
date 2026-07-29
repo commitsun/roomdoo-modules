@@ -3,6 +3,7 @@
 
 from . import common
 from . import pms_availability_plan
+from . import pms_property
 from . import pms_reservation
 from . import pms_room_type
 from . import product_pricelist
