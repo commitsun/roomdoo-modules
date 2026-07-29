@@ -6,3 +6,4 @@ from . import backend_type
 from . import backend_log
 from . import backend_method
 from . import binding
+from . import channel_connect_mixin

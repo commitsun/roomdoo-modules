@@ -15,6 +15,20 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "%(backend)s expects a numeric external ID."
+msgstr "%(backend)s espera un ID externo numérico."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "%(model)s cannot be connected to %(backend)s."
+msgstr "%(model)s no se puede conectar a %(backend)s."
+
+#. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_view_form
 msgid "<span class=\"o_stat_text\">Configuration</span>"
@@ -59,12 +73,28 @@ msgid "A binding already exists with the same Internal (Odoo) ID."
 msgstr "Ya existe un vínculo con el mismo ID interno (de Odoo)."
 
 #. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+msgid ""
+"A new record will be created on the channel manager\n"
+"                                using the data of this Odoo record. The connection is\n"
+"                                created automatically."
+msgstr ""
+"Se creará un registro nuevo en el channel manager con los datos de este "
+"registro de Odoo. La conexión se crea automáticamente."
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__arguments
 msgid "Arguments"
 msgstr "Argumentos"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__available_backend_ids
+msgid "Available Backend"
+msgstr "Backends disponibles"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__backend_id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__backend_id
 msgid "Backend"
 msgstr "Backend"
 
@@ -94,6 +124,66 @@ msgid "Backends"
 msgstr "Backends"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__binding_model
+msgid "Binding Model"
+msgstr "Modelo de vínculo"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_can_connect
+msgid "Can be connected to a channel"
+msgstr "Se puede conectar a un canal"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__candidate_ids
+msgid "Candidate"
+msgstr "Candidato"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_connection_state
+msgid "Channel"
+msgstr "Canal"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_connect_wizard
+msgid "Channel Connect Wizard"
+msgstr "Asistente de conexión con un canal"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_connect_wizard_candidate
+msgid "Channel Connect Wizard Candidate"
+msgstr "Candidato del asistente de conexión con un canal"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#, python-format
+msgid "Channel Connection"
+msgstr "Conexión con el canal"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#, python-format
+msgid "Channel Connections"
+msgstr "Conexiones con canales"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_connect_mixin
+msgid "Channel Manual Connect Mixin"
+msgstr "Mixin de conexión manual con canales"
+
+#. module: connector_pms
 #: model:ir.model,name:connector_pms.model_channel_backend
 msgid "Channel PMS Backend"
 msgstr "Backend de canal del PMS"
@@ -119,6 +209,60 @@ msgid "Channel PMS Binding (abstract)"
 msgstr "Vínculo de canal del PMS (abstracto)"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__backend_id
+msgid "Channel manager"
+msgstr "Channel manager"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__selected_candidate_id
+msgid "Channel record"
+msgstr "Registro del canal"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+msgid "Connect"
+msgstr "Conectar"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
+msgid "Connect to a channel"
+msgstr "Conectar a un canal"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+#, python-format
+msgid "Connect to a channel manager"
+msgstr "Conectar a un channel manager"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_wizard__mode__existing
+msgid "Connect to an existing record on the channel"
+msgstr "Conectar a un registro existente en el canal"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_mixin__channel_connection_state__connected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_availability_plan__channel_connection_state__connected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_room_type__channel_connection_state__connected
+#: model:ir.model.fields.selection,name:connector_pms.selection__product_pricelist__channel_connection_state__connected
+msgid "Connected"
+msgstr "Conectado"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_backend_ids
+#, python-format
+msgid "Connected channels"
+msgstr "Canales conectados"
+
+#. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.availability_plan_rule_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.pms_board_service_form
@@ -132,10 +276,24 @@ msgid "Connectors"
 msgstr "Conectores"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "Could not fetch candidates from %(backend)s: %(error)s"
+msgstr "No se han podido obtener los candidatos de %(backend)s: %(error)s"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_wizard__mode__new
+msgid "Create new on the channel"
+msgstr "Crear uno nuevo en el canal"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__create_uid
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__create_uid
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__create_uid
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__create_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__create_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__create_uid
 msgid "Created by"
 msgstr "Creado por"
 
@@ -144,6 +302,8 @@ msgstr "Creado por"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__create_date
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__create_date
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__create_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__create_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__create_date
 msgid "Created on"
 msgstr "Creado el"
 
@@ -152,6 +312,8 @@ msgstr "Creado el"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__display_name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__display_name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__display_name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__display_name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
@@ -161,7 +323,13 @@ msgid "Export Disabled"
 msgstr "Exportación desactivada"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__external_id
+msgid "External"
+msgstr "Externo"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_binding__external_id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__manual_external_id
 msgid "External ID"
 msgstr "ID externo"
 
@@ -187,6 +355,8 @@ msgstr "El mapeo del campo '%s' está definido dos veces"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__id
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__id
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__id
 msgid "ID"
 msgstr "ID"
 
@@ -213,6 +383,8 @@ msgstr "La clave %s no existe"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log____last_update
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method____last_update
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type____last_update
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard____last_update
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate____last_update
 msgid "Last Modified on"
 msgstr "Última modificación el"
 
@@ -231,6 +403,8 @@ msgstr "Última sincronización (importación)"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__write_uid
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__write_uid
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__write_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__write_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__write_uid
 msgid "Last Updated by"
 msgstr "Última actualización por"
 
@@ -239,6 +413,8 @@ msgstr "Última actualización por"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__write_date
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__write_date
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__write_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__write_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__write_date
 msgid "Last Updated on"
 msgstr "Última actualización el"
 
@@ -246,6 +422,16 @@ msgstr "Última actualización el"
 #: model:ir.model.fields,field_description:connector_pms.field_channel_binding__actual_write_date
 msgid "Last Updated on (actual)"
 msgstr "Última actualización (real)"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+msgid "Load records from the channel manager"
+msgstr "Cargar los registros del channel manager"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_wizard__mode__manual
+msgid "Manual external ID"
+msgstr "ID externo manual"
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__max_calls
@@ -270,9 +456,15 @@ msgid "Method"
 msgstr "Método"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__mode
+msgid "Mode"
+msgstr "Modo"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__name
 msgid "Name"
 msgstr "Nombre"
 
@@ -290,6 +482,25 @@ msgstr "El backend no tiene definido el campo de ID (_id)"
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#, python-format
+msgid ""
+"No channel manager is configured for the properties of this record. Create a"
+" backend first."
+msgstr ""
+"No hay ningún channel manager configurado para los hoteles de este registro."
+" Crea un backend antes."
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_mixin__channel_connection_state__disconnected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_availability_plan__channel_connection_state__disconnected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_room_type__channel_connection_state__disconnected
+#: model:ir.model.fields.selection,name:connector_pms.selection__product_pricelist__channel_connection_state__disconnected
+msgid "Not connected"
+msgstr "No conectado"
+
+#. module: connector_pms
+#. odoo-python
 #: code:addons/connector_pms/components_custom/exporter.py:0
 #: code:addons/connector_pms/components_custom/exporter.py:0
 #: code:addons/connector_pms/components_custom/exporter.py:0
@@ -301,6 +512,11 @@ msgstr "Nada que exportar"
 #: model:ir.model.fields,field_description:connector_pms.field_pms_reservation__ota_reservation_code
 msgid "OTA Reservation Code"
 msgstr "Código de reserva de la OTA"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
+msgid "Odoo record"
+msgstr "Registro de Odoo"
 
 #. module: connector_pms
 #: model:ir.model.constraint,message:connector_pms.constraint_channel_backend_method_method_backend_type
@@ -360,6 +576,18 @@ msgid "PMS Channel Backend Method"
 msgstr "Método del backend de canal del PMS"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "Pick a record from the list."
+msgstr "Elige un registro de la lista."
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_product_pricelist
+msgid "Pricelist"
+msgstr "Tarifa"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms.field_queue_job__pms_property_id
 #: model_terms:ir.ui.view,arch_db:connector_pms.view_queue_job_search
@@ -367,9 +595,21 @@ msgid "Property"
 msgstr "Hotel"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "Provide an external ID."
+msgstr "Indica un ID externo."
+
+#. module: connector_pms
 #: model:ir.model,name:connector_pms.model_queue_job
 msgid "Queue Job"
 msgstr "Cola de trabajos"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__record_display_name
+msgid "Record Display Name"
+msgstr "Nombre del registro"
 
 #. module: connector_pms
 #. odoo-python
@@ -391,9 +631,24 @@ msgid "Referenced Model Type"
 msgstr "Tipo de modelo referenciado"
 
 #. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__res_id
+msgid "Res"
+msgstr "Res"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard__res_model
+msgid "Res Model"
+msgstr "Modelo del recurso"
+
+#. module: connector_pms
 #: model:ir.model,name:connector_pms.model_pms_reservation
 msgid "Reservation"
 msgstr "Reserva"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_pms_availability_plan
+msgid "Reservation availability plan"
+msgstr "Plan de Disponibilidad de la Reserva"
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__response
@@ -406,9 +661,21 @@ msgid "Response Code"
 msgstr "Código de respuesta"
 
 #. module: connector_pms
+#: model:ir.model,name:connector_pms.model_pms_room_type
+msgid "Room Type"
+msgstr "Tipo de Habitación"
+
+#. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
 msgid "Rules"
 msgstr "Reglas"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "Source record does not exist."
+msgstr "El registro de origen no existe."
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_binding__synced_export
@@ -428,11 +695,46 @@ msgstr ""
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid ""
+"The record picked was listed by another channel manager. Load the records of"
+" %(backend)s and pick again."
+msgstr ""
+"El registro elegido lo listó otro channel manager. Carga los registros de "
+"%(backend)s y vuelve a elegir."
+
+#. module: connector_pms
+#. odoo-python
 #: code:addons/connector_pms/components/adapter.py:0
 #: code:addons/connector_pms/components/adapter.py:0
 #, python-format
 msgid "The value %s should be a list or tuple"
 msgstr "El valor %s debería ser una lista o una tupla"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#, python-format
+msgid ""
+"This record is already connected to every channel manager available to it."
+msgstr ""
+"Este registro ya está conectado a todos los channel managers que tiene "
+"disponibles."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "This record is already connected to the selected channel."
+msgstr "Este registro ya está conectado al canal seleccionado."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
+#, python-format
+msgid "This record is not connected to any channel yet."
+msgstr "Este registro todavía no está conectado a ningún canal."
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__time_window
@@ -455,9 +757,28 @@ msgid "Type"
 msgstr "Tipo"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/wizards/wizard_connect.py:0
+#, python-format
+msgid "Unknown mode."
+msgstr "Modo desconocido."
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__user_id
 msgid "User"
 msgstr "Usuario"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
+msgid "View connections"
+msgstr "Ver conexiones"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_connect_wizard_candidate__wizard_id
+msgid "Wizard"
+msgstr "Asistente"
 
 #. module: connector_pms
 #. odoo-python
