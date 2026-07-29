@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <record id="channel_channex" model="queue.job.channel">
+        <field name="name">channex</field>
+        <field name="parent_id" ref="connector_pms.channel_pms" />
+    </record>
+    <record id="channel_channex_masters" model="queue.job.channel">
+        <field name="name">masters</field>
+        <field name="parent_id" ref="channel_channex" />
+    </record>
+    <record id="channel_channex_others" model="queue.job.channel">
+        <field name="name">others</field>
+        <field name="parent_id" ref="channel_channex" />
+    </record>
+</odoo>
