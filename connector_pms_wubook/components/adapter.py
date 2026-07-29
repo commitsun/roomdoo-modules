@@ -12,8 +12,8 @@ from odoo.addons.connector_pms.components.adapter import ChannelAdapterError
 
 _logger = logging.getLogger(__name__)
 
+
 # TODO: move this auxiliary class to a library or connector_pms adapter
-# flake8: noqa=C901
 class ChannelCallControl:
     # https://tdocs.wubook.net/wired/policies.html#anti-flood-policies
     def __init__(self, obj, funcname, args):
@@ -40,7 +40,11 @@ class ChannelCallControl:
         if self.method.max_calls > 0 and self.method.time_window > 0:
             calls_int = self.obj.env["channel.backend.log"].search_count(
                 [
-                    ("backend_id", "=", self.obj.backend_record.id),
+                    # ``channel.backend.log.backend_id`` points at the generic
+                    # ``channel.backend``, which is what ``add_result`` writes.
+                    # Counting with the vendor backend id never matched a row,
+                    # so the rate limit never fired.
+                    ("backend_id", "=", self.obj.backend_record.parent_id.id),
                     ("method_id", "=", self.method.id),
                     (
                         "timestamp",
@@ -53,7 +57,8 @@ class ChannelCallControl:
             if calls_int >= self.method.max_calls:
                 raise ValidationError(
                     _(
-                        "Too many calls to '%(function)s': %(number)i in last %(minuts)i minutes"
+                        "Too many calls to '%(function)s': %(number)i in "
+                        "last %(minuts)i minutes"
                     )
                     % {
                         "function": funcname,
@@ -131,11 +136,12 @@ class ChannelWubookAdapter(AbstractComponent):
                     raise ChannelAdapterError(
                         _(
                             "Some of the resources (id's) not found on Backend "
-                            "executing %(function)s(%(arguments)s). Probably they have been "
+                            "executing %(function)s(%(arguments)s). Probably they "
+                            "have been "
                             "deleted from the Backend"
                         )
                         % {"function": funcname, "arguments": args}
-                    )
+                    ) from e
                 raise
             if res:
                 # TODO: rethink this and maybie put it to the UX
@@ -242,13 +248,13 @@ class ChannelWubookAdapter(AbstractComponent):
             value = value.strftime(self._date_format)
         elif isinstance(value, bool):
             value = value and 1 or 0
-        elif isinstance(value, (int, str, list, tuple)):
+        elif isinstance(value, int | str | list | tuple):
             pass
         else:
             raise Exception("Type '%s' not supported" % type(value))
         return value
 
-    def _domain_to_normalized_dict(self, domain, interval_fields=None):
+    def _domain_to_normalized_dict(self, domain, interval_fields=None):  # noqa: C901
         """Convert, if possible, standard Odoo domain to a dictionary.
         To do so it is necessary to convert all operators to
         equal '=' operator.
@@ -256,7 +262,7 @@ class ChannelWubookAdapter(AbstractComponent):
         if not interval_fields:
             interval_fields = []
         else:
-            if not isinstance(interval_fields, (tuple, list)):
+            if not isinstance(interval_fields, tuple | list):
                 interval_fields = [interval_fields]
         res = {}
         ifields_check = {}
@@ -269,7 +275,7 @@ class ChannelWubookAdapter(AbstractComponent):
             if op == "=":
                 if field in interval_fields:
                     for postfix in ["from", "to"]:
-                        field_field = "{}_{}".format(field, postfix)
+                        field_field = f"{field}_{postfix}"
                         ifields_check.setdefault(field, set())
                         if field_field in ifields_check[field]:
                             raise ValidationError(
@@ -292,7 +298,8 @@ class ChannelWubookAdapter(AbstractComponent):
                 if field in interval_fields:
                     raise ValidationError(
                         _(
-                            "Operator %(operation)s not supported on interval fields %(field)s"
+                            "Operator %(operation)s not supported on interval "
+                            "fields %(field)s"
                         )
                         % {"operation": op, "field": field}
                     )
@@ -309,14 +316,16 @@ class ChannelWubookAdapter(AbstractComponent):
                 if field in interval_fields:
                     raise ValidationError(
                         _(
-                            "Operator %(operation)s not supported on interval fields %(field)s"
+                            "Operator %(operation)s not supported on interval "
+                            "fields %(field)s"
                         )
                         % {"operation": op, "field": field}
                     )
-                if not isinstance(value, (tuple, list)):
+                if not isinstance(value, tuple | list):
                     raise ValidationError(
                         _(
-                            "Operator '%(operation)s' only supports tuples or lists, not %(field)s"
+                            "Operator '%(operation)s' only supports tuples or "
+                            "lists, not %(field)s"
                         )
                         % {"operation": op, "field": type(value)}
                     )
@@ -329,7 +338,7 @@ class ChannelWubookAdapter(AbstractComponent):
                         _("The operator %s is only supported on interval fields") % op
                     )
                 if not isinstance(
-                    value, (datetime.date, datetime.datetime, int, float)
+                    value, datetime.date | datetime.datetime | int | float
                 ):
                     raise ValidationError(
                         _("Type %(val)s not supported for operator %(operation)s")
@@ -337,7 +346,7 @@ class ChannelWubookAdapter(AbstractComponent):
                     )
                 if op in (">", "<"):
                     adj = 1
-                    if isinstance(value, (datetime.date, datetime.datetime)):
+                    if isinstance(value, datetime.date | datetime.datetime):
                         adj = datetime.timedelta(days=adj)
                     if op == "<":
                         op, value = "<=", value - adj
@@ -360,7 +369,8 @@ class ChannelWubookAdapter(AbstractComponent):
                 if len(ifields_check[field]) != 2:
                     raise ValidationError(
                         _(
-                            "Interval field %s should have exactly 2 clauses on the domain"
+                            "Interval field %s should have exactly 2 clauses "
+                            "on the domain"
                         )
                         % field
                     )
@@ -383,7 +393,8 @@ class ChannelWubookAdapter(AbstractComponent):
     #             if op == "=":
     #                 if not isinstance(value, int):
     #                     raise ValidationError(
-    #                         _("Value should be an integer for field %s and operator %s")
+    #                         _("Value should be an integer for field %s "
+    #                           "and operator %s")
     #                         % (field, op)
     #                     )
     #                 if field == "rooms":
