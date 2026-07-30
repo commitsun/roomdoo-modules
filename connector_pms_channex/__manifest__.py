@@ -22,4 +22,10 @@
         "views/pms_property_views.xml",
         "views/pms_room_type_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "connector_pms_channex/static/src/**/*.js",
+            "connector_pms_channex/static/src/**/*.xml",
+        ],
+    },
 }
