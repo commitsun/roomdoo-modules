@@ -3,5 +3,6 @@
 
 from . import test_adapter
 from . import test_group_setup
+from . import test_iframe
 from . import test_listeners
 from . import test_masters
