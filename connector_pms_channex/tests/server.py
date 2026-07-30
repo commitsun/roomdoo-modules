@@ -106,6 +106,8 @@ class FakeChannexServer:
                 headers,
             )
 
+        if method == "POST" and path == "auth/one_time_token":
+            return self._one_time_token(json)
         if method == "GET" and "/" in path:
             return self._read(resource, path.split("/")[1])
         if method == "GET":
@@ -117,6 +119,25 @@ class FakeChannexServer:
         if method == "DELETE":
             return self._delete(resource, path.split("/")[1])
         return FakeResponse(405, {"errors": {"code": "method", "title": "Not allowed"}})
+
+    def _one_time_token(self, body):
+        """Its answer is not wrapped like the rest of the API: no ``type``, no
+        ``attributes``, just the token. A fresh one on every call, because it is
+        single use on Channex too."""
+        values = (body or {}).get("one_time_token") or {}
+        if not values.get("property_id"):
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation",
+                        "title": "Missing required fields",
+                        "details": {"property_id": ["can't be blank"]},
+                    }
+                },
+            )
+        self._counter += 1
+        return FakeResponse(200, {"data": {"token": _uuid(self._counter)}})
 
     def _payload_root(self, resource):
         return {
