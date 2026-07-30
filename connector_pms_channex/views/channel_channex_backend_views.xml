@@ -14,6 +14,13 @@
             string="Test connection"
             class="btn-primary"
           />
+                    <button
+            name="action_open_channex_channels"
+            type="object"
+            string="Channels"
+            class="btn-secondary"
+            help="Create and map the OTA channels on Channex, from here."
+          />
                 </header>
                 <sheet>
                     <group>
