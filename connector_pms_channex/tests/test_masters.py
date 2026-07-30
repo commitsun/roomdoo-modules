@@ -8,7 +8,7 @@ during certification, and a silent regression there is invisible otherwise."""
 from odoo.exceptions import ValidationError
 from odoo.tests.common import tagged
 
-from .common import ChannexConnectorCase
+from .common import GROUP_UUID, ChannexConnectorCase
 
 PROPERTY_BINDING = "channel.channex.pms.property"
 ROOM_TYPE_BINDING = "channel.channex.pms.room.type"
@@ -38,7 +38,7 @@ class TestPropertyExport(ChannexConnectorCase):
         self.assertEqual(payload["currency"], self.company.currency_id.name)
         self.assertEqual(payload["timezone"], "Europe/Madrid")
         self.assertEqual(payload["property_type"], "hotel")
-        self.assertEqual(payload["group_id"], "group-uuid")
+        self.assertEqual(payload["group_id"], GROUP_UUID)
         # Availability is pushed as an absolute number, so letting Channex
         # decrement on confirmation is safe and narrows the overbooking window,
         # while the other two could inflate inventory Odoo has not released.

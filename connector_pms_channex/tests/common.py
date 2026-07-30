@@ -5,6 +5,10 @@ from odoo.addons.component.tests.common import TransactionComponentCase
 
 from .server import FakeChannexServer
 
+# The group id has to be a real UUID: the backend validates it, because pasting
+# it from the Channex panel URL is an easy mistake to make.
+GROUP_UUID = "11111111-1111-1111-1111-111111111111"
+
 
 class ChannexConnectorCase(TransactionComponentCase):
     """A hotel with two room types of differing capacity, and a backend pointing
@@ -45,7 +49,6 @@ class ChannexConnectorCase(TransactionComponentCase):
                 "model_type_id": cls.env.ref(
                     "connector_pms_channex.model_channel_channex_backend_type"
                 ).id,
-                "group_id": "group-uuid",
                 "room_kind_ids": [
                     (
                         0,
@@ -65,6 +68,7 @@ class ChannexConnectorCase(TransactionComponentCase):
                 "backend_type_id": cls.backend_type.parent_id.id,
                 "api_key": "test-key",
                 "environment": "staging",
+                "group_id": GROUP_UUID,
             }
         )
 

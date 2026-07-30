@@ -45,6 +45,7 @@ class FakeResponse:
 class FakeChannexServer:
     #: required attributes, mirroring what Channex rejects a body without
     REQUIRED = {
+        "groups": ("title",),
         "properties": ("title", "currency"),
         "room_types": (
             "property_id",
@@ -118,9 +119,11 @@ class FakeChannexServer:
         return FakeResponse(405, {"errors": {"code": "method", "title": "Not allowed"}})
 
     def _payload_root(self, resource):
-        return {"properties": "property", "room_types": "room_type"}.get(
-            resource, resource
-        )
+        return {
+            "groups": "group",
+            "properties": "property",
+            "room_types": "room_type",
+        }.get(resource, resource)
 
     def _wrap(self, resource, record):
         attributes = {k: v for k, v in record.items() if k != "id"}
