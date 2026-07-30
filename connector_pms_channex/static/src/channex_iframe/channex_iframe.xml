@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<templates xml:space="preserve">
+    <t t-name="connector_pms_channex.ChannexIframeAction" owl="1">
+        <div class="o_action o_channex_iframe_action">
+            <!-- The frame is sized by .o_content, which the webclient layout
+                 already gives a height: no styling of our own. -->
+            <Layout
+        display="{ controlPanel: { 'top-right': false, 'bottom-right': false } }"
+      >
+                <iframe class="h-100 w-100 border-0" t-att-src="url" />
+            </Layout>
+        </div>
+    </t>
+</templates>

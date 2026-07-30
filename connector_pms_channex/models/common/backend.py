@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
+import urllib.parse
 import uuid
 
 from odoo import _, api, fields, models
@@ -9,8 +10,13 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-STAGING_URL = "https://staging.channex.io/api/v1"
-PRODUCTION_URL = "https://channex.io/api/v1"
+API_PATH = "/api/v1"
+STAGING_URL = "https://staging.channex.io" + API_PATH
+PRODUCTION_URL = "https://channex.io" + API_PATH
+
+# Languages the embedded Channex UI ships. Anything else falls back to English,
+# which is what Channex does anyway, only without leaving a wrong hint in the URL.
+UI_LANGUAGES = ("de", "el", "en", "es", "hu", "it", "pt", "ru", "th")
 
 
 class ChannelChannexBackend(models.Model):
@@ -176,6 +182,102 @@ class ChannelChannexBackend(models.Model):
             raise UserError(_("Channex did not return a group ID."))
         self.write({"group_id": data["id"], "group_title": title})
         return self._notify(_("Channex group %s created.") % title)
+
+    # -- embedded Channex UI -----------------------------------------------
+
+    def _channex_web_url(self):
+        """``url`` addresses the API; the embedded UI hangs off the web root."""
+        self.ensure_one()
+        root = (self.url or "").rstrip("/")
+        if root.endswith(API_PATH):
+            root = root[: -len(API_PATH)]
+        return root
+
+    def _channex_property_external_id(self):
+        """Channex scopes the embedded session to one of its properties, so the
+        property has to be there before anything can be shown inside it."""
+        self.ensure_one()
+        binding = (
+            self.env["channel.channex.pms.property"]
+            .with_context(active_test=False)
+            .search([("backend_id", "=", self.id)], limit=1)
+        )
+        if not binding.external_id:
+            raise UserError(
+                _("Export %s to Channex before opening its Channex screens.")
+                % self.pms_property_id.display_name
+            )
+        return binding.external_id
+
+    def _channex_one_time_token(self, property_id, group_id):
+        """Mint a token for one load of the embedded UI.
+
+        It is never stored: Channex drops it on first use and after 15 minutes,
+        while the session it opens does not expire once the frame has loaded.
+        """
+        self.ensure_one()
+        body = self._channex_request(
+            "POST",
+            "auth/one_time_token",
+            payload={
+                "one_time_token": {
+                    "property_id": property_id,
+                    "group_id": group_id,
+                    "username": self.env.user.name,
+                }
+            },
+        )
+        if body is None:
+            raise UserError(
+                _(
+                    "Exports are disabled on this backend, so Channex would not "
+                    "authorise the session."
+                )
+            )
+        token = ((body or {}).get("data") or {}).get("token")
+        if not token:
+            raise UserError(_("Channex did not return an access token."))
+        return token
+
+    def channex_iframe_url(self, page="/channels"):
+        """URL of a Channex screen, embeddable in Odoo.
+
+        Called by the client action on every mount rather than handed over once
+        in the action, because the token only survives a single load and an
+        action lives on in the breadcrumb.
+        """
+        self.ensure_one()
+        property_id = self._channex_property_external_id()
+        group_id = self._channex_group_id()
+        lang = (self.env.user.lang or "en").split("_")[0]
+        query = urllib.parse.urlencode(
+            {
+                "oauth_session_key": self._channex_one_time_token(
+                    property_id, group_id
+                ),
+                # Hides the Channex chrome, so what is left is the screen itself.
+                "app_mode": "headless",
+                "redirect_to": page,
+                "property_id": property_id,
+                "group_id": group_id,
+                "lng": lang if lang in UI_LANGUAGES else "en",
+            }
+        )
+        return f"{self._channex_web_url()}/auth/exchange?{query}"
+
+    def action_open_channex_channels(self):
+        """Channels are created and mapped in Channex's own UI.
+
+        Not reimplemented in Odoo on purpose: only Channex knows which OTAs are
+        really connectable, and every one of them has its own mapping screen.
+        """
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "channex_iframe",
+            "name": _("Channex channels"),
+            "params": {"backend_id": self.id, "page": "/channels"},
+        }
 
     def _notify(self, message):
         return {
