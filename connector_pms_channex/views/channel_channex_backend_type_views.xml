@@ -13,10 +13,6 @@
                         <field name="name" />
                         <field name="default_property_type" />
                     </group>
-                    <group string="Channex group">
-                        <field name="group_id" />
-                        <field name="group_title" />
-                    </group>
                     <notebook>
                         <page string="Room type classes" name="room_kinds">
                             <field name="room_kind_ids" nolabel="1">
