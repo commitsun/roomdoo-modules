@@ -128,6 +128,19 @@ class ChannelBinding(models.AbstractModel):
             exporter = work.component(usage="direct.record.exporter")
             return exporter.run(relation)
 
+    @api.model
+    def export_delete_record(self, backend_record, external_id):
+        """Delete a record on the channel manager.
+
+        Takes the external id as a plain value rather than a binding, because
+        the caller is normally reacting to the Odoo record going away: by the
+        time the job runs, the binding is gone too.
+        """
+        backend_record = self._backend_in_job_context(backend_record)
+        with backend_record.work_on(self._name) as work:
+            deleter = work.component(usage="deleter")
+            return deleter.run(external_id)
+
     # existing binding synchronization
     def resync_import(self):
         for record in self:

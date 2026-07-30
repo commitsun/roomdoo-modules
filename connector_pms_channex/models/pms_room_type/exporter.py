@@ -10,8 +10,13 @@ class ChannelChannexPmsRoomTypeExporter(Component):
     _apply_on = "channel.channex.pms.room.type"
 
     def _has_to_skip(self):
-        """A room type of an excluded class is never sent."""
-        return self.binding._is_excluded() or super()._has_to_skip()
+        """A room type of an excluded class is never sent, and neither is one
+        with no rooms: Channex rejects ``count_of_rooms`` below 1."""
+        if self.binding._is_excluded():
+            return True
+        if self.binding.count_of_rooms < 1:
+            return True
+        return super()._has_to_skip()
 
     def _export_dependencies(self):
         """Channex needs the property to exist before its room types."""
