@@ -33,8 +33,46 @@
                             <field name="timeout_read" />
                         </group>
                     </group>
+                    <group
+            string="Channex group"
+            help="Every property on Channex belongs to a group. Channex hides its groups screen until the account has a property, so a new account gets its group from here."
+          >
+                        <field name="group_id" placeholder="UUID of the group" />
+                        <field name="group_title" />
+                        <div>
+                            <button
+                name="action_fetch_channex_group"
+                type="object"
+                string="Fetch group"
+                class="btn-secondary"
+              />
+                            <button
+                name="action_create_channex_group"
+                type="object"
+                string="Create group"
+                class="btn-secondary"
+                confirm="This creates a new group on Channex. Fetch first to check whether the account already has one."
+              />
+                        </div>
+                    </group>
                 </sheet>
             </form>
+        </field>
+    </record>
+    <record id="channel_channex_group_option_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.group.option.tree</field>
+        <field name="model">channel.channex.group.option</field>
+        <field name="arch" type="xml">
+            <tree string="Channex Groups" create="false">
+                <field name="title" />
+                <field name="external_id" />
+                <button
+          name="action_use"
+          type="object"
+          string="Use this group"
+          class="btn-primary"
+        />
+            </tree>
         </field>
     </record>
     <record id="channel_channex_backend_view_tree" model="ir.ui.view">

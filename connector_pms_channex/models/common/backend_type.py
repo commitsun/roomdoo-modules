@@ -21,6 +21,10 @@ class ChannelBackendType(models.Model):
 class ChannelChannexBackendType(models.Model):
     """Business mapping shared by every backend of this channel manager.
 
+    Only installation-wide vocabularies live here. Anything scoped to a Channex
+    account -- the API key, the group -- belongs on the backend, because the
+    account is defined by the key.
+
     Note there is no direct sale channel here, unlike the Wubook backend type:
     Channex has no booking engine of its own, it only connects to OTAs. The OTA
     a reservation came from is a partner, resolved through ``ota_ids``.
@@ -47,11 +51,6 @@ class ChannelChannexBackendType(models.Model):
         ),
     ]
 
-    group_id = fields.Char(
-        string="Channex group ID",
-        help="Channex requires every property to belong to a group.",
-    )
-    group_title = fields.Char(string="Channex group name", readonly=True)
     default_property_type = fields.Selection(
         selection=[
             ("hotel", "Hotel"),

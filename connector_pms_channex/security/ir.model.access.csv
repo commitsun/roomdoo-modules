@@ -5,3 +5,4 @@ access_channel_channex_backend_type_ota_manager,channel channex backend type ota
 access_channel_channex_backend_type_room_kind_manager,channel channex backend type room kind manager,model_channel_channex_backend_type_room_kind,connector.group_connector_manager,1,1,1,1
 access_channel_channex_pms_property_manager,channel channex pms property manager,model_channel_channex_pms_property,connector.group_connector_manager,1,1,1,1
 access_channel_channex_pms_room_type_manager,channel channex pms room type manager,model_channel_channex_pms_room_type,connector.group_connector_manager,1,1,1,1
+access_channel_channex_group_option_manager,channel channex group option manager,model_channel_channex_group_option,connector.group_connector_manager,1,1,1,1
