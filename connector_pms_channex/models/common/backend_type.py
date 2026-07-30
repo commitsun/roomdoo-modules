@@ -71,3 +71,11 @@ class ChannelChannexBackendType(models.Model):
         inverse_name="backend_type_id",
         string="OTAs",
     )
+
+    def _is_excluded_class(self, room_type_class):
+        """Room type classes flagged as excluded are never sent to Channex."""
+        self.ensure_one()
+        mapping = self.room_kind_ids.filtered(
+            lambda m: m.room_type_class_id == room_type_class
+        )
+        return bool(mapping[:1].excluded)

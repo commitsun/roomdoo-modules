@@ -72,7 +72,15 @@ class ChannelChannexPmsRoomType(models.Model):
             ]
         )
 
-    @api.depends("odoo_id", "backend_id")
+    @api.depends(
+        "odoo_id",
+        "backend_id",
+        "backend_id.pms_property_id",
+        "odoo_id.room_ids",
+        "odoo_id.room_ids.active",
+        "odoo_id.room_ids.capacity",
+        "odoo_id.room_ids.pms_property_id",
+    )
     def _compute_from_rooms(self):
         for rec in self:
             rooms = rec._backend_rooms()
@@ -113,7 +121,6 @@ class ChannelChannexPmsRoomType(models.Model):
     def _is_excluded(self):
         """Room type classes flagged as excluded are never sent."""
         self.ensure_one()
-        mapping = self.backend_id.backend_type_id.child_id.room_kind_ids.filtered(
-            lambda m: m.room_type_class_id == self.odoo_id.class_id
+        return self.backend_id.backend_type_id.child_id._is_excluded_class(
+            self.odoo_id.class_id
         )
-        return bool(mapping[:1].excluded)
