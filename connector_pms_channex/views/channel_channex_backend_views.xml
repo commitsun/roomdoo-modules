@@ -14,13 +14,6 @@
             string="Test connection"
             class="btn-primary"
           />
-                    <button
-            name="action_open_channex_channels"
-            type="object"
-            string="Channels"
-            class="btn-secondary"
-            help="Create and map the OTA channels on Channex, from here."
-          />
                 </header>
                 <sheet>
                     <group>
@@ -62,6 +55,38 @@
               />
                         </div>
                     </group>
+                    <notebook>
+                        <page string="Channels" name="channels">
+                            <div
+                class="alert alert-warning"
+                role="alert"
+                attrs="{'invisible': [('unmapped_channel_count', '=', 0)]}"
+              >
+                                <field
+                  name="unmapped_channel_count"
+                  class="oe_inline"
+                />
+                                channel(s) have no agency. Their bookings would come in
+                                with nobody to attribute them to.
+                            </div>
+                            <div class="mb-2">
+                                <button
+                  name="action_sync_channex_channels"
+                  type="object"
+                  string="Sync channels"
+                  class="btn-primary"
+                />
+                                <button
+                  name="action_open_channex_channels"
+                  type="object"
+                  string="Open Channex"
+                  class="btn-secondary"
+                  help="Create and map the OTA channels on Channex."
+                />
+                            </div>
+                            <field name="channel_ids" nolabel="1" />
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
