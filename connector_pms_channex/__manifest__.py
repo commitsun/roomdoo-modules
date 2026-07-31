@@ -17,6 +17,7 @@
     "data": [
         "security/ir.model.access.csv",
         "data/queue_data.xml",
+        "views/channel_channex_channel_views.xml",
         "views/channel_channex_backend_views.xml",
         "views/channel_channex_backend_type_views.xml",
         "views/pms_property_views.xml",
