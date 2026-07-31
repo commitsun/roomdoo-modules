@@ -27,7 +27,9 @@ class ChannelChannexBackendType(models.Model):
 
     Note there is no direct sale channel here, unlike the Wubook backend type:
     Channex has no booking engine of its own, it only connects to OTAs. The OTA
-    a reservation came from is a partner, resolved through ``ota_ids``.
+    a reservation came from is a partner, resolved through
+    ``channel.channex.ota``, which is installation wide rather than per backend
+    type: a channel code means the same partner in every property.
     """
 
     _name = "channel.channex.backend.type"
@@ -65,11 +67,6 @@ class ChannelChannexBackendType(models.Model):
         comodel_name="channel.channex.backend.type.room.kind",
         inverse_name="backend_type_id",
         string="Room type classes",
-    )
-    ota_ids = fields.One2many(
-        comodel_name="channel.channex.backend.type.ota",
-        inverse_name="backend_type_id",
-        string="OTAs",
     )
 
     def _is_excluded_class(self, room_type_class):
