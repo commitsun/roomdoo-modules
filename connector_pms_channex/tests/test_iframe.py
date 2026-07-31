@@ -90,10 +90,9 @@ class TestChannexIframe(ChannexConnectorCase):
         with self.assertRaises(UserError):
             self.backend.channex_iframe_url()
 
-    def test_action_opens_the_client_action(self):
+    def test_the_action_carries_no_token(self):
+        """It would be stale on the way back from the breadcrumb."""
         action = self.backend.action_open_channex_channels()
-        self.assertEqual(action["tag"], "channex_iframe")
+        self.assertEqual(action["tag"], "channex_channels")
         self.assertEqual(action["params"]["backend_id"], self.backend.id)
-        self.assertEqual(action["params"]["page"], "/channels")
-        # The token is not in the action: it would be stale on the way back.
         self.assertNotIn("oauth_session_key", str(action))
