@@ -302,11 +302,15 @@ class ChannelChannexBackend(models.Model):
             adapter = work.component(usage="backend.adapter")
             return adapter.search_read([("property_id", "=", property_id)])
 
-    def action_sync_channex_channels(self):
+    def channex_sync_channels(self):
         """Bring in the channels the hotel connected on Channex.
 
         Nothing is created on Channex from here, and no partner is invented
         either: an unmapped channel is reported, never guessed.
+
+        There is no button for this. The screen that guides the hotel through
+        connecting channels runs it on its own, because a step called
+        "synchronise" is a step that means nothing to a hotelier.
         """
         self.ensure_one()
         channels = self.env["channel.channex.channel"]
@@ -315,32 +319,33 @@ class ChannelChannexBackend(models.Model):
             seen |= channels._channex_upsert(self, values)
         gone = self.channel_ids - seen
         gone.write({"active": False})
-        if self.unmapped_channel_count:
-            return self._notify(
-                _("%s channel(s) have no agency yet.") % self.unmapped_channel_count,
-                kind="warning",
-            )
-        return self._notify(_("%s channel(s) in sync.") % len(seen))
+        return {"total": len(seen), "unmapped": self.unmapped_channel_count}
 
     def action_open_channex_channels(self):
-        """Channels are created and mapped in Channex's own UI.
+        """The whole channel flow, in one screen.
 
-        Not reimplemented in Odoo on purpose: only Channex knows which OTAs are
-        really connectable, and every one of them has its own mapping screen.
+        Meant to be opened from anywhere -- today a button on this form, later a
+        hotel facing dashboard -- so everything it needs is the backend and the
+        step to land on. It starts on the mapping step once there is something
+        to map, which is what makes it a screen a hotel can come back to rather
+        than a one-shot wizard.
         """
         self.ensure_one()
         return {
             "type": "ir.actions.client",
-            "tag": "channex_iframe",
-            "name": _("Channex channels"),
-            "params": {"backend_id": self.id, "page": "/channels"},
+            "tag": "channex_channels",
+            "name": _("Channels"),
+            "params": {
+                "backend_id": self.id,
+                "step": "map" if self.channel_ids else "connect",
+            },
         }
 
-    def _notify(self, message, kind="success"):
+    def _notify(self, message):
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
-            "params": {"type": kind, "message": message, "sticky": kind != "success"},
+            "params": {"type": "success", "message": message, "sticky": False},
         }
 
 
