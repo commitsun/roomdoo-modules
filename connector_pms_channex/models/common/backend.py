@@ -74,6 +74,16 @@ class ChannelChannexBackend(models.Model):
         "Channex account, and the account is the one the API key belongs to.",
     )
     group_title = fields.Char(string="Channex group name", readonly=True)
+    channel_ids = fields.One2many(
+        comodel_name="channel.channex.channel",
+        inverse_name="backend_id",
+        string="Channels",
+    )
+    unmapped_channel_count = fields.Integer(
+        compute="_compute_unmapped_channel_count",
+        help="Channels with no agency. Their bookings would come in with no "
+        "partner to attribute them to.",
+    )
 
     @api.depends("environment")
     def _compute_url(self):
@@ -265,6 +275,53 @@ class ChannelChannexBackend(models.Model):
         )
         return f"{self._channex_web_url()}/auth/exchange?{query}"
 
+    # -- channels ----------------------------------------------------------
+
+    @api.depends("channel_ids.agency_id", "channel_ids.active")
+    def _compute_unmapped_channel_count(self):
+        for rec in self:
+            # ``active`` is filtered here and not left to ``active_test``: a
+            # channel deactivated during the sync is still in the one2many that
+            # was read before it, and a channel that no longer exists on Channex
+            # is nothing to warn about.
+            rec.unmapped_channel_count = len(
+                rec.channel_ids.filtered(
+                    lambda channel: channel.active and not channel.agency_id
+                )
+            )
+
+    def _channex_fetch_channels(self):
+        """The channels of this backend's property, as Channex reports them.
+
+        An account holds the channels of all its properties, so the property
+        filter is the scoping, not an optimisation.
+        """
+        self.ensure_one()
+        property_id = self._channex_property_external_id()
+        with self.work_on("channel.channex.channel") as work:
+            adapter = work.component(usage="backend.adapter")
+            return adapter.search_read([("property_id", "=", property_id)])
+
+    def action_sync_channex_channels(self):
+        """Bring in the channels the hotel connected on Channex.
+
+        Nothing is created on Channex from here, and no partner is invented
+        either: an unmapped channel is reported, never guessed.
+        """
+        self.ensure_one()
+        channels = self.env["channel.channex.channel"]
+        seen = channels
+        for values in self._channex_fetch_channels():
+            seen |= channels._channex_upsert(self, values)
+        gone = self.channel_ids - seen
+        gone.write({"active": False})
+        if self.unmapped_channel_count:
+            return self._notify(
+                _("%s channel(s) have no agency yet.") % self.unmapped_channel_count,
+                kind="warning",
+            )
+        return self._notify(_("%s channel(s) in sync.") % len(seen))
+
     def action_open_channex_channels(self):
         """Channels are created and mapped in Channex's own UI.
 
@@ -279,11 +336,11 @@ class ChannelChannexBackend(models.Model):
             "params": {"backend_id": self.id, "page": "/channels"},
         }
 
-    def _notify(self, message):
+    def _notify(self, message, kind="success"):
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
-            "params": {"type": "success", "message": message, "sticky": False},
+            "params": {"type": kind, "message": message, "sticky": kind != "success"},
         }
 
 
