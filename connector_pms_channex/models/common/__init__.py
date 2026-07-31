@@ -3,6 +3,6 @@
 
 from . import backend
 from . import backend_type
-from . import backend_type_ota
 from . import backend_type_room_kind
 from . import binding
+from . import ota
