@@ -151,9 +151,25 @@ class AccountBankStatement(models.Model):
         when the session is actually closed and False when it is discarded.
         """
         self.ensure_one()
+        # Serialize concurrent close requests on the same session (e.g. a
+        # double click on the close button): the second request waits on the
+        # row lock until the first one commits, and the recheck below then
+        # sees the session already closed instead of pouring the payments
+        # again. The router's 409 guard alone cannot see an uncommitted close.
+        self.env.cr.execute(
+            "SELECT id FROM account_bank_statement WHERE id = %s FOR UPDATE",
+            (self.id,),
+        )
+        self.invalidate_recordset()
+        if self.cash_session_closed:
+            return True
         breakdown = self._pms_cash_session_breakdown()
         difference = round(counted_cash - breakdown["expected"], 2)
-        session_payments = self._pms_cash_session_payments()
+        # A payment already matched against a statement line was poured by a
+        # previous close, so pouring it again would duplicate the line.
+        session_payments = self._pms_cash_session_payments().filtered(
+            lambda p: not p.is_matched
+        )
         if not session_payments and not difference:
             self.unlink()
             return False
