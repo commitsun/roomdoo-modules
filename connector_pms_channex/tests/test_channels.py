@@ -50,7 +50,7 @@ class TestChannexChannels(ChannexConnectorCase):
 
     def test_sync_brings_in_a_channel_created_on_channex(self):
         self._seed_channel()
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         channel = self._channels()
         self.assertEqual(len(channel), 1)
         self.assertEqual(channel.external_id, "c1")
@@ -64,15 +64,15 @@ class TestChannexChannels(ChannexConnectorCase):
         """One Channex account holds the channels of every hotel in it."""
         self._seed_channel(uuid="c1")
         self._seed_channel(uuid="c2", properties="99999999-9999-9999-9999-999999999999")
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self.assertEqual(self._channels().mapped("external_id"), ["c1"])
 
     def test_syncing_twice_updates_instead_of_duplicating(self):
         self._seed_channel()
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self.server.store["channels"][0]["is_active"] = False
         self.server.store["channels"][0]["title"] = "Renamed"
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         channel = self._channels()
         self.assertEqual(len(channel), 1)
         self.assertEqual(channel.title, "Renamed")
@@ -83,7 +83,7 @@ class TestChannexChannels(ChannexConnectorCase):
         self._seed_channel(uuid="c1")
         self._seed_channel(uuid="c2")
         self.server.store["channels"][1]["settings"] = {"hotel_id": "7777"}
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         channels = self._channels()
         self.assertEqual(len(channels), 2)
         self.assertEqual(len(channels.ota_id), 1)
@@ -93,19 +93,40 @@ class TestChannexChannels(ChannexConnectorCase):
     def test_a_channel_gone_from_channex_keeps_its_mapping(self):
         """Bookings already attributed to it still have to resolve."""
         self._seed_channel()
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self._channels().agency_id = self.agency
         self.server.store["channels"] = []
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         channel = self._channels()
         self.assertFalse(channel.active)
         self.assertEqual(channel.agency_id, self.agency)
+
+    def test_sync_reports_what_it_did(self):
+        self._seed_channel()
+        self.assertEqual(
+            self.backend.channex_sync_channels(), {"total": 1, "unmapped": 1}
+        )
+
+    # -- the guided screen -------------------------------------------------
+
+    def test_it_opens_on_connecting_when_there_is_nothing_to_map(self):
+        self.assertEqual(
+            self.backend.action_open_channex_channels()["params"]["step"], "connect"
+        )
+
+    def test_it_opens_on_mapping_once_there_is_something_to_map(self):
+        """What makes it a screen to come back to rather than a one-shot wizard."""
+        self._seed_channel()
+        self.backend.channex_sync_channels()
+        self.assertEqual(
+            self.backend.action_open_channex_channels()["params"]["step"], "map"
+        )
 
     # -- mapping -----------------------------------------------------------
 
     def test_no_partner_is_invented_for_an_unknown_channel(self):
         self._seed_channel(code="SomethingNew")
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         channel = self._channels()
         self.assertFalse(channel.agency_id)
         self.assertEqual(channel.ota_id.code, "SomethingNew")
@@ -113,23 +134,23 @@ class TestChannexChannels(ChannexConnectorCase):
 
     def test_mapping_the_agency_clears_the_warning(self):
         self._seed_channel()
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self.assertEqual(self.backend.unmapped_channel_count, 1)
         self._channels().agency_id = self.agency
         self.assertEqual(self.backend.unmapped_channel_count, 0)
 
     def test_a_channel_gone_from_channex_stops_warning(self):
         self._seed_channel()
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self.server.store["channels"] = []
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self.assertEqual(self.backend.unmapped_channel_count, 0)
 
     def test_the_agency_is_shared_by_every_property(self):
         """Booking.com is the same partner in all of the hotels, so the second
         one does not have to be mapped by hand."""
         self._seed_channel(uuid="c1")
-        self.backend.action_sync_channex_channels()
+        self.backend.channex_sync_channels()
         self._channels().agency_id = self.agency
 
         other_property = self.env["pms.property"].create(
@@ -155,7 +176,7 @@ class TestChannexChannels(ChannexConnectorCase):
         )
         second_uuid = self.server.store["properties"][-1]["id"]
         self._seed_channel(uuid="c2", properties=second_uuid)
-        other_backend.action_sync_channex_channels()
+        other_backend.channex_sync_channels()
 
         self.assertEqual(self._channels(other_backend).agency_id, self.agency)
         self.assertEqual(other_backend.unmapped_channel_count, 0)
