@@ -460,7 +460,7 @@ class PmsTransactionService(Component):
                 balance=0,
                 dateTime=fields.Datetime.now().isoformat(),
             )
-        isOpen = True if not statement.is_complete else False
+        isOpen = self._is_cash_session_open(statement)
         timezone = pytz.timezone(self.env.context.get("tz") or "UTC")
         create_date_utc = pytz.UTC.localize(statement.create_date)
         create_date = create_date_utc.astimezone(timezone)
@@ -528,7 +528,7 @@ class PmsTransactionService(Component):
         # If a cash session is already open, do not create a duplicate one: a
         # second open statement would steal the day's payments and lead to a
         # double count of those payments when closing. Just reuse the open one.
-        if last_statement and not last_statement.is_complete:
+        if last_statement and self._is_cash_session_open(last_statement):
             return {"result": True, "diff": 0}
         compute_end_balance = (
             round(last_statement.balance_end_real, 2) if last_statement else 0
@@ -568,6 +568,23 @@ class PmsTransactionService(Component):
             journal_id=journal_id,
             pms_property_id=pms_property_id,
         )
+        if not statement:
+            return {"result": True, "diff": 0}
+        # Serialize concurrent close requests on the same session (e.g. a
+        # double click on the front close button): the second request waits
+        # on the row lock until the first one commits, and then sees the
+        # session already closed instead of pouring the payments again.
+        self.env.cr.execute(
+            "SELECT id FROM account_bank_statement WHERE id = %s FOR UPDATE",
+            (statement.id,),
+        )
+        statement.invalidate_recordset()
+        # Only the explicit flag here: the is_complete fallback of
+        # _is_cash_session_open would misread a force-opened session (whose
+        # difference line makes it compute complete) as closed and skip
+        # pouring its payments.
+        if "cash_session_closed" in statement._fields and statement.cash_session_closed:
+            return {"result": True, "diff": 0}
         session_payments = (
             self.env["account.payment"]
             .sudo()
@@ -580,6 +597,13 @@ class PmsTransactionService(Component):
                 ]
             )
         )
+        # A payment already matched against a statement line was poured by a
+        # previous close request: pouring it again would duplicate the line.
+        session_payments = session_payments.filtered(lambda p: not p.is_matched)
+        if statement.line_ids and not session_payments:
+            # Repeated close request: the session lines were already created.
+            self._mark_cash_session_closed(statement)
+            return {"result": True, "diff": 0}
         session_payments_amount = sum(
             session_payments.filtered(lambda x: x.payment_type == "inbound").mapped(
                 "amount"
@@ -747,6 +771,16 @@ class PmsTransactionService(Component):
                     statement_move_line.account_id = payment_move_line.account_id
                     lines_to_reconcile = payment_move_line + statement_move_line
                     lines_to_reconcile.reconcile()
+
+    def _is_cash_session_open(self, statement):
+        """Whether the session is open, keyed off cash_session_closed when
+        pms_fastapi is installed (see _mark_cash_session_closed). The
+        is_complete fallback misreads force-opened sessions (their difference
+        line makes them compute complete), so it is only a fallback.
+        """
+        if "cash_session_closed" in statement._fields:
+            return not statement.cash_session_closed
+        return not statement.is_complete
 
     def _mark_cash_session_closed(self, statement):
         """TEMPORARY bridge to the FastAPI cash-session state. REMOVE WITH THIS MODULE.
