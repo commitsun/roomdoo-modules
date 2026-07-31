@@ -71,20 +71,14 @@
                             </div>
                             <div class="mb-2">
                                 <button
-                  name="action_sync_channex_channels"
-                  type="object"
-                  string="Sync channels"
-                  class="btn-primary"
-                />
-                                <button
                   name="action_open_channex_channels"
                   type="object"
-                  string="Open Channex"
-                  class="btn-secondary"
-                  help="Create and map the OTA channels on Channex."
+                  string="Manage channels"
+                  class="btn-primary"
+                  help="Connect the OTA channels on Channex and say which agency each one is."
                 />
                             </div>
-                            <field name="channel_ids" nolabel="1" />
+                            <field name="channel_ids" nolabel="1" readonly="1" />
                         </page>
                     </notebook>
                 </sheet>
