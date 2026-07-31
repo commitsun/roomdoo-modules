@@ -150,27 +150,31 @@ class FakeChannexServer:
         attributes = {k: v for k, v in record.items() if k != "id"}
         return {"id": record["id"], "type": resource, "attributes": attributes}
 
+    @staticmethod
+    def _matches(record, field, value):
+        # A channel belongs to a list of properties, and Channex filters it by
+        # the singular ``property_id``.
+        if field == "property_id" and "properties" in record:
+            return str(value) in [str(p) for p in record["properties"]]
+        return str(record.get(field)) == str(value)
+
     def _list(self, resource, params):
         records = self.store.get(resource, [])
         for key, value in (params or {}).items():
             if key.startswith("filter[") and key.endswith("]"):
                 field = key[len("filter[") : -1]
-                records = [r for r in records if str(r.get(field)) == str(value)]
+                records = [r for r in records if self._matches(r, field, value)]
         limit = int((params or {}).get("pagination[limit]") or 10)
         page = int((params or {}).get("pagination[page]") or 1)
-        total_pages = max(1, -(-len(records) // limit))
         window = records[(page - 1) * limit : page * limit]
+        meta = {"total": len(records), "page": page, "limit": limit}
+        if resource != "channels":
+            # Channex sends no total_pages on channels, so the adapter has to
+            # fall back to stopping on the first empty page.
+            meta["total_pages"] = max(1, -(-len(records) // limit))
         return FakeResponse(
             200,
-            {
-                "data": [self._wrap(resource, r) for r in window],
-                "meta": {
-                    "total": len(records),
-                    "total_pages": total_pages,
-                    "page": page,
-                    "limit": limit,
-                },
-            },
+            {"data": [self._wrap(resource, r) for r in window], "meta": meta},
         )
 
     def _read(self, resource, external_id):
