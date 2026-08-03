@@ -19,8 +19,8 @@
                 <field name="channex_active" readonly="1" />
                 <field
           name="agency_id"
-          options="{'no_create': True}"
-          placeholder="Pick the agency"
+          options="{'no_quick_create': True}"
+          placeholder="Pick or create the agency"
         />
                 <field name="sync_date" optional="hide" readonly="1" />
                 <field name="external_id" optional="hide" readonly="1" />
