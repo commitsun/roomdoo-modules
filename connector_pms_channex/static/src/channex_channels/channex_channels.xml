@@ -48,7 +48,7 @@
               >Connect and map your OTAs on Channex, then come back with the button below.</t>
                             <t
                 t-else=""
-              >Set the agency of each channel. The ones still missing one are highlighted.</t>
+              >Every channel needs its agency; create it from the dropdown if it is not in Odoo yet. The ones left without one, highlighted, take in bookings with nobody to attribute them to.</t>
                         </span>
                     </div>
                     <div class="flex-grow-1" style="min-height: 0">
