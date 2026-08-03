@@ -17,7 +17,10 @@ which is what makes it worth coming back to when the hotel connects a new OTA
 months later.
 
 No partner is created automatically: a wrong attribution is worse than a missing
-one, so an unmapped channel is highlighted and left alone.
+one, so a channel left without an agency is highlighted and let be. An agency
+that does not exist in Odoo yet is created from the dropdown itself, through the
+contact form, since an agency needs an indirect sale channel and a pricelist
+available for PMS.
 
 The agency is shared by every property: a channel code means the same partner in
 the whole installation, so it is mapped once.
