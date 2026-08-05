@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 from odoo import fields
@@ -205,12 +205,9 @@ class TestBuildLockCodeWindows(CommonSmartlock):
         self.assertEqual(second_to, reservation.checkout_datetime)
         # Transition: same instant, at default_departure_hour of day 2
         self.assertEqual(first_to, second_from)
-        hour, minute = (
-            int(self.pms_property.default_departure_hour[0:2]),
-            int(self.pms_property.default_departure_hour[3:5]),
+        expected = self.pms_property.datetime_from_hour_str(
+            sorted_lines[1].date, self.pms_property.default_departure_hour
         )
-        transition_local = datetime.combine(sorted_lines[1].date, time(hour, minute))
-        expected = self.pms_property.date_property_timezone(transition_local)
         self.assertEqual(first_to, expected)
 
     def test_room_without_lock_excluded_from_windows(self):
