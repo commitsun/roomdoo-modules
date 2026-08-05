@@ -63,6 +63,19 @@ def get_board_service_room_type(mapper, room_type, board, pricelist_id=False):
     )
 
 
+def pad_hour(hour_str):
+    """Return the hour Wubook sends ("9:00") zero-padded ("09:00").
+
+    ``pms.reservation.arrival_hour`` only accepts the padded format. What
+    is not an hour is returned untouched, to be rejected there instead of
+    imported.
+    """
+    hour, separator, minute = hour_str.partition(":")
+    if not separator or not hour.isdigit() or not minute.isdigit():
+        return hour_str
+    return f"{hour.zfill(2)}:{minute.zfill(2)}"
+
+
 class ChannelWubookPmsReservationMapperImport(Component):
     _name = "channel.wubook.pms.reservation.mapper.import"
     _inherit = "channel.wubook.mapper.import"
@@ -124,7 +137,7 @@ class ChannelWubookPmsReservationMapperImport(Component):
             if record["arrival_hour"] == "24:00":
                 record["arrival_hour"] = "23:59"
             return {
-                "arrival_hour": record["arrival_hour"],
+                "arrival_hour": pad_hour(record["arrival_hour"]),
             }
 
     @mapping
