@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import timedelta
 
 from odoo import api, fields, models
 
@@ -232,23 +232,16 @@ class PmsReservation(models.Model):
             if idx == 0:
                 date_from = self.checkin_datetime
             else:
-                date_from = self._lock_code_property_dt(
+                date_from = self.pms_property_id.datetime_from_hour_str(
                     first.date, self.pms_property_id.default_departure_hour
                 )
             if idx == len(groups) - 1:
                 date_to = self.checkout_datetime
             else:
                 next_first_date = groups[idx + 1][1].date
-                date_to = self._lock_code_property_dt(
+                date_to = self.pms_property_id.datetime_from_hour_str(
                     next_first_date,
                     self.pms_property_id.default_departure_hour,
                 )
             windows.append((room, date_from, date_to))
         return windows
-
-    def _lock_code_property_dt(self, local_date, hour_str):
-        self.ensure_one()
-        hour = int(hour_str[0:2])
-        minute = int(hour_str[3:5])
-        local_dt = datetime.combine(local_date, time(hour, minute))
-        return self.pms_property_id.date_property_timezone(local_dt)
