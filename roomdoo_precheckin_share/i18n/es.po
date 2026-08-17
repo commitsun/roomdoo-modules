@@ -1,0 +1,65 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* roomdoo_precheckin_share
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid "Booking cancelled"
+msgstr "Reserva cancelada"
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid "Complete your online check-in before you arrive."
+msgstr "Completa tu check-in online antes de llegar."
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid "Continue to your online check-in"
+msgstr "Continúa con tu check-in online"
+
+#. module: roomdoo_precheckin_share
+#: model:ir.model,name:roomdoo_precheckin_share.model_roomdoo_precheckin_share
+msgid "Pre-check-in Share Document"
+msgstr "Documento para compartir el check-in online"
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid "Stay completed"
+msgstr "Estancia finalizada"
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid ""
+"This booking was cancelled, so its online check-in is no longer available."
+msgstr ""
+"Esta reserva fue cancelada, así que su check-in online ya no está disponible."
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
+msgid ""
+"This stay has already ended, so its online check-in is no longer available."
+msgstr ""
+"Esta estancia ya ha terminado, así que su check-in online ya no está disponible."
