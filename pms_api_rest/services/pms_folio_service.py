@@ -1905,7 +1905,7 @@ class PmsFolioService(Component):
                     )
                     message_body = self.parse_message_body(message)
                     if message.message_type == "email":
-                        subject = "Email enviado: " + message.subject
+                        subject = "Email enviado: " + (message.subject or "")
                     else:
                         subject = message.subject if message.subject else None
                     reservation_messages.append(
@@ -1919,9 +1919,9 @@ class PmsFolioService(Component):
                             date=reservation_message_date.strftime("%d/%m/%y %H:%M:%S"),
                             messageType=message.message_type,
                             authorImageBase64=base64.b64encode(
-                                message.author_id.image_1024
+                                message.author_id.image_128
                             ).decode("utf-8")
-                            if message.author_id.image_1024
+                            if message.author_id.image_128
                             else None,
                             authorImageUrl=url_image_pms_api_rest(
                                 "res.partner", message.author_id.id, "image_1024"
@@ -1932,7 +1932,7 @@ class PmsFolioService(Component):
             for folio_message in folio.message_ids:
                 message_body = self.parse_message_body(folio_message)
                 if folio_message.message_type == "email":
-                    subject = "Email enviado: " + folio_message.subject
+                    subject = "Email enviado: " + (folio_message.subject or "")
                 else:
                     subject = folio_message.subject if folio_message.subject else None
                 folio_message_date = pytz.UTC.localize(folio_message.date)
@@ -1947,9 +1947,9 @@ class PmsFolioService(Component):
                         date=folio_message_date.strftime("%d/%m/%y %H:%M:%S"),
                         messageType=folio_message.message_type,
                         authorImageBase64=base64.b64encode(
-                            folio_message.author_id.image_1024
+                            folio_message.author_id.image_128
                         ).decode("utf-8")
-                        if folio_message.author_id.image_1024
+                        if folio_message.author_id.image_128
                         else None,
                         authorImageUrl=url_image_pms_api_rest(
                             "res.partner", folio_message.author_id.id, "image_1024"
