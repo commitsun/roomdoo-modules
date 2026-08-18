@@ -30,6 +30,20 @@ def url_image_pms_api_rest(model, record_id, field):
     return result if result else ""
 
 
+def precheckin_share_url(env, kind, record_id, token):
+    """Shareable URL of a pre-check-in link, or ``""`` when unavailable.
+
+    ``roomdoo_precheckin_share`` owns the ``/share`` route, so it is asked
+    rather than having this module build a path it does not own, on an origin
+    that is not even the same one the SPA runs on. It is an optional module,
+    hence the registry lookup instead of a dependency.
+    """
+    model_name = "roomdoo.precheckin.share"
+    if model_name not in env:
+        return ""
+    return env[model_name].get_public_share_url(kind, record_id, token)
+
+
 def pms_api_check_access(user, records=False):
     if not records or user.has_group("base.group_public"):
         return

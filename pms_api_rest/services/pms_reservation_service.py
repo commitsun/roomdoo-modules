@@ -16,7 +16,11 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
-from ..pms_api_rest_utils import pms_api_check_access, url_image_pms_api_rest
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    precheckin_share_url,
+    url_image_pms_api_rest,
+)
 
 
 def is_adult(birthdate):
@@ -1827,6 +1831,9 @@ class PmsReservationService(Component):
             pmsPropertyId=reservation_record.pms_property_id.id,
             folioPartnerName=reservation_record.folio_id.partner_name,
             reservations=reservations,
+            shareUrl=precheckin_share_url(
+                self.env, "precheckin-reservation", reservation_record.id, token
+            ),
             cardexWarning=reservation_record.pms_property_id.cardex_warning
             if reservation_record.pms_property_id.cardex_warning
             else "",
