@@ -15,7 +15,11 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
-from ..pms_api_rest_utils import pms_api_check_access, url_image_pms_api_rest
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    precheckin_share_url,
+    url_image_pms_api_rest,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -2922,6 +2926,12 @@ class PmsFolioService(Component):
                     roomTypeName=reservation.room_type_id.name,
                     checkinNamesCompleted=reservation_checkin_partner_names,
                     accessToken=self._get_reservation_access_token(reservation),
+                    shareUrl=precheckin_share_url(
+                        self.env,
+                        "precheckin-reservation",
+                        reservation.id,
+                        self._get_reservation_access_token(reservation),
+                    ),
                     nights=reservation.nights,
                     checkin=datetime.combine(
                         reservation.checkin, datetime.min.time()
@@ -3055,6 +3065,9 @@ class PmsFolioService(Component):
             folioPendingAmount=folio_record.pending_amount,
             folioPaymentLink=folio_payment_link if folio_payment_link else "",
             folioPortalLink=folio_portal_link,
+            shareUrl=precheckin_share_url(
+                self.env, "precheckin", folio_record.id, token
+            ),
             folioNumCheckins=sum(
                 len(r.checkin_partner_ids) for r in folio_record.reservation_ids
             ),
