@@ -974,6 +974,15 @@ class PmsFolioService(Component):
                     "blocked": True if external_app else False,
                     "partner_requests": reservation.partnerRequests or "",
                 }
+                # The guest of each reservation can differ from the folio
+                # holder (e.g. company folios with the occupant name sent
+                # per reservation)
+                if reservation.partnerName:
+                    vals["partner_name"] = reservation.partnerName
+                if reservation.partnerEmail:
+                    vals["email"] = reservation.partnerEmail
+                if reservation.partnerPhone:
+                    vals["mobile"] = reservation.partnerPhone
                 if reservation.preferredRoomId:
                     vals["preferred_room_id"] = reservation.preferredRoomId
                 if reservation.reservationLines:
@@ -2603,6 +2612,26 @@ class PmsFolioService(Component):
                     != info_reservation.partnerRequests
                 ):
                     vals.update({"partner_requests": info_reservation.partnerRequests})
+            # The guest of each reservation can differ from the folio holder
+            # (e.g. company folios with the occupant name sent per reservation)
+            if info_reservation.partnerName:
+                if (
+                    new_res
+                    or proposed_reservation.partner_name != info_reservation.partnerName
+                ):
+                    vals.update({"partner_name": info_reservation.partnerName})
+            if info_reservation.partnerEmail:
+                if (
+                    new_res
+                    or proposed_reservation.email != info_reservation.partnerEmail
+                ):
+                    vals.update({"email": info_reservation.partnerEmail})
+            if info_reservation.partnerPhone:
+                if (
+                    new_res
+                    or proposed_reservation.mobile != info_reservation.partnerPhone
+                ):
+                    vals.update({"mobile": info_reservation.partnerPhone})
             if info_reservation.adults:
                 if new_res or proposed_reservation.adults != info_reservation.adults:
                     vals.update({"adults": info_reservation.adults})
