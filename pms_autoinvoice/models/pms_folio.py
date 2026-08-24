@@ -1,5 +1,7 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
+
 from odoo import fields, models
 
 
@@ -51,26 +53,28 @@ class PmsFolio(models.Model):
                 if partner_invoice.margin_days_autoinvoice == 0
                 else partner_invoice.margin_days_autoinvoice
             )
-            invoice_date = max(
+            checkouts = (
                 self.env["pms.reservation"]
-                .search([("sale_line_ids", "in", lines_to_invoice.keys())])
+                .search([("sale_line_ids", "in", list(lines_to_invoice.keys()))])
                 .mapped("checkout")
-            ) + datetime.timedelta(days=margin_days_autoinvoice)
+            )
+            # Folios billing only services not bound to a reservation have no
+            # checkout to work with: keep the date computed by super() instead
+            # of blowing up on an empty max().
+            if checkouts:
+                invoice_date = max(checkouts) + datetime.timedelta(
+                    days=margin_days_autoinvoice
+                )
         if partner_invoice_policy == "month_day":
             month_day = (
                 self.pms_property_id.invoicing_month_day
                 if partner_invoice.invoicing_month_day == 0
                 else partner_invoice.invoicing_month_day
             )
-            invoice_date = datetime.date(
-                datetime.date.today().year,
-                datetime.date.today().month,
-                month_day,
-            )
-            if invoice_date < datetime.date.today():
-                invoice_date = datetime.date(
-                    datetime.date.today().year,
-                    datetime.date.today().month + 1,
-                    month_day,
-                )
+            today = fields.Date.today()
+            # relativedelta clamps the day to the end of the month, and rolls
+            # the year over in December (month + 1 would raise there).
+            invoice_date = today + relativedelta(day=month_day)
+            if invoice_date < today:
+                invoice_date = today + relativedelta(months=1, day=month_day)
         return invoice_date
