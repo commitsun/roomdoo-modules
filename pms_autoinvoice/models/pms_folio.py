@@ -37,6 +37,21 @@ class PmsFolio(models.Model):
             ):
                 continue
             lines_to_invoice[line.id] = 0 if line.display_type else line.qty_to_invoice
+        # Add the reservation section header of every line being invoiced. The
+        # section name carries the room ("folio/reservation - room"), which is
+        # the reference corporate clients check the invoice against, and
+        # get_invoice_vals_list can only emit a section that is part of the
+        # lines to invoice (this is what manual invoicing does as well).
+        # Only sections billed to the same partner as the line are added, so a
+        # section can never end up alone in a group and create an empty invoice.
+        for line in self.env["folio.sale.line"].browse(list(lines_to_invoice)):
+            section = line.section_id
+            if (
+                section
+                and section.id not in lines_to_invoice
+                and section.default_invoice_to == line.default_invoice_to
+            ):
+                lines_to_invoice[section.id] = 0
         return lines_to_invoice
 
     def _get_invoice_date(self, partner_invoice_id, lines_to_invoice, date=None):

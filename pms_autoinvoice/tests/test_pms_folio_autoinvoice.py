@@ -340,6 +340,51 @@ class TestPmsFolioInvoice(TestPms):
             "Billed services and overnights invoicing wrong compute",
         )
 
+    def test_autoinvoice_folio_keeps_reservation_sections(self):
+        """
+        Test that the automatic invoice keeps the reservation sections
+        --------------------------------------
+        Set property default_invoicing_policy to checkout with 0 days of
+        margin, create a reservation already checked out and run the
+        autoinvoicing. The created invoice must include the section line of
+        the reservation, whose name carries the room that the client checks
+        the invoice against.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=3),
+                "checkout": datetime.date.today(),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        self.property.autoinvoicing()
+
+        # ASSERT
+        invoice_sections = reservation.folio_id.move_ids.line_ids.filtered(
+            lambda line: line.display_type == "line_section"
+        )
+        self.assertEqual(
+            invoice_sections.folio_line_ids,
+            reservation.sale_line_ids.filtered(
+                lambda line: line.display_type == "line_section"
+            ),
+            "The automatic invoice must include the reservation section",
+        )
+        self.assertIn(
+            reservation.rooms,
+            invoice_sections.name,
+            "The invoice section must show the rooms of the reservation",
+        )
+
     def test_not_autoinvoice_unpaid_cancel_folio_partner_policy(self):
         """
         Test create and invoice the cron by partner preconfig automation
