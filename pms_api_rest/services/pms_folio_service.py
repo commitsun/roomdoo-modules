@@ -2920,17 +2920,21 @@ class PmsFolioService(Component):
                 for checkin_partner in reservation.checkin_partner_ids
                 if checkin_partner.state in ["precheckin", "onboard", "done"]
             ]
+            # Once, not once per use: the first call mints and writes the
+            # token when the reservation has none.
+            reservation_access_token = self._get_reservation_access_token(reservation)
             reservations.append(
                 self.env.datamodels["pms.reservation.public.info"](
                     id=reservation.id,
                     roomTypeName=reservation.room_type_id.name,
                     checkinNamesCompleted=reservation_checkin_partner_names,
-                    accessToken=self._get_reservation_access_token(reservation),
+                    accessToken=reservation_access_token,
                     shareUrl=precheckin_share_url(
                         self.env,
                         "precheckin-reservation",
                         reservation.id,
-                        self._get_reservation_access_token(reservation),
+                        reservation_access_token,
+                        lang=folio_record.lang,
                     ),
                     nights=reservation.nights,
                     checkin=datetime.combine(
@@ -3066,7 +3070,11 @@ class PmsFolioService(Component):
             folioPaymentLink=folio_payment_link if folio_payment_link else "",
             folioPortalLink=folio_portal_link,
             shareUrl=precheckin_share_url(
-                self.env, "precheckin", folio_record.id, token
+                self.env,
+                "precheckin",
+                folio_record.id,
+                token,
+                lang=folio_record.lang,
             ),
             folioNumCheckins=sum(
                 len(r.checkin_partner_ids) for r in folio_record.reservation_ids
