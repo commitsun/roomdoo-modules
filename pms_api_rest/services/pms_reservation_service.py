@@ -1751,10 +1751,22 @@ class PmsReservationService(Component):
                 folio_checkin_partner_names.append(checkin_partner.firstname)
 
         # append reservation public info
+        reservation_share_url = precheckin_share_url(
+            self.env,
+            "precheckin-reservation",
+            reservation_record.id,
+            token,
+            lang=reservation_record.folio_id.lang,
+        )
         reservations = [
             self.env.datamodels["pms.reservation.public.info"](
                 roomTypeName=reservation_record.room_type_id.name,
                 checkinNamesCompleted=reservation_checkin_partner_names,
+                # Same datamodel as the one the folio endpoint fills, so it
+                # carries the same field: a caller should not have to know
+                # which of the two endpoints it happened to call to find out
+                # where the share URL of a reservation lives.
+                shareUrl=reservation_share_url,
                 nights=reservation_record.nights,
                 checkin=datetime.combine(
                     reservation_record.checkin, datetime.min.time()
@@ -1831,9 +1843,7 @@ class PmsReservationService(Component):
             pmsPropertyId=reservation_record.pms_property_id.id,
             folioPartnerName=reservation_record.folio_id.partner_name,
             reservations=reservations,
-            shareUrl=precheckin_share_url(
-                self.env, "precheckin-reservation", reservation_record.id, token
-            ),
+            shareUrl=reservation_share_url,
             cardexWarning=reservation_record.pms_property_id.cardex_warning
             if reservation_record.pms_property_id.cardex_warning
             else "",
