@@ -24,6 +24,13 @@ msgstr "Reserva cancelada"
 #. odoo-python
 #: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
 #, python-format
+msgid "Check-in online"
+msgstr "Check-in online"
+
+#. module: roomdoo_precheckin_share
+#. odoo-python
+#: code:addons/roomdoo_precheckin_share/models/precheckin_share.py:0
+#, python-format
 msgid "Complete your online check-in before you arrive."
 msgstr "Completa tu check-in online antes de llegar."
 

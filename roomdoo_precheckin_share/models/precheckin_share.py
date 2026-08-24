@@ -17,6 +17,9 @@ SHARE_TEMPLATE = "roomdoo_precheckin_share.precheckin_share_document"
 # the card simply stays generic.
 DEFAULT_INSTANCE_NAME = "Roomdoo"
 TITLE_SEPARATOR = "·"  # MIDDLE DOT, the separator the SPA ships
+# Untranslated on purpose, and only ever used to build FALLBACK_TITLE: that
+# card has to match the static one the SPA ships byte for byte. The suffix of
+# a card that did resolve is translated, see _get_share_state_labels.
 TITLE_SUFFIX = "Check-in online"
 
 # Generic card the SPA itself ships in roomdoo-vite/index.html. Reused verbatim
@@ -435,6 +438,12 @@ class PrecheckinShare(models.AbstractModel):
         lang_model = self.env["res.lang"].sudo()
         if not url_lang:
             return lang_model.browse()
+        # Ordered, because iso_code is a plain editable Char: stock data gives
+        # it a single owner per language (get_iso_codes maps es_ES to "es" and
+        # es_AR to "es_AR"), but nothing stops a tenant from ending up with two
+        # rows carrying the same one, and then an unordered limit=1 leaves the
+        # pick to the query plan and the same link renders in a different
+        # language from one crawl to the next.
         return lang_model.search(
             [
                 ("active", "=", True),
@@ -443,6 +452,7 @@ class PrecheckinShare(models.AbstractModel):
                 ("iso_code", "=", url_lang),
             ],
             limit=1,
+            order="code",
         )
 
     @api.model
@@ -457,7 +467,11 @@ class PrecheckinShare(models.AbstractModel):
         """
         return {
             SHARE_STATE_OK: {
-                "suffix": TITLE_SUFFIX,
+                # The same words as TITLE_SUFFIX, spelled out again because
+                # _() needs a literal to be extracted. Leaving the constant
+                # here instead would ship the one card a guest almost always
+                # sees in English while a cancelled one localised.
+                "suffix": _("Check-in online"),
                 "description": _("Complete your online check-in before you arrive."),
             },
             SHARE_STATE_CANCELLED: {
@@ -538,9 +552,12 @@ class PrecheckinShare(models.AbstractModel):
         card that says the link is dead is the whole point of this document.
 
         Crawlers re-fetch the URL every time the link is shared, and the
-        document is cheap but not free, hence the short cache window.
+        document is cheap but not free, hence the short cache window. It is
+        ``private`` because the URL carries an access token: the URL is the
+        credential here, so it has no business sitting in a shared proxy.
+        Crawlers keep their own cache regardless of the directive.
         """
         return [
             ("Content-Type", "text/html; charset=utf-8"),
-            ("Cache-Control", "public, max-age=300"),
+            ("Cache-Control", "private, max-age=300"),
         ]

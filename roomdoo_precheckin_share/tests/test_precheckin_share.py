@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from odoo import fields
 from odoo.tests import tagged
+from odoo.tools.translate import code_translations
 
 from odoo.addons.pms.tests.common import TestPms
 
@@ -254,7 +255,9 @@ class TestPrecheckinShare(TestPms):
             document["headers"],
             [
                 ("Content-Type", "text/html; charset=utf-8"),
-                ("Cache-Control", "public, max-age=300"),
+                # private: the URL carries an access token, so it has no
+                # business sitting in a shared proxy.
+                ("Cache-Control", "private, max-age=300"),
             ],
         )
 
@@ -394,6 +397,26 @@ class TestPrecheckinShare(TestPms):
                 f"segment {segment!r} leaked into the redirect",
             )
             self.assertNotIn("<html lang=", html)
+
+    def test_every_state_suffix_is_in_the_catalog(self):
+        """The valid-link suffix is translatable like the other two states.
+
+        It titles the card a guest almost always sees, and it shipped as a bare
+        constant while a cancelled link localised: an English title over a
+        translated description. Only the catalog side is asserted, because the
+        Spanish msgstr is identical to the msgid, so no rendered string can
+        tell a marked-up literal from the constant it replaced.
+        """
+        catalog = code_translations.get_python_translations(
+            "roomdoo_precheckin_share", "es_ES"
+        )
+        for state in ("ok", "cancelled", "past"):
+            suffix = self.share._get_share_state_labels()[state]["suffix"]
+            self.assertIn(
+                suffix,
+                catalog,
+                f"the {state} suffix is not offered for translation",
+            )
 
     def test_description_is_localised_from_the_language_segment(self):
         """The description comes from the i18n catalogs, not a fixed string."""
