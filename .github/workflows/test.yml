@@ -107,9 +107,27 @@ jobs:
           pip install -r odoo/requirements.txt
           pip install -r repo/requirements.txt
 
+          # Los requirements de los repos de dependencias se instalan en bloque, pero si
+          # una sola linea falla (p.ej. un paquete con extension C que ya no compila en
+          # el runner) pip aborta el fichero completo y nos deja sin el resto de
+          # librerias: eso rompe la instalacion de modulos con external_dependencies.
+          # Reintentamos linea a linea y avisamos de las que se queden fuera.
+          install_reqs() {
+            local file="$1"
+            if pip install -r "$file"; then
+              return 0
+            fi
+            echo "::warning::pip install -r $file failed; retrying line by line"
+            while IFS= read -r req; do
+              case "$req" in ''|'#'*) continue ;; esac
+              pip install "$req" || echo "::warning::unmet requirement from $file: $req"
+            done < "$file"
+            return 0
+          }
+
           for dep in deps/*; do
-            [ -f "$dep/requirements.txt" ] && pip install -r "$dep/requirements.txt" || true
-            [ -f "$dep/test-requirements.txt" ] && pip install -r "$dep/test-requirements.txt" || true
+            if [ -f "$dep/requirements.txt" ]; then install_reqs "$dep/requirements.txt"; fi
+            if [ -f "$dep/test-requirements.txt" ]; then install_reqs "$dep/test-requirements.txt"; fi
           done
 
       - name: Build addons path
