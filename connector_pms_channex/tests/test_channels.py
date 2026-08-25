@@ -180,3 +180,115 @@ class TestChannexChannels(ChannexConnectorCase):
 
         self.assertEqual(self._channels(other_backend).agency_id, self.agency)
         self.assertEqual(other_backend.unmapped_channel_count, 0)
+
+    # -- pushing the rate logic --------------------------------------------
+
+    def _mapped_channel(self, mappings, agency=True):
+        """A discovered channel whose mappings the hotel already built."""
+        self._seed_channel(rate_plans=mappings)
+        self.backend.channex_sync_channels()
+        channel = self._channels()
+        if agency:
+            channel.agency_id = self.agency
+        return channel
+
+    def _remote_settings(self):
+        return self.server.store["channels"][0]["rate_plans"][0]["settings"]
+
+    def test_every_rate_logic_reaches_the_mapping(self):
+        channel = self._mapped_channel(
+            [{"rate_plan_id": "rp1", "settings": {"room_code": "R1"}}]
+        )
+        for modifier_type, expected in (
+            ("increase_amount", "increase_by_amount"),
+            ("decrease_amount", "decrease_by_amount"),
+            ("increase_percent", "increase_by_percent"),
+            ("decrease_percent", "decrease_by_percent"),
+        ):
+            self.agency.write(
+                {
+                    "ota_price_modifier_type": modifier_type,
+                    "ota_price_modifier_value": 10,
+                }
+            )
+            channel.action_push_price_modifier()
+            self.assertEqual(
+                self._remote_settings()["derived_option"],
+                {"rate": [[expected, "10"]]},
+            )
+
+    def test_the_hotels_own_mapping_survives_the_push(self):
+        """Odoo reaches into one key of a mapping the hotel built; the room and
+        rate codes in it are none of its business."""
+        channel = self._mapped_channel(
+            [
+                {
+                    "rate_plan_id": "rp1",
+                    "settings": {"room_code": "R1", "rate_code": "RT1"},
+                }
+            ]
+        )
+        self.agency.write(
+            {
+                "ota_price_modifier_type": "increase_percent",
+                "ota_price_modifier_value": 12.5,
+            }
+        )
+        channel.action_push_price_modifier()
+        settings = self._remote_settings()
+        self.assertEqual(settings["room_code"], "R1")
+        self.assertEqual(settings["rate_code"], "RT1")
+        self.assertEqual(
+            settings["derived_option"], {"rate": [["increase_by_percent", "12.5"]]}
+        )
+
+    def test_clearing_the_rate_logic_clears_it_on_channex(self):
+        """Cleared in Odoo means cleared there, not quietly left behind."""
+        channel = self._mapped_channel(
+            [
+                {
+                    "rate_plan_id": "rp1",
+                    "settings": {
+                        "room_code": "R1",
+                        "derived_option": {"rate": [["increase_by_percent", "10"]]},
+                    },
+                }
+            ]
+        )
+        channel.action_push_price_modifier()
+        settings = self._remote_settings()
+        self.assertNotIn("derived_option", settings)
+        self.assertEqual(settings["room_code"], "R1")
+
+    def test_a_channel_without_an_agency_is_not_pushed(self):
+        self._seed_channel(rate_plans=[{"rate_plan_id": "rp1", "settings": {}}])
+        self.backend.channex_sync_channels()
+        channel = self._channels()
+        calls_before = len(self.server.calls)
+        channel.action_push_price_modifier()
+        self.assertEqual(len(self.server.calls), calls_before)
+
+    def test_a_channel_the_hotel_has_not_mapped_is_not_written(self):
+        channel = self._mapped_channel([])
+        self.agency.write(
+            {
+                "ota_price_modifier_type": "increase_percent",
+                "ota_price_modifier_value": 10,
+            }
+        )
+        channel.action_push_price_modifier()
+        self.assertFalse(self.server.calls_to("PUT", "channels"))
+
+    def test_pushing_what_is_already_there_writes_nothing(self):
+        channel = self._mapped_channel(
+            [{"rate_plan_id": "rp1", "settings": {"room_code": "R1"}}]
+        )
+        self.agency.write(
+            {
+                "ota_price_modifier_type": "increase_percent",
+                "ota_price_modifier_value": 10,
+            }
+        )
+        channel.action_push_price_modifier()
+        channel.action_push_price_modifier()
+        self.assertEqual(len(self.server.calls_to("PUT", "channels")), 1)
