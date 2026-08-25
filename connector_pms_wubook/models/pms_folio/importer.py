@@ -6,6 +6,8 @@ from odoo import _, fields
 
 from odoo.addons.component.core import Component
 
+from ..pms_availability.listener import buffer_property_exports_for_rooms
+
 
 class ChannelWubookPmsFolioDelayedBatchImporter(Component):
     _name = "channel.wubook.pms.folio.delayed.batch.importer"
@@ -143,16 +145,45 @@ class ChannelWubookPmsFolioImporter(Component):
                     partner=folio.partner_id,
                 )
 
-        # REVIEW: mark actual_write_date to now
-        # in availability and force to update Wubook avail changes
-        # (Wubook add/delete avail by itself)
+        self._refresh_availability_export(binding)
+
+    def _refresh_availability_export(self, binding):
+        """Re-publish the availability the imported folio just moved.
+
+        Two halves, and only the first one used to be here:
+
+        * mark the affected ``channel.wubook.pms.availability`` bindings
+          dirty, so the exporter picks them up (Wubook adds / deletes avail
+          by itself on the channel side, so our value has to win);
+        * actually schedule that export. The whole import runs under
+          ``connector_no_export=True`` (``connector_pms``'s importer sets
+          it on every record it creates or writes), which is exactly the
+          flag every availability listener checks
+          before staging a push — so an imported folio consumed or freed
+          rooms and nothing ever told Wubook. The dirty bindings then sat
+          there until an unrelated event happened to enqueue a job, and
+          the channel kept selling a room the PMS no longer had.
+
+        Staging goes through the same precommit buffer as the listeners,
+        so a burst of imports still collapses to one job per
+        (backend × property) pair.
+        """
+        folio = binding.odoo_id
         dates = folio.mapped("reservation_ids.reservation_line_ids.date")
+        if not dates:
+            return
+        # A reservation can sit in a room of a different type than the one
+        # booked (cross-type relocation) and it is the ASSIGNED room that
+        # moves availability, so both sides have to be refreshed.
+        room_types = folio.mapped("reservation_ids.room_type_id") | folio.mapped(
+            "reservation_ids.reservation_line_ids.room_id.room_type_id"
+        )
         avails = self.env["channel.wubook.pms.availability"].search(
             [
                 ("backend_id", "=", binding.backend_id.id),
                 ("date", ">=", min(dates)),
                 ("date", "<=", max(dates)),
-                ("room_type_id", "in", folio.mapped("reservation_ids.room_type_id.id")),
+                ("room_type_id", "in", room_types.ids),
             ]
         )
         query = (
@@ -165,6 +196,7 @@ class ChannelWubookPmsFolioImporter(Component):
             set(avails.filtered(lambda i: i.date >= fields.Date.today()).ids)
         ):
             cr.execute(query, [sub_ids])
+        buffer_property_exports_for_rooms(self.env, folio.pms_property_id, room_types)
 
     def _create(self, model, values):
         """Create the Internal record"""

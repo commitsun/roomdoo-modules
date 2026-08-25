@@ -1472,3 +1472,173 @@ class TestAvailabilityListener(TransactionComponentCase):
             self.property_avail_binding.export_record,
             args=(self.backend, self.pms_property),
         )
+
+
+@tagged("post_install", "-at_install")
+class TestFolioImportAvailabilityExport(TransactionComponentCase):
+    """A folio arriving from Wubook must re-publish the availability it moved.
+
+    The importer creates every record under ``connector_no_export=True``,
+    which is exactly the flag the avail / line / reservation listeners check
+    before staging a push. So nothing downstream of an import ever schedules
+    the property export: the importer has to do it itself, otherwise the
+    channel keeps selling a room the PMS has already given away.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        _make_backend_environment(cls)
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": cls.room_type_a.id,
+                "backend_id": cls.backend.id,
+                "external_id": 111,
+            }
+        )
+        cls.property_avail_binding = cls.env[
+            "channel.wubook.pms.property.availability"
+        ].create(
+            {
+                "odoo_id": cls.pms_property.id,
+                "backend_id": cls.backend.id,
+                "external_id": cls.pms_property.id,
+            }
+        )
+        cls.availability_plan = cls.env["pms.availability.plan"].create(
+            {"name": "Folio Import Plan"}
+        )
+        cls.pricelist_default.write(
+            {
+                "availability_plan_id": cls.availability_plan.id,
+                "is_pms_available": True,
+            }
+        )
+        cls.room = cls.env["pms.room"].create(
+            {
+                "name": "Room MS 1",
+                "room_type_id": cls.room_type_a.id,
+                "pms_property_id": cls.pms_property.id,
+                "capacity": 2,
+            }
+        )
+        cls.sale_channel = cls.env["pms.sale.channel"].create(
+            {"name": "Wubook OTA", "channel_type": "indirect"}
+        )
+        cls.checkin = date.today() + timedelta(days=10)
+        cls.checkout = cls.checkin + timedelta(days=2)
+
+    def _import_reservation(self, checkin=None):
+        """Create a reservation the way an import leaves it: under
+        ``connector_no_export=True``, so no listener stages anything.
+        """
+        checkin = checkin or self.checkin
+        return (
+            self.env["pms.reservation"]
+            .with_context(connector_no_export=True)
+            .create(
+                {
+                    "pms_property_id": self.pms_property.id,
+                    "checkin": checkin,
+                    "checkout": checkin + timedelta(days=2),
+                    "partner_name": "Imported guest",
+                    "sale_channel_origin_id": self.sale_channel.id,
+                    "room_type_id": self.room_type_a.id,
+                }
+            )
+        )
+
+    def _folio_binding(self, folio, external_id=987654):
+        return self.env["channel.wubook.pms.folio"].create(
+            {
+                "odoo_id": folio.id,
+                "backend_id": self.backend.id,
+                "external_id": external_id,
+            }
+        )
+
+    def _importer(self):
+        with self.backend.work_on("channel.wubook.pms.folio") as work:
+            return work.component_by_name("channel.wubook.pms.folio.importer")
+
+    def test_imported_reservation_stages_nothing_by_itself(self):
+        """The cause of the bug, pinned: with the flag on, the listeners
+        stay silent even though the reservation just ate a room."""
+        with trap_jobs() as trap:
+            self._import_reservation()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_importer_stages_property_export(self):
+        folio = self._import_reservation().folio_id
+        binding = self._folio_binding(folio)
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            self._importer()._refresh_availability_export(binding)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
+
+    def test_several_imports_collapse_to_one_job(self):
+        bindings = [
+            self._folio_binding(
+                self._import_reservation(
+                    checkin=self.checkin + timedelta(days=3 * offset)
+                ).folio_id,
+                external_id=500 + offset,
+            )
+            for offset in range(3)
+        ]
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            importer = self._importer()
+            for binding in bindings:
+                importer._refresh_availability_export(binding)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+
+    def test_folio_without_reservations_stages_nothing(self):
+        folio = self.env["pms.folio"].create(
+            {
+                "pms_property_id": self.pms_property.id,
+                "partner_name": "Empty folio",
+                "sale_channel_origin_id": self.sale_channel.id,
+            }
+        )
+        binding = self._folio_binding(folio, external_id=123456)
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            self._importer()._refresh_availability_export(binding)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_unbound_room_type_stages_nothing(self):
+        """The backend only sells what it has mapped: a folio on an
+        unbound room type has nothing to publish."""
+        folio = self._import_reservation().folio_id
+        binding = self._folio_binding(folio)
+        self.room_type_a_binding.unlink()
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            self._importer()._refresh_availability_export(binding)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_property_not_connected_stages_nothing(self):
+        folio = self._import_reservation().folio_id
+        binding = self._folio_binding(folio)
+        self.property_avail_binding.unlink()
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            self._importer()._refresh_availability_export(binding)
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)

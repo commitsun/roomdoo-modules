@@ -4,10 +4,7 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-from ..pms_availability.listener import (
-    _AVAILABILITY_BUFFER_KEY,
-    _flush_availability_buffer,
-)
+from ..pms_availability.listener import buffer_property_exports_for_rooms
 from .pms_room import PmsRoom
 
 # Fields whose change on a ``pms.room`` shifts the effective room count
@@ -50,19 +47,6 @@ class ChannelWubookPmsRoomListener(Component):
     _inherit = "base.connector.listener"
     _apply_on = "pms.room"
 
-    def _buffer_property_export(self, property_binding):
-        cr = self.env.cr
-        data = cr.precommit.data
-        if _AVAILABILITY_BUFFER_KEY not in data:
-            data[_AVAILABILITY_BUFFER_KEY] = {}
-            env = self.env
-            cr.precommit.add(
-                lambda env=env: _flush_availability_buffer(env)
-            )
-        data[_AVAILABILITY_BUFFER_KEY].setdefault(
-            property_binding.id, property_binding
-        )
-
     def _affected_pairs(self, record):
         """Return the set of ``(property_id, room_type_id)`` pairs whose
         Wubook avail may have moved as a consequence of the change.
@@ -94,22 +78,10 @@ class ChannelWubookPmsRoomListener(Component):
         prop_ids = {prop_id for prop_id, _rt_id in pairs}
         properties = self.env["pms.property"].browse(prop_ids).exists()
         for prop in properties:
-            for property_binding in prop.channel_wubook_bind_ids:
-                if not property_binding.external_id:
-                    continue
-                backend = property_binding.backend_id
-                # Only push if at least one of the affected room_types
-                # is also bound on this backend — otherwise Wubook
-                # cannot apply the change anyway.
-                bound = room_types.filtered(
-                    lambda rt, backend=backend: any(
-                        b.backend_id == backend and b.external_id
-                        for b in rt.channel_wubook_bind_ids
-                    )
-                )
-                if not bound:
-                    continue
-                self._buffer_property_export(property_binding)
+            # Only pushes where at least one of the affected room_types is
+            # also bound on the backend — otherwise Wubook cannot apply the
+            # change anyway.
+            buffer_property_exports_for_rooms(self.env, prop, room_types)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
