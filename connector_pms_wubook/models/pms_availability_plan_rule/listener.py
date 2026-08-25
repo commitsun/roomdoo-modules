@@ -4,10 +4,7 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-from ..pms_availability.listener import (
-    _AVAILABILITY_BUFFER_KEY,
-    _flush_availability_buffer,
-)
+from ..pms_availability.listener import buffer_property_exports_for_rooms
 
 # Per-transaction buffer for plan re-exports triggered by rule changes.
 # Massive operations (typical of calendar wizards that touch hundreds of
@@ -136,16 +133,7 @@ def _flush_pending_plan_avail(env):
         room_type = RoomType.browse(room_type_id).exists()
         if not room_type:
             continue
-        for property_binding in prop.channel_wubook_bind_ids:
-            if not property_binding.external_id:
-                continue
-            backend = property_binding.backend_id
-            room_type_bound = room_type.channel_wubook_bind_ids.filtered(
-                lambda b, backend=backend: b.backend_id == backend and b.external_id
-            )
-            if not room_type_bound:
-                continue
-            _buffer_property_export_at(env, property_binding)
+        buffer_property_exports_for_rooms(env, prop, room_type)
 
 
 def _buffer_plan_export_at(env, plan_binding):
@@ -159,19 +147,6 @@ def _buffer_plan_export_at(env, plan_binding):
         env_captured = env
         cr.precommit.add(lambda env=env_captured: _flush_plan_rules_buffer(env))
     data[_PLAN_RULES_BUFFER_KEY].setdefault(plan_binding.id, plan_binding)
-
-
-def _buffer_property_export_at(env, property_binding):
-    """Module-level twin of ``_buffer_property_export``, callable from
-    the precommit flush (no ``self``).
-    """
-    cr = env.cr
-    data = cr.precommit.data
-    if _AVAILABILITY_BUFFER_KEY not in data:
-        data[_AVAILABILITY_BUFFER_KEY] = {}
-        env_captured = env
-        cr.precommit.add(lambda env=env_captured: _flush_availability_buffer(env))
-    data[_AVAILABILITY_BUFFER_KEY].setdefault(property_binding.id, property_binding)
 
 
 class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
