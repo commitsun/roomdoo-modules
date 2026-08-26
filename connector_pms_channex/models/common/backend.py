@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
+import secrets
 import urllib.parse
 import uuid
 
@@ -10,7 +11,13 @@ from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.queue_job.job import identity_exact
 
+from ...components.adapter import SECRET_HEADER
+
 _logger = logging.getLogger(__name__)
+
+#: Hosts Channex cannot possibly call back, which is what a developer machine
+#: looks like.
+UNREACHABLE_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0")
 
 API_PATH = "/api/v1"
 STAGING_URL = "https://staging.channex.io" + API_PATH
@@ -69,6 +76,26 @@ class ChannelChannexBackend(models.Model):
         required=True,
         help="Items per page when listing. Channex defaults to 10.",
     )
+    webhook_external_id = fields.Char(
+        string="Channex webhook ID",
+        readonly=True,
+        copy=False,
+        help="What Channex calls the notification we registered. Kept so the "
+        "same one is updated instead of piling up a new one every time.",
+    )
+    webhook_secret = fields.Char(
+        readonly=True,
+        copy=False,
+        help="Given to Channex when the webhook is registered and expected back "
+        "on every call. Channex signs nothing, so this is the only thing that "
+        "tells its calls from anybody else's.",
+    )
+    webhook_url = fields.Char(
+        compute="_compute_webhook_url",
+        help="Where Channex is told to call. It hangs off the web base URL, so "
+        "it is only reachable once that is a public address.",
+    )
+
     group_id = fields.Char(
         string="Channex group ID",
         help="Channex requires every property to belong to a group. It lives "
@@ -129,6 +156,88 @@ class ChannelChannexBackend(models.Model):
                 )
             )
         return self.group_id
+
+    # -- being told about bookings -----------------------------------------
+
+    def _compute_webhook_url(self):
+        base = (
+            self.env["ir.config_parameter"].sudo().get_param("web.base.url") or ""
+        ).rstrip("/")
+        for backend in self:
+            backend.webhook_url = f"{base}/channex/webhook/{backend.id}"
+
+    def _channex_webhook_secret(self):
+        """The secret Channex is expected to send back, made once and kept.
+
+        Kept and not derived from anything: derived from a field it would change
+        under us the day that field is edited, and Channex would go on calling
+        with the old one.
+        """
+        self.ensure_one()
+        if not self.webhook_secret:
+            self.webhook_secret = secrets.token_urlsafe(32)
+        return self.webhook_secret
+
+    def _channex_webhook_admits(self, secret):
+        """Whether a call carrying this secret is Channex calling.
+
+        Compared in constant time, and never admitted while no secret is set:
+        an unregistered backend has nobody to be called by.
+        """
+        self.ensure_one()
+        if not self.webhook_secret or not secret:
+            return False
+        return secrets.compare_digest(self.webhook_secret, secret)
+
+    def action_register_channex_webhook(self):
+        """Tell Channex where to call, and with what.
+
+        ``send_data`` stays off: what we want is being told there is something
+        to read, and the reading we do ourselves. Registered for this property
+        alone rather than for the whole account, because a property level
+        webhook is what the rest of this connector is shaped like -- and it wins
+        over an account level one, should the account ever grow one.
+        """
+        self.ensure_one()
+        url = self.webhook_url
+        if any(host in url for host in UNREACHABLE_HOSTS):
+            raise UserError(
+                _(
+                    "Channex has to be able to reach %s, and it cannot reach "
+                    "this one. Set the web base URL to a public address first."
+                )
+                % url
+            )
+        payload = {
+            "webhook": {
+                "property_id": self._channex_property_external_id(),
+                "callback_url": url,
+                # Every booking revision: new, modified and cancelled alike.
+                # What each one is gets decided on reading it, not here.
+                "event_mask": "booking",
+                "is_active": True,
+                "send_data": False,
+                "headers": {SECRET_HEADER: self._channex_webhook_secret()},
+            }
+        }
+        if self.webhook_external_id:
+            body = self._channex_request(
+                "PUT", f"webhooks/{self.webhook_external_id}", payload=payload
+            )
+        else:
+            body = self._channex_request("POST", "webhooks", payload=payload)
+        if body is None:
+            raise UserError(
+                _(
+                    "Exports are disabled on this backend, so Channex was not "
+                    "told anything."
+                )
+            )
+        external_id = ((body or {}).get("data") or {}).get("id")
+        if not external_id:
+            raise UserError(_("Channex did not return a webhook ID."))
+        self.webhook_external_id = external_id
+        return self._notify(_("Channex will call %s from now on.") % url)
 
     # -- group setup -------------------------------------------------------
 
