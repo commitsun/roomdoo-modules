@@ -5,13 +5,13 @@ import logging
 
 from odoo.addons.component.core import Component
 
-from ...components.adapter import MAX_PAGES
+from ...components.adapter import MAX_PAGES, NOT_FOUND, ChannexAPIError
 
 _logger = logging.getLogger(__name__)
 
 
 class ChannelChannexBookingRevisionAdapter(Component):
-    """Read side of the booking revisions feed.
+    """The booking revisions feed: reading it, and acknowledging what was read.
 
     Not a binding of any PMS model: what it mirrors is the message Channex
     hands over, not a hotel entity.
@@ -58,3 +58,26 @@ class ChannelChannexBookingRevisionAdapter(Component):
             page += 1
         _logger.warning("Channex booking revisions feed hit the %s page cap", MAX_PAGES)
         return records
+
+    def ack(self, external_id):
+        """Confirm the message is saved, so Channex stops handing it over.
+
+        Returns whether the receipt actually went out: the call is skipped on a
+        backend with exports disabled, and nobody may record a receipt that was
+        never sent.
+
+        A 404 is not a failure here. It means Channex no longer holds the
+        message, which leaves us exactly where acknowledging would: it will not
+        be offered again.
+        """
+        try:
+            body = self.request("POST", f"{self._resource}/{external_id}/ack")
+        except ChannexAPIError as error:
+            if error.status_code != NOT_FOUND:
+                raise
+            _logger.info(
+                "Channex no longer holds booking revision %s to acknowledge",
+                external_id,
+            )
+            return True
+        return body is not None

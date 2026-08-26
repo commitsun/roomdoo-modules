@@ -108,6 +108,8 @@ class FakeChannexServer:
 
         if method == "POST" and path == "auth/one_time_token":
             return self._one_time_token(json)
+        if method == "POST" and path.startswith("booking_revisions/"):
+            return self._ack(path.split("/")[1])
         if method == "GET" and path == "booking_revisions/feed":
             # The feed is a listing under a sub-path, not a record.
             return self._list(resource, params)
@@ -141,6 +143,20 @@ class FakeChannexServer:
             )
         self._counter += 1
         return FakeResponse(200, {"data": {"token": _uuid(self._counter)}})
+
+    def _ack(self, external_id):
+        """Acknowledging drops the revision from the feed, which is the whole
+        point of it: the fake has to stop offering it too, or nothing about
+        acknowledging can be tested."""
+        revisions = self.store.get("booking_revisions", [])
+        if not any(str(r["id"]) == str(external_id) for r in revisions):
+            return FakeResponse(
+                404, {"errors": {"code": "resource_not_found", "title": "Not found"}}
+            )
+        self.store["booking_revisions"] = [
+            r for r in revisions if str(r["id"]) != str(external_id)
+        ]
+        return FakeResponse(200, {"meta": {"message": "Success"}})
 
     def _payload_root(self, resource):
         return {
