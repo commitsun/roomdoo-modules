@@ -47,6 +47,26 @@ def buffer_property_export(env, property_binding):
     data[_AVAILABILITY_BUFFER_KEY].setdefault(property_binding.id, property_binding)
 
 
+def buffer_property_exports(env, pms_property):
+    """Stage a property-availability export on every backend connected on
+    ``pms_property``, whatever the room types involved.
+
+    For a reassignment the footprint spans the room type the reservation
+    LEFT and the one it took, and the event only carries the latter, so
+    gating on it would skip the freed side whenever the destination type is
+    not mapped on the backend (an internal room, a type not sold online).
+    The export only ships bindings whose value actually moved, so scheduling
+    one too many costs a no-op job at worst.
+    """
+    if not pms_property:
+        return
+    for property_binding in pms_property.channel_wubook_bind_ids:
+        if not property_binding.external_id:
+            # Property not yet connected on this backend.
+            continue
+        buffer_property_export(env, property_binding)
+
+
 def buffer_property_exports_for_rooms(env, pms_property, room_types):
     """Stage a property-availability export on every backend connected on
     ``pms_property`` that also has at least one of ``room_types`` bound.

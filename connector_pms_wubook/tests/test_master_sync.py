@@ -1642,3 +1642,147 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
             self._importer()._refresh_availability_export(binding)
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
+
+
+@tagged("post_install", "-at_install")
+class TestRoomReassignmentAvailabilityExport(TransactionComponentCase):
+    """Moving a reservation between rooms must publish BOTH sides.
+
+    Two things conspire against it. Reassigning from the reservation header
+    only recomputes ``line.room_id`` through ``_write()``, which
+    ``component_event`` never sees; and the event that does fire carries the
+    room the reservation moved INTO, never the one it left — so gating the
+    push on the room types we can see drops the freed side whenever the
+    destination room type is not sold on the backend.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        _make_backend_environment(cls)
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
+            {
+                "odoo_id": cls.room_type_a.id,
+                "backend_id": cls.backend.id,
+                "external_id": 222,
+            }
+        )
+        cls.property_avail_binding = cls.env[
+            "channel.wubook.pms.property.availability"
+        ].create(
+            {
+                "odoo_id": cls.pms_property.id,
+                "backend_id": cls.backend.id,
+                "external_id": cls.pms_property.id,
+            }
+        )
+        cls.plan = cls.env["pms.availability.plan"].create({"name": "Reassign Plan"})
+        cls.pricelist_default.write(
+            {"availability_plan_id": cls.plan.id, "is_pms_available": True}
+        )
+        cls.room_a1, cls.room_a2 = (
+            cls.env["pms.room"].create(
+                {
+                    "name": name,
+                    "room_type_id": cls.room_type_a.id,
+                    "pms_property_id": cls.pms_property.id,
+                    "capacity": 2,
+                }
+            )
+            for name in ("Reassign A1", "Reassign A2")
+        )
+        # A room type the backend does not sell (internal room, offline type).
+        unsold_product = cls.env["product.product"].create(
+            {"name": "RT-unsold product", "type": "service", "list_price": 80.0}
+        )
+        cls.room_type_unsold = cls.env["pms.room.type"].create(
+            {
+                "name": "RT-unsold",
+                "default_code": "RTUN",
+                "class_id": cls.room_type_class.id,
+                "product_id": unsold_product.id,
+                "pms_property_ids": [(6, 0, [cls.pms_property.id])],
+            }
+        )
+        cls.room_unsold = cls.env["pms.room"].create(
+            {
+                "name": "Reassign internal",
+                "room_type_id": cls.room_type_unsold.id,
+                "pms_property_id": cls.pms_property.id,
+                "capacity": 2,
+            }
+        )
+        cls.sale_channel = cls.env["pms.sale.channel"].create(
+            {"name": "Reassign channel", "channel_type": "indirect"}
+        )
+
+    def _reservation(self):
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property.id,
+                "checkin": date.today() + timedelta(days=20),
+                "checkout": date.today() + timedelta(days=22),
+                "partner_name": "Reassign guest",
+                "sale_channel_origin_id": self.sale_channel.id,
+                "room_type_id": self.room_type_a.id,
+                "preferred_room_id": self.room_a1.id,
+            }
+        )
+        self.env.cr.precommit.run()  # flush the buffer filled by the create
+        return reservation
+
+    def _assert_property_export(self, trap):
+        trap.assert_jobs_count(1)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
+
+    def test_header_reassignment_stages_export(self):
+        reservation = self._reservation()
+        with trap_jobs() as trap:
+            reservation.preferred_room_id = self.room_a2.id
+            self.env.cr.precommit.run()
+        self._assert_property_export(trap)
+
+    def test_header_reassignment_to_unsold_type_stages_export(self):
+        """The guest moves into a room the backend does not sell: the room
+        left behind is back on sale and has to be published."""
+        reservation = self._reservation()
+        with trap_jobs() as trap:
+            reservation.preferred_room_id = self.room_unsold.id
+            self.env.cr.precommit.run()
+        self._assert_property_export(trap)
+
+    def test_line_room_write_to_unsold_type_stages_export(self):
+        reservation = self._reservation()
+        with trap_jobs() as trap:
+            reservation.reservation_line_ids.write({"room_id": self.room_unsold.id})
+            self.env.cr.precommit.run()
+        self._assert_property_export(trap)
+
+    def test_state_change_is_still_scoped_to_bound_room_types(self):
+        """Cancelling does not move rooms, so the room types on the lines are
+        the whole footprint and the scope check still applies."""
+        reservation = self._reservation()
+        reservation.preferred_room_id = self.room_unsold.id
+        self.env.cr.precommit.run()
+        self.room_type_a_binding.unlink()
+        with trap_jobs() as trap:
+            reservation.action_cancel()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
+
+    def test_reassignment_without_connected_property_stages_nothing(self):
+        reservation = self._reservation()
+        self.property_avail_binding.unlink()
+        with trap_jobs() as trap:
+            reservation.preferred_room_id = self.room_a2.id
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(0)
