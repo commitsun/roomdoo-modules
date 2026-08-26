@@ -124,8 +124,15 @@ class ChannelChannexBookingRevision(models.Model):
         string="Reason",
         readonly=True,
         help="Why the message could not become a folio, when that is something "
-        "the hotel can settle. The feed keeps offering the message, so fixing "
-        "the cause and reading it again is all it takes.",
+        "the hotel can settle. It stays unacknowledged, so fixing the cause and "
+        "reading the feed again is all it takes.",
+    )
+    acknowledged_at = fields.Datetime(
+        string="Acknowledged",
+        readonly=True,
+        help="When Channex was told the message is in. From then on it is not "
+        "handed over again, so it is only ever stamped after the folio is "
+        "saved for good.",
     )
 
     _sql_constraints = [
@@ -195,7 +202,9 @@ class ChannelChannexBookingRevision(models.Model):
             else:
                 self._channex_import(backend, payload)
                 values = {"state": "applied", "error": False}
-        return self._channex_record(backend, payload, values).state
+        revision = self._channex_record(backend, payload, values)
+        revision._channex_schedule_acknowledge()
+        return revision.state
 
     @api.model
     def _channex_import(self, backend, payload):
@@ -238,6 +247,40 @@ class ChannelChannexBookingRevision(models.Model):
             "currency": values.get("currency"),
             "inserted_at": _channex_datetime(values.get("inserted_at")),
         }
+
+    # -- acknowledging ------------------------------------------------------
+
+    def _channex_schedule_acknowledge(self):
+        """Queue the receipt for every message that is settled and unconfirmed.
+
+        Queued and not sent inline on purpose: a job only exists once the
+        transaction that queued it commits, so no receipt is ever sent for a
+        folio that was rolled back. Acknowledging cannot be undone -- the feed
+        never offers the message again -- so it has to wait for the save to be
+        final.
+        """
+        for revision in self.filtered(
+            lambda r: not r.acknowledged_at and r.state in ("applied", "superseded")
+        ):
+            revision.with_delay(identity_key=identity_exact).channex_acknowledge()
+
+    def channex_acknowledge(self):
+        """Tell Channex this message is in. Job entry point.
+
+        A message that could not be applied is never acknowledged: Channex
+        keeps offering it, which is what makes retrying free. The price is that
+        Channex emails a warning half an hour later, and that is the right
+        trade: a warning is recoverable, a lost booking is not.
+        """
+        self.ensure_one()
+        if self.acknowledged_at or self.state not in ("applied", "superseded"):
+            return False
+        with self.backend_id.work_on(self._name) as work:
+            sent = work.component(usage="backend.adapter").ack(self.external_id)
+        if not sent:
+            return False
+        self.acknowledged_at = fields.Datetime.now()
+        return True
 
     # -- what can be foreseen -----------------------------------------------
 
