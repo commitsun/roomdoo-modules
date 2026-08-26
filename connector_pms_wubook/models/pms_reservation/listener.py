@@ -4,7 +4,10 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-from ..pms_availability.listener import buffer_property_exports_for_rooms
+from ..pms_availability.listener import (
+    buffer_property_exports,
+    buffer_property_exports_for_rooms,
+)
 
 # Why this listener exists: when a reservation is cancelled (or
 # re-confirmed) the only PUBLIC write Odoo performs is
@@ -18,10 +21,20 @@ from ..pms_availability.listener import buffer_property_exports_for_rooms
 # down to the lines to figure out which property bindings need an avail
 # re-export.
 #
-# Other fields (dates, room_type_id, etc.) are NOT listed here: changes
-# to those propagate as line creates / unlinks / room_id writes which
-# are caught by the ``pms.reservation.line`` listener.
-_RESERVATION_RELEVANT_FIELDS = {"state"}
+# ``preferred_room_id`` / ``room_type_id`` are here because moving a
+# reservation from its header only RECOMPUTES ``pms.reservation.line.room_id``
+# (a stored compute) through Odoo's internal ``_write()``, which
+# ``component_event`` does not hook — so the line listener never sees the
+# move and the channel keeps selling the room the guest now occupies.
+#
+# Dates are not listed: they propagate as line creates / unlinks, which the
+# ``pms.reservation.line`` listener does catch.
+_RESERVATION_RELEVANT_FIELDS = {"state", "preferred_room_id", "room_type_id"}
+
+# Of those, the ones that can move the reservation ACROSS room types. The
+# event carries the record after the write, so the room type it left is
+# already gone: the push cannot be gated on the room types we can see.
+_RESERVATION_REASSIGNMENT_FIELDS = {"preferred_room_id", "room_type_id"}
 
 
 class ChannelWubookPmsReservationListener(Component):
@@ -49,5 +62,8 @@ class ChannelWubookPmsReservationListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if not fields or not (set(fields) & _RESERVATION_RELEVANT_FIELDS):
+            return
+        if set(fields) & _RESERVATION_REASSIGNMENT_FIELDS:
+            buffer_property_exports(self.env, record.pms_property_id)
             return
         self._enqueue_property_exports(record)

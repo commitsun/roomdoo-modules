@@ -4,7 +4,10 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-from ..pms_availability.listener import buffer_property_exports_for_rooms
+from ..pms_availability.listener import (
+    buffer_property_exports,
+    buffer_property_exports_for_rooms,
+)
 
 # Fields whose public write on a reservation line shifts the
 # availability footprint: ``room_id`` is the actual assignment that
@@ -53,6 +56,12 @@ class ChannelWubookPmsReservationLineListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if not fields or not (set(fields) & _LINE_RELEVANT_FIELDS):
+            return
+        if "room_id" in fields:
+            # The line moved between rooms: the availability freed on the
+            # room type it left has to be published too, and the record only
+            # carries the new one.
+            buffer_property_exports(self.env, record.pms_property_id)
             return
         self._enqueue_property_exports(record)
 
