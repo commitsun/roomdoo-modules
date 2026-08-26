@@ -64,6 +64,7 @@ class TestChannexBookingRevisions(ChannexFeedCase):
                     "amount": "153.00",
                     "currency": "EUR",
                     "inserted_at": "2026-11-12T11:39:50.111087",
+                    "acknowledge_status": "pending",
                     **values,
                 }
             ],
@@ -120,13 +121,15 @@ class TestChannexBookingRevisions(ChannexFeedCase):
         self.assertEqual(len(self._revisions()), 5)
         self.assertEqual(len(self.server.calls_to("GET", "booking_revisions")), 3)
 
-    def test_the_read_asks_for_the_oldest_message_first(self):
-        """Revisions of one booking only mean anything in the order issued."""
+    def test_the_read_asks_only_for_what_is_pending_here(self):
+        """One API key reaches every property of its account, and a message
+        already acknowledged is one already dealt with."""
         self._seed_revision()
         self._import()
         params = self.server.calls_to("GET", "booking_revisions")[0][3]
-        self.assertEqual(params["order[inserted_at]"], "asc")
         self.assertEqual(params["filter[property_id]"], self.property_uuid)
+        self.assertEqual(params["filter[acknowledge_status]"], "pending")
+        self.assertEqual(params["order[inserted_at]"], "asc")
 
 
 class ChannexBookingCase(ChannexFeedCase):
@@ -191,6 +194,7 @@ class ChannexBookingCase(ChannexFeedCase):
                     "amount": "153.00",
                     "currency": "EUR",
                     "inserted_at": "2026-11-12T11:39:50.111087",
+                    "acknowledge_status": "pending",
                     "rooms": rooms if rooms is not None else [self._room()],
                     **values,
                 }
@@ -814,9 +818,111 @@ class TestChannexBookingAck(ChannexBookingCase):
         # Still pending, so turning exports back on sends it.
         self.assertEqual(self.backend.channex_acknowledge_booking_revisions(), 1)
 
-    def test_an_acknowledged_message_is_gone_from_the_feed(self):
+    def test_an_acknowledged_message_is_not_read_again(self):
         """Which is what makes the folio stay put on the next read."""
         self._seed_booking()
         self._import()
         self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertEqual(len(self._folios()), 1)
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingSweep(ChannexBookingCase):
+    """The two readings, and the sweep that runs one of them.
+
+    Channex stops offering a message in the feed half an hour after issuing it,
+    acknowledged or not, and keeps it in the listing of unacknowledged ones. So
+    the feed is what to read on notice and the listing is what to sweep with: a
+    connector sweeping the feed would miss exactly the messages a sweep is for.
+    """
+
+    def test_a_message_the_feed_no_longer_offers_is_still_taken_in(self):
+        self._seed_booking()
+        self.server.age_out_of_feed("r1")
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertEqual(len(self._folios()), 1)
+
+    def test_the_feed_reading_takes_in_what_was_just_issued(self):
+        """The short path, for when Channex tells us something arrived."""
+        self._seed_booking()
+        with trap_jobs() as trap:
+            result = self.backend.channex_import_booking_feed()
+            trap.perform_enqueued_jobs()
+        self.assertEqual(result, {"total": 1, "queued": 1})
+        self.assertEqual(len(self._folios()), 1)
+
+    def test_the_feed_reading_does_not_see_what_aged_out_of_it(self):
+        self._seed_booking()
+        self.server.age_out_of_feed("r1")
+        with trap_jobs() as trap:
+            result = self.backend.channex_import_booking_feed()
+            trap.perform_enqueued_jobs()
+        self.assertEqual(result, {"total": 0, "queued": 0})
+        self.assertFalse(self._folios())
+
+    def test_a_message_already_acknowledged_is_not_taken_in(self):
+        """Channex answers a filter it does not know with everything instead of
+        refusing it, so the status of each message is checked here as well.
+        Without that, the day the filter stops being supported we would take in
+        again every booking ever received."""
+        self.server.ignore_filter("acknowledge_status")
+        self._seed_booking(acknowledge_status="acknowledged")
+        self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertFalse(self._folios())
+
+    # -- the sweep ---------------------------------------------------------
+
+    def _second_backend(self, exported):
+        """Another hotel of the same account, on Channex or not."""
+        pms_property = self.env["pms.property"].create(
+            {
+                "name": "Channex Property 2",
+                "company_id": self.company.id,
+                "default_pricelist_id": self.pricelist.id,
+                "tz": "Europe/Madrid",
+            }
+        )
+        backend = self.env["channel.channex.backend"].create(
+            {
+                "name": "Channex Backend 2",
+                "pms_property_id": pms_property.id,
+                "backend_type_id": self.backend.backend_type_id.id,
+                "api_key": "test-key",
+                "environment": "staging",
+                "group_id": self.backend.group_id,
+            }
+        )
+        if exported:
+            self.env["channel.channex.pms.property"].export_record(
+                backend, pms_property
+            )
+        return backend
+
+    def _swept(self, trap):
+        return [job.recordset.id for job in trap.enqueued_jobs]
+
+    def test_the_sweep_queues_a_reading_for_every_backend(self):
+        other = self._second_backend(exported=True)
+        with trap_jobs() as trap:
+            self.env["channel.channex.backend"].channex_cron_import_booking_revisions()
+            self.assertEqual(set(self._swept(trap)), {self.backend.id, other.id})
+
+    def test_the_sweep_skips_a_property_never_exported(self):
+        """There is nothing on Channex waiting for it, and a property Channex
+        cannot answer for must not stop the sweep of the others."""
+        self._second_backend(exported=False)
+        with trap_jobs() as trap:
+            self.env["channel.channex.backend"].channex_cron_import_booking_revisions()
+            self.assertEqual(self._swept(trap), [self.backend.id])
+
+    def test_the_sweep_reads_each_backend_in_its_own_job(self):
+        """So a hotel Channex cannot answer for is retried on its own."""
+        self._seed_booking()
+        with trap_jobs() as trap:
+            self.env["channel.channex.backend"].channex_cron_import_booking_revisions()
+            self.assertFalse(self.server.calls_to("GET", "booking_revisions"))
+            for _round in range(3):
+                if not trap.enqueued_jobs:
+                    break
+                trap.perform_enqueued_jobs()
         self.assertEqual(len(self._folios()), 1)

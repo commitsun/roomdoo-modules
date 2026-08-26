@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class ChannelChannexBookingRevisionAdapter(Component):
-    """The booking revisions feed: reading it, and acknowledging what was read.
+    """The booking messages: reading them, and acknowledging what was read.
 
     Not a binding of any PMS model: what it mirrors is the message Channex
     hands over, not a hotel entity.
@@ -27,25 +27,63 @@ class ChannelChannexBookingRevisionAdapter(Component):
     _server_filters = ("property_id",)
 
     def feed(self, property_id):
-        """The revisions Channex still holds as undelivered, oldest first.
+        """What Channex has just issued for this property, oldest first.
 
-        Ordered on purpose: the revisions of one booking only mean anything
-        applied in the order they were issued.
+        A page long and always fresh: a revision is offered here only for its
+        first half hour, acknowledged or not. That makes this the reading to do
+        on notice, and not the one to sweep with.
+        """
+        return self._collect(
+            f"{self._resource}/feed",
+            {
+                # An API key reaches every property of its account, so the
+                # property filter is the scoping, not an optimisation.
+                "filter[property_id]": property_id,
+                "order[inserted_at]": "asc",
+            },
+        )
 
-        Paginated on ``meta.total``, which this endpoint reports where the rest
-        of the API reports ``total_pages``. Re-reading page 1 until it comes
-        back empty is what the feed is designed for, but only once revisions
-        are being acknowledged; until then it never empties.
+    def pending(self, property_id):
+        """Every message this property has left unacknowledged, however old.
+
+        This listing keeps what the feed drops, which is exactly what a sweep is
+        for: a message nobody could apply half an hour ago is still here.
+
+        The status of each row is checked instead of trusted to the query, and
+        that is not caution for its own sake: Channex answers a filter it does
+        not know with everything rather than refusing it, so the day this filter
+        stops being supported the answer would quietly include what is already
+        acknowledged.
+        """
+        return [
+            record
+            for record in self._collect(
+                self._resource,
+                {
+                    "filter[property_id]": property_id,
+                    "filter[acknowledge_status]": "pending",
+                    "order[inserted_at]": "asc",
+                },
+            )
+            if record.get("acknowledge_status") == "pending"
+        ]
+
+    def _collect(self, path, params):
+        """Every page of a listing that reports ``meta.total``.
+
+        Both of these do, where the rest of the API reports ``total_pages``.
+        Re-reading page one until it comes back empty is what Channex designed
+        the feed for, but only once revisions are being acknowledged: a message
+        that cannot be applied is never acknowledged, so it never empties.
         """
         records, page = [], 1
         limit = self.backend_record.page_limit
         while page <= MAX_PAGES:
             body = self.request(
                 "GET",
-                f"{self._resource}/feed",
+                path,
                 params={
-                    "filter[property_id]": property_id,
-                    "order[inserted_at]": "asc",
+                    **params,
                     "pagination[page]": page,
                     "pagination[limit]": limit,
                 },
@@ -56,7 +94,7 @@ class ChannelChannexBookingRevisionAdapter(Component):
             if not data or (total is not None and page * limit >= total):
                 return records
             page += 1
-        _logger.warning("Channex booking revisions feed hit the %s page cap", MAX_PAGES)
+        _logger.warning("Channex %s hit the %s page cap", path, MAX_PAGES)
         return records
 
     def ack(self, external_id):
