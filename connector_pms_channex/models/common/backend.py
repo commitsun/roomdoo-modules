@@ -363,13 +363,34 @@ class ChannelChannexBackend(models.Model):
         payload travels in the job, which is what makes retrying one possible
         even after Channex stops offering it.
 
+        Nothing is acknowledged here either. That is a job of its own, and it
+        only runs once the folio it confirms is saved for good.
         """
         self.ensure_one()
         payloads = self._channex_booking_revision_feed()
         queued = self.env["channel.channex.booking.revision"]._channex_schedule(
             self, payloads
         )
+        self.channex_acknowledge_booking_revisions()
         return {"total": len(payloads), "queued": queued}
+
+    def channex_acknowledge_booking_revisions(self):
+        """Queue the receipt of every message settled and not yet confirmed.
+
+        Asked of the whole backlog and not only of this read: a receipt that
+        could not be sent -- exports disabled on this backend, Channex down --
+        is simply still pending, and the next read picks it up.
+        """
+        self.ensure_one()
+        pending = self.env["channel.channex.booking.revision"].search(
+            [
+                ("backend_id", "=", self.id),
+                ("acknowledged_at", "=", False),
+                ("state", "in", ("applied", "superseded")),
+            ]
+        )
+        pending._channex_schedule_acknowledge()
+        return len(pending)
 
     def action_import_booking_revisions(self):
         self.ensure_one()
