@@ -17,6 +17,7 @@
                 <field name="ota_name" />
                 <field name="status" />
                 <field name="state" />
+                <field name="acknowledged_at" />
                 <field name="error" />
                 <field name="arrival_date" />
                 <field name="departure_date" />

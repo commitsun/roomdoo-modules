@@ -14,7 +14,10 @@ class ChannexFeedCase(ChannexConnectorCase):
     def _import(self, rounds=1):
         """Read the feed and run the jobs it queues.
 
-        Reading only queues, so nothing has happened until the jobs run.
+        One round by default, which is taking the messages in. Acknowledging
+        them is queued by those jobs, so it takes a round more, and most tests
+        want it left alone: an acknowledged message is gone from the feed, and
+        what a second read sees is half of what they are about.
         """
         with trap_jobs() as trap:
             result = self.backend.channex_import_booking_revisions()
@@ -713,3 +716,107 @@ class TestChannexBookingModification(ChannexBookingCase):
             self.reservation.reservation_line_ids.sorted("date").mapped("price"),
             [70.0, 80.0],
         )
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingAck(ChannexBookingCase):
+    """Acknowledging what was taken in.
+
+    Channex hands a message over until it is acknowledged, and never again
+    after. That makes the receipt the one irreversible step of the import, so it
+    is sent as a job: a job only exists once the transaction that queued it
+    commits, and never for a folio that was rolled back.
+    """
+
+    def _acks(self):
+        return [
+            call
+            for call in self.server.calls_to("POST", "booking_revisions")
+            if call[1].endswith("/ack")
+        ]
+
+    def _import(self, rounds=2):
+        """Two rounds: taking the message in, and then the receipt that queues.
+
+        ``self.receipts`` is left holding what the last round queued and did not
+        run, which is how a test can look at a receipt before it is sent.
+        """
+        sent = len(self._acks())
+        self.receipts = []
+        with trap_jobs() as trap:
+            result = self.backend.channex_import_booking_revisions()
+            self.assertEqual(
+                len(self._acks()), sent, "the read itself must send no receipt"
+            )
+            for _round in range(rounds):
+                if not trap.enqueued_jobs:
+                    break
+                trap.perform_enqueued_jobs()
+                self.receipts = trap.enqueued_jobs
+        return result
+
+    def test_a_saved_message_is_acknowledged(self):
+        self._seed_booking()
+        self._import()
+        self.assertEqual(len(self._acks()), 1)
+        self.assertEqual(self._acks()[0][1], "booking_revisions/r1/ack")
+        self.assertTrue(self._revision().acknowledged_at)
+
+    def test_the_receipt_is_a_job_of_its_own(self):
+        """So that it cannot be sent before the folio is saved for good."""
+        self._seed_booking()
+        self._import(rounds=1)
+        self.assertEqual(self._revision().state, "applied")
+        self.assertEqual(len(self.receipts), 1)
+        self.assertFalse(self._acks())
+        self.assertFalse(self._revision().acknowledged_at)
+
+    def test_a_message_that_could_not_be_applied_is_not_acknowledged(self):
+        """It has to keep coming back until the hotel can take it in."""
+        self._seed_booking(rooms=[self._room(room_type_id="not-mapped")])
+        self._import()
+        self.assertFalse(self._acks())
+        self.assertFalse(self._revision().acknowledged_at)
+
+    def test_a_superseded_message_is_acknowledged(self):
+        """It is dealt with too: the folio is at a later message already."""
+        self._seed_booking()
+        self._import()
+        self._seed_booking(external_id="r0", inserted_at="2026-11-12T09:00:00.000000")
+        self._import()
+        self.assertEqual(self._revision("r0").state, "superseded")
+        self.assertTrue(self._revision("r0").acknowledged_at)
+
+    def test_it_is_not_acknowledged_twice(self):
+        self._seed_booking()
+        self._import()
+        self.assertEqual(self.backend.channex_acknowledge_booking_revisions(), 0)
+        self.assertEqual(len(self._acks()), 1)
+
+    def test_a_message_channex_no_longer_holds_counts_as_acknowledged(self):
+        """Nothing to acknowledge is the outcome acknowledging aims for."""
+        self._seed_booking()
+        with trap_jobs() as trap:
+            self.backend.channex_import_booking_revisions()
+            trap.perform_enqueued_jobs()
+            self.server.store["booking_revisions"] = []
+            trap.perform_enqueued_jobs()
+        self.assertTrue(self._revision().acknowledged_at)
+
+    def test_exports_disabled_leaves_the_message_unacknowledged(self):
+        """A backend with exports off is usually a copy of a live one, and a
+        receipt sent from it would make the real hotel lose the message."""
+        self.backend.export_disabled = True
+        self._seed_booking()
+        self._import()
+        self.assertFalse(self._acks())
+        self.assertFalse(self._revision().acknowledged_at)
+        # Still pending, so turning exports back on sends it.
+        self.assertEqual(self.backend.channex_acknowledge_booking_revisions(), 1)
+
+    def test_an_acknowledged_message_is_gone_from_the_feed(self):
+        """Which is what makes the folio stay put on the next read."""
+        self._seed_booking()
+        self._import()
+        self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertEqual(len(self._folios()), 1)

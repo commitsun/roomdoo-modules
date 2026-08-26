@@ -28,11 +28,17 @@ MAX_PAGES = 200
 
 
 class ChannexAPIError(ChannelAdapterError):
-    """A rejection from Channex, carrying the parsed error body."""
+    """A rejection from Channex, carrying the parsed error body and its status.
 
-    def __init__(self, message, payload=None):
+    The status is kept because the same status means different things on
+    different calls: a 404 is a failure on most of them and the expected
+    outcome on others.
+    """
+
+    def __init__(self, message, payload=None, status_code=None):
         super().__init__(message)
         self.payload = payload
+        self.status_code = status_code
 
 
 class ChannelChannexAdapter(AbstractComponent):
@@ -117,7 +123,9 @@ class ChannelChannexAdapter(AbstractComponent):
 
             raise IDMissingInBackend(message)
         if response.status_code in PERMANENT_STATUSES:
-            raise ChannexAPIError(message, payload=body)
+            raise ChannexAPIError(
+                message, payload=body, status_code=response.status_code
+            )
         if response.status_code in THROTTLED_STATUSES:
             raise RetryableJobError(
                 message, seconds=self._retry_after(response, THROTTLED_RETRY_SECONDS)
@@ -126,7 +134,7 @@ class ChannelChannexAdapter(AbstractComponent):
             raise RetryableJobError(
                 message, seconds=self._retry_after(response, DEFAULT_RETRY_SECONDS)
             )
-        raise ChannexAPIError(message, payload=body)
+        raise ChannexAPIError(message, payload=body, status_code=response.status_code)
 
     @staticmethod
     def _parse(response):
@@ -174,9 +182,9 @@ class ChannelChannexAdapter(AbstractComponent):
         skipped because exports are disabled on this backend.
 
         Anything but a GET is a write, whether or not it carries a body: a
-        DELETE has none. A backend with exports disabled is usually a copy of a
-        live one, and letting a bodiless write through would reach the real
-        Channex.
+        DELETE has none, and neither does acknowledging a booking. A backend
+        with exports disabled is usually a copy of a live one, and letting a
+        bodiless write through would reach the real Channex.
         """
         from .call_control import ChannexCallControl
 
