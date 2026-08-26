@@ -1,0 +1,435 @@
+# Copyright 2026 Roomdoo
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+
+from odoo.tests import tagged
+
+from odoo.addons.queue_job.tests.common import trap_jobs
+
+from .common import ChannexConnectorCase
+
+
+class ChannexFeedCase(ChannexConnectorCase):
+    """Reading the feed and running what the read queues."""
+
+    def _import(self, rounds=1):
+        """Read the feed and run the jobs it queues.
+
+        Reading only queues, so nothing has happened until the jobs run.
+        """
+        with trap_jobs() as trap:
+            result = self.backend.channex_import_booking_revisions()
+            for _round in range(rounds):
+                if not trap.enqueued_jobs:
+                    break
+                trap.perform_enqueued_jobs()
+        return result
+
+    def _revisions(self):
+        return self.env["channel.channex.booking.revision"].search(
+            [("backend_id", "=", self.backend.id)]
+        )
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingRevisions(ChannexFeedCase):
+    """What Channex is holding for this property, as this property's messages."""
+
+    def setUp(self):
+        super().setUp()
+        self.env["channel.channex.pms.property"].export_record(
+            self.backend, self.pms_property
+        )
+        self.property_uuid = self.server.store["properties"][0]["id"]
+
+    def _seed_revision(self, external_id="r1", property_id=None, **values):
+        self.server.seed(
+            "booking_revisions",
+            [
+                {
+                    "id": external_id,
+                    "property_id": self.property_uuid
+                    if property_id is None
+                    else property_id,
+                    "booking_id": "b1",
+                    "unique_id": "BDC-3333333333",
+                    "ota_reservation_code": "3333333333",
+                    "ota_name": "BookingCom",
+                    "channel_id": "85016ebd-a1aa-2b9f-abb9-4ad3a0857835",
+                    "status": "new",
+                    "arrival_date": "2026-11-13",
+                    "departure_date": "2026-11-15",
+                    "amount": "153.00",
+                    "currency": "EUR",
+                    "inserted_at": "2026-11-12T11:39:50.111087",
+                    **values,
+                }
+            ],
+        )
+
+    def test_the_message_channex_is_holding_is_recorded(self):
+        self._seed_revision()
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        revision = self._revisions()
+        self.assertEqual(revision.external_id, "r1")
+        self.assertEqual(revision.booking_id, "b1")
+        self.assertEqual(revision.unique_id, "BDC-3333333333")
+        self.assertEqual(revision.ota_reservation_code, "3333333333")
+        self.assertEqual(revision.ota_name, "BookingCom")
+        self.assertEqual(revision.channel_id, "85016ebd-a1aa-2b9f-abb9-4ad3a0857835")
+        self.assertEqual(revision.status, "new")
+        self.assertEqual(str(revision.arrival_date), "2026-11-13")
+        self.assertEqual(str(revision.departure_date), "2026-11-15")
+        self.assertEqual(revision.amount, 153.0)
+        self.assertEqual(revision.currency, "EUR")
+        # Channex issues the timestamp in ISO 8601 UTC, Odoo stores it plain.
+        self.assertEqual(str(revision.inserted_at), "2026-11-12 11:39:50")
+
+    def test_the_repeated_message_stays_one_row(self):
+        """The feed keeps offering an unacknowledged revision, so reading it
+        again has to be harmless. It is looked at again -- what stopped it may
+        be gone -- but it is the same message and so the same row."""
+        self._seed_revision()
+        self._import()
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertEqual(len(self._revisions()), 1)
+
+    def test_a_later_revision_of_the_same_booking_is_its_own_row(self):
+        self._seed_revision()
+        self._import()
+        self._seed_revision(external_id="r2", status="cancelled")
+        self.assertEqual(self._import(), {"total": 2, "queued": 2})
+        self.assertEqual(self._revisions().mapped("status"), ["cancelled", "new"])
+
+    def test_the_read_ignores_revisions_of_another_property(self):
+        """One API key reaches every property of its account, so the property
+        filter is the scoping."""
+        self._seed_revision(external_id="other", property_id="another-property")
+        self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertFalse(self._revisions())
+
+    def test_the_read_covers_every_page_of_the_feed(self):
+        """The feed reports ``total`` where the rest of the API reports
+        ``total_pages``."""
+        self.backend.page_limit = 2
+        for number in range(5):
+            self._seed_revision(external_id=f"r{number}", booking_id=f"b{number}")
+        self.assertEqual(self._import(), {"total": 5, "queued": 5})
+        self.assertEqual(len(self._revisions()), 5)
+        self.assertEqual(len(self.server.calls_to("GET", "booking_revisions")), 3)
+
+    def test_the_read_asks_for_the_oldest_message_first(self):
+        """Revisions of one booking only mean anything in the order issued."""
+        self._seed_revision()
+        self._import()
+        params = self.server.calls_to("GET", "booking_revisions")[0][3]
+        self.assertEqual(params["order[inserted_at]"], "asc")
+        self.assertEqual(params["filter[property_id]"], self.property_uuid)
+
+
+class ChannexBookingCase(ChannexFeedCase):
+    """A property with one mapped room type, and messages to feed it."""
+
+    def setUp(self):
+        super().setUp()
+        self._bind_and_export("channel.channex.pms.property", self.pms_property)
+        self.room_type_binding = self._bind_and_export(
+            "channel.channex.pms.room.type", self.room_type
+        )
+        self.property_uuid = self.server.store["properties"][0]["id"]
+        self.room_type_uuid = self.room_type_binding.external_id
+
+    def _bind_and_export(self, model, record):
+        binding = (
+            self.env[model]
+            .with_context(connector_no_export=True)
+            .create({"odoo_id": record.id, "backend_id": self.backend.id})
+        )
+        self.env[model].export_record(self.backend, record)
+        binding.invalidate_recordset()
+        return binding
+
+    def _room(self, **values):
+        return {
+            "room_type_id": self.room_type_uuid,
+            "rate_plan_id": "rp-1",
+            "checkin_date": "2026-11-13",
+            "checkout_date": "2026-11-15",
+            "amount": "153.00",
+            "days": {"2026-11-13": "76.50", "2026-11-14": "76.50"},
+            "occupancy": {"adults": 2, "children": 1, "infants": 1},
+            **values,
+        }
+
+    def _seed_booking(self, external_id="r1", rooms=None, **values):
+        self.server.seed(
+            "booking_revisions",
+            [
+                {
+                    "id": external_id,
+                    "property_id": self.property_uuid,
+                    "booking_id": "b1",
+                    "unique_id": "BDC-3333333333",
+                    "ota_reservation_code": "3333333333",
+                    "ota_name": "BookingCom",
+                    "channel_id": "chn-1",
+                    "status": "new",
+                    "arrival_hour": "18:00",
+                    "notes": "Quiet room, please",
+                    "customer": {
+                        "name": "User",
+                        "surname": "Channex",
+                        "mail": "user@channex.io",
+                        "phone": "1234567890",
+                        "language": "en",
+                    },
+                    "occupancy": {"adults": 2, "children": 1, "infants": 1},
+                    "arrival_date": "2026-11-13",
+                    "departure_date": "2026-11-15",
+                    "amount": "153.00",
+                    "currency": "EUR",
+                    "inserted_at": "2026-11-12T11:39:50.111087",
+                    "rooms": rooms if rooms is not None else [self._room()],
+                    **values,
+                }
+            ],
+        )
+
+    def _revision(self, external_id="r1"):
+        return self.env["channel.channex.booking.revision"].search(
+            [("backend_id", "=", self.backend.id), ("external_id", "=", external_id)]
+        )
+
+    def _folios(self):
+        return self.env["channel.channex.pms.folio"].search(
+            [("backend_id", "=", self.backend.id)]
+        )
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingImport(ChannexBookingCase):
+    """From message to folio, for a new booking."""
+
+    def test_new_booking_becomes_a_folio(self):
+        self._seed_booking()
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        binding = self._folios()
+        self.assertEqual(len(binding), 1)
+        # Bound on the booking, not on the message.
+        self.assertEqual(binding.external_id, "b1")
+        self.assertEqual(binding.revision_external_id, "r1")
+        self.assertEqual(str(binding.revision_inserted_at), "2026-11-12 11:39:50")
+        folio = binding.odoo_id
+        self.assertEqual(folio.pms_property_id, self.pms_property)
+        self.assertEqual(folio.partner_name, "Channex, User")
+        self.assertEqual(folio.email, "user@channex.io")
+        self.assertEqual(folio.mobile, "1234567890")
+        self.assertEqual(self._revision().state, "applied")
+
+    def test_the_room_becomes_a_reservation_priced_as_the_ota_sold_it(self):
+        self._seed_booking()
+        self._import()
+        reservation = self._folios().odoo_id.reservation_ids
+        self.assertEqual(len(reservation), 1)
+        self.assertEqual(reservation.room_type_id, self.room_type)
+        self.assertEqual(str(reservation.checkin), "2026-11-13")
+        self.assertEqual(str(reservation.checkout), "2026-11-15")
+        self.assertEqual(reservation.adults, 2)
+        # Infants are not children: Channex counts them apart because they take
+        # no place.
+        self.assertEqual(reservation.children, 1)
+        # Stated once for the booking, needed on the reservation.
+        self.assertEqual(reservation.ota_reservation_code, "3333333333")
+        self.assertEqual(reservation.arrival_hour, "18:00")
+        self.assertEqual(reservation.partner_requests, "Quiet room, please")
+        lines = reservation.reservation_line_ids.sorted("date")
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(
+            [str(line.date) for line in lines], ["2026-11-13", "2026-11-14"]
+        )
+        self.assertEqual(lines.mapped("price"), [76.5, 76.5])
+
+    def test_a_breakdown_that_does_not_cover_the_stay_is_not_applied(self):
+        """No price is ever derived here: what the OTA sold is what gets
+        written, or nothing gets written."""
+        self._seed_booking(rooms=[self._room(days={"2026-11-13": "153.00"})])
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertFalse(self._folios())
+        self.assertIn("2026-11-14", self._revision().error)
+
+    def test_a_breakdown_reaching_outside_the_stay_is_not_applied(self):
+        """Dropping a night the OTA priced would be dropping money silently."""
+        self._seed_booking(
+            rooms=[
+                self._room(
+                    days={
+                        "2026-11-13": "76.50",
+                        "2026-11-14": "76.50",
+                        "2026-11-15": "76.50",
+                    }
+                )
+            ]
+        )
+        self._import()
+        self.assertFalse(self._folios())
+        self.assertIn("2026-11-15", self._revision().error)
+
+    def test_a_night_the_ota_gave_away_is_not_applied(self):
+        """pms reads a price of zero as "not priced yet" and would replace it
+        with the one from its pricelist, so it cannot be written as it came."""
+        self._seed_booking(
+            rooms=[self._room(days={"2026-11-13": "153.00", "2026-11-14": "0.00"})]
+        )
+        self._import()
+        self.assertFalse(self._folios())
+        self.assertIn("2026-11-14", self._revision().error)
+
+    def test_the_reservation_is_blocked(self):
+        self._seed_booking()
+        self._import()
+        self.assertTrue(self._folios().odoo_id.reservation_ids.blocked)
+
+    def test_two_rooms_become_two_reservations(self):
+        self._seed_booking(
+            rooms=[
+                self._room(),
+                self._room(checkout_date="2026-11-14", days={"2026-11-13": "80.00"}),
+            ]
+        )
+        self._import()
+        reservations = self._folios().odoo_id.reservation_ids
+        self.assertEqual(len(reservations), 2)
+        self.assertEqual(
+            sorted(str(checkout) for checkout in reservations.mapped("checkout")),
+            ["2026-11-14", "2026-11-15"],
+        )
+
+    # -- idempotence -------------------------------------------------------
+
+    def test_the_same_message_twice_leaves_one_folio(self):
+        """Nothing is acknowledged, so the feed hands the message over again."""
+        self._seed_booking()
+        self._import()
+        # Not queued again: there is nothing left to make of it.
+        self.assertEqual(self._import(), {"total": 1, "queued": 0})
+        self.assertEqual(len(self._folios()), 1)
+        self.assertEqual(len(self._folios().odoo_id.reservation_ids), 1)
+        self.assertEqual(self._revision().state, "applied")
+
+    def test_a_message_older_than_the_folio_is_not_applied(self):
+        self._seed_booking()
+        self._import()
+        self._seed_booking(external_id="r0", inserted_at="2026-11-12T09:00:00.000000")
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(self._revision("r0").state, "superseded")
+        self.assertEqual(self._folios().revision_external_id, "r1")
+
+    # -- what does not become a folio --------------------------------------
+
+    def test_an_unmapped_room_type_leaves_the_message_unapplied(self):
+        self._seed_booking(rooms=[self._room(room_type_id="not-mapped")])
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertFalse(self._folios())
+        revision = self._revision()
+        self.assertEqual(revision.state, "error")
+        self.assertIn("not-mapped", revision.error)
+
+    def test_a_modification_is_not_taken_in_yet(self):
+        self._seed_booking(status="modified")
+        self._import()
+        self.assertFalse(self._folios())
+        self.assertEqual(self._revision().state, "error")
+
+    def test_a_message_with_no_booking_id_is_reported(self):
+        self._seed_booking(booking_id=None)
+        self._import()
+        self.assertFalse(self._folios())
+        self.assertEqual(self._revision().state, "error")
+
+    def test_a_message_that_could_not_be_applied_is_retried(self):
+        """It stays unacknowledged, so the next read brings it back. Mapping the
+        room type is all it takes."""
+        self._seed_booking(rooms=[self._room(room_type_id="not-mapped")])
+        self._import()
+        self.server.store["booking_revisions"][0]["rooms"] = [self._room()]
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertEqual(len(self._folios()), 1)
+        self.assertEqual(self._revision().state, "applied")
+
+    # -- the agency --------------------------------------------------------
+
+    def _seed_channel(self, agency=None, active=True):
+        channel = self.env["channel.channex.channel"].create(
+            {
+                "backend_id": self.backend.id,
+                "external_id": "chn-1",
+                "code": "BookingCom",
+                "title": "BookingCom - Channex Property",
+                "active": active,
+                "ota_id": self.env["channel.channex.ota"]
+                ._channex_of_code("BookingCom")
+                .id,
+            }
+        )
+        if agency:
+            channel.agency_id = agency
+        return channel
+
+    def _agency(self):
+        sale_channel = self.env["pms.sale.channel"].create(
+            {"name": "An OTA", "channel_type": "indirect"}
+        )
+        # An agency in pms needs an indirect sale channel and a pricelist that
+        # is available for pms, which in turn needs an availability plan.
+        self.pricelist.write(
+            {
+                "is_pms_available": True,
+                "availability_plan_id": self.env["pms.availability.plan"]
+                .create({"name": "Channex AP"})
+                .id,
+            }
+        )
+        # The pricelist of a partner is per company, so the agency has to be
+        # created in the one this property belongs to.
+        agency = (
+            self.env["res.partner"]
+            .with_company(self.company)
+            .create(
+                {
+                    "name": "An agency",
+                    "is_agency": True,
+                    "sale_channel_id": sale_channel.id,
+                    "property_product_pricelist": self.pricelist.id,
+                }
+            )
+        )
+        return agency, sale_channel
+
+    def test_the_agency_comes_from_the_channel_of_the_message(self):
+        agency, sale_channel = self._agency()
+        self._seed_channel(agency=agency)
+        self._seed_booking()
+        self._import()
+        folio = self._folios().odoo_id
+        self.assertEqual(folio.agency_id, agency)
+        self.assertEqual(folio.sale_channel_origin_id, sale_channel)
+
+    def test_a_channel_gone_from_channex_still_names_the_agency(self):
+        """A channel that disappears is deactivated and never deleted, so what
+        it sold keeps resolving to its partner."""
+        agency, _sale_channel = self._agency()
+        self._seed_channel(agency=agency, active=False)
+        self._seed_booking()
+        self._import()
+        self.assertEqual(self._folios().odoo_id.agency_id, agency)
+
+    def test_a_channel_with_no_agency_does_not_hold_up_the_booking(self):
+        """Losing a booking is worse than not knowing whose it is."""
+        self._seed_channel()
+        self._seed_booking()
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertFalse(self._folios().odoo_id.agency_id)
+
+    def test_an_unknown_channel_does_not_hold_up_the_booking_either(self):
+        self._seed_booking(channel_id="never-seen")
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertFalse(self._folios().odoo_id.agency_id)
