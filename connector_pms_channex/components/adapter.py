@@ -81,7 +81,9 @@ class ChannelChannexAdapter(AbstractComponent):
         """Single entry point for every call, so logging, error mapping and the
         rate limit are applied uniformly."""
         url = f"{self.backend_record.url.rstrip('/')}/{path.lstrip('/')}"
-        control = self._call_control(f"{method} /{path.split('/')[0]}", params, payload)
+        control = self._call_control(
+            method, f"{method} /{path.split('/')[0]}", params, payload
+        )
         if control is None:
             return None
         try:
@@ -167,13 +169,19 @@ class ChannelChannexAdapter(AbstractComponent):
             return body
         return {k: v for k, v in body.items() if k not in ("user-api-key", "api_key")}
 
-    def _call_control(self, funcname, params, payload):
+    def _call_control(self, method, funcname, params, payload):
         """Rate limit bookkeeping. Returns ``None`` when the call must be
-        skipped because exports are disabled on this backend."""
+        skipped because exports are disabled on this backend.
+
+        Anything but a GET is a write, whether or not it carries a body: a
+        DELETE has none. A backend with exports disabled is usually a copy of a
+        live one, and letting a bodiless write through would reach the real
+        Channex.
+        """
         from .call_control import ChannexCallControl
 
         control = ChannexCallControl(self, funcname, {"params": params})
-        if self.backend_record.export_disabled and payload is not None:
+        if self.backend_record.export_disabled and method != "GET":
             control.add_result("skipped", "Export disabled on this backend")
             return None
         return control
