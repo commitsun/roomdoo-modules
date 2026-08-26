@@ -108,6 +108,9 @@ class FakeChannexServer:
 
         if method == "POST" and path == "auth/one_time_token":
             return self._one_time_token(json)
+        if method == "GET" and path == "booking_revisions/feed":
+            # The feed is a listing under a sub-path, not a record.
+            return self._list(resource, params)
         if method == "GET" and "/" in path:
             return self._read(resource, path.split("/")[1])
         if method == "GET":
@@ -169,9 +172,10 @@ class FakeChannexServer:
         page = int((params or {}).get("pagination[page]") or 1)
         window = records[(page - 1) * limit : page * limit]
         meta = {"total": len(records), "page": page, "limit": limit}
-        if resource != "channels":
+        if resource not in ("channels", "booking_revisions"):
             # Channex sends no total_pages on channels, so the adapter has to
-            # fall back to stopping on the first empty page.
+            # fall back to stopping on the first empty page, nor on the booking
+            # revisions feed, which reports the total instead.
             meta["total_pages"] = max(1, -(-len(records) // limit))
         return FakeResponse(
             200,
