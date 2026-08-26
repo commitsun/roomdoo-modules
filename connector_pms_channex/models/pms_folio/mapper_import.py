@@ -103,6 +103,12 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
     # by pms.
     BOOKING_LEVEL = ("ota_reservation_code", "arrival_hour", "notes")
 
+    #: What a room is recognised by. Neither of the two ids Channex puts on a
+    #: room survives a modification, so the reservation a room stands for is
+    #: deduced from what it is, and these are the three that make a room a
+    #: different room rather than the same one changed.
+    IDENTITY = ("room_type_id", "checkin", "checkout")
+
     def get_all_items(self, mapper, items, parent, to_attr, options):
         """Hand each room the booking level fields it needs.
 
@@ -111,10 +117,119 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
         room wins on a clash, should Channex ever state one of these per room.
         """
         booking = {key: parent.source.get(key) for key in self.BOOKING_LEVEL}
-        return super().get_all_items(
-            mapper,
-            [{**booking, **item} for item in items],
-            parent,
-            to_attr,
-            options,
+        items = [{**booking, **item} for item in items]
+        binding = options.get("binding")
+        if not binding:
+            return super().get_all_items(mapper, items, parent, to_attr, options)
+        return self._channex_reconcile(mapper, items, parent, to_attr, options, binding)
+
+    def skip_item(self, map_record):
+        """A room the message itself says is cancelled.
+
+        There is nothing to write for it: on a folio being created it simply is
+        not one of its reservations, and on one being modified the reservation
+        it stood for is left over below, and cancelled there.
+        """
+        return bool(map_record.source.get("is_cancelled"))
+
+    def format_items(self, items_values):
+        return [
+            (1, values.pop("id"), values) if values.get("id") else (0, 0, values)
+            for values in items_values
+        ]
+
+    # -- modifying an existing folio -----------------------------------------
+
+    def _channex_reconcile(self, mapper, items, parent, to_attr, options, binding):
+        """Say which reservation each room of the message is, and cancel the rest.
+
+        A room that is recognisably one of the reservations of the folio updates
+        it. A room that is not is a reservation the folio does not have yet, and
+        a reservation no room accounts for is a reservation the booking no
+        longer has.
+        """
+        # Reservations cancelled by an earlier version of this same booking are
+        # not candidates: they are what the booking used to be, and reviving one
+        # would re-occupy a room the hotel has already sold again.
+        pending = binding.reservation_ids.filtered(lambda r: r.state != "cancel")
+        mapped = []
+        for item in items:
+            map_record = mapper.map_record(item, parent=parent)
+            if self.skip_item(map_record):
+                continue
+            values = self.get_item_values(map_record, to_attr, options)
+            reservation = self._channex_match(values, pending)
+            if reservation:
+                pending -= reservation
+                values = self._channex_update_values(values, reservation)
+                values["id"] = reservation.id
+            else:
+                # A reservation the folio is getting now is a reservation being
+                # created, and the mappings that only run on creation -- the
+                # block against manual edits among them -- have to run for it.
+                # Nothing propagates that on this path.
+                values = map_record.values(**dict(options, for_create=True))
+            if values:
+                mapped.append(values)
+        self._channex_cancel(pending)
+        return mapped
+
+    def _channex_match(self, values, reservations):
+        """The reservation this room is, or nothing."""
+        identity = (
+            values["room_type_id"],
+            str(values["checkin"]),
+            str(values["checkout"]),
         )
+        for reservation in reservations:
+            if identity == (
+                reservation.room_type_id.id,
+                str(reservation.checkin),
+                str(reservation.checkout),
+            ):
+                return reservation
+        return self.env["pms.reservation"]
+
+    def _channex_update_values(self, values, reservation):
+        """What to write on a reservation that is staying.
+
+        The three fields the reservation was recognised by are dropped: they
+        already hold these values, and writing dates or room type sends pms off
+        rebuilding the nights of the stay, which is the one thing that must not
+        happen to prices the OTA sold. The prices themselves go onto the lines
+        that are already there, one per night, because the nights are the same
+        nights.
+        """
+        values = {
+            key: value for key, value in values.items() if key not in self.IDENTITY
+        }
+        nights = values.pop("reservation_line_ids", None)
+        if nights is None:
+            return values
+        lines = {str(line.date): line for line in reservation.reservation_line_ids}
+        commands = []
+        for _op, _id, night in nights:
+            line = lines.get(night["date"])
+            assert line, (
+                f"night {night['date']} is not a line of reservation "
+                f"{reservation.id}, which was matched on these very nights"
+            )
+            commands.append((1, line.id, {"price": night["price"]}))
+        values["reservation_line_ids"] = commands
+        return values
+
+    def _channex_cancel(self, reservations):
+        """Reservations of the folio the message no longer accounts for.
+
+        Cancelled and never deleted: it is what the hotel worked with until now,
+        and someone will want to see it. ``modified`` in the context is what
+        tells pms this is not a guest cancelling, so no cancellation penalty is
+        charged for it.
+
+        A stay already under way cannot be cancelled, and that is recognised
+        before any of this runs, on the message itself. Nothing is checked here
+        again: pms refuses it anyway, and the message says so.
+        """
+        if not reservations:
+            return
+        reservations.with_context(modified=True).action_cancel()
