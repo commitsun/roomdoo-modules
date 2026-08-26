@@ -79,6 +79,11 @@ class ChannelChannexBackend(models.Model):
         inverse_name="backend_id",
         string="Channels",
     )
+    booking_revision_ids = fields.One2many(
+        comodel_name="channel.channex.booking.revision",
+        inverse_name="backend_id",
+        string="Booking revisions",
+    )
     unmapped_channel_count = fields.Integer(
         compute="_compute_unmapped_channel_count",
         help="Channels with no agency. Their bookings would come in with no "
@@ -340,6 +345,38 @@ class ChannelChannexBackend(models.Model):
                 "step": "map" if self.channel_ids else "connect",
             },
         }
+
+    # -- bookings ----------------------------------------------------------
+
+    def _channex_booking_revision_feed(self):
+        """The messages Channex is holding for this property, oldest first."""
+        self.ensure_one()
+        property_id = self._channex_property_external_id()
+        with self.work_on("channel.channex.booking.revision") as work:
+            return work.component(usage="backend.adapter").feed(property_id)
+
+    def channex_import_booking_revisions(self):
+        """Read the feed and queue what to make of each message.
+
+        One job per message, so each gets a transaction of its own: a message
+        pms refuses cannot take the rest of the read down with it, and its
+        payload travels in the job, which is what makes retrying one possible
+        even after Channex stops offering it.
+
+        """
+        self.ensure_one()
+        payloads = self._channex_booking_revision_feed()
+        queued = self.env["channel.channex.booking.revision"]._channex_schedule(
+            self, payloads
+        )
+        return {"total": len(payloads), "queued": queued}
+
+    def action_import_booking_revisions(self):
+        self.ensure_one()
+        result = self.channex_import_booking_revisions()
+        return self._notify(
+            _("%(queued)s of %(total)s booking message(s) queued.") % result
+        )
 
     def _notify(self, message):
         return {
