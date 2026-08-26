@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector Channex",
     "summary": "Channel PMS connector Channex.io",
-    "version": "16.0.1.2.0",
+    "version": "16.0.1.3.0",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",
