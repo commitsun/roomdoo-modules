@@ -80,6 +80,22 @@
                             </div>
                             <field name="channel_ids" nolabel="1" readonly="1" />
                         </page>
+                        <page string="Bookings" name="bookings">
+                            <div class="mb-2">
+                                <button
+                  name="action_import_booking_revisions"
+                  type="object"
+                  string="Import bookings"
+                  class="btn-primary"
+                  help="Read the messages Channex is holding for this property and queue one job per message. What became of each one shows up below as its job runs."
+                />
+                            </div>
+                            <field
+                name="booking_revision_ids"
+                nolabel="1"
+                readonly="1"
+              />
+                        </page>
                     </notebook>
                 </sheet>
             </form>

@@ -1,0 +1,338 @@
+# Copyright 2026 Roomdoo
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+
+import datetime
+
+from odoo import _, api, fields, models
+
+from odoo.addons.queue_job.job import identity_exact
+
+
+def _channex_datetime(value):
+    """Channex stamps revisions in UTC, which is what Odoo stores, only in ISO
+    8601: a ``T`` where Odoo wants a space, and microseconds it has no room
+    for. Odoo derives the format from the length of the string, so what is left
+    over is not ignored, it raises."""
+    if not value:
+        return False
+    return fields.Datetime.to_datetime(str(value).replace("T", " ")[:19])
+
+
+def _channex_nights(room):
+    """The nights of a room, as the dates Channex keys its prices by."""
+    checkin = datetime.date.fromisoformat(room["checkin_date"])
+    checkout = datetime.date.fromisoformat(room["checkout_date"])
+    nights, night = [], checkin
+    while night < checkout:
+        nights.append(night.isoformat())
+        night += datetime.timedelta(days=1)
+    return nights
+
+
+class ChannelChannexBookingRevision(models.Model):
+    """What Channex has sent for this property, and what became of each message.
+
+    A log of outcomes, not a queue: the queue is ``queue.job``, one job per
+    message, and a row here is only written once there is something to say
+    about the message. Nothing is ever ``pending`` in this table.
+
+    That split runs through the whole model. What we can foresee -- a room type
+    nobody mapped, a breakdown that does not cover its own stay, a status not
+    taken in yet -- is not a failure, it is a decision, and it is written here
+    in words a hotel can act on. Anything else pms says is a job that failed,
+    with its traceback, and its transaction is undone whole; no row is left
+    behind claiming something happened.
+
+    A revision is immutable on Channex -- a change to a booking is a new
+    revision with a new id -- so the identity of a row never changes once
+    written. The message itself is not kept: the body is in
+    ``channel.backend.log`` and in the arguments of its own job, which is what
+    makes retrying one possible even after Channex stops offering it.
+    """
+
+    _name = "channel.channex.booking.revision"
+    _description = "Channel Channex Booking Revision"
+    _rec_name = "unique_id"
+    _order = "inserted_at desc, id desc"
+
+    backend_id = fields.Many2one(
+        comodel_name="channel.channex.backend",
+        required=True,
+        readonly=True,
+        ondelete="cascade",
+    )
+    external_id = fields.Char(
+        string="Revision ID",
+        required=True,
+        readonly=True,
+        index=True,
+        help="Identifies the message. A new one for every change to a booking.",
+    )
+    booking_id = fields.Char(
+        string="Booking ID",
+        readonly=True,
+        help="The same across every revision of one booking, so it is what a "
+        "folio gets bound to.",
+    )
+    unique_id = fields.Char(
+        readonly=True,
+        help="OTA code and reservation code together, as Channex composes it, "
+        "e.g. BDC-3333333333.",
+    )
+    ota_reservation_code = fields.Char(
+        readonly=True,
+        help="The code the guest and the OTA see.",
+    )
+    ota_name = fields.Char(readonly=True)
+    channel_id = fields.Char(
+        string="Channex channel ID",
+        readonly=True,
+        help="What the agency is resolved by. Channex does not document it on "
+        "this payload, so it may well come in empty.",
+    )
+    status = fields.Selection(
+        selection=[
+            ("new", "New"),
+            ("modified", "Modified"),
+            ("cancelled", "Cancelled"),
+        ],
+        readonly=True,
+        help="Of the message, not of the booking.",
+    )
+    arrival_date = fields.Date(readonly=True)
+    departure_date = fields.Date(readonly=True)
+    amount = fields.Float(readonly=True)
+    currency = fields.Char(readonly=True, help="As the OTA sold it.")
+    inserted_at = fields.Datetime(
+        string="Issued at",
+        readonly=True,
+        help="When Channex received the message from the OTA.",
+    )
+
+    state = fields.Selection(
+        selection=[
+            ("applied", "Applied"),
+            ("superseded", "Superseded"),
+            ("error", "Not applied"),
+        ],
+        readonly=True,
+        required=True,
+        help="What became of this message. There is no state for work still to "
+        "be done: that is what the job queue is for.",
+    )
+    error = fields.Char(
+        string="Reason",
+        readonly=True,
+        help="Why the message could not become a folio, when that is something "
+        "the hotel can settle. The feed keeps offering the message, so fixing "
+        "the cause and reading it again is all it takes.",
+    )
+
+    _sql_constraints = [
+        (
+            "external_uniq",
+            "unique(backend_id, external_id)",
+            "This booking revision is already recorded for this backend.",
+        ),
+    ]
+
+    # -- taking in one message ----------------------------------------------
+
+    @api.model
+    def _channex_schedule(self, backend, payloads):
+        """Queue one job per message of this read, and say how many.
+
+        Nothing is decided here: reading the feed and making sense of a message
+        are separate concerns, and separating them is what gives each message a
+        transaction of its own.
+
+        A message already settled is not queued again -- there is nothing left
+        to make of it -- while one that could not be applied is, because the
+        reason may well be gone by now.
+
+        The order jobs run in does not matter, and that is not luck: the folio
+        carries the revision it is at, so a message applied out of order is
+        recognised as the older one and lands as ``superseded``.
+        """
+        # The feed is live, so paginating over it can hand the same revision
+        # over twice.
+        by_id = {payload["id"]: payload for payload in payloads if payload.get("id")}
+        settled = set(
+            self.search(
+                [
+                    ("backend_id", "=", backend.id),
+                    ("external_id", "in", list(by_id)),
+                    ("state", "in", ("applied", "superseded")),
+                ]
+            ).mapped("external_id")
+        )
+        queued = 0
+        for external_id, payload in by_id.items():
+            if external_id in settled:
+                continue
+            self.with_delay(identity_key=identity_exact).channex_take_message(
+                backend, payload
+            )
+            queued += 1
+        return queued
+
+    @api.model
+    def channex_take_message(self, backend, payload):
+        """Make of one message whatever can be made of it. Job entry point.
+
+        The row is written last and in one go, so the outcome it reports is
+        never a guess: if the import raises, this transaction is undone and
+        there is no row at all, only a failed job holding the message and its
+        traceback.
+        """
+        settled = self._channex_settled(backend, payload)
+        if settled:
+            values = {"state": settled, "error": False}
+        else:
+            problem = self._channex_problem(backend, payload)
+            if problem:
+                values = {"state": "error", "error": problem}
+            else:
+                self._channex_import(backend, payload)
+                values = {"state": "applied", "error": False}
+        return self._channex_record(backend, payload, values).state
+
+    @api.model
+    def _channex_import(self, backend, payload):
+        """Write the folio. Whatever pms says about it is the job's business."""
+        with backend.work_on("channel.channex.pms.folio") as work:
+            work.component(usage="direct.record.importer").run(
+                payload["booking_id"], external_data=payload
+            )
+
+    @api.model
+    def _channex_record(self, backend, payload, values):
+        """The row for this message, with what became of it."""
+        revision = self.search(
+            [
+                ("backend_id", "=", backend.id),
+                ("external_id", "=", payload["id"]),
+            ],
+            limit=1,
+        )
+        if revision:
+            revision.write(values)
+            return revision
+        return self.create({**self._channex_values(backend, payload), **values})
+
+    @api.model
+    def _channex_values(self, backend, values):
+        """The identity of the message, as Channex states it."""
+        return {
+            "backend_id": backend.id,
+            "external_id": values["id"],
+            "booking_id": values.get("booking_id"),
+            "unique_id": values.get("unique_id"),
+            "ota_reservation_code": values.get("ota_reservation_code"),
+            "ota_name": values.get("ota_name"),
+            "channel_id": values.get("channel_id"),
+            "status": values.get("status"),
+            "arrival_date": values.get("arrival_date"),
+            "departure_date": values.get("departure_date"),
+            "amount": values.get("amount") or 0.0,
+            "currency": values.get("currency"),
+            "inserted_at": _channex_datetime(values.get("inserted_at")),
+        }
+
+    # -- what can be foreseen -----------------------------------------------
+
+    @api.model
+    def _channex_settled(self, backend, payload):
+        """``applied`` if the folio is already at this message, ``superseded``
+        if it is at a later one, and nothing if it is behind.
+
+        This is the guard that makes re-reading the feed free, and the one that
+        keeps a message delivered late from reverting a folio.
+        """
+        binding = self._channex_binding(backend, payload)
+        if not binding:
+            return False
+        if binding.revision_external_id == payload["id"]:
+            return "applied"
+        issued = _channex_datetime(payload.get("inserted_at"))
+        if binding.revision_inserted_at and issued:
+            if binding.revision_inserted_at > issued:
+                return "superseded"
+        return False
+
+    @api.model
+    def _channex_binding(self, backend, payload):
+        """The folio this booking is already at, if it is at one."""
+        if not payload.get("booking_id"):
+            return self.env["channel.channex.pms.folio"]
+        return self.env["channel.channex.pms.folio"].search(
+            [
+                ("backend_id", "=", backend.id),
+                ("external_id", "=", payload["booking_id"]),
+            ],
+            limit=1,
+        )
+
+    @api.model
+    def _channex_problem(self, backend, payload):
+        """Why this message cannot become a folio, if we can tell in advance.
+
+        Reported rather than raised: none of these is a fault, they are all
+        things a person can settle, and losing the message is worse than any of
+        them.
+        """
+        if payload.get("status") != "new":
+            return _("Modifications and cancellations are not taken in yet.")
+        if not payload.get("booking_id"):
+            return _("The message carries no booking id to file it under.")
+        rooms = payload.get("rooms") or []
+        if not rooms:
+            return _("The message carries no room.")
+        with backend.work_on("channel.channex.pms.room.type") as work:
+            binder = work.component(usage="binder")
+            for room in rooms:
+                problem = self._channex_room_problem(room, binder)
+                if problem:
+                    return problem
+        return False
+
+    @api.model
+    def _channex_room_problem(self, room, binder):
+        """Whether one room of the message can be written as it came."""
+        if not room.get("checkin_date") or not room.get("checkout_date"):
+            return _("The message does not say what nights a room is for.")
+        if not room.get("room_type_id") or not binder.to_internal(room["room_type_id"]):
+            return _("Room type %s is not mapped to this property.") % (
+                room.get("room_type_id") or _("none")
+            )
+        return self._channex_price_problem(room)
+
+    @api.model
+    def _channex_price_problem(self, room):
+        """Whether every night of a room can be priced exactly as the OTA sold it.
+
+        No price of an OTA booking is ever derived here. Either the message
+        carries the price of every night of the stay and that is what gets
+        written, or the message is not applied: a folio priced from our own
+        pricelist would be an invoice for money nobody agreed to.
+        """
+        days = room.get("days") or {}
+        nights = _channex_nights(room)
+        missing = [night for night in nights if night not in days]
+        if missing:
+            return _("The message prices no night on %s.") % ", ".join(missing)
+        outside = sorted(date for date in days if date not in nights)
+        if outside:
+            return _("The message prices %s, which is outside the stay.") % ", ".join(
+                outside
+            )
+        # pms reads a price of zero as "not priced yet" and replaces it with the
+        # one from its pricelist, so a night the OTA gave away cannot be written
+        # as it came. Reported rather than quietly repriced: the fix belongs in
+        # pms, not in a connector working around it.
+        free = [night for night in nights if not float(days[night])]
+        if free:
+            return _("The message gives %s away, and that price cannot be kept.") % (
+                ", ".join(free)
+            )
+        return False
