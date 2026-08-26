@@ -61,11 +61,23 @@ class FakeChannexServer:
         self.calls = []
         self._next_failures = []
         self._counter = 0
+        self._ignored_filters = set()
+        self._aged_out = set()
 
     # -- test helpers ------------------------------------------------------
 
     def seed(self, resource, records):
         self.store.setdefault(resource, []).extend(records)
+
+    def age_out_of_feed(self, external_id):
+        """Drop a revision from the feed while leaving it unacknowledged, which
+        is what Channex does to one half an hour after issuing it."""
+        self._aged_out.add(external_id)
+
+    def ignore_filter(self, field):
+        """Answer a filter on this field with everything, which is what Channex
+        does with a filter it does not know."""
+        self._ignored_filters.add(field)
 
     def fail_next(self, status_code, payload=None, headers=None):
         self._next_failures.append((status_code, payload, headers))
@@ -111,8 +123,7 @@ class FakeChannexServer:
         if method == "POST" and path.startswith("booking_revisions/"):
             return self._ack(path.split("/")[1])
         if method == "GET" and path == "booking_revisions/feed":
-            # The feed is a listing under a sub-path, not a record.
-            return self._list(resource, params)
+            return self._feed(params)
         if method == "GET" and "/" in path:
             return self._read(resource, path.split("/")[1])
         if method == "GET":
@@ -145,18 +156,35 @@ class FakeChannexServer:
         return FakeResponse(200, {"data": {"token": _uuid(self._counter)}})
 
     def _ack(self, external_id):
-        """Acknowledging drops the revision from the feed, which is the whole
-        point of it: the fake has to stop offering it too, or nothing about
-        acknowledging can be tested."""
-        revisions = self.store.get("booking_revisions", [])
-        if not any(str(r["id"]) == str(external_id) for r in revisions):
-            return FakeResponse(
-                404, {"errors": {"code": "resource_not_found", "title": "Not found"}}
-            )
-        self.store["booking_revisions"] = [
-            r for r in revisions if str(r["id"]) != str(external_id)
+        """Acknowledging marks the revision, it does not delete it.
+
+        That is the shape of the real thing, and the difference is the whole
+        point of having two readings: the listing keeps handing an acknowledged
+        revision over with its status, and only the feed stops offering it.
+        """
+        for revision in self.store.get("booking_revisions", []):
+            if str(revision["id"]) == str(external_id):
+                revision["acknowledge_status"] = "acknowledged"
+                return FakeResponse(200, {"meta": {"message": "Success"}})
+        return FakeResponse(
+            404, {"errors": {"code": "resource_not_found", "title": "Not found"}}
+        )
+
+    def _feed(self, params):
+        """The feed is a listing under a sub-path, and it only offers what is
+        both unacknowledged and still within its window."""
+        offered = [
+            revision
+            for revision in self.store.get("booking_revisions", [])
+            if revision.get("acknowledge_status") != "acknowledged"
+            and str(revision["id"]) not in self._aged_out
         ]
-        return FakeResponse(200, {"meta": {"message": "Success"}})
+        keep = self.store.get("booking_revisions")
+        self.store["booking_revisions"] = offered
+        try:
+            return self._list("booking_revisions", params)
+        finally:
+            self.store["booking_revisions"] = keep
 
     def _payload_root(self, resource):
         return {
@@ -183,6 +211,8 @@ class FakeChannexServer:
         for key, value in (params or {}).items():
             if key.startswith("filter[") and key.endswith("]"):
                 field = key[len("filter[") : -1]
+                if field in self._ignored_filters:
+                    continue
                 records = [r for r in records if self._matches(r, field, value)]
         limit = int((params or {}).get("pagination[limit]") or 10)
         page = int((params or {}).get("pagination[page]") or 1)
