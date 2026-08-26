@@ -333,8 +333,24 @@ class TestChannexBookingImport(ChannexBookingCase):
         self.assertEqual(revision.state, "error")
         self.assertIn("not-mapped", revision.error)
 
-    def test_a_modification_is_not_taken_in_yet(self):
+    def test_a_cancellation_is_not_taken_in_yet(self):
+        self._seed_booking(status="cancelled")
+        self._import()
+        self.assertFalse(self._folios())
+        self.assertEqual(self._revision().state, "error")
+
+    def test_a_modification_of_a_booking_we_never_saw_becomes_a_folio(self):
+        """A modification is a whole snapshot of the booking, not a diff, so it
+        can be taken in on its own. It happens when the message that created the
+        booking was acknowledged before this connector existed."""
         self._seed_booking(status="modified")
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertEqual(len(self._folios().odoo_id.reservation_ids), 1)
+
+    def test_a_message_cancelling_every_room_is_not_applied(self):
+        """A modification that cancels all of its rooms is a cancellation by
+        another name."""
+        self._seed_booking(status="modified", rooms=[self._room(is_cancelled=True)])
         self._import()
         self.assertFalse(self._folios())
         self.assertEqual(self._revision().state, "error")
@@ -433,3 +449,267 @@ class TestChannexBookingImport(ChannexBookingCase):
         self._seed_booking(channel_id="never-seen")
         self.assertEqual(self._import(), {"total": 1, "queued": 1})
         self.assertFalse(self._folios().odoo_id.agency_id)
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingModification(ChannexBookingCase):
+    """From message to folio, for a booking that changed after it was sold.
+
+    Channex issues a whole new snapshot of the booking, and none of the ids it
+    puts on a room survive it, so which reservation of the folio each room of
+    the message is has to be deduced. A room recognisably one of them updates
+    it; one that is not is a reservation being added; and a reservation no room
+    accounts for is one the booking no longer has.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._seed_booking()
+        self._import()
+        self.folio = self._folios().odoo_id
+        self.reservation = self.folio.reservation_ids
+
+    def _seed_modification(self, rooms=None, **values):
+        """The same booking, changed, as Channex hands it over: a second
+        message, later, with the booking id of the first."""
+        return self._seed_booking(
+            external_id="r2",
+            status="modified",
+            inserted_at="2026-11-12T18:20:00.000000",
+            rooms=rooms,
+            **values,
+        )
+
+    # -- a change the reservation can take ----------------------------------
+
+    def test_a_new_price_lands_on_the_reservation_that_is_there(self):
+        """Same room type and same nights: the same reservation, repriced. The
+        one thing that must not happen is a second reservation for the stay the
+        hotel is already holding."""
+        self._seed_modification(
+            rooms=[self._room(days={"2026-11-13": "70.00", "2026-11-14": "80.00"})]
+        )
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(self.folio.reservation_ids, self.reservation)
+        lines = self.reservation.reservation_line_ids.sorted("date")
+        self.assertEqual(lines.mapped("price"), [70.0, 80.0])
+
+    def test_the_folio_is_left_pointing_at_the_message_applied(self):
+        self._seed_modification(rooms=[self._room()], customer={"name": "Other"})
+        self._import()
+        binding = self._folios()
+        self.assertEqual(binding.revision_external_id, "r2")
+        self.assertEqual(str(binding.revision_inserted_at), "2026-11-12 18:20:00")
+        self.assertEqual(self._revision("r2").state, "applied")
+
+    def test_a_new_guest_name_is_written(self):
+        self._seed_modification(
+            rooms=[self._room()],
+            customer={"name": "Someone", "surname": "Else"},
+        )
+        self._import()
+        self.assertEqual(self.folio.partner_name, "Else, Someone")
+
+    # -- a change the reservation cannot take -------------------------------
+
+    def test_a_new_departure_replaces_the_reservation(self):
+        """The nights of a stay are what the reservation is, so a stay of other
+        nights is another reservation. The one it replaces is cancelled, never
+        deleted: it is what the hotel worked with until now."""
+        self._seed_modification(
+            rooms=[
+                self._room(
+                    checkout_date="2026-11-16",
+                    days={
+                        "2026-11-13": "76.50",
+                        "2026-11-14": "76.50",
+                        "2026-11-15": "80.00",
+                    },
+                )
+            ]
+        )
+        self._import()
+        self.assertEqual(self.reservation.state, "cancel")
+        # No penalty: the guest did not cancel anything.
+        self.assertEqual(self.reservation.cancelled_reason, "modified")
+        live = self.folio.reservation_ids - self.reservation
+        self.assertEqual(len(live), 1)
+        self.assertEqual(str(live.checkout), "2026-11-16")
+        self.assertEqual(
+            live.reservation_line_ids.sorted("date").mapped("price"),
+            [76.5, 76.5, 80.0],
+        )
+
+    def test_the_reservation_a_modification_creates_is_blocked_too(self):
+        """The mappings that only run on creation do not run on this path by
+        themselves, and the block against manual edits is one of them."""
+        self._seed_modification(
+            rooms=[self._room(checkout_date="2026-11-14", days={"2026-11-13": "76.50"})]
+        )
+        self._import()
+        live = self.folio.reservation_ids.filtered(lambda r: r.state != "cancel")
+        self.assertTrue(live.blocked)
+        self.assertEqual(live.pms_property_id, self.pms_property)
+
+    def test_the_folio_of_a_replaced_reservation_stays_confirmed(self):
+        """Cancelling the last live reservation of a folio cancels the folio, and
+        the reservation replacing it arrives in the same message."""
+        self._seed_modification(
+            rooms=[self._room(checkout_date="2026-11-14", days={"2026-11-13": "76.50"})]
+        )
+        self._import()
+        self.assertEqual(self.folio.state, "confirm")
+
+    def test_a_room_the_message_cancels_leaves_its_reservation_cancelled(self):
+        """One room of several dropped, the rest of the booking standing."""
+        self._seed_booking(
+            external_id="r0",
+            booking_id="b2",
+            inserted_at="2026-11-12T11:00:00.000000",
+            rooms=[
+                self._room(),
+                self._room(checkout_date="2026-11-14", days={"2026-11-13": "80.00"}),
+            ],
+        )
+        self._import()
+        folio = self._folios().filtered(lambda b: b.external_id == "b2").odoo_id
+        self._seed_booking(
+            external_id="r3",
+            booking_id="b2",
+            status="modified",
+            inserted_at="2026-11-12T19:00:00.000000",
+            rooms=[
+                self._room(),
+                self._room(
+                    checkout_date="2026-11-14",
+                    days={"2026-11-13": "80.00"},
+                    is_cancelled=True,
+                ),
+            ],
+        )
+        self._import()
+        dropped = folio.reservation_ids.filtered(
+            lambda r: str(r.checkout) == "2026-11-14"
+        )
+        self.assertEqual(dropped.state, "cancel")
+        self.assertEqual(dropped.cancelled_reason, "modified")
+        kept = folio.reservation_ids - dropped
+        self.assertEqual(kept.state, "confirm")
+
+    def test_a_stay_already_under_way_holds_up_the_change(self):
+        """pms refuses to cancel a reservation the guest is in or has already
+        had, so nobody is thrown out of a room by a message: it is reported and
+        a person decides."""
+        self.reservation.state = "done"
+        self._seed_modification(
+            rooms=[
+                self._room(
+                    checkout_date="2026-11-16",
+                    days={
+                        "2026-11-13": "76.50",
+                        "2026-11-14": "76.50",
+                        "2026-11-15": "80.00",
+                    },
+                )
+            ]
+        )
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(self._revision("r2").state, "error")
+        # Nothing half done: the folio is as it was.
+        self.assertEqual(self.folio.reservation_ids, self.reservation)
+        self.assertEqual(str(self.reservation.checkout), "2026-11-15")
+
+    # -- money already on paper --------------------------------------------
+
+    def _invoice(self):
+        """Invoice the folio for real: what the guard reads is ``move_ids``, and
+        that is computed from the invoice lines of the folio's own sale lines."""
+        receivable = self._setup_accounting()
+        self.folio.partner_id = (
+            self.env["res.partner"]
+            .with_company(self.company)
+            .create(
+                {"name": "A guest", "property_account_receivable_id": receivable.id}
+            )
+        )
+        return self.folio._create_invoices(partner_invoice_id=self.folio.partner_id.id)
+
+    def _setup_accounting(self):
+        """A company created by a test has no chart of accounts, and an invoice
+        needs the little of one that it touches."""
+        accounts = self.env["account.account"]
+        income = accounts.create(
+            {
+                "name": "Channex income",
+                "code": "CHX700",
+                "account_type": "income",
+                "company_id": self.company.id,
+            }
+        )
+        receivable = accounts.create(
+            {
+                "name": "Channex receivable",
+                "code": "CHX430",
+                "account_type": "asset_receivable",
+                "reconcile": True,
+                "company_id": self.company.id,
+            }
+        )
+        # pms picks the journal off the property, and the two it looks for are
+        # these: whom the invoice is for decides which.
+        journals = self.env["account.journal"].create(
+            [
+                {
+                    "name": "Channex invoices",
+                    "code": "CHXI",
+                    "type": "sale",
+                    "company_id": self.company.id,
+                },
+                {
+                    "name": "Channex simplified invoices",
+                    "code": "CHXSI",
+                    "type": "sale",
+                    "is_simplified_invoice": True,
+                    "company_id": self.company.id,
+                },
+            ]
+        )
+        self.pms_property.write(
+            {
+                "journal_normal_invoice_id": journals[0].id,
+                "journal_simplified_invoice_id": journals[1].id,
+            }
+        )
+        self.room_type.product_id.with_company(
+            self.company
+        ).property_account_income_id = income
+        return receivable
+
+    def test_an_invoiced_folio_holds_up_the_change(self):
+        invoice = self._invoice()
+        invoice.action_post()
+        self._seed_modification(
+            rooms=[self._room(days={"2026-11-13": "70.00", "2026-11-14": "80.00"})]
+        )
+        self._import()
+        self.assertEqual(self._revision("r2").state, "error")
+        self.assertIn(invoice.name, self._revision("r2").error)
+        self.assertEqual(
+            self.reservation.reservation_line_ids.sorted("date").mapped("price"),
+            [76.5, 76.5],
+        )
+
+    def test_a_draft_invoice_is_deleted_and_the_change_applied(self):
+        """It says what was sold before the change, so it cannot stand."""
+        invoice = self._invoice()
+        self.assertEqual(invoice.state, "draft")
+        self._seed_modification(
+            rooms=[self._room(days={"2026-11-13": "70.00", "2026-11-14": "80.00"})]
+        )
+        self._import()
+        self.assertEqual(self._revision("r2").state, "applied")
+        self.assertFalse(invoice.exists())
+        self.assertEqual(
+            self.reservation.reservation_line_ids.sorted("date").mapped("price"),
+            [70.0, 80.0],
+        )

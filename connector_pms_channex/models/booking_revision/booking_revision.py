@@ -281,19 +281,67 @@ class ChannelChannexBookingRevision(models.Model):
         things a person can settle, and losing the message is worse than any of
         them.
         """
-        if payload.get("status") != "new":
-            return _("Modifications and cancellations are not taken in yet.")
+        if payload.get("status") not in ("new", "modified"):
+            return _("Cancellations are not taken in yet.")
         if not payload.get("booking_id"):
             return _("The message carries no booking id to file it under.")
         rooms = payload.get("rooms") or []
         if not rooms:
             return _("The message carries no room.")
+        # A modification can cancel one room of several. Every room cancelled is
+        # a cancellation by another name, and that is not taken in yet either.
+        rooms = [room for room in rooms if not room.get("is_cancelled")]
+        if not rooms:
+            return _(
+                "Every room of the message is cancelled, and cancellations are "
+                "not taken in yet."
+            )
+        invoiced = self._channex_binding(backend, payload).odoo_id.move_ids.filtered(
+            lambda move: move.state == "posted"
+        )
+        if invoiced:
+            return _(
+                "The folio is invoiced by %s, which would no longer say what "
+                "was sold."
+            ) % ", ".join(invoiced.mapped("name"))
         with backend.work_on("channel.channex.pms.room.type") as work:
             binder = work.component(usage="binder")
             for room in rooms:
                 problem = self._channex_room_problem(room, binder)
                 if problem:
                     return problem
+            return self._channex_dropped_problem(backend, payload, rooms, binder)
+
+    @api.model
+    def _channex_dropped_problem(self, backend, payload, rooms, binder):
+        """Whether the message drops a stay that cannot be dropped.
+
+        A reservation no room of the message accounts for is cancelled, and pms
+        refuses to cancel one whose guest is in the room or has already left.
+        Said here, before anything is written: nobody is taken out of a room by
+        a message, and a person has to look at it.
+        """
+        binding = self._channex_binding(backend, payload)
+        if not binding:
+            return False
+        offered = {
+            (
+                binder.to_internal(room["room_type_id"], unwrap=True).id,
+                room["checkin_date"],
+                room["checkout_date"],
+            )
+            for room in rooms
+        }
+        dropped = binding.reservation_ids.filtered(
+            lambda r: r.state != "cancel"
+            and not r.allowed_cancel
+            and (r.room_type_id.id, str(r.checkin), str(r.checkout)) not in offered
+        )
+        if dropped:
+            return _(
+                "The change drops %s, and a stay already under way cannot be "
+                "cancelled."
+            ) % ", ".join(dropped.mapped("name"))
         return False
 
     @api.model
