@@ -192,6 +192,7 @@ class FakeChannexServer:
             "properties": "property",
             "room_types": "room_type",
             "channels": "channel",
+            "webhooks": "webhook",
         }.get(resource, resource)
 
     def _wrap(self, resource, record):
