@@ -387,10 +387,27 @@ document numbers mapping</p>
 </div>
 <div class="section" id="usage">
 <h1><a class="toc-backref" href="#toc-entry-1">Usage</a></h1>
-<p>You can set the aeat documentation type in Contacts -&gt; Configuration -&gt;
-Partner ID Categories. When you add a new partner document,
-automatically set it in vat or aeat documents according to the
-configured mapping</p>
+<p>The module ships five ready-to-use notification rules (booking
+confirmation, pre-arrival information, digital check-in reminder,
+checkout reminder and thank you / review request), each one bound to its
+own email template.</p>
+<p><strong>All of them are created inactive.</strong> They send messages to your guests,
+so nothing goes out until somebody reviews the wording and turns the
+rule on. To activate one:</p>
+<ol class="arabic simple">
+<li>Go to <em>Property Management &gt; Configuration &gt; Notification Rules</em>.</li>
+<li>Open the rule, review its template (the default texts are generic)
+and pick the properties it applies to. An empty <em>Properties</em> field
+means every property in the database.</li>
+<li>Tick <em>Active</em>.</li>
+</ol>
+<p>Scheduled rules are triggered by the <em>PMS Notifications: Run Scheduled
+Rules</em> cron, and queued messages are delivered by <em>PMS Notifications:
+Send Pending Email Notifications</em>. Note that a scheduled rule fires for
+every reservation already inside its time window, so activating one on a
+live database may send a batch of messages straight away.</p>
+<p>Every attempt is recorded in <em>Notification Logs</em>, with its state and
+error, so you can check what was sent and to whom.</p>
 </div>
 <div class="section" id="bug-tracker">
 <h1><a class="toc-backref" href="#toc-entry-2">Bug Tracker</a></h1>

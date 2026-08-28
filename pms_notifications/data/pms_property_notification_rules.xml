@@ -8,7 +8,7 @@
       model="pms.property.notification.rule"
     >
         <field name="name">Confirmation Notification (Email)</field>
-        <field name="active">True</field>
+        <field name="active">False</field>
         <field
         name="template_id"
         ref="pms_notifications.pms_notification_template_folio_confirmation_email"
@@ -28,7 +28,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Pre-arrival Information (Email)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -55,7 +55,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Digital Check-in Reminder (Email)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -82,7 +82,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Checkout Reminder (Email)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -109,7 +109,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Thank You Review Request (Email)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
