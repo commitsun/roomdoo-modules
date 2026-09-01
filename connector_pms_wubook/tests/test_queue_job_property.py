@@ -45,3 +45,25 @@ class TestQueueJobProperty(TransactionComponentCase):
         partner = self.env["res.partner"].create({"name": "Unrelated"})
         job = partner.with_delay().write({"comment": "touched"})
         self.assertFalse(job.db_record().pms_property_id)
+
+    def test_only_channel_jobs_are_inspected(self):
+        """``queue.job`` is inherited instance-wide, so the resolution has to be
+        dismissed on ``model_name`` alone: reading the payload of every job in
+        the instance to fill a channel-only field is not worth it."""
+        binding_job = (
+            self.env["channel.wubook.pms.room.type"]
+            .with_delay()
+            .import_data(backend_record=self.backend)
+        )
+        partner = self.env["res.partner"].create({"name": "Unrelated"})
+        partner_job = partner.with_delay().write({"comment": "touched"})
+        self.assertTrue(binding_job.db_record()._is_channel_job())
+        self.assertFalse(partner_job.db_record()._is_channel_job())
+
+    def test_a_job_on_the_backend_is_still_inspected(self):
+        """A vendor backend is not a ``channel.binding`` subclass -- it
+        delegates to ``channel.backend`` through ``_inherits`` -- so matching
+        bindings alone would silently stop stamping it."""
+        job = self.backend.with_delay().import_room_types()
+        self.assertTrue(job.db_record()._is_channel_job())
+        self.assertEqual(job.db_record().pms_property_id, self.pms_property)
