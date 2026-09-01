@@ -47,6 +47,14 @@ class FakeChannexServer:
     REQUIRED = {
         "groups": ("title",),
         "properties": ("title", "currency"),
+        # Verified against staging: a policy with none of these is refused, and
+        # the pre-payment policy is the surprising one -- it is the one thing in
+        # a cancellation policy this connector has no opinion about.
+        "cancellation_policies": (
+            "currency",
+            "guarantee_payment_policy",
+            "cancellation_policy_logic",
+        ),
         "room_types": (
             "property_id",
             "title",
@@ -193,6 +201,7 @@ class FakeChannexServer:
             "room_types": "room_type",
             "channels": "channel",
             "webhooks": "webhook",
+            "cancellation_policies": "cancellation_policy",
         }.get(resource, resource)
 
     def _wrap(self, resource, record):

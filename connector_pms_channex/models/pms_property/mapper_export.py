@@ -40,6 +40,20 @@ class ChannelChannexPmsPropertyExportMapper(Component):
         }
 
     @mapping
+    def cancellation_policy(self, record):
+        """The policy the OTAs show for this hotel.
+
+        Left out of the payload rather than sent empty when Odoo has nothing to
+        say. A hotel that set a policy by hand in Channex before this connector
+        existed would otherwise lose it on the first export, and what a guest
+        was promised is not something to drop quietly.
+        """
+        policy = record._channex_default_cancellation_policy_id()
+        if not policy:
+            return {}
+        return {"default_cancellation_policy_id": policy}
+
+    @mapping
     def settings(self, record):
         return {
             "settings": {

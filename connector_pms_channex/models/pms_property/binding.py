@@ -68,3 +68,20 @@ class ChannelChannexPmsProperty(models.Model):
     )
     cut_off_time = fields.Char(default="00:00:00")
     cut_off_days = fields.Integer()
+
+    def _channex_default_cancellation_policy_id(self):
+        """The UUID of the policy the OTAs should show for this hotel.
+
+        Which is the rule of the hotel's default pricelist, exported as a policy
+        of its own. Empty until that policy exists, which is why the rule
+        reconciliation exports the policy first and the property second.
+        """
+        self.ensure_one()
+        rule = self.odoo_id.default_pricelist_id.cancelation_rule_id
+        if not rule:
+            return False
+        binding = self.env["channel.channex.pms.cancelation.rule"].search(
+            [("odoo_id", "=", rule.id), ("backend_id", "=", self.backend_id.id)],
+            limit=1,
+        )
+        return binding.external_id
