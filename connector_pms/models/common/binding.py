@@ -53,10 +53,25 @@ class ChannelBinding(models.AbstractModel):
         ),
         (
             "channel_internal_uniq",
-            "EXCLUDE (backend_id WITH =, odoo_id WITH =) WHERE (no_export = False or no_export IS NULL)",
+            "EXCLUDE (backend_id WITH =, odoo_id WITH =) "
+            "WHERE (no_export = False or no_export IS NULL)",
             "A binding already exists with the same Internal (Odoo) ID.",
         ),
     ]
+
+    @api.model
+    def _backend_in_job_context(self, backend_record):
+        """The backend, marked as running inside the current job.
+
+        queue_job sets ``job_uuid`` only on the recordset a job is called on;
+        a backend passed as an argument is rebuilt without it. Components take
+        their environment from the backend, so without this an adapter cannot
+        tell that it runs inside a job.
+        """
+        job_uuid = self.env.context.get("job_uuid")
+        if not job_uuid:
+            return backend_record
+        return backend_record.with_context(job_uuid=job_uuid)
 
     # default methods
     @api.model
@@ -75,6 +90,7 @@ class ChannelBinding(models.AbstractModel):
         """Prepare the batch import of records modified on Channel"""
         if not domain:
             domain = []
+        backend_record = self._backend_in_job_context(backend_record)
         with backend_record.work_on(self._name) as work:
             importer = work.component(
                 usage=delayed and "delayed.batch.importer" or "direct.batch.importer"
@@ -86,6 +102,7 @@ class ChannelBinding(models.AbstractModel):
         """Import Channel record"""
         if not external_data:
             external_data = {}
+        backend_record = self._backend_in_job_context(backend_record)
         with backend_record.work_on(self._name) as work:
             importer = work.component(usage="direct.record.importer")
             return importer.run(external_id, external_data=external_data)
@@ -96,6 +113,7 @@ class ChannelBinding(models.AbstractModel):
         """Prepare the batch export of records modified on Odoo"""
         if not domain:
             domain = []
+        backend_record = self._backend_in_job_context(backend_record)
         with backend_record.work_on(self._name) as work:
             exporter = work.component(
                 usage=delayed and "delayed.batch.exporter" or "direct.batch.exporter"
@@ -105,6 +123,7 @@ class ChannelBinding(models.AbstractModel):
     @api.model
     def export_record(self, backend_record, relation):
         """Export Odoo record"""
+        backend_record = self._backend_in_job_context(backend_record)
         with backend_record.work_on(self._name) as work:
             exporter = work.component(usage="direct.record.exporter")
             return exporter.run(relation)
