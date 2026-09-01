@@ -30,11 +30,41 @@ class QueueJob(models.Model):
         historical rows carry no property anyway.
         """
         jobs = super().create(vals_list)
-        for job in jobs:
+        for job in jobs.filtered(lambda job: job._is_channel_job()):
             pms_property = job._channel_job_pms_property()
             if pms_property:
                 job.pms_property_id = pms_property.id
         return jobs
+
+    def _is_channel_job(self):
+        """True when this job was enqueued on a channel binding or a backend.
+
+        ``queue.job`` is inherited instance-wide, so ``create`` runs for every
+        job there is: mail, invoicing, smartlocks. This decides from the stored
+        ``model_name`` column and the registry, and it has to come before
+        ``_channel_job_pms_property``, which reads ``records``, ``args`` and
+        ``kwargs``: those are ``JobSerialized``, so touching them costs
+        deserializing the whole payload of a job that could never fill a field
+        only channel jobs can fill.
+
+        Both kinds of model are accepted so that no job the resolution used to
+        reach is dropped. Bindings cover the normal path -- the exporter and
+        importer components delay ``self.model``, the listeners and the connect
+        wizard delay a binding recordset. Backends are matched separately
+        because they are not ``channel.binding`` subclasses: a vendor backend
+        delegates to ``channel.backend`` through ``_inherits``.
+        """
+        self.ensure_one()
+        registry = self.env.registry
+        model_cls = registry.get(self.model_name)
+        if model_cls is None:
+            return False
+        binding_cls = registry.get("channel.binding")
+        if binding_cls is not None and issubclass(model_cls, binding_cls):
+            return True
+        return self.model_name == "channel.backend" or "channel.backend" in (
+            model_cls._inherits or {}
+        )
 
     def _channel_job_pms_property(self):
         """Best-effort resolution of the property a channel job acts on.
