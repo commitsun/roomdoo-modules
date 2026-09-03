@@ -55,13 +55,22 @@ class PmsFolio(models.Model):
         return lines_to_invoice
 
     def _get_invoice_date(self, partner_invoice_id, lines_to_invoice, date=None):
+        invoice_date = super()._get_invoice_date(
+            partner_invoice_id, lines_to_invoice, date=date
+        )
+        # The invoicing policy only dates the invoices issued by the automatic
+        # invoicing cron. Manual invoicing (backend wizard, app) must keep the
+        # date asked for by the caller, which is usually none: the invoice then
+        # takes the date of the day it is posted. Dating a manual invoice on the
+        # checkout of the reservation books it in a past period -- often locked,
+        # or already closed -- and leaves a draft that cannot be posted, because
+        # the sequence of the current period does not match that date.
+        if not self.env.context.get("autoinvoice"):
+            return invoice_date
         partner_invoice = self.env["res.partner"].browse(partner_invoice_id)
         partner_invoice_policy = self.pms_property_id.default_invoicing_policy
         if partner_invoice and partner_invoice.invoicing_policy != "property":
             partner_invoice_policy = partner_invoice.invoicing_policy
-        invoice_date = super()._get_invoice_date(
-            partner_invoice_id, lines_to_invoice, date=date
-        )
         if partner_invoice_policy == "checkout":
             margin_days_autoinvoice = (
                 self.pms_property_id.margin_days_autoinvoice

@@ -385,6 +385,115 @@ class TestPmsFolioInvoice(TestPms):
             "The invoice section must show the rooms of the reservation",
         )
 
+    def test_manual_invoice_ignores_checkout_invoicing_policy(self):
+        """
+        Test that manual invoicing does not date the invoice on the checkout
+        --------------------------------------
+        Set property default_invoicing_policy to checkout with 0 days of
+        margin, create a reservation checked out a week ago and invoice its
+        folio manually (no autoinvoice context, like the backend wizard and
+        the app do). The draft invoice must not take the checkout as its
+        date: it stays empty so that the invoice is dated the day it is
+        posted, instead of being booked in a past period.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        invoices = reservation.folio_id._create_invoices()
+
+        # ASSERT
+        self.assertFalse(
+            invoices.invoice_date,
+            "A manually created invoice must not be dated on the checkout",
+        )
+        self.assertNotEqual(
+            invoices.invoice_date_due,
+            reservation.checkout,
+            "A manually created invoice must not be due on the checkout",
+        )
+
+    def test_manual_invoice_keeps_the_requested_date(self):
+        """
+        Test that manual invoicing honours the date asked for by the caller
+        --------------------------------------
+        Same property policy as above, but the caller (the app sends the date
+        chosen by the user) asks for an explicit invoice date: that date must
+        be the one used, not the checkout of the reservation.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        invoice_date = datetime.date.today() - datetime.timedelta(days=1)
+
+        # ACT
+        invoices = reservation.folio_id._create_invoices(date=invoice_date)
+
+        # ASSERT
+        self.assertEqual(
+            invoices.invoice_date,
+            invoice_date,
+            "The manually created invoice must keep the requested date",
+        )
+
+    def test_autoinvoice_dates_the_invoice_on_the_checkout(self):
+        """
+        Test that the automatic invoicing keeps applying the policy date
+        --------------------------------------
+        The invoicing policy of the property (checkout + margin days) is the
+        one that dates the invoices issued by the autoinvoicing cron, so that
+        every stay is invoiced in the period it was consumed.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        invoices = reservation.folio_id.with_context(autoinvoice=True)._create_invoices(
+            grouped=True, final=False
+        )
+
+        # ASSERT
+        self.assertEqual(
+            invoices.invoice_date,
+            reservation.checkout,
+            "The automatic invoice must be dated on the checkout of the stay",
+        )
+
     def test_not_autoinvoice_unpaid_cancel_folio_partner_policy(self):
         """
         Test create and invoice the cron by partner preconfig automation
