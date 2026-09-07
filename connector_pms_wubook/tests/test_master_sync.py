@@ -1533,7 +1533,7 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
         ``connector_no_export=True``, so no listener stages anything.
         """
         checkin = checkin or self.checkin
-        reservation = (
+        return (
             self.env["pms.reservation"]
             .with_context(connector_no_export=True)
             .create(
@@ -1547,16 +1547,6 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
                 }
             )
         )
-        # ``pms.reservation.splitted`` is a stored compute that assigns
-        # ``preferred_room_id`` as a side effect, so it reaches the listeners
-        # through a public write. Being deferred, that recompute runs in
-        # whichever environment flushes first -- ``Transaction.flush()`` picks
-        # one out of a ``WeakSet``, i.e. by memory address -- while the guard
-        # only looks at ``record.env.context``. Flush here, in the importing
-        # environment, so the flag is where the listener looks for it instead
-        # of leaving it to chance.
-        reservation.env.flush_all()
-        return reservation
 
     def _folio_binding(self, folio, external_id=987654):
         return self.env["channel.wubook.pms.folio"].create(
@@ -1571,11 +1561,30 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
         with self.backend.work_on("channel.wubook.pms.folio") as work:
             return work.component_by_name("channel.wubook.pms.folio.importer")
 
-    def test_imported_reservation_stages_nothing_by_itself(self):
-        """The cause of the bug, pinned: with the flag on, the listeners
-        stay silent even though the reservation just ate a room."""
+    def test_import_flag_silences_the_reservation_listener(self):
+        """The cause of the bug, pinned: the importer works under
+        ``connector_no_export=True`` and while that flag is on the listeners
+        stage nothing, so publishing availability is the importer's job.
+
+        The write is made here explicitly instead of being left to the
+        create: ``pms.reservation.splitted`` is a stored compute that
+        assigns ``preferred_room_id`` as a side effect, and a deferred
+        recompute runs in whichever environment flushes first
+        (``Transaction.flush()`` takes one out of a ``WeakSet``, i.e. by
+        memory address) while the guard only reads ``record.env.context``.
+        Asserting on the create was therefore a coin toss -- the flag was
+        simply not in the environment the guard looked at. What the guard
+        does promise is what is pinned here.
+        """
+        reservation = self._import_reservation()
+        # Settle every deferred recompute the create left pending and drain
+        # whatever they staged, so the only thing the trap below can see is
+        # the write this test makes.
+        self.env.cr.flush()
         with trap_jobs() as trap:
-            self._import_reservation()
+            reservation.with_context(connector_no_export=True).write(
+                {"preferred_room_id": self.room.id}
+            )
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
 
