@@ -1533,7 +1533,7 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
         ``connector_no_export=True``, so no listener stages anything.
         """
         checkin = checkin or self.checkin
-        return (
+        reservation = (
             self.env["pms.reservation"]
             .with_context(connector_no_export=True)
             .create(
@@ -1547,6 +1547,16 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
                 }
             )
         )
+        # ``pms.reservation.splitted`` is a stored compute that assigns
+        # ``preferred_room_id`` as a side effect, so it reaches the listeners
+        # through a public write. Being deferred, that recompute runs in
+        # whichever environment flushes first -- ``Transaction.flush()`` picks
+        # one out of a ``WeakSet``, i.e. by memory address -- while the guard
+        # only looks at ``record.env.context``. Flush here, in the importing
+        # environment, so the flag is where the listener looks for it instead
+        # of leaving it to chance.
+        reservation.env.flush_all()
+        return reservation
 
     def _folio_binding(self, folio, external_id=987654):
         return self.env["channel.wubook.pms.folio"].create(
