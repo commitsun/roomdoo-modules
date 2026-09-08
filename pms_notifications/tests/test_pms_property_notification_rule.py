@@ -390,3 +390,100 @@ class TestEventDelayMinutes(TestPms):
                     "event_delay_minutes": 10,
                 }
             )
+
+
+class TestScheduledMaxSends(TestPms):
+    """max_sends_per_record on the *scheduled* path.
+
+    The event path (_is_under_max_sends) counts with search_count and was
+    covered; the scheduled path groups with read_group and was not, which is
+    how a crash in it went unnoticed: it only runs when some record of the
+    batch already has a log for the rule, and the shipped setup ran these
+    rules once a day over fresh records.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.folio_model = cls.env.ref("pms.model_pms_folio")
+        cls.mail_template = cls.env["mail.template"].create(
+            {
+                "name": "Scheduled max sends template",
+                "model_id": cls.folio_model.id,
+                "subject": "Test",
+                "body_html": "<p>Test</p>",
+            }
+        )
+        cls.notification_template = cls.env["pms.notification.template"].create(
+            {
+                "name": "Scheduled max sends notification",
+                "code": "scheduled_max_sends_notification",
+                "model_id": cls.folio_model.id,
+                "mail_template_id": cls.mail_template.id,
+            }
+        )
+        cls.rule = cls.env["pms.property.notification.rule"].create(
+            {
+                "name": "Scheduled max sends rule",
+                "template_id": cls.notification_template.id,
+                "target_model_id": cls.folio_model.id,
+                "rule_type": "scheduled",
+                "scheduled_domain": "[]",
+                "time_field_name": "first_checkin",
+                "channel": "email",
+                "max_sends_per_record": 1,
+            }
+        )
+
+    def _create_folio(self, partner_name):
+        return self.env["pms.folio"].create(
+            {
+                "pms_property_id": self.pms_property1.id,
+                "partner_name": partner_name,
+            }
+        )
+
+    def _create_log(self, folio, state="sent"):
+        return (
+            self.env["pms.notification.log"]
+            .sudo()
+            .create(
+                {
+                    "name": "Log %s" % folio.id,
+                    "state": state,
+                    "template_id": self.notification_template.id,
+                    "rule_id": self.rule.id,
+                    "channel": "email",
+                    "origin_model": "pms.folio",
+                    "origin_res_id": folio.id,
+                    "recipient_mode": "template",
+                }
+            )
+        )
+
+    def test_filters_out_records_already_sent(self):
+        """A record that already reached its max is dropped from the batch.
+
+        Without the read_group fix this raises TypeError, because a grouped
+        Integer field is returned as a plain value and the code subscripted
+        it as if it were an (id, name) pair.
+        """
+        already = self._create_folio("Already Notified")
+        pending = self._create_folio("Not Notified Yet")
+        self._create_log(already)
+        batch = already | pending
+        self.assertEqual(self.rule._scheduled_filter_by_max_sends(batch), pending)
+
+    def test_skipped_log_does_not_consume_the_quota(self):
+        """Skipped logs are excluded from the count, as on the event path."""
+        folio = self._create_folio("Skipped Only")
+        self._create_log(folio, state="skipped")
+        batch = folio
+        self.assertEqual(self.rule._scheduled_filter_by_max_sends(batch), folio)
+
+    def test_no_max_sends_returns_the_whole_batch(self):
+        """max_sends_per_record = 0 disables the filter."""
+        folio = self._create_folio("No Limit")
+        self._create_log(folio)
+        self.rule.max_sends_per_record = 0
+        self.assertEqual(self.rule._scheduled_filter_by_max_sends(folio), folio)

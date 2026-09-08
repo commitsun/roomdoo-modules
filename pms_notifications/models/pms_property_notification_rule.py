@@ -739,11 +739,14 @@ class PmsPropertyNotificationRule(models.Model):
             ("state", "not in", ("cancelled", "skipped")),
         ]
 
-        grouped = Log.read_group(domain, ["origin_res_id"], ["origin_res_id"])
+        # origin_res_id is an Integer, not a Many2one: read_group returns the
+        # value itself, not an (id, name) pair. And "__count" is only present
+        # with lazy=False; the lazy grouping names it "<field>_count".
+        grouped = Log.read_group(
+            domain, ["origin_res_id"], ["origin_res_id"], lazy=False
+        )
         counts = {
-            g["origin_res_id"][0]: g["__count"]
-            for g in grouped
-            if g.get("origin_res_id")
+            g["origin_res_id"]: g["__count"] for g in grouped if g.get("origin_res_id")
         }
 
         allowed_ids = [
