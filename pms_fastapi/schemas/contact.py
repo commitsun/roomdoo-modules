@@ -8,7 +8,7 @@ from pydantic import AnyHttpUrl, Field
 from odoo import api
 from odoo.osv import expression
 
-from .base import BaseSearch, PmsBaseModel, SearchText
+from .base import BaseSearch, PmsBaseModel, SearchText, StrippedText
 from .contact_id_number import ContactIdNumberId
 from .contact_tag import ContactTagId
 from .country import CountryId, CountrySummary
@@ -192,9 +192,16 @@ class ContactDetail(PmsBaseModel):
     contactType: ContactTypeDetail = ""
     is_agency: bool = Field(False, alias="isAgency")
     ref: str = Field("", alias="reference")
-    name: str = Field("", alias="name")
-    firstname: str = Field("", alias="firstname")
-    lastname: str = Field("", alias="lastname")
+    name: str = Field(
+        "",
+        description="Contact name: the given name when the contact is a person, "
+        "the company name when it is a company.",
+    )
+    lastname: str = Field(
+        "",
+        description="Last name. Only a person has last names; it is always "
+        "empty for a company.",
+    )
     email: str = Field("", alias="email")
     phones: list[Phone] = Field(default_factory=list)
     lang: str = Field("", alias="lang")
@@ -219,8 +226,25 @@ class ContactDetail(PmsBaseModel):
     saleChannel: SaleChannelId | None = None
 
     @classmethod
+    def _name_from_res_partner(cls, partner) -> dict:
+        """Public name fields of a contact, whatever its type.
+
+        A company has a single name and no last names; a person has a given
+        name and last names.
+        """
+        if partner.is_company:
+            return {"name": partner.name or "", "lastname": ""}
+        return {
+            "name": partner.firstname or "",
+            "lastname": partner.lastname or "",
+        }
+
+    @classmethod
     def from_res_partner(cls, partner):
         filtered_data = cls._read_odoo_record(partner)
+        # After the generic read: it fills name and lastname with the stored
+        # values, which are not what the contract exposes.
+        filtered_data.update(cls._name_from_res_partner(partner))
         contact_type = partner.company_type
         filtered_data["contactType"] = contact_type
         if partner.nationality_id:
@@ -263,9 +287,16 @@ class ContactInsert(PmsBaseModel):
     contactType: ContactTypeDetail
     is_agency: bool = Field(False, alias="isAgency")
     ref: str = Field("", alias="reference")
-    name: str = Field("", alias="name")
-    firstname: str = Field("", alias="firstname")
-    lastname: str = Field("", alias="lastname")
+    name: StrippedText = Field(
+        "",
+        description="Contact name: the given name when the contact is a person, "
+        "the company name when it is a company.",
+    )
+    lastname: StrippedText = Field(
+        "",
+        description="Last name. Only accepted for a person; sending a value for "
+        "a company is rejected.",
+    )
     email: str = Field("", alias="email")
     phones: list[Phone] = Field(default_factory=list)
     lang: str = Field("", alias="lang")
@@ -290,6 +321,48 @@ class ContactInsert(PmsBaseModel):
     default_commission: float = Field(0.0, alias="defaultCommission")
     sale_channel_id: int | None = Field(None, alias="saleChannel")
 
+    @classmethod
+    def surname_fields(cls) -> tuple:
+        """Payload fields holding last names, which only apply to a person."""
+        return ("lastname",)
+
+    @classmethod
+    def _name_input_fields(cls) -> set:
+        """Payload fields holding the name, never written as they come."""
+        return {"name"} | set(cls.surname_fields())
+
+    def name_vals(self, is_company: bool, partner=None) -> dict:
+        """Values to store the contact name, given the type it ends up with.
+
+        A company keeps a single name: it is written as it comes and the
+        distribution among the stored parts is left to Odoo, the same way its
+        own form does. A person's name is their given name, and their last
+        names are written as they come.
+
+        ``partner`` is the contact being updated. It is needed to keep the
+        current name when the payload changes the type without sending a new
+        name: the name shown must not change on its own.
+        """
+        values = self.model_dump(exclude_unset=True)
+        switched = partner is not None and is_company != partner.is_company
+        if is_company:
+            if "name" in values:
+                return {"name": values["name"]}
+            if switched:
+                return {"name": partner.name}
+            return {}
+        vals = {}
+        if "name" in values:
+            vals["firstname"] = values["name"]
+        elif switched:
+            vals["firstname"] = partner.name
+        for field in self.surname_fields():
+            if field in values:
+                vals[field] = values[field] or False
+            elif switched:
+                vals[field] = False
+        return vals
+
     def to_res_partner(self, extra_exclude=None) -> dict:
         exclude_fields = {
             "phones",
@@ -297,7 +370,7 @@ class ContactInsert(PmsBaseModel):
             "tags",
             "fiscalIdNumber",
             "fiscalIdNumberType",
-        }
+        } | self._name_input_fields()
         if extra_exclude:
             exclude_fields = exclude_fields.union(extra_exclude)
         data = self.model_dump(exclude_unset=True, exclude=exclude_fields)
@@ -308,7 +381,9 @@ class ContactInsert(PmsBaseModel):
             data["category_id"] = [(6, 0, values.get("tags"))]
         contact_type = values.get("contactType")
         if contact_type in ["person", "company"]:
-            data["company_type"] = contact_type
+            # is_company, not company_type: company_type is not stored and its
+            # value is not visible yet to the name inverse of the same write.
+            data["is_company"] = contact_type == ContactTypeDetail.company
         for phone in values.get("phones", []):
             if phone["type"] == PhoneType.phone:
                 data["phone"] = phone["number"]

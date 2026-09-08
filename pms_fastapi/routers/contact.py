@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
+from fastapi.responses import JSONResponse
 
 from odoo import _, api, models
 from odoo.exceptions import MissingError
@@ -24,13 +25,22 @@ from odoo.addons.pms_fastapi.schemas.contact import (
     ContactOrderField,
     ContactSearch,
     ContactSummary,
+    ContactTypeDetail,
     ContactUpdate,
 )
-from odoo.addons.pms_fastapi.utils import FilteredModelAdapter
+from odoo.addons.pms_fastapi.utils import (
+    ApiProblem,
+    FilteredModelAdapter,
+    build_problem,
+)
 
 ContactOrderDependency = create_order_dependency(
     ContactOrderField, CONTACT_ORDER_MAPPING, ["name"]
 )
+
+
+class _ContactProblem(ApiProblem):
+    """Contact-router problem, caught by this router's local handlers."""
 
 
 @pms_api_router.get(
@@ -75,7 +85,12 @@ async def contactDetail(
     env: AuthenticatedEnv,
     contact_id: int,
 ) -> ContactDetail:
-    """Get detail info of a contact"""
+    """Get detail info of a contact.
+
+    The name is split the way the contact type allows: for a person, `name` is
+    their given name and `lastname` their last names; a company has a single
+    `name` and no last names. The contact listings return the full name
+    instead."""
     helper = env["pms_api_contact.contact_router.helper"].new()
     partner = helper.get_or_404(contact_id)
     return ContactDetail.from_res_partner(partner)
@@ -85,30 +100,61 @@ async def contactDetail(
     "/contacts",
     response_model=ContactDetail,
     status_code=201,
+    responses={
+        422: {
+            "description": "The name does not fit the contact type: last names "
+            "were sent for a company (contact-lastname-not-applicable), or the "
+            "contact would be left with no name (contact-name-required)"
+        }
+    },
     tags=["contact"],
 )
 async def create_contact(
     env: AuthenticatedEnv,
     contactData: ContactInsert,
-) -> ContactDetail:
+) -> ContactDetail | JSONResponse:
+    """Create a contact.
+
+    `contactType` decides how the name is kept: a person has a given name in
+    `name` plus their last names, while a company has a single `name` and no
+    last names."""
     helper = env["pms_api_contact.contact_router.helper"].new()
-    new_contact = helper.create_contact(contactData)
+    try:
+        new_contact = helper.create_contact(contactData)
+    except _ContactProblem as problem:
+        return problem.response
     return ContactDetail.from_res_partner(new_contact)
 
 
 @pms_api_router.patch(
     "/contacts/{contact_id}",
     response_model=ContactDetail,
+    responses={
+        422: {
+            "description": "The name does not fit the contact type: last names "
+            "were sent for a company (contact-lastname-not-applicable), or the "
+            "contact would be left with no name (contact-name-required)"
+        }
+    },
     tags=["contact"],
 )
 async def update_contact(
     env: AuthenticatedEnv,
     contact_id: int,
     contactData: ContactUpdate,
-) -> ContactDetail:
+) -> ContactDetail | JSONResponse:
+    """Update a contact, changing only what the payload carries.
+
+    `contactType` decides how the name is kept: a person has a given name in
+    `name` plus their last names, while a company has a single `name` and no
+    last names. Changing the type without sending a name keeps the name the
+    contact already shows."""
     helper = env["pms_api_contact.contact_router.helper"].new()
     contact = helper.get_or_404(contact_id)
-    helper.update_contact(contactData, contact_id)
+    try:
+        helper.update_contact(contactData, contact_id)
+    except _ContactProblem as problem:
+        return problem.response
     return ContactDetail.from_res_partner(contact)
 
 
@@ -168,17 +214,85 @@ class PmsApiContactRouterHelper(models.AbstractModel):
     def extra_features(self):
         return []
 
+    @staticmethod
+    def _problem(status_code, type_, title, detail, **extra):
+        raise _ContactProblem(build_problem(status_code, type_, title, detail, **extra))
+
+    def _is_company(self, data, partner=None):
+        """Type the contact ends up with, which the payload may not carry."""
+        contact_type = data.contactType or (partner.company_type if partner else "")
+        return contact_type == ContactTypeDetail.company
+
+    def _check_surnames_applicable(self, data, is_company):
+        if not is_company:
+            return
+        values = data.model_dump(exclude_unset=True)
+        for field in data.surname_fields():
+            if values.get(field):
+                self._problem(
+                    422,
+                    "/errors/contact-lastname-not-applicable",
+                    _("Last name not applicable"),
+                    _("A company contact has a single name and no last names."),
+                    field=field,
+                )
+
+    def _check_name_present(self, data, name_vals, is_company, partner=None):
+        if is_company:
+            name = name_vals.get("name", partner.name if partner else "")
+            if not name:
+                self._problem(
+                    422,
+                    "/errors/contact-name-required",
+                    _("Name required"),
+                    _("A company contact needs a name."),
+                    field="name",
+                )
+            return
+        for field in ("firstname",) + tuple(data.surname_fields()):
+            if field in name_vals:
+                value = name_vals[field]
+            elif partner and field in partner._fields:
+                value = partner[field]
+            else:
+                value = False
+            if value:
+                return
+        self._problem(
+            422,
+            "/errors/contact-name-required",
+            _("Name required"),
+            _("A contact needs a name or a last name."),
+            field="name",
+        )
+
+    def _prepare_name_vals(self, data, partner=None):
+        """Validated values to store the name of the contact."""
+        is_company = self._is_company(data, partner)
+        self._check_surnames_applicable(data, is_company)
+        vals = data.name_vals(is_company, partner)
+        self._check_name_present(data, vals, is_company, partner)
+        # The extendable schema registry is shared between databases, so a last
+        # name field may come from a module that is not installed in this one.
+        partner_fields = self.env["res.partner"]._fields
+        return {name: value for name, value in vals.items() if name in partner_fields}
+
     def _prepare_create_res_partner_vals(
         self,
         data: ContactInsert,
     ):
-        return data.to_res_partner()
+        vals = data.to_res_partner()
+        vals.update(self._prepare_name_vals(data))
+        return vals
 
     def _prepare_write_res_partner_vals(
         self,
         data: ContactUpdate,
+        partner=None,
     ):
-        return data.to_res_partner()
+        vals = data.to_res_partner()
+        vals.update(self._prepare_name_vals(data, partner))
+        return vals
 
     def create_contact(self, data: ContactInsert):
         vals = self._prepare_create_res_partner_vals(data)
@@ -188,8 +302,8 @@ class PmsApiContactRouterHelper(models.AbstractModel):
         return res
 
     def update_contact(self, data: ContactUpdate, contact_id: int):
-        vals = self._prepare_write_res_partner_vals(data)
         partner = self.env["res.partner"].sudo().browse(contact_id)
+        vals = self._prepare_write_res_partner_vals(data, partner)
         res = partner.write(vals)
         if data.fiscalIdNumberType or data.fiscalIdNumber:
             partner.set_fiscal_document_data(
