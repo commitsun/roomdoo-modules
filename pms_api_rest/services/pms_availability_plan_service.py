@@ -30,7 +30,6 @@ class PmsAvailabilityPlanService(Component):
         auth="jwt_api_pms",
     )
     def get_availability_plans(self, pms_search_param, **args):
-
         availability_plans_all_properties = (
             self.env["pms.availability.plan"]
             .sudo()
@@ -120,6 +119,12 @@ class PmsAvailabilityPlanService(Component):
         )
         pms_api_check_access(user=self.env.user, records=rooms)
         room_type_ids = rooms.mapped("room_type_id").ids
+        if not room_type_ids or not target_dates:
+            # The query below interpolates these as SQL tuples, and an empty
+            # one renders as "IN ()", which is a syntax error. A property with
+            # no rooms configured, or a reversed date range, has no rules by
+            # definition: answer with an empty list instead of a 500.
+            return []
         selected_fields = [
             "id",
             "date",
