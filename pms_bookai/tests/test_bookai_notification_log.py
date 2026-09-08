@@ -386,3 +386,63 @@ class TestBookaiNotificationLog(TestBookaiCommon):
         ) as mock_post:
             log.action_send_bookai_whatsapp()
         mock_post.assert_not_called()
+
+    # ---------------------------------------------------------------
+    # Payload re-render at send time
+    # ---------------------------------------------------------------
+    def _make_param_follow_partner_name(self):
+        """Turn the template param into one that depends on the record."""
+        self.bookai_template.bookai_param_ids.filtered(
+            lambda p: p.key == "guest_name"
+        ).write(
+            {
+                "value_type": "inline",
+                "value_literal": False,
+                "value_inline_tmpl": "{{ object.partner_name or '' }}",
+            }
+        )
+
+    def test_action_send_rerenders_payload(self):
+        """The payload must reflect the record state at send time, not at create."""
+        self._make_param_follow_partner_name()
+        log = self._create_log()
+        self.assertIn("Test Guest", log.whatsapp_template_parameters)
+
+        # The guest is renamed after the log was created.
+        self.folio.write({"partner_name": "Renamed Guest"})
+
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.status_code = 200
+        mock_resp.content = b'{"message_id": "wamid.test"}'
+        mock_resp.text = '{"message_id": "wamid.test"}'
+        mock_resp.json.return_value = {"message_id": "wamid.test", "status": "ok"}
+        mock_resp.raise_for_status = MagicMock()
+        with patch(
+            "odoo.addons.pms_bookai.models." "pms_notification_log.requests.post",
+            return_value=mock_resp,
+        ) as mock_post:
+            log.action_send_bookai_whatsapp()
+
+        mock_post.assert_called_once()
+        self.assertEqual(log.state, "sent")
+        self.assertIn("Renamed Guest", log.whatsapp_template_parameters)
+        self.assertNotIn("Test Guest", log.whatsapp_template_parameters)
+        self.assertIn("Renamed Guest", log.bookai_last_request_payload)
+
+    @mute_logger(PREPARE_LOGGER)
+    def test_action_send_aborts_when_reprepare_fails(self):
+        """A failed re-render must abort the send instead of shipping stale data."""
+        log = self._create_log()
+        self.assertTrue(log.whatsapp_template_parameters)
+
+        # Break the template so that re-preparing the payload fails.
+        self.bookai_template.write({"bookai_template_code": False})
+
+        with patch(
+            "odoo.addons.pms_bookai.models." "pms_notification_log.requests.post"
+        ) as mock_post:
+            log.action_send_bookai_whatsapp()
+
+        mock_post.assert_not_called()
+        self.assertIn(log.state, ("error", "skipped"))
