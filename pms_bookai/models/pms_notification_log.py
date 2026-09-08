@@ -622,13 +622,21 @@ class PmsNotificationLog(models.Model):
                     log.write({"state": state, "error_message": msg})
                     continue
 
-                # Fallback: if legacy logs miss payload data, prepare it now.
-                if (
-                    not log.whatsapp_phone
-                    or not log.whatsapp_country
-                    or not log.bookai_origin_folio_id
-                ):
-                    log._bookai_prepare_payload_fields()
+                # Re-render the payload at send time: parameters, preview and
+                # recipient data must reflect the CURRENT record state (amounts,
+                # phone or language may have changed since the log was created).
+                frozen_params = log.whatsapp_template_parameters
+                log._bookai_prepare_payload_fields()
+                if log.state in ("error", "skipped"):
+                    # Re-preparation failed or property mode changed:
+                    # never send a stale payload.
+                    continue
+                if frozen_params and frozen_params != log.whatsapp_template_parameters:
+                    _logger.info(
+                        "Log %s payload re-rendered at send time; params were: %s",
+                        log.id,
+                        frozen_params,
+                    )
 
                 if not log.whatsapp_phone or not log.whatsapp_country:
                     raise ValidationError(
