@@ -12,9 +12,9 @@ class ContactDetailLastname2(contact.ContactDetail, extends=True):
     )
 
     @classmethod
-    def _name_from_res_partner(cls, partner) -> dict:
-        res = super()._name_from_res_partner(partner)
-        res["lastname2"] = "" if partner.is_company else (partner.lastname2 or "")
+    def _name_from_res_partner(cls, partner, is_company: bool) -> dict:
+        res = super()._name_from_res_partner(partner, is_company)
+        res["lastname2"] = "" if is_company else (partner.lastname2 or "")
         return res
 
 

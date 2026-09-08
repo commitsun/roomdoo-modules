@@ -226,13 +226,13 @@ class ContactDetail(PmsBaseModel):
     saleChannel: SaleChannelId | None = None
 
     @classmethod
-    def _name_from_res_partner(cls, partner) -> dict:
+    def _name_from_res_partner(cls, partner, is_company: bool) -> dict:
         """Public name fields of a contact, whatever its type.
 
         A company has a single name and no last names; a person has a given
         name and last names.
         """
-        if partner.is_company:
+        if is_company:
             return {"name": partner.name or "", "lastname": ""}
         return {
             "name": partner.firstname or "",
@@ -242,11 +242,13 @@ class ContactDetail(PmsBaseModel):
     @classmethod
     def from_res_partner(cls, partner):
         filtered_data = cls._read_odoo_record(partner)
+        is_company = partner.is_company
         # After the generic read: it fills name and lastname with the stored
         # values, which are not what the contract exposes.
-        filtered_data.update(cls._name_from_res_partner(partner))
-        contact_type = partner.company_type
-        filtered_data["contactType"] = contact_type
+        filtered_data.update(cls._name_from_res_partner(partner, is_company))
+        filtered_data["contactType"] = (
+            ContactTypeDetail.company if is_company else ContactTypeDetail.person
+        )
         if partner.nationality_id:
             filtered_data["nationality"] = CountryId.from_res_country(
                 partner.nationality_id
@@ -343,22 +345,22 @@ class ContactInsert(PmsBaseModel):
         current name when the payload changes the type without sending a new
         name: the name shown must not change on its own.
         """
-        values = self.model_dump(exclude_unset=True)
+        sent = self.model_fields_set
         switched = partner is not None and is_company != partner.is_company
         if is_company:
-            if "name" in values:
-                return {"name": values["name"]}
+            if "name" in sent:
+                return {"name": self.name}
             if switched:
                 return {"name": partner.name}
             return {}
         vals = {}
-        if "name" in values:
-            vals["firstname"] = values["name"]
+        if "name" in sent:
+            vals["firstname"] = self.name or False
         elif switched:
-            vals["firstname"] = partner.name
+            vals["firstname"] = partner.name or False
         for field in self.surname_fields():
-            if field in values:
-                vals[field] = values[field] or False
+            if field in sent:
+                vals[field] = getattr(self, field) or False
             elif switched:
                 vals[field] = False
         return vals
@@ -373,10 +375,12 @@ class ContactInsert(PmsBaseModel):
         } | self._name_input_fields()
         if extra_exclude:
             exclude_fields = exclude_fields.union(extra_exclude)
-        data = self.model_dump(exclude_unset=True, exclude=exclude_fields)
-        # We need a second dump without exclude to check if the special fields
-        # are set in the request
         values = self.model_dump(exclude_unset=True)
+        # The excluded fields are needed below, so they are dropped from the
+        # values instead of being left out of the dump
+        data = {
+            name: value for name, value in values.items() if name not in exclude_fields
+        }
         if values.get("tags"):
             data["category_id"] = [(6, 0, values.get("tags"))]
         contact_type = values.get("contactType")
