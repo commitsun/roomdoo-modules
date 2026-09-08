@@ -43,6 +43,38 @@ class _ContactProblem(ApiProblem):
     """Contact-router problem, caught by this router's local handlers."""
 
 
+# Both bodies a rejected contact payload can come back with: the endpoint's own
+# name errors, and the request validation error of any malformed payload.
+NAME_ERROR_RESPONSES = {
+    422: {
+        "description": "The payload was rejected. As application/problem+json "
+        "when the name does not fit the contact type: type "
+        "/errors/contact-lastname-not-applicable (last names sent for a "
+        "company, with the offending field in `field`) or "
+        "/errors/contact-name-required (the contact would be left with no "
+        "name). As application/json with the request validation error when the "
+        "payload itself is malformed, such as an unknown field.",
+        "content": {
+            "application/problem+json": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string"},
+                        "title": {"type": "string"},
+                        "status": {"type": "integer"},
+                        "detail": {"type": "string"},
+                        "field": {"type": "string"},
+                    },
+                },
+            },
+            "application/json": {
+                "schema": {"$ref": "#/components/schemas/HTTPValidationError"},
+            },
+        },
+    }
+}
+
+
 @pms_api_router.get(
     "/contacts",
     response_model=PagedCollection[ContactSummary],
@@ -100,13 +132,7 @@ async def contactDetail(
     "/contacts",
     response_model=ContactDetail,
     status_code=201,
-    responses={
-        422: {
-            "description": "The name does not fit the contact type: last names "
-            "were sent for a company (contact-lastname-not-applicable), or the "
-            "contact would be left with no name (contact-name-required)"
-        }
-    },
+    responses=NAME_ERROR_RESPONSES,
     tags=["contact"],
 )
 async def create_contact(
@@ -129,13 +155,7 @@ async def create_contact(
 @pms_api_router.patch(
     "/contacts/{contact_id}",
     response_model=ContactDetail,
-    responses={
-        422: {
-            "description": "The name does not fit the contact type: last names "
-            "were sent for a company (contact-lastname-not-applicable), or the "
-            "contact would be left with no name (contact-name-required)"
-        }
-    },
+    responses=NAME_ERROR_RESPONSES,
     tags=["contact"],
 )
 async def update_contact(
@@ -220,15 +240,17 @@ class PmsApiContactRouterHelper(models.AbstractModel):
 
     def _is_company(self, data, partner=None):
         """Type the contact ends up with, which the payload may not carry."""
-        contact_type = data.contactType or (partner.company_type if partner else "")
-        return contact_type == ContactTypeDetail.company
+        if data.contactType:
+            return data.contactType == ContactTypeDetail.company
+        return bool(partner) and partner.is_company
 
     def _check_surnames_applicable(self, data, is_company):
         if not is_company:
             return
-        values = data.model_dump(exclude_unset=True)
         for field in data.surname_fields():
-            if values.get(field):
+            # A non-empty value can only come from the payload: they default
+            # to empty
+            if getattr(data, field):
                 self._problem(
                     422,
                     "/errors/contact-lastname-not-applicable",
