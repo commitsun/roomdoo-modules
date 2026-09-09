@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from odoo import _, models
 from odoo.exceptions import UserError
 
@@ -22,15 +24,25 @@ class AccountMove(models.Model):
         # Down payment invoices can always be validated.
         if self._is_downpayment():
             return True
-        block_domain = self.company_id._get_reservation_invoice_block_domain()
-        if not block_domain:
+        if not self.company_id._is_reservation_invoice_block_enabled():
             return True
         reservations = self.line_ids.folio_line_ids.reservation_id
         if not reservations:
             return True
-        blocked = self.env["pms.reservation"].search(
-            [("id", "in", reservations.ids)] + block_domain
-        )
+        # Every reservation is judged against the current date of ITS OWN
+        # property: the invoice can be issued from anywhere, but the stay happens
+        # on the hotel's clock. Grouping by timezone keeps this to a single query
+        # in the normal case, where all the reservations share one property.
+        Reservation = self.env["pms.reservation"]
+        by_tz = defaultdict(lambda: Reservation.browse())
+        for reservation in reservations:
+            by_tz[reservation.pms_property_id.tz or "UTC"] |= reservation
+        blocked = Reservation.browse()
+        for tz, group in by_tz.items():
+            block_domain = self.company_id._get_reservation_invoice_block_domain(tz=tz)
+            if not block_domain:
+                continue
+            blocked |= Reservation.search([("id", "in", group.ids)] + block_domain)
         if blocked:
             self._raise_reservation_invoice_lock(blocked)
         return True

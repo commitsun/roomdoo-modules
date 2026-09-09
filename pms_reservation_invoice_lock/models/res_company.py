@@ -54,18 +54,49 @@ class ResCompany(models.Model):
             "relativedelta": relativedelta,
         }
 
-    def _get_reservation_invoice_block_domain(self):
+    def _is_reservation_invoice_block_enabled(self):
+        """True when the company has the lock configured at all, without resolving
+        any date. Lets the caller skip the whole check (and its queries) when the
+        policy is off, which is the common case."""
+        self.ensure_one()
+        policy = self.reservation_invoice_block_policy
+        if not policy or policy == "disabled":
+            return False
+        if policy in ("checkin", "checkout"):
+            return True
+        raw = (self.reservation_invoice_block_domain or "").strip()
+        return bool(raw) and raw != "[]"
+
+    def _get_reservation_invoice_block_domain(self, tz=None):
         """Resolve the configured policy into a reservation domain. Empty list means
-        the lock is disabled."""
+        the lock is disabled.
+
+        ``tz`` is the timezone the current date must be read in -- the property's
+        one, passed by the caller. A stay happens on the hotel's clock: without
+        this, a guest checking out today is still "in the future" for any user
+        whose session runs in another timezone, and for everyone with no timezone
+        set at all (which falls back to UTC, so between midnight and 02:00 in
+        Madrid the whole day's departures stay locked).
+
+        Cancelled reservations are never blocked: the stay will not happen, so
+        there is nothing left to wait for, and what gets invoiced for them is the
+        cancellation penalty -- which must always be issuable."""
         self.ensure_one()
         policy = self.reservation_invoice_block_policy
         if not policy or policy == "disabled":
             return []
+        company = self.with_context(tz=tz) if tz else self
         if policy == "checkin":
-            return [("checkin", ">", fields.Date.context_today(self))]
+            return [
+                ("state", "!=", "cancel"),
+                ("checkin", ">", fields.Date.context_today(company)),
+            ]
         if policy == "checkout":
-            return [("checkout", ">", fields.Date.context_today(self))]
+            return [
+                ("state", "!=", "cancel"),
+                ("checkout", ">", fields.Date.context_today(company)),
+            ]
         raw = (self.reservation_invoice_block_domain or "").strip()
         if not raw or raw == "[]":
             return []
-        return safe_eval(raw, self._get_reservation_lock_eval_context())
+        return safe_eval(raw, company._get_reservation_lock_eval_context())

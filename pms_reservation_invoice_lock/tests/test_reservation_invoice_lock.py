@@ -1,5 +1,7 @@
 import datetime
 
+from freezegun import freeze_time
+
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
@@ -229,3 +231,110 @@ class TestReservationInvoiceLock(TestPms, AccountTestInvoicingCommon):
         with self.assertRaises(UserError) as cm:
             invoice._check_reservation_invoice_lock()
         self.assertIn(res.name, str(cm.exception))
+
+    # --- cancelled reservations & cancellation penalties -----------------
+
+    def _cancellation_rule(self):
+        """A rule that penalises a cancellation made within 30 days of arrival."""
+        # No pms_property_ids on purpose: pricelist1 is not restricted to any
+        # property either, and multi_pms_properties refuses to link a record
+        # scoped to one property to a record that applies to all of them.
+        return self.env["pms.cancelation.rule"].create(
+            {
+                "name": "Lock test rule",
+                "days_intime": 30,
+                "penalty_late": 100,
+                "apply_on_late": "all",
+                "penalty_noshow": 100,
+                "apply_on_noshow": "all",
+            }
+        )
+
+    def test_cancelled_reservation_does_not_block(self):
+        """A cancelled stay never blocks: it is not going to happen, so there is
+        nothing left to wait for."""
+        today = datetime.date.today()
+        res = self._create_reservation(
+            today + datetime.timedelta(days=20), today + datetime.timedelta(days=22)
+        )
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkout"
+        # Sanity: while it is a live future stay, it does block.
+        with self.assertRaises(UserError):
+            invoice._check_reservation_invoice_lock()
+        res.action_cancel()
+        self.assertEqual(res.state, "cancel")
+        self.assertTrue(invoice._check_reservation_invoice_lock())
+
+    def test_cancelled_reservation_does_not_block_with_checkin_policy(self):
+        """Same for policy=checkin: a cancelled arrival is never going to arrive."""
+        today = datetime.date.today()
+        res = self._create_reservation(
+            today + datetime.timedelta(days=20), today + datetime.timedelta(days=22)
+        )
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkin"
+        with self.assertRaises(UserError):
+            invoice._check_reservation_invoice_lock()
+        res.action_cancel()
+        self.assertTrue(invoice._check_reservation_invoice_lock())
+
+    def test_cancellation_penalty_can_be_invoiced(self):
+        """The business case: a stay cancelled in advance generates a penalty that
+        must be invoiceable straight away, not when the cancelled checkout would
+        have been. Goes all the way through action_post()."""
+        today = datetime.date.today()
+        res = self._create_reservation(
+            today + datetime.timedelta(days=5), today + datetime.timedelta(days=7)
+        )
+        # The rule has to hang from the pricelist the reservation actually uses,
+        # which is not necessarily the property default.
+        res.pricelist_id.cancelation_rule_id = self._cancellation_rule()
+        # The penalty amount is a percentage of the nightly prices, and this
+        # test harness leaves them at 0 (the inherited pricelist has no item for
+        # the room type), which would silently skip the penalty altogether.
+        res.reservation_line_ids.write({"price": 50})
+        res.action_cancel()
+        self.assertEqual(
+            res.cancelled_reason, "late", "The cancellation rule did not apply"
+        )
+        penalty = res.service_ids.filtered(lambda s: s.is_cancel_penalty)
+        self.assertTrue(penalty, "No cancellation penalty service was generated")
+        self.company.reservation_invoice_block_policy = "checkout"
+        invoice = self._invoice_for(res)
+        invoice.action_post()
+        self.assertEqual(invoice.state, "posted")
+
+    # --- timezone: the hotel's clock, never the user's -------------------
+
+    @freeze_time("2026-09-09 23:30:00")
+    def test_checkout_policy_uses_property_timezone(self):
+        """At 23:30 UTC it is already the 10th in Madrid, so a departure on the
+        10th is today for the hotel and must not be blocked -- even though the
+        user's session, in UTC, still reads the 9th."""
+        self.env.user.tz = "UTC"
+        self.property.tz = "Europe/Madrid"
+        res = self._create_reservation(
+            datetime.date(2026, 9, 8), datetime.date(2026, 9, 10)
+        )
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkout"
+        self.assertTrue(
+            invoice._check_reservation_invoice_lock(),
+            "A departure on the hotel's own today must not be blocked",
+        )
+
+    @freeze_time("2026-09-09 23:30:00")
+    def test_property_timezone_is_the_one_that_decides(self):
+        """Control for the test above: the very same invoice, with the property in
+        UTC, IS blocked. Proves the property timezone is what changes the verdict,
+        and that the first test is not passing by accident."""
+        self.env.user.tz = "Europe/Madrid"
+        self.property.tz = "UTC"
+        res = self._create_reservation(
+            datetime.date(2026, 9, 8), datetime.date(2026, 9, 10)
+        )
+        invoice = self._invoice_for(res)
+        self.company.reservation_invoice_block_policy = "checkout"
+        with self.assertRaises(UserError):
+            invoice._check_reservation_invoice_lock()

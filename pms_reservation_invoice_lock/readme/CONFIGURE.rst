@@ -16,6 +16,17 @@ When an invoice is posted, the reservations it invoices are matched against the
 resulting condition: if **any** of them matches, posting is blocked (all
 reservations must be outside the condition to allow posting).
 
+Two things are always true for the built-in policies:
+
+* **Cancelled reservations never block.** The stay is not going to happen, so
+  there is nothing left to wait for, and what gets invoiced for them is the
+  cancellation penalty, which must always be issuable.
+* **The current date is read in the property's timezone**, not in the user's.
+  A stay happens on the hotel's clock, so a guest checking out today is never
+  "in the future", whatever timezone the person invoicing is working in (or
+  none at all, which would otherwise fall back to UTC and lock the whole day's
+  departures until 02:00 in Madrid).
+
 Custom domain
 ~~~~~~~~~~~~~
 

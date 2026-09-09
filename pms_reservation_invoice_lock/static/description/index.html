@@ -420,6 +420,17 @@ other rule.</li>
 <p>When an invoice is posted, the reservations it invoices are matched against the
 resulting condition: if <strong>any</strong> of them matches, posting is blocked (all
 reservations must be outside the condition to allow posting).</p>
+<p>Two things are always true for the built-in policies:</p>
+<ul class="simple">
+<li><strong>Cancelled reservations never block.</strong> The stay is not going to happen, so
+there is nothing left to wait for, and what gets invoiced for them is the
+cancellation penalty, which must always be issuable.</li>
+<li><strong>The current date is read in the property’s timezone</strong>, not in the user’s.
+A stay happens on the hotel’s clock, so a guest checking out today is never
+“in the future”, whatever timezone the person invoicing is working in (or
+none at all, which would otherwise fall back to UTC and lock the whole day’s
+departures until 02:00 in Madrid).</li>
+</ul>
 <div class="section" id="custom-domain">
 <h2><a class="toc-backref" href="#toc-entry-2">Custom domain</a></h2>
 <p>With the <strong>Custom domain</strong> policy, fill <strong>Reservation invoice block domain</strong>.
