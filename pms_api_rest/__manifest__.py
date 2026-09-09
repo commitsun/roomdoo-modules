@@ -7,6 +7,7 @@
     "license": "AGPL-3",
     "depends": [
         "pms",
+        "pms_reservation_invoice_lock",
         "base_rest",
         "base_rest_datamodel",
         "web",
@@ -18,7 +19,6 @@
         "feed_rss",
         "pms_partner_type_residence",
         "pms_autoinvoice",
-        "pms_reservation_invoice_lock",
     ],
     "external_dependencies": {
         "python": ["simplejson", "marshmallow", "jose"],
