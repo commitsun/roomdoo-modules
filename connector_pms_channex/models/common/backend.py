@@ -2,13 +2,22 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
+import secrets
 import urllib.parse
 import uuid
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from odoo.addons.queue_job.job import identity_exact
+
+from ...components.adapter import SECRET_HEADER
+
 _logger = logging.getLogger(__name__)
+
+#: Hosts Channex cannot possibly call back, which is what a developer machine
+#: looks like.
+UNREACHABLE_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0")
 
 API_PATH = "/api/v1"
 STAGING_URL = "https://staging.channex.io" + API_PATH
@@ -67,6 +76,26 @@ class ChannelChannexBackend(models.Model):
         required=True,
         help="Items per page when listing. Channex defaults to 10.",
     )
+    webhook_external_id = fields.Char(
+        string="Channex webhook ID",
+        readonly=True,
+        copy=False,
+        help="What Channex calls the notification we registered. Kept so the "
+        "same one is updated instead of piling up a new one every time.",
+    )
+    webhook_secret = fields.Char(
+        readonly=True,
+        copy=False,
+        help="Given to Channex when the webhook is registered and expected back "
+        "on every call. Channex signs nothing, so this is the only thing that "
+        "tells its calls from anybody else's.",
+    )
+    webhook_url = fields.Char(
+        compute="_compute_webhook_url",
+        help="Where Channex is told to call. It hangs off the web base URL, so "
+        "it is only reachable once that is a public address.",
+    )
+
     group_id = fields.Char(
         string="Channex group ID",
         help="Channex requires every property to belong to a group. It lives "
@@ -78,6 +107,11 @@ class ChannelChannexBackend(models.Model):
         comodel_name="channel.channex.channel",
         inverse_name="backend_id",
         string="Channels",
+    )
+    booking_revision_ids = fields.One2many(
+        comodel_name="channel.channex.booking.revision",
+        inverse_name="backend_id",
+        string="Booking revisions",
     )
     unmapped_channel_count = fields.Integer(
         compute="_compute_unmapped_channel_count",
@@ -122,6 +156,88 @@ class ChannelChannexBackend(models.Model):
                 )
             )
         return self.group_id
+
+    # -- being told about bookings -----------------------------------------
+
+    def _compute_webhook_url(self):
+        base = (
+            self.env["ir.config_parameter"].sudo().get_param("web.base.url") or ""
+        ).rstrip("/")
+        for backend in self:
+            backend.webhook_url = f"{base}/channex/webhook/{backend.id}"
+
+    def _channex_webhook_secret(self):
+        """The secret Channex is expected to send back, made once and kept.
+
+        Kept and not derived from anything: derived from a field it would change
+        under us the day that field is edited, and Channex would go on calling
+        with the old one.
+        """
+        self.ensure_one()
+        if not self.webhook_secret:
+            self.webhook_secret = secrets.token_urlsafe(32)
+        return self.webhook_secret
+
+    def _channex_webhook_admits(self, secret):
+        """Whether a call carrying this secret is Channex calling.
+
+        Compared in constant time, and never admitted while no secret is set:
+        an unregistered backend has nobody to be called by.
+        """
+        self.ensure_one()
+        if not self.webhook_secret or not secret:
+            return False
+        return secrets.compare_digest(self.webhook_secret, secret)
+
+    def action_register_channex_webhook(self):
+        """Tell Channex where to call, and with what.
+
+        ``send_data`` stays off: what we want is being told there is something
+        to read, and the reading we do ourselves. Registered for this property
+        alone rather than for the whole account, because a property level
+        webhook is what the rest of this connector is shaped like -- and it wins
+        over an account level one, should the account ever grow one.
+        """
+        self.ensure_one()
+        url = self.webhook_url
+        if any(host in url for host in UNREACHABLE_HOSTS):
+            raise UserError(
+                _(
+                    "Channex has to be able to reach %s, and it cannot reach "
+                    "this one. Set the web base URL to a public address first."
+                )
+                % url
+            )
+        payload = {
+            "webhook": {
+                "property_id": self._channex_property_external_id(),
+                "callback_url": url,
+                # Every booking revision: new, modified and cancelled alike.
+                # What each one is gets decided on reading it, not here.
+                "event_mask": "booking",
+                "is_active": True,
+                "send_data": False,
+                "headers": {SECRET_HEADER: self._channex_webhook_secret()},
+            }
+        }
+        if self.webhook_external_id:
+            body = self._channex_request(
+                "PUT", f"webhooks/{self.webhook_external_id}", payload=payload
+            )
+        else:
+            body = self._channex_request("POST", "webhooks", payload=payload)
+        if body is None:
+            raise UserError(
+                _(
+                    "Exports are disabled on this backend, so Channex was not "
+                    "told anything."
+                )
+            )
+        external_id = ((body or {}).get("data") or {}).get("id")
+        if not external_id:
+            raise UserError(_("Channex did not return a webhook ID."))
+        self.webhook_external_id = external_id
+        return self._notify(_("Channex will call %s from now on.") % url)
 
     # -- group setup -------------------------------------------------------
 
@@ -203,21 +319,27 @@ class ChannelChannexBackend(models.Model):
             root = root[: -len(API_PATH)]
         return root
 
+    def _channex_bound_property_id(self):
+        """The Channex id of this property, or nothing if it was never exported."""
+        self.ensure_one()
+        return (
+            self.env["channel.channex.pms.property"]
+            .with_context(active_test=False)
+            .search([("backend_id", "=", self.id)], limit=1)
+            .external_id
+        )
+
     def _channex_property_external_id(self):
         """Channex scopes the embedded session to one of its properties, so the
         property has to be there before anything can be shown inside it."""
         self.ensure_one()
-        binding = (
-            self.env["channel.channex.pms.property"]
-            .with_context(active_test=False)
-            .search([("backend_id", "=", self.id)], limit=1)
-        )
-        if not binding.external_id:
+        external_id = self._channex_bound_property_id()
+        if not external_id:
             raise UserError(
                 _("Export %s to Channex before opening its Channex screens.")
                 % self.pms_property_id.display_name
             )
-        return binding.external_id
+        return external_id
 
     def _channex_one_time_token(self, property_id, group_id):
         """Mint a token for one load of the embedded UI.
@@ -340,6 +462,104 @@ class ChannelChannexBackend(models.Model):
                 "step": "map" if self.channel_ids else "connect",
             },
         }
+
+    # -- bookings ----------------------------------------------------------
+
+    def _channex_booking_revision_feed(self):
+        """What Channex has just issued for this property."""
+        self.ensure_one()
+        with self.work_on("channel.channex.booking.revision") as work:
+            return work.component(usage="backend.adapter").feed(
+                self._channex_property_external_id()
+            )
+
+    def _channex_pending_booking_revisions(self):
+        """Every message this property has left unacknowledged."""
+        self.ensure_one()
+        with self.work_on("channel.channex.booking.revision") as work:
+            return work.component(usage="backend.adapter").pending(
+                self._channex_property_external_id()
+            )
+
+    def channex_import_booking_revisions(self):
+        """Take in everything Channex is still waiting on for this property.
+
+        Reads the listing of unacknowledged messages and not the feed: the feed
+        stops offering a message half an hour after it was issued, and the ones
+        worth sweeping for are precisely those nobody has dealt with yet.
+        """
+        self.ensure_one()
+        return self._channex_take_in(self._channex_pending_booking_revisions())
+
+    def channex_import_booking_feed(self):
+        """Take in what Channex has just issued for this property.
+
+        The short reading, for when Channex tells us something arrived: it is a
+        page long and it is what Channex means a PMS to read on notice.
+        """
+        self.ensure_one()
+        return self._channex_take_in(self._channex_booking_revision_feed())
+
+    def _channex_take_in(self, payloads):
+        """Queue what to make of each message read, and the receipts pending.
+
+        One job per message, so each gets a transaction of its own: a message
+        pms refuses cannot take the rest of the read down with it, and its
+        payload travels in the job.
+
+        Nothing is acknowledged here. That is a job of its own, and it only runs
+        once the folio it confirms is saved for good.
+        """
+        self.ensure_one()
+        queued = self.env["channel.channex.booking.revision"]._channex_schedule(
+            self, payloads
+        )
+        self.channex_acknowledge_booking_revisions()
+        return {"total": len(payloads), "queued": queued}
+
+    @api.model
+    def channex_cron_import_booking_revisions(self):
+        """Sweep every backend. Entry point of the scheduled action.
+
+        Queued one job per backend rather than read here and now: a property
+        Channex cannot answer for must not stop the sweep of the other ninety
+        nine, and each read is then retried on its own.
+
+        A backend whose property was never exported is skipped: there is nothing
+        on Channex waiting for it.
+        """
+        for backend in self.search([]):
+            if not backend._channex_bound_property_id():
+                continue
+            backend.with_delay(
+                identity_key=identity_exact
+            ).channex_import_booking_revisions()
+        return True
+
+    def channex_acknowledge_booking_revisions(self):
+        """Queue the receipt of every message settled and not yet confirmed.
+
+        Asked of the whole backlog and not only of this read: a receipt that
+        could not be sent -- exports disabled on this backend, Channex down --
+        is simply still pending, and the next read picks it up.
+        """
+        self.ensure_one()
+        pending = self.env["channel.channex.booking.revision"].search(
+            [
+                ("backend_id", "=", self.id),
+                ("acknowledged_at", "=", False),
+                ("state", "in", ("applied", "superseded")),
+            ]
+        )
+        pending._channex_schedule_acknowledge()
+        return len(pending)
+
+    def action_import_booking_revisions(self):
+        self.ensure_one()
+        result = self.channex_import_booking_revisions()
+        return self._notify(
+            _("%(queued)s of %(total)s booking message(s) queued.") % result
+        )
 
     def _notify(self, message):
         return {
