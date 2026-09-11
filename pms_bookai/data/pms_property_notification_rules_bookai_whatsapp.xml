@@ -3,22 +3,39 @@
     <data noupdate="1">
 
         <!--
-          NOTE: this file used to start with two <delete> elements that removed
-          the legacy rules replaced by this matrix. They are gone on purpose.
+          NOTE: this file used to start with two <delete> elements, meant as a
+          one-off cleanup of the layout this matrix replaced. They are gone on
+          purpose and must not come back.
 
-          <delete> ignores noupdate="1", so those elements ran on EVERY module
-          update: the matching rules were dropped and recreated from the
-          <record> definitions below, which set an empty pms_property_ids
-          (= every property). Any per-property scoping or timing configured by
-          an operator was therefore silently reset on each update, re-enabling
-          rules on properties that were never meant to receive them and, where
-          a newer rule already covered a property, sending the guest two
-          messages for the same event.
+          <delete> ignores noupdate="1", so they ran on EVERY module update.
 
-          The legacy cleanup has long been applied on every live database, so
-          the elements no longer had anything to clean. If a one-off cleanup is
-          ever needed again, it belongs in a migration script, not in a
-          noupdate data file.
+          The first one filtered by template_id.code on the *_v1 codes. That
+          "_v1" is the version of the TEMPLATE, not of the rule: the templates
+          were never bumped to v2, so the _v2 rules defined below match that
+          very domain. Far from having nothing left to clean, the element was
+          deleting the rules this file creates, which the <record> blocks then
+          recreated on the same update, with an empty pms_property_ids
+          (= every property), active, and every other field back to its
+          default. Scoping, delays and windows set by an operator were
+          therefore reset on each update, re-enabling rules on properties that
+          were never meant to receive them and, where another rule already
+          covered a property, sending the guest two messages for the same
+          event. The sent-count is also kept per rule, and the log's rule_id
+          is ondelete="set null", so a recreated rule restarted its
+          max_sends_per_record count from zero.
+
+          The second one matched scheduled_timing_mode='window'. None of the
+          rules below use that mode, so it never touched them: it only removed
+          Window rules created or edited by an operator, and those were NOT
+          recreated: they were lost outright.
+
+          If a one-off cleanup is ever needed again, it belongs in a migration
+          script, not in a noupdate data file.
+
+          Related, and unchanged by this fix: deleting one of these rules from
+          the UI drops its ir_model_data row as well, so the next update
+          recreates it, active and for every property. To stop a rule, untick
+          Active; never delete it.
         -->
 
         <!-- 1) booking_confirmation_v1 -->
