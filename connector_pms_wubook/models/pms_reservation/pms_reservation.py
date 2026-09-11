@@ -16,8 +16,13 @@ class PmsReservation(models.Model):
 
     def _compute_channel_external_ids(self):
         for record in self:
+            # ``external_id`` is an Integer on this binding, so it has to be
+            # cast before joining.
             record.channel_external_ids = ",".join(
-                record.folio_id.channel_wubook_bind_ids.mapped("external_id")
+                str(external_id)
+                for external_id in record.folio_id.channel_wubook_bind_ids.mapped(
+                    "external_id"
+                )
             )
 
     def _search_channel_external_ids(self, operator, value):
