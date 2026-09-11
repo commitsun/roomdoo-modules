@@ -191,10 +191,24 @@ class PmsProperty(models.Model):
             ]
         )
         room_types_excluded_ids = property_client_conf.excluded_room_type_ids.ids
-        plan_avail = property_client_conf.main_avail_plan_id
         room_type_ids = [
             rid for rid in room_type_ids if rid not in room_types_excluded_ids
         ]
+        # The payload is built per client and a client IS an agency, so the
+        # inventory is resolved at the agency scope: this is what lets a
+        # property put a different number of rooms on sale per OTA.
+        avail_dates = avails.mapped("date")
+        caps = (
+            self.env["pms.inventory.rule"].get_inventory_caps(
+                pms_property_id,
+                min(avail_dates),
+                max(avail_dates),
+                room_type_ids=room_type_ids,
+                agency_id=client.partner_id.id,
+            )
+            if room_type_ids and avail_dates
+            else {}
+        )
         for room_type_id in room_type_ids:
             room_type_avails = sorted(
                 avails.filtered(
@@ -204,24 +218,12 @@ class PmsProperty(models.Model):
             )
             avail_room_type_index = {}
             for record_avail in room_type_avails:
-                avail_rule = record_avail.avail_rule_ids.filtered(
-                    lambda r: r.availability_plan_id == plan_avail
+                cap = caps.get((room_type_id, record_avail.date))
+                avail = (
+                    record_avail.real_avail
+                    if cap is None
+                    else min(cap, record_avail.real_avail)
                 )
-                if avail_rule:
-                    avail = avail_rule.plan_avail
-                else:
-                    room_type = avail_rule.room_type_id
-                    avail = min(
-                        [
-                            record_avail.real_avail,
-                            room_type.default_max_avail
-                            if room_type.default_max_avail >= 0
-                            else record_avail.real_avail,
-                            room_type.default_quota
-                            if room_type.default_quota >= 0
-                            else record_avail.real_avail,
-                        ]
-                    )
                 previus_date = record_avail.date - datetime.timedelta(days=1)
                 avail_index = avail_room_type_index.get(previus_date)
                 if avail_index and avail_index["avail"] == avail:
@@ -379,15 +381,6 @@ class PmsProperty(models.Model):
     def generate_availability_json(
         self, date_from, date_to, pms_property_id, room_type_id, client
     ):
-        avail_records = self.env["pms.availability"].search(
-            [
-                ("date", ">=", date_from),
-                ("date", "<=", date_to),
-                ("pms_property_id", "=", pms_property_id),
-                ("room_type_id", "=", room_type_id),
-            ],
-            order="date",
-        )
         avail_data = []
         current_avail = None
         current_date_from = None
@@ -396,52 +389,22 @@ class PmsProperty(models.Model):
             date_from + datetime.timedelta(days=x)
             for x in range((date_to - date_from).days + 1)
         ]
-        property_client_conf = self.env["ota.property.settings"].search(
-            [
-                ("pms_property_id", "=", pms_property_id),
-                ("agency_id", "=", client.partner_id.id),
-            ]
+        # Resolved at the agency scope: the payload is per client and a
+        # client IS an agency.
+        caps = self.env["pms.inventory.rule"].get_inventory_caps(
+            pms_property_id,
+            date_from,
+            date_to,
+            room_type_ids=[room_type_id],
+            agency_id=client.partner_id.id,
         )
-        plan_avail = property_client_conf.main_avail_plan_id
+        real_avail_map = self.env["pms.availability"].get_real_avail_map(
+            pms_property_id, date_from, date_to, room_type_ids=[room_type_id]
+        )
         for date in all_dates:
-            avail_record = avail_records.filtered(lambda r, d=date: r.date == d)
-            if avail_record:
-                avail_rule = avail_record.avail_rule_ids.filtered(
-                    lambda r: r.availability_plan_id == plan_avail
-                )
-                if avail_rule:
-                    avail = avail_rule.plan_avail
-                else:
-                    room_type = avail_rule.room_type_id
-                    avail = min(
-                        [
-                            avail_record.real_avail,
-                            room_type.default_max_avail
-                            if room_type.default_max_avail >= 0
-                            else avail_record.real_avail,
-                            room_type.default_quota
-                            if room_type.default_quota >= 0
-                            else avail_record.real_avail,
-                        ]
-                    )
-            else:
-                room_type = self.env["pms.room.type"].browse(room_type_id)
-                avail = min(
-                    [
-                        len(
-                            room_type.room_ids.filtered(
-                                lambda r: r.active
-                                and r.pms_property_id.id == pms_property_id
-                            )
-                        ),
-                        room_type.default_max_avail
-                        if room_type.default_max_avail >= 0
-                        else avail_record.real_avail,
-                        room_type.default_quota
-                        if room_type.default_quota >= 0
-                        else avail_record.real_avail,
-                    ]
-                )
+            physical = real_avail_map.get((room_type_id, date), 0)
+            cap = caps.get((room_type_id, date))
+            avail = physical if cap is None else min(cap, physical)
             if current_avail is None:
                 current_avail = avail
                 current_date_from = date
