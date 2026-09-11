@@ -6,7 +6,7 @@ from odoo import fields, models
 
 class PmsAvailabilityPlan(models.Model):
     _name = "pms.availability.plan"
-    _inherit = ["pms.availability.plan", "channel.wubook.connect.mixin"]
+    _inherit = "pms.availability.plan"
 
     channel_wubook_bind_ids = fields.One2many(
         comodel_name="channel.wubook.pms.availability.plan",

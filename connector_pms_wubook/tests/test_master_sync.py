@@ -82,7 +82,7 @@ def _make_backend_environment(cls):
 
 
 @tagged("post_install", "-at_install")
-class TestWubookConnectMixin(TransactionComponentCase):
+class TestChannelConnectMixin(TransactionComponentCase):
     """Connection state computed field + action helpers."""
 
     @classmethod
@@ -91,7 +91,7 @@ class TestWubookConnectMixin(TransactionComponentCase):
         _make_backend_environment(cls)
 
     def test_connection_state_disconnected_by_default(self):
-        self.assertEqual(self.room_type_a.wubook_connection_state, "disconnected")
+        self.assertEqual(self.room_type_a.channel_connection_state, "disconnected")
 
     def test_connection_state_flips_to_connected_after_binding(self):
         self.env["channel.wubook.pms.room.type"].create(
@@ -102,24 +102,24 @@ class TestWubookConnectMixin(TransactionComponentCase):
             }
         )
         self.room_type_a.invalidate_recordset()
-        self.assertEqual(self.room_type_a.wubook_connection_state, "connected")
+        self.assertEqual(self.room_type_a.channel_connection_state, "connected")
 
     @mute_logger(
-        "odoo.addons.connector_pms_wubook.wizards.wizard_connect",
-        "odoo.addons.connector_pms_wubook.models.common.wubook_connect_mixin",
+        "odoo.addons.connector_pms.wizards.wizard_connect",
+        "odoo.addons.connector_pms.models.common.channel_connect_mixin",
     )
     def test_action_open_wizard_creates_pre_saved_wizard(self):
-        action = self.room_type_a.action_open_wubook_connect_wizard()
-        self.assertEqual(action["res_model"], "channel.wubook.connect.wizard")
+        action = self.room_type_a.action_open_channel_connect_wizard()
+        self.assertEqual(action["res_model"], "channel.connect.wizard")
         self.assertTrue(action.get("res_id"))
-        wizard = self.env["channel.wubook.connect.wizard"].browse(action["res_id"])
+        wizard = self.env["channel.connect.wizard"].browse(action["res_id"])
         self.assertEqual(wizard.res_model, "pms.room.type")
         self.assertEqual(wizard.res_id, self.room_type_a.id)
-        self.assertEqual(wizard.backend_id, self.backend)
+        self.assertEqual(wizard.backend_id, self.backend.parent_id)
 
     def test_action_view_connection_requires_binding(self):
         with self.assertRaises(UserError):
-            self.room_type_a.action_view_wubook_connection()
+            self.room_type_a.action_view_channel_connections()
 
     def test_action_view_connection_opens_binding_form(self):
         binding = self.env["channel.wubook.pms.room.type"].create(
@@ -130,13 +130,13 @@ class TestWubookConnectMixin(TransactionComponentCase):
             }
         )
         self.room_type_a.invalidate_recordset()
-        action = self.room_type_a.action_view_wubook_connection()
+        action = self.room_type_a.action_view_channel_connections()
         self.assertEqual(action["res_model"], "channel.wubook.pms.room.type")
         self.assertEqual(action["res_id"], binding.id)
 
 
 @tagged("post_install", "-at_install")
-class TestWubookConnectWizard(TransactionComponentCase):
+class TestChannelConnectWizard(TransactionComponentCase):
     """Wizard end-to-end: existing/manual/new modes."""
 
     @classmethod
@@ -145,11 +145,12 @@ class TestWubookConnectWizard(TransactionComponentCase):
         _make_backend_environment(cls)
 
     def _open_wizard(self, record, mode="existing"):
-        return self.env["channel.wubook.connect.wizard"].create(
+        return self.env["channel.connect.wizard"].create(
             {
                 "res_model": record._name,
                 "res_id": record.id,
-                "backend_id": self.backend.id,
+                # the wizard works on the generic backend, not the vendor one
+                "backend_id": self.backend.parent_id.id,
                 "mode": mode,
             }
         )
@@ -160,7 +161,7 @@ class TestWubookConnectWizard(TransactionComponentCase):
 
     def test_manual_mode_creates_binding(self):
         wiz = self._open_wizard(self.room_type_a, mode="manual")
-        wiz.manual_external_id = 4242
+        wiz.manual_external_id = "4242"
         with trap_jobs() as trap:
             wiz.action_connect()
         # No job: manual connect must not trigger an export
@@ -188,10 +189,10 @@ class TestWubookConnectWizard(TransactionComponentCase):
 
     def test_existing_mode_creates_binding_from_candidate(self):
         wiz = self._open_wizard(self.room_type_a, mode="existing")
-        candidate = self.env["channel.wubook.connect.wizard.candidate"].create(
+        candidate = self.env["channel.connect.wizard.candidate"].create(
             {
                 "wizard_id": wiz.id,
-                "external_id": 314,
+                "external_id": "314",
                 "name": "Some WuBook room [#314]",
             }
         )
@@ -208,11 +209,11 @@ class TestWubookConnectWizard(TransactionComponentCase):
     def test_double_connection_refused(self):
         # First connection
         wiz1 = self._open_wizard(self.room_type_a, mode="manual")
-        wiz1.manual_external_id = 1001
+        wiz1.manual_external_id = "1001"
         wiz1.action_connect()
         # Second attempt
         wiz2 = self._open_wizard(self.room_type_a, mode="manual")
-        wiz2.manual_external_id = 1002
+        wiz2.manual_external_id = "1002"
         with self.assertRaises(UserError):
             wiz2.action_connect()
 
@@ -243,18 +244,19 @@ class TestWubookConnectWizard(TransactionComponentCase):
             }
         )
         wiz = self._open_wizard(other_rt, mode="existing")
+        external_records = [
+            {"id": 7777, "name": "Already bound"},
+            {"id": 8888, "name": "Free"},
+        ]
         with mock.patch(
-            "odoo.addons.connector_pms_wubook.wizards.wizard_connect."
-            "ChannelWubookConnectWizard._fetch_external_records",
-            return_value=[
-                {"id": 7777, "name": "Already bound"},
-                {"id": 8888, "name": "Free"},
-            ],
+            "odoo.addons.connector_pms.wizards.wizard_connect."
+            "ChannelConnectWizard._fetch_external_records",
+            return_value=(external_records, ["Already bound", "Free"]),
         ):
             wiz.reload_candidates()
         external_ids = wiz.candidate_ids.mapped("external_id")
-        self.assertIn(8888, external_ids)
-        self.assertNotIn(7777, external_ids)
+        self.assertIn("8888", external_ids)
+        self.assertNotIn("7777", external_ids)
 
     def test_new_mode_creates_empty_binding_then_exports(self):
         wiz = self._open_wizard(self.room_type_a, mode="new")
@@ -1096,13 +1098,13 @@ class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
         )
 
     def test_manual_connect_triggers_dependent_reexports(self):
-        wiz = self.env["channel.wubook.connect.wizard"].create(
+        wiz = self.env["channel.connect.wizard"].create(
             {
                 "res_model": "pms.room.type",
                 "res_id": self.room_type_a.id,
-                "backend_id": self.backend.id,
+                "backend_id": self.backend.parent_id.id,
                 "mode": "manual",
-                "manual_external_id": 5050,
+                "manual_external_id": "5050",
             }
         )
         with trap_jobs() as trap:
@@ -1133,13 +1135,13 @@ class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
                 "pms_property_ids": [(6, 0, [self.pms_property.id])],
             }
         )
-        wiz = self.env["channel.wubook.connect.wizard"].create(
+        wiz = self.env["channel.connect.wizard"].create(
             {
                 "res_model": "pms.room.type",
                 "res_id": other_rt.id,
-                "backend_id": self.backend.id,
+                "backend_id": self.backend.parent_id.id,
                 "mode": "manual",
-                "manual_external_id": 5051,
+                "manual_external_id": "5051",
             }
         )
         with trap_jobs() as trap:
