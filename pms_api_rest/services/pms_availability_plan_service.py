@@ -136,8 +136,6 @@ class PmsAvailabilityPlanService(Component):
             "closed",
             "closed_departure",
             "closed_arrival",
-            "quota",
-            "max_avail",
         ]
         sql_select = "SELECT %s" % ", ".join(selected_fields)
         self.env.cr.execute(
@@ -162,6 +160,20 @@ class PmsAvailabilityPlanService(Component):
             rules.append(
                 {field: res[selected_fields.index(field)] for field in selected_fields}
             )
+        # The inventory left the plan rules, so it is resolved at the general
+        # scope, which is all this plan bound payload can express.
+        inventory = (
+            self.env["pms.inventory.rule"]
+            .sudo()
+            .get_inventory(
+                pms_property_id,
+                min(target_dates),
+                max(target_dates),
+                room_type_ids=room_type_ids,
+            )
+            if target_dates and room_type_ids
+            else {}
+        )
 
         result = []
         PmsAvailabilityPlanRuleInfo = self.env.datamodels[
@@ -178,6 +190,9 @@ class PmsAvailabilityPlanService(Component):
                     ),
                     False,
                 )
+                resolved_inventory = inventory.get(
+                    (room_type_id, date), {"quota": -1, "max_avail": -1}
+                )
 
                 if rule:
                     availability_plan_rule_info = PmsAvailabilityPlanRuleInfo(
@@ -191,13 +206,86 @@ class PmsAvailabilityPlanService(Component):
                         closed=rule["closed"],
                         closedDeparture=rule["closed_departure"],
                         closedArrival=rule["closed_arrival"],
-                        quota=rule["quota"],
-                        maxAvailability=rule["max_avail"],
+                        quota=resolved_inventory["quota"],
+                        maxAvailability=resolved_inventory["max_avail"],
                         availabilityPlanId=availability_plan_id,
                     )
                     result.append(availability_plan_rule_info)
 
         return result
+
+    def _bridge_inventory(self, avail_plan_rules):
+        """Write the inventory the front sends on the plan rule payload.
+
+        Kept in this legacy service on purpose: the inventory is no longer a
+        field of ``pms.availability.plan.rule`` and the SPA contract should not
+        break for it.
+
+        The payload carries one item per night, but ``pms.inventory.rule``
+        expresses a period as one record, so the nights that share a room type
+        and the same values are collapsed into ranges. A massive change over a
+        fortnight for five room types lands as five rules, not as eighty.
+        """
+        InventoryRule = self.env["pms.inventory.rule"].sudo()
+        dates_by_scope = {}
+        for avail_plan_rule in avail_plan_rules:
+            if (
+                avail_plan_rule.quota is None
+                and avail_plan_rule.maxAvailability is None
+            ):
+                continue
+            key = (
+                avail_plan_rule.pmsPropertyId,
+                avail_plan_rule.roomTypeId,
+                avail_plan_rule.quota,
+                avail_plan_rule.maxAvailability,
+            )
+            date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
+            dates_by_scope.setdefault(key, []).append(date)
+
+        for key, dates in dates_by_scope.items():
+            pms_property_id, room_type_id, quota, max_avail = key
+            inventory_vals = {}
+            if quota is not None:
+                inventory_vals["quota"] = quota
+            if max_avail is not None:
+                inventory_vals["max_avail"] = max_avail
+            for date_from, date_to in InventoryRule.collapse_dates(dates):
+                rule = InventoryRule.search(
+                    [
+                        ("pms_property_id", "=", pms_property_id),
+                        ("room_type_id", "=", room_type_id),
+                        ("sale_channel_id", "=", False),
+                        ("agency_id", "=", False),
+                        ("date_from", "=", date_from),
+                        ("date_to", "=", date_to),
+                    ],
+                    limit=1,
+                )
+                if rule:
+                    rule.write(inventory_vals)
+                    continue
+                # The field the payload does not carry takes the CURRENT
+                # default of the room type, not the -1 the field would default
+                # to: a general rule replaces the room type defaults in BOTH
+                # fields, so a -1 would lift a closing default. The plan rules
+                # filled the missing field with that same default, through the
+                # stored compute they had.
+                room_type = self.env["pms.room.type"].sudo().browse(room_type_id)
+                InventoryRule.create(
+                    {
+                        "pms_property_id": pms_property_id,
+                        "room_type_id": room_type_id,
+                        "date_from": date_from,
+                        "date_to": date_to,
+                        "quota": quota
+                        if quota is not None
+                        else room_type.default_quota,
+                        "max_avail": max_avail
+                        if max_avail is not None
+                        else room_type.default_max_avail,
+                    }
+                )
 
     def _create_or_update_avail_plan_rules(self, pms_avail_plan_rules_info):
         rules_by_property = {}
@@ -212,6 +300,12 @@ class PmsAvailabilityPlanService(Component):
         for property_id, rules in rules_by_property.items():
             pms_property = self.env["pms.property"].sudo().browse(property_id)
             pms_api_check_access(user=self.env.user, records=pms_property)
+            # BRIDGE: the front still sends the inventory on the plan rule
+            # payload, but it no longer lives there. Done for the whole batch
+            # at once so the nights can be collapsed into ranges. The proper
+            # shape is a dedicated endpoint by date range; this stays until
+            # the front moves to it.
+            self._bridge_inventory(rules)
             for avail_plan_rule in rules:
                 vals = dict()
                 date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
@@ -229,10 +323,6 @@ class PmsAvailabilityPlanService(Component):
                     vals.update({"closed_departure": avail_plan_rule.closedDeparture})
                 if avail_plan_rule.closedArrival is not None:
                     vals.update({"closed_arrival": avail_plan_rule.closedArrival})
-                if avail_plan_rule.quota is not None:
-                    vals.update({"quota": avail_plan_rule.quota})
-                if avail_plan_rule.maxAvailability is not None:
-                    vals.update({"max_avail": avail_plan_rule.maxAvailability})
                 avail_rule = (
                     self.env["pms.availability.plan.rule"]
                     .sudo()
@@ -289,7 +379,8 @@ class PmsAvailabilityPlanService(Component):
         ):
             raise ValidationError(
                 _(
-                    "You cannot create availability plan rules for different availability plans"
+                    "You cannot create availability plan rules for different"
+                    " availability plans"
                 )
             )
         else:
