@@ -2,15 +2,24 @@
 <odoo>
     <data noupdate="1">
 
-        <!-- Cleanup legacy noupdate rules replaced by the new matrix -->
-        <delete
-      model="pms.property.notification.rule"
-      search="[('channel', '=', 'bookai_whatsapp'), ('template_id.code', 'in', ['folio_booking_confirmation_bookai_whatsapp_v1', 'folio_booking_cancellation_bookai_whatsapp_v1', 'folio_request_eta_bookai_whatsapp_v1'])]"
-    />
-        <delete
-      model="pms.property.notification.rule"
-      search="[('channel', '=', 'bookai_whatsapp'), ('target_model_name', '=', 'pms.folio'), ('rule_type', '=', 'scheduled'), ('scheduled_timing_mode', '=', 'window')]"
-    />
+        <!--
+          NOTE: this file used to start with two <delete> elements that removed
+          the legacy rules replaced by this matrix. They are gone on purpose.
+
+          <delete> ignores noupdate="1", so those elements ran on EVERY module
+          update: the matching rules were dropped and recreated from the
+          <record> definitions below, which set an empty pms_property_ids
+          (= every property). Any per-property scoping or timing configured by
+          an operator was therefore silently reset on each update, re-enabling
+          rules on properties that were never meant to receive them and, where
+          a newer rule already covered a property, sending the guest two
+          messages for the same event.
+
+          The legacy cleanup has long been applied on every live database, so
+          the elements no longer had anything to clean. If a one-off cleanup is
+          ever needed again, it belongs in a migration script, not in a
+          noupdate data file.
+        -->
 
         <!-- 1) booking_confirmation_v1 -->
         <record
