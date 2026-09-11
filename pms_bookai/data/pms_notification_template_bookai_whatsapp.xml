@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
 
-    <!-- Cleanup of obsolete legacy params/templates -->
-    <delete
-    model="pms.notification.template.bookai.param"
-    search="[('template_id.code', '=', 'folio_booking_confirmation_bookai_whatsapp_v1'), ('key', 'in', ['checkin_date', 'checkout_date', 'reservation_details_url'])]"
-  />
-    <delete
-    model="pms.notification.template.bookai.param"
-    search="[('template_id.code', '=', 'folio_booking_modification_bookai_whatsapp_v1'), ('key', 'in', ['checkin_date', 'checkout_date', 'reservation_details_url'])]"
-  />
-    <delete
-    model="pms.property.notification.rule"
-    search="[('template_id.code', '=', 'folio_request_eta_bookai_whatsapp_v1')]"
-  />
-    <delete
-    model="pms.notification.template"
-    search="[('code', '=', 'folio_request_eta_bookai_whatsapp_v1')]"
-  />
+    <!--
+      NOTE: four <delete> elements used to live here, cleaning up obsolete
+      legacy params and a template. They are gone on purpose.
+
+      <delete> ignores noupdate="1" and runs on EVERY module update, so a
+      cleanup written for one migration keeps firing forever against whatever
+      happens to match its search domain at the time. That is what broke the
+      rule scoping in the sibling data file (see
+      pms_property_notification_rules_bookai_whatsapp.xml).
+
+      Here the blast radius is worse than a reset: one of them deleted a
+      pms.notification.template, and pms.notification.log.template_id is
+      required with ondelete="restrict". On any database that had ever logged
+      a send for that template, the delete raises and the whole module update
+      aborts halfway.
+
+      One-off cleanups belong in a migration script, which runs once for the
+      version that needs it.
+    -->
 
     <!-- =========================================================
          COMMON CORE FIELDS (repeated by template)
