@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_channex_channel_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.channel.tree</field>
+        <field name="model">channel.channex.channel</field>
+        <field name="arch" type="xml">
+            <tree
+        string="Channex Channels"
+        editable="bottom"
+        create="false"
+        delete="false"
+        decoration-warning="not agency_id"
+      >
+                <field name="title" readonly="1" />
+                <field name="code" readonly="1" />
+                <field name="hotel_id" readonly="1" />
+                <field name="channex_active" readonly="1" />
+                <field
+          name="agency_id"
+          options="{'no_quick_create': True}"
+          placeholder="Pick or create the agency"
+        />
+                <field name="sync_date" optional="hide" readonly="1" />
+                <field name="external_id" optional="hide" readonly="1" />
+                <field name="active" optional="hide" readonly="1" />
+            </tree>
+        </field>
+    </record>
+</odoo>

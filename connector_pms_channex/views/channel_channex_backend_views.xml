@@ -55,6 +55,32 @@
               />
                         </div>
                     </group>
+                    <notebook>
+                        <page string="Channels" name="channels">
+                            <div
+                class="alert alert-warning"
+                role="alert"
+                attrs="{'invisible': [('unmapped_channel_count', '=', 0)]}"
+              >
+                                <field
+                  name="unmapped_channel_count"
+                  class="oe_inline"
+                />
+                                channel(s) have no agency. Their bookings would come in
+                                with nobody to attribute them to.
+                            </div>
+                            <div class="mb-2">
+                                <button
+                  name="action_open_channex_channels"
+                  type="object"
+                  string="Manage channels"
+                  class="btn-primary"
+                  help="Connect the OTA channels on Channex and say which agency each one is."
+                />
+                            </div>
+                            <field name="channel_ids" nolabel="1" readonly="1" />
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
