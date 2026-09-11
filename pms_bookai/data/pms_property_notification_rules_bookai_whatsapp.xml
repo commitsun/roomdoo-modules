@@ -38,13 +38,26 @@
           Active; never delete it.
         -->
 
+        <!--
+          The rules below ship INACTIVE and with an empty pms_property_ids.
+          An empty pms_property_ids means EVERY property, so shipping them
+          enabled turns a fresh install into guest-facing WhatsApp traffic for
+          the whole estate before anyone has chosen which properties should
+          send, which template variant they use, or with what delay.
+
+          Onboarding is the right place for that decision: enable each rule
+          once it is scoped to the properties that want it. (pms_notifications
+          made the same change for its own data rules after an install sent
+          real reminder e-mails to real guests overnight.)
+        -->
+
         <!-- 1) booking_confirmation_v1 -->
         <record
       id="pms_property_notification_rule_folio_booking_confirmation_bookai_whatsapp_v2"
       model="pms.property.notification.rule"
     >
             <field name="name">Booking Confirmation (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -70,7 +83,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Booking Modification (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -98,7 +111,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Booking Cancellation (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -126,7 +139,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Precheck-in Payment Initial (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -154,7 +167,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Precheck-in Payment Urgent (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -182,7 +195,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Precheck-in Initial (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -210,7 +223,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Precheck-in Urgent (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -238,7 +251,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Payment Initial (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
@@ -266,7 +279,7 @@
       model="pms.property.notification.rule"
     >
             <field name="name">Payment Urgent (BookAI WhatsApp)</field>
-            <field name="active">True</field>
+            <field name="active">False</field>
             <field name="pms_property_ids" eval="[(6, 0, [])]" />
             <field
         name="template_id"
