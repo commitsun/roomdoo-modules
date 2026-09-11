@@ -43,16 +43,29 @@ class ResUsers(models.Model):
     )
 
     def _get_default_avail_rule_fields(self):
-        default_avail_rule_fields = self.env["ir.model.fields"].search(
-            [
-                ("model_id", "=", "pms.availability.plan.rule"),
-                ("name", "in", ("min_stay", "quota")),
-            ]
+        """Fields the calendar lets a user edit, by default.
+
+        What reaches the API is the list of field NAMES, and it has to stay
+        the same. The commercial inventory moved to ``pms.inventory.rule``,
+        but its fields are still called ``quota`` and ``max_avail``, so
+        pointing at the new model keeps the payload byte for byte identical
+        while the record behind it is the right one.
+        """
+        return (
+            self.env["ir.model.fields"]
+            .search(
+                [
+                    "|",
+                    "&",
+                    ("model_id", "=", "pms.availability.plan.rule"),
+                    ("name", "=", "min_stay"),
+                    "&",
+                    ("model_id", "=", "pms.inventory.rule"),
+                    ("name", "=", "quota"),
+                ]
+            )
+            .ids
         )
-        if default_avail_rule_fields:
-            return default_avail_rule_fields.ids
-        else:
-            return []
 
     def _check_credentials(self, password, env):
         try:
