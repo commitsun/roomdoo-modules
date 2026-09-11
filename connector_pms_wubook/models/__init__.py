@@ -14,6 +14,7 @@ from . import pms_property_availability
 from . import pms_availability
 from . import pms_availability_plan
 from . import pms_availability_plan_rule
+from . import pms_inventory_rule
 from . import pms_folio
 from . import pms_reservation
 from . import pms_reservation_line
