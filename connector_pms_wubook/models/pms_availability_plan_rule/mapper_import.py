@@ -17,7 +17,8 @@ class ChannelWubookPmsAvailabilityPlanRuleMapperImport(Component):
     direct = [
         ("date", "date"),
         ("no_ota", "no_ota"),
-        ("avail", "quota"),
+        # ``avail`` is deliberately not mapped here any more: the inventory
+        # left the plan rules.
         ("min_stay", "min_stay"),
         ("max_stay", "max_stay"),
         ("min_stay_arrival", "min_stay_arrival"),
