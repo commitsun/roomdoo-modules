@@ -4,7 +4,7 @@
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 
-from ..booking_revision.booking_revision import _channex_datetime
+from ..booking_revision.booking_revision import _channex_cancels, _channex_datetime
 
 
 class ChannelChannexPmsFolioMapperImport(Component):
@@ -119,6 +119,10 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
         booking = {key: parent.source.get(key) for key in self.BOOKING_LEVEL}
         items = [{**booking, **item} for item in items]
         binding = options.get("binding")
+        if _channex_cancels(parent.source):
+            return self._channex_cancelled_items(
+                mapper, items, parent, options, binding
+            )
         if not binding:
             return super().get_all_items(mapper, items, parent, to_attr, options)
         return self._channex_reconcile(mapper, items, parent, to_attr, options, binding)
@@ -128,7 +132,8 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
 
         There is nothing to write for it: on a folio being created it simply is
         not one of its reservations, and on one being modified the reservation
-        it stood for is left over below, and cancelled there.
+        it stood for is left over below, and cancelled there. A booking being
+        cancelled whole does not come through here at all.
         """
         return bool(map_record.source.get("is_cancelled"))
 
@@ -136,6 +141,32 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
         return [
             (1, values.pop("id"), values) if values.get("id") else (0, 0, values)
             for values in items_values
+        ]
+
+    # -- cancelling ----------------------------------------------------------
+
+    def _channex_cancelled_items(self, mapper, items, parent, options, binding):
+        """What to write for the rooms of a booking that is being cancelled.
+
+        On a folio we already have: nothing at all. A cancellation is a change
+        of state, not a restatement of the booking, and what it says about the
+        rooms cannot be taken over the top of what the hotel sold -- Channex
+        hands cancelled bookings of some OTAs over with their rates zeroed. The
+        reservations are cancelled after the write, at the prices they were sold
+        at, which is what the cancellation charge is worked out from.
+
+        On a folio we do not have: every room of it, cancelled flags and all.
+        The booking never reached Odoo, and a cancellation nobody can see is a
+        cancellation lost, so this message is also what puts the booking there.
+        These rooms are the one place a breakdown is allowed not to add up.
+        """
+        if binding:
+            return []
+        return [
+            mapper.map_record(item, parent=parent).values(
+                **dict(options, for_create=True)
+            )
+            for item in items
         ]
 
     # -- modifying an existing folio -----------------------------------------
