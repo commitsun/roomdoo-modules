@@ -13,6 +13,12 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 "lastname": "doe",
             }
         )
+        cls.test_company_partner = cls.env["res.partner"].create(
+            {
+                "name": "Grand Hotel Group SL",
+                "is_company": True,
+            }
+        )
         # Prepare reusable relational records
         cls.country = cls.env["res.country"].search(
             [("code", "=", "ES")], limit=1
@@ -95,10 +101,82 @@ class TestContactsEndpoints(CommonTestPmsApi):
             self.assertIn("items", response.json())
 
     def test_contact_detail_get(self):
+        """A person shows their given name in name and their last names apart."""
         with self._create_test_client() as test_client:
             response = self._login(test_client)
             response = test_client.get(f"/contacts/{self.test_partner.id}")
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["contactType"], "person")
+            self.assertEqual(response.json()["name"], "john")
+            self.assertEqual(response.json()["lastname"], "doe")
+            self.assertNotIn("firstname", response.json())
+
+    def test_contact_detail_get_company(self):
+        """A company shows its whole name in name and never a last name."""
+        self.assertTrue(self.test_company_partner.lastname)
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get(f"/contacts/{self.test_company_partner.id}")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["contactType"], "company")
+            self.assertEqual(response.json()["name"], "Grand Hotel Group SL")
+            self.assertEqual(response.json()["lastname"], "")
+
+    def test_contact_list_returns_the_full_name(self):
+        """Listings keep returning the full name, unlike the detail."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get("/contacts", params={"globalSearch": "doe"})
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            names = {item["name"] for item in response.json()["items"]}
+            self.assertIn(self.test_partner.display_name, names)
+            self.assertNotIn("john", names)
+
+    def test_contact_detail_get_single_word_name(self):
+        """A person whose stored name has no given name part: nothing invented.
+
+        Reposting the same payload must not be rejected either.
+        """
+        partner = self.env["res.partner"].create({"name": "Madonna"})
+        self.assertFalse(partner.firstname)
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get(f"/contacts/{partner.id}")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "")
+            self.assertEqual(response.json()["lastname"], "Madonna")
+            response = test_client.patch(
+                f"/contacts/{partner.id}",
+                json={"name": "", "lastname": "Madonna"},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+
+    def test_contact_detail_get_company_with_person_name_parts(self):
+        """A company whose stored parts are person-shaped still shows one name.
+
+        Writing the name normalizes what is stored.
+        """
+        partner = self.env["res.partner"].create(
+            {
+                "firstname": "Grand",
+                "lastname": "Resort SL",
+                "is_company": True,
+            }
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.get(f"/contacts/{partner.id}")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "Grand Resort SL")
+            self.assertEqual(response.json()["lastname"], "")
+            response = test_client.patch(
+                f"/contacts/{partner.id}",
+                json={"name": "Grand Resort SL"},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.env.invalidate_all()
+        self.assertFalse(partner.firstname)
+        self.assertEqual(partner.name, "Grand Resort SL")
 
     def test_contact_post(self):
         with self._create_test_client() as test_client:
@@ -107,7 +185,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 "/contacts",
                 json={
                     "lastname": "doe",
-                    "firstname": "john",
+                    "name": "john",
                     "contactType": "person",
                     "phones": [
                         {"type": "phone", "number": "+34 911 111 111"},
@@ -126,7 +204,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
             )
             self.assertIn("id", response.json())
             self.assertEqual(response.json()["lastname"], "doe")
-            self.assertEqual(response.json()["firstname"], "john")
+            self.assertEqual(response.json()["name"], "john")
             self.assertIn("phones", response.json())
             self.assertEqual(len(response.json()["phones"]), 2)
             # Relational fields returned as nested objects
@@ -178,7 +256,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
             self.assertEqual(detail.status_code, status.HTTP_200_OK, detail.text)
             self.assertEqual(detail.json()["id"], new_contact_id)
             self.assertEqual(detail.json()["lastname"], "doe")
-            self.assertEqual(detail.json()["firstname"], "john")
+            self.assertEqual(detail.json()["name"], "john")
             self.assertIn("phones", detail.json())
             self.assertEqual(len(detail.json()["phones"]), 2)
             self.assertEqual(detail.json().get("contactType"), "person")
@@ -216,8 +294,8 @@ class TestContactsEndpoints(CommonTestPmsApi):
                 f"/contacts/{self.test_partner.id}",
                 json={
                     "lastname": "doe_updated",
-                    "firstname": "john_updated",
-                    "contactType": "company",
+                    "name": "john_updated",
+                    "contactType": "person",
                     "phones": [
                         {"type": "phone", "number": "+1 202 555 0100"},
                         {"type": "mobile", "number": "+1 202 555 0199"},
@@ -233,9 +311,9 @@ class TestContactsEndpoints(CommonTestPmsApi):
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
             self.assertIn("id", response.json())
             self.assertEqual(response.json()["id"], self.test_partner.id)
-            self.assertEqual(response.json()["firstname"], "john_updated")
+            self.assertEqual(response.json()["name"], "john_updated")
             self.assertEqual(response.json().get("lastname"), "doe_updated")
-            self.assertEqual(response.json().get("contactType"), "company")
+            self.assertEqual(response.json().get("contactType"), "person")
             self.assertIn("phones", response.json())
             self.assertEqual(len(response.json()["phones"]), 2)
             # Relational fields returned as nested objects after PATCH
@@ -268,7 +346,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
             partner = self.env["res.partner"].browse(self.test_partner.id)
             self.assertEqual(partner.firstname, "john_updated")
             self.assertEqual(partner.lastname, "doe_updated")
-            self.assertEqual(partner.company_type, "company")
+            self.assertEqual(partner.company_type, "person")
             self.assertFalse(partner.is_agency)
             self.assertEqual(partner.phone, "+1 202 555 0100")
             self.assertEqual(partner.mobile, "+1 202 555 0199")
@@ -279,3 +357,265 @@ class TestContactsEndpoints(CommonTestPmsApi):
             self.assertEqual(partner.property_payment_term_id.id, self.payment_term2.id)
             self.assertEqual(partner.property_product_pricelist.id, self.pricelist2.id)
             self.assertEqual(set(partner.category_id.ids), set([self.tag_patch.id]))
+
+    def test_contact_post_company_keeps_the_whole_name(self):
+        """A multi-word company name is stored whole, not split as a person."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post(
+                "/contacts",
+                json={"name": "Grand Hotel Centro SL", "contactType": "company"},
+            )
+            self.assertEqual(
+                response.status_code, status.HTTP_201_CREATED, response.text
+            )
+            self.assertEqual(response.json()["name"], "Grand Hotel Centro SL")
+            self.assertEqual(response.json()["lastname"], "")
+            contact = self.env["res.partner"].browse(response.json()["id"])
+            self.assertTrue(contact.is_company)
+            self.assertEqual(contact.name, "Grand Hotel Centro SL")
+            self.assertFalse(contact.firstname)
+
+    def test_contact_post_rejects_removed_firstname_field(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post(
+                "/contacts",
+                json={
+                    "name": "john",
+                    "firstname": "john",
+                    "contactType": "person",
+                },
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+
+    def test_contact_post_company_with_lastname(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post(
+                "/contacts",
+                json={
+                    "name": "Grand Hotel Centro SL",
+                    "lastname": "doe",
+                    "contactType": "company",
+                },
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(
+                response.headers["content-type"], "application/problem+json"
+            )
+            self.assertEqual(
+                response.json()["type"], "/errors/contact-lastname-not-applicable"
+            )
+            self.assertEqual(response.json()["field"], "lastname")
+
+    def test_contact_post_company_with_empty_lastname(self):
+        """An empty last name on a company is ignored, not rejected."""
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post(
+                "/contacts",
+                json={
+                    "name": "Grand Hotel Centro SL",
+                    "lastname": "",
+                    "contactType": "company",
+                },
+            )
+            self.assertEqual(
+                response.status_code, status.HTTP_201_CREATED, response.text
+            )
+            contact = self.env["res.partner"].browse(response.json()["id"])
+            self.assertEqual(contact.name, "Grand Hotel Centro SL")
+
+    def test_contact_post_without_name(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post("/contacts", json={"contactType": "person"})
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(response.json()["type"], "/errors/contact-name-required")
+
+    def test_contact_post_company_without_name(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.post("/contacts", json={"contactType": "company"})
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(response.json()["type"], "/errors/contact-name-required")
+
+    def test_contact_patch_name_only_keeps_the_lastname(self):
+        partner = self.env["res.partner"].create(
+            {"firstname": "john", "lastname": "doe"}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"name": "johnny"}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "johnny")
+            self.assertEqual(response.json()["lastname"], "doe")
+        self.env.invalidate_all()
+        self.assertEqual(partner.firstname, "johnny")
+        self.assertEqual(partner.lastname, "doe")
+
+    def test_contact_patch_lastname_only_keeps_the_name(self):
+        partner = self.env["res.partner"].create(
+            {"firstname": "john", "lastname": "doe"}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"lastname": "roe"}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "john")
+            self.assertEqual(response.json()["lastname"], "roe")
+        self.env.invalidate_all()
+        self.assertEqual(partner.firstname, "john")
+        self.assertEqual(partner.lastname, "roe")
+
+    def test_contact_patch_company_other_field_keeps_the_name(self):
+        partner = self.env["res.partner"].create(
+            {"name": "Grand Hotel Centro SL", "is_company": True}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"email": "hotel@example.org"}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "Grand Hotel Centro SL")
+        self.env.invalidate_all()
+        self.assertEqual(partner.name, "Grand Hotel Centro SL")
+        self.assertEqual(partner.email, "hotel@example.org")
+
+    def test_contact_patch_company_with_lastname(self):
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{self.test_company_partner.id}",
+                json={"lastname": "doe"},
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(
+                response.json()["type"], "/errors/contact-lastname-not-applicable"
+            )
+
+    def test_contact_patch_person_to_company_with_name(self):
+        partner = self.env["res.partner"].create(
+            {"firstname": "john", "lastname": "doe"}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}",
+                json={"name": "Grand Hotel Centro SL", "contactType": "company"},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["contactType"], "company")
+            self.assertEqual(response.json()["name"], "Grand Hotel Centro SL")
+            self.assertEqual(response.json()["lastname"], "")
+        self.env.invalidate_all()
+        self.assertTrue(partner.is_company)
+        self.assertEqual(partner.name, "Grand Hotel Centro SL")
+        self.assertFalse(partner.firstname)
+
+    def test_contact_patch_person_to_company_keeps_the_shown_name(self):
+        partner = self.env["res.partner"].create(
+            {"firstname": "john", "lastname": "doe"}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"contactType": "company"}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["contactType"], "company")
+            self.assertEqual(response.json()["name"], "john doe")
+            self.assertEqual(response.json()["lastname"], "")
+        self.env.invalidate_all()
+        self.assertEqual(partner.name, "john doe")
+        self.assertFalse(partner.firstname)
+
+    def test_contact_patch_company_to_person_keeps_the_shown_name(self):
+        partner = self.env["res.partner"].create(
+            {"name": "Grand Hotel Centro SL", "is_company": True}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"contactType": "person"}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["contactType"], "person")
+            self.assertEqual(response.json()["name"], "Grand Hotel Centro SL")
+            self.assertEqual(response.json()["lastname"], "")
+        self.env.invalidate_all()
+        self.assertFalse(partner.is_company)
+        self.assertEqual(partner.name, "Grand Hotel Centro SL")
+
+    def test_contact_patch_company_to_person_with_names(self):
+        partner = self.env["res.partner"].create(
+            {"name": "Grand Hotel Centro SL", "is_company": True}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}",
+                json={"name": "john", "lastname": "doe", "contactType": "person"},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["name"], "john")
+            self.assertEqual(response.json()["lastname"], "doe")
+        self.env.invalidate_all()
+        self.assertEqual(partner.firstname, "john")
+        self.assertEqual(partner.lastname, "doe")
+
+    def test_contact_patch_blank_name(self):
+        partner = self.env["res.partner"].create(
+            {"name": "Grand Hotel", "is_company": True}
+        )
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(
+                f"/contacts/{partner.id}", json={"name": "   "}
+            )
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(response.json()["type"], "/errors/contact-name-required")
+        self.env.invalidate_all()
+        self.assertEqual(partner.name, "Grand Hotel")
+
+    def test_contact_patch_person_without_any_name(self):
+        partner = self.env["res.partner"].create({"firstname": "john"})
+        with self._create_test_client() as test_client:
+            response = self._login(test_client)
+            response = test_client.patch(f"/contacts/{partner.id}", json={"name": ""})
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+            self.assertEqual(response.json()["type"], "/errors/contact-name-required")
