@@ -1,8 +1,6 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from psycopg2.extensions import AsIs
-
 from odoo import api, fields, models
 
 AUTO_EXPORT_FIELDS = [
@@ -37,86 +35,83 @@ class ChannelWubookPmsAvailabilityBinding(models.Model):
         inverse="_inverse_sale_avail",
     )
 
+    # NOTE: the inventory lives in ``pms.inventory.rule``, with no relation
+    # to ``pms.availability``, so there is no field path to declare here. A
+    # rule reaches this compute through the listener on that model.
     @api.depends(
         "odoo_id.real_avail",
-        "odoo_id.avail_rule_ids",
-        "odoo_id.avail_rule_ids.plan_avail",
         "odoo_id.room_type_id.channel_wubook_bind_ids.default_availability",
     )
     def _compute_sale_avail(self):
-        # Cache the authoritative plan per backend: the recordset can span
-        # several backends and the lookup hits the parity pricelist binding.
-        plan_by_backend = {}
+        # The bookable count shipped to Wubook is the availability of the
+        # PROPERTY, so the inventory is resolved at the general scope: Wubook
+        # is not a sale channel of its own here.
+        caps_by_property = {}
+        keyed = self.filtered(lambda record: record.date and record.pms_property_id)
+        for pms_property in keyed.mapped("pms_property_id"):
+            records = keyed.filtered(
+                lambda record, prop=pms_property: record.pms_property_id == prop
+            )
+            dates = records.mapped("date")
+            caps_by_property[pms_property.id] = self.env[
+                "pms.inventory.rule"
+            ].get_inventory_caps(
+                pms_property.id,
+                min(dates),
+                max(dates),
+                room_type_ids=records.mapped("room_type_id").ids,
+            )
         for record in self:
-            backend = record.backend_id
-            if backend.id not in plan_by_backend:
-                plan_by_backend[backend.id] = backend._get_wubook_availability_plan()
-            wubook_plan = plan_by_backend[backend.id]
-            # The bookable count shipped to Wubook is driven by a SINGLE
-            # plan (the parity pricelist's plan). Every other plan bound
-            # to the backend is ignored on purpose: its quota / max_avail
-            # never reach Wubook, so there is nothing to reconcile and the
-            # connector must not equalize them across plans.
-            if wubook_plan:
-                rules = record.avail_rule_ids.filtered(
-                    lambda x, plan=wubook_plan: x.availability_plan_id == plan
-                )
-            else:
-                # Parity plan not resolvable (misconfigured backend): keep
-                # the legacy selection (any plan bound to the backend) but
-                # pick one rule deterministically and never write back.
-                rules = record.avail_rule_ids.filtered(
-                    lambda x, backend=backend: backend
-                    in x.availability_plan_id.channel_wubook_bind_ids.backend_id
-                ).sorted(key=lambda r: r.availability_plan_id.id)
-            if not rules:
-                with backend.work_on("channel.wubook.pms.room.type") as work:
+            cap = caps_by_property.get(record.pms_property_id.id, {}).get(
+                (record.room_type_id.id, record.date)
+            )
+            if cap is None:
+                # Nothing declared for this night: fall back to the
+                # availability the connector defaults to for the room type.
+                with record.backend_id.work_on("channel.wubook.pms.room.type") as work:
                     binder = work.component(usage="binder")
-                min_avail = min(
+                sale_avail = min(
                     record.real_avail,
                     binder.wrap_record(record.room_type_id).default_availability,
                 )
-                if record.sale_avail != min_avail:
-                    record.sale_avail = min_avail
             else:
-                sale_avail = rules[:1].plan_avail
-                if record.sale_avail != sale_avail:
-                    record.sale_avail = sale_avail
+                sale_avail = min(record.real_avail, cap)
+            if record.sale_avail != sale_avail:
+                record.sale_avail = sale_avail
 
     def _inverse_sale_avail(self):
         for record in self:
             if record.sale_avail > record.real_avail:
                 # TODO: exportar a wubook el real_avail, corregir wubook
                 continue
-            # Reflect the value back into the SINGLE authoritative plan
-            # (the parity pricelist's plan) only. Other plans bound to the
-            # backend are left untouched on purpose. When the parity plan
-            # cannot be resolved there is nothing safe to write back.
-            wubook_plan = record.backend_id._get_wubook_availability_plan()
-            if not wubook_plan:
-                continue
-            rule = record.avail_rule_ids.filtered(
-                lambda x, plan=wubook_plan: x.availability_plan_id == plan
+            # A single night rule at the general scope, on ``max_avail`` and
+            # NOT on ``quota``: what Wubook calls ``avail`` is how many rooms
+            # can be sold right now, and a quota has the nights already sold
+            # subtracted from it, so a quota of 3 with 2 sold would leave 1
+            # sellable, which is not what Wubook said. It also keeps the round
+            # trip idempotent.
+            rule = self.env["pms.inventory.rule"].search(
+                [
+                    ("pms_property_id", "=", record.pms_property_id.id),
+                    ("room_type_id", "=", record.room_type_id.id),
+                    ("sale_channel_id", "=", False),
+                    ("agency_id", "=", False),
+                    ("date_from", "=", record.date),
+                    ("date_to", "=", record.date),
+                ],
+                limit=1,
             )
             if rule:
-                rule.filtered(
-                    lambda x, record=record: x.quota != record.sale_avail
-                ).quota = record.sale_avail
+                if rule.max_avail != record.sale_avail:
+                    rule.max_avail = record.sale_avail
             else:
-                wubook_plan.write(
+                self.env["pms.inventory.rule"].create(
                     {
-                        "rule_ids": [
-                            (
-                                0,
-                                0,
-                                {
-                                    "room_type_id": record.room_type_id.id,
-                                    "date": record.date,
-                                    "pms_property_id": record.pms_property_id.id,
-                                    "quota": record.sale_avail,
-                                },
-                            )
-                        ]
+                        "pms_property_id": record.pms_property_id.id,
+                        "room_type_id": record.room_type_id.id,
+                        "date_from": record.date,
+                        "date_to": record.date,
+                        "max_avail": record.sale_avail,
                     }
                 )
 
@@ -167,9 +162,10 @@ class ChannelWubookPmsAvailabilityBinding(models.Model):
     def _write(self, vals):
         cr = self._cr
         if any([field in vals for field in AUTO_EXPORT_FIELDS]):
-            query = 'UPDATE "%s" SET "actual_write_date"=%s WHERE id IN %%s' % (
-                self._table,
-                AsIs("(now() at time zone 'UTC')"),
+            query = (
+                f'UPDATE "{self._table}" '
+                "SET \"actual_write_date\"=(now() at time zone 'UTC') "
+                "WHERE id IN %s"
             )
             for sub_ids in cr.split_for_in_conditions(
                 set(self.filtered(lambda i: i.date >= fields.Date.today()).ids)

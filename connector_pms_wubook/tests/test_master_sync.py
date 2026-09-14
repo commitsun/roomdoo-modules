@@ -442,7 +442,7 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
                     "availability_plan_id": self.plan.id,
                     "room_type_id": self.room_type_a.id,
                     "date": d0 + timedelta(days=i),
-                    "quota": 5,
+                    "min_stay": 5,
                     "pms_property_id": self.pms_property.id,
                 }
             )
@@ -456,7 +456,7 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
 
         with trap_jobs() as trap:
             for r in rules:
-                r.quota = r.quota + 1
+                r.min_stay = r.min_stay + 1
             self.env.cr.precommit.run()
         # Despite 20 rule writes, only ONE job is enqueued for the plan binding
         trap.assert_jobs_count(1)
@@ -475,7 +475,7 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
                     "availability_plan_id": bare_plan.id,
                     "room_type_id": self.room_type_a.id,
                     "date": date.today() + timedelta(days=1),
-                    "quota": 1,
+                    "min_stay": 1,
                     "pms_property_id": self.pms_property.id,
                 }
             )
@@ -678,13 +678,13 @@ class TestExportRecordIdentityKey(TransactionComponentCase):
                 "availability_plan_id": self.plan.id,
                 "room_type_id": self.room_type_a.id,
                 "date": date.today() + timedelta(days=3),
-                "quota": 5,
+                "min_stay": 5,
                 "pms_property_id": self.pms_property.id,
             }
         )
         self.env.cr.precommit.run()
         with trap_jobs() as trap:
-            rule.quota = 7
+            rule.min_stay = 7
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
         expected_key = (
@@ -1283,10 +1283,10 @@ class TestAvailabilityListener(TransactionComponentCase):
 
     * Calendar expansion (a new ``pms.availability`` row appears) fires
       the ``pms.availability`` listener on create.
-    * ``plan_avail`` (= min(real_avail, quota, max_avail)) flips on a
-      ``pms.availability.plan.rule`` — the only value actually shipped
-      to Wubook. ``real_avail`` is intentionally NOT a trigger because
-      the cap can absorb the change (no-op).
+    * The declared inventory moves on a ``pms.inventory.rule``, which is
+      what caps ``sale_avail`` = min(real_avail, inventory), the value
+      actually shipped to Wubook. ``real_avail`` is intentionally NOT a
+      trigger because the cap can absorb the change (no-op).
 
     Both paths share the same precommit buffer so simultaneous events
     collapse to one ``export_record`` job per ``(backend × property)``
@@ -1340,10 +1340,22 @@ class TestAvailabilityListener(TransactionComponentCase):
             "room_type_id": self.room_type_a.id,
             "pms_property_id": self.pms_property.id,
             "date": self.d0 + timedelta(days=day_offset),
-            "quota": 5,
+            "min_stay": 5,
         }
         vals.update(overrides)
         return self.env["pms.availability.plan.rule"].create(vals)
+
+    def _make_inventory_rule(self, day_offset=0, **overrides):
+        day = self.d0 + timedelta(days=day_offset)
+        vals = {
+            "room_type_id": self.room_type_a.id,
+            "pms_property_id": self.pms_property.id,
+            "date_from": day,
+            "date_to": day,
+            "max_avail": 5,
+        }
+        vals.update(overrides)
+        return self.env["pms.inventory.rule"].create(vals)
 
     def test_create_enqueues_property_export(self):
         with trap_jobs() as trap:
@@ -1361,16 +1373,16 @@ class TestAvailabilityListener(TransactionComponentCase):
             },
         )
 
-    def test_write_plan_avail_enqueues_property_export(self):
-        # ``plan_avail`` (not ``real_avail``) is the trigger: it's the
-        # value actually pushed to Wubook. The listener lives on
-        # ``pms.availability.plan.rule`` and shares the property-avail
-        # precommit buffer, so this still results in one property
-        # export per (backend × property).
-        rule = self._make_rule()
-        self.env.cr.precommit.run()  # flush plan-export buffer from rule create
+    def test_write_inventory_enqueues_property_export(self):
+        # The declared inventory is the trigger, not ``real_avail``: it is
+        # what caps the value actually pushed to Wubook. The listener lives
+        # on ``pms.inventory.rule`` and shares the property-avail precommit
+        # buffer, so this results in one property export per
+        # (backend × property).
+        rule = self._make_inventory_rule()
+        self.env.cr.precommit.run()  # flush the buffer from the rule create
         with trap_jobs() as trap:
-            rule.write({"plan_avail": 2})
+            rule.write({"max_avail": 2})
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
         trap.assert_enqueued_job(
@@ -1418,36 +1430,30 @@ class TestAvailabilityListener(TransactionComponentCase):
             self.env.cr.precommit.run()
         trap.assert_jobs_count(0)
 
-    def test_massive_plan_avail_writes_collapse_to_one_job(self):
-        # Five rules on different dates with plan_avail flipping →
-        # still ONE property-export job per (backend × property).
-        rules = self.env["pms.availability.plan.rule"]
+    def test_massive_inventory_writes_collapse_to_one_job(self):
+        # Five inventory rules on different dates all moving → still ONE
+        # property-export job per (backend × property).
+        rules = self.env["pms.inventory.rule"]
         for i in range(5):
-            rules |= self._make_rule(day_offset=i)
-        self.env.cr.precommit.run()  # flush plan-export buffer from rule creates
+            rules |= self._make_inventory_rule(day_offset=i)
+        self.env.cr.precommit.run()  # flush the buffer from the rule creates
         with trap_jobs() as trap:
             for r in rules:
-                r.write({"plan_avail": 1})
+                r.write({"max_avail": 1})
             self.env.cr.precommit.run()
         trap.assert_jobs_count(1)
 
-    def test_write_quota_enqueues_property_export(self):
-        # ``quota`` / ``max_avail`` are the PUBLIC writes that drive
-        # ``plan_avail`` (a stored compute whose flush never fires
-        # ``on_record_write``), so the front calendar sale-availability
-        # edit must enqueue the property export through them. The same
-        # write also re-exports the plan (restrictions payload), hence
-        # two jobs.
-        rule = self._make_rule()
-        self.env.cr.precommit.run()  # flush buffers from rule create
+    def test_closing_inventory_does_not_reexport_the_plan(self):
+        # Closing the inventory of a night is the front calendar
+        # sale-availability edit. It must enqueue the property export and
+        # NOTHING else: the inventory left the plan rules, so the
+        # restrictions payload of the plan has not changed.
+        rule = self._make_inventory_rule()
+        self.env.cr.precommit.run()  # flush the buffer from the rule create
         with trap_jobs() as trap:
-            rule.write({"quota": 0})
+            rule.write({"max_avail": 0})
             self.env.cr.precommit.run()
-        trap.assert_jobs_count(2)
-        trap.assert_enqueued_job(
-            self.plan_binding.export_record,
-            args=(self.backend, self.plan),
-        )
+        trap.assert_jobs_count(1)
         trap.assert_enqueued_job(
             self.property_avail_binding.export_record,
             args=(self.backend, self.pms_property),
@@ -1459,30 +1465,30 @@ class TestAvailabilityListener(TransactionComponentCase):
             },
         )
 
-    def test_rule_create_on_existing_avail_enqueues_property_export(self):
-        # Capping a date whose ``pms.availability`` record already
-        # exists creates a rule but no availability record, so the rule
-        # create itself must stage the property export.
+    def test_inventory_create_on_existing_avail_enqueues_property_export(self):
+        # Capping a date whose ``pms.availability`` record already exists
+        # creates no availability record, so the inventory rule create
+        # itself must stage the property export.
         self._make_avail()
         self.env.cr.precommit.run()  # flush avail-create buffer
         with trap_jobs() as trap:
-            self._make_rule(quota=0)
+            self._make_inventory_rule(max_avail=0)
             self.env.cr.precommit.run()
-        trap.assert_jobs_count(2)
+        trap.assert_jobs_count(1)
         trap.assert_enqueued_job(
             self.property_avail_binding.export_record,
             args=(self.backend, self.pms_property),
         )
 
-    def test_rule_unlink_enqueues_property_export(self):
-        # Deleting a rule lifts its quota cap → the bookable count
-        # changes → property export (plus the plan re-export).
-        rule = self._make_rule()
+    def test_inventory_unlink_enqueues_property_export(self):
+        # Deleting an inventory rule lifts its cap → the bookable count
+        # changes → property export.
+        rule = self._make_inventory_rule()
         self.env.cr.precommit.run()
         with trap_jobs() as trap:
             rule.unlink()
             self.env.cr.precommit.run()
-        trap.assert_jobs_count(2)
+        trap.assert_jobs_count(1)
         trap.assert_enqueued_job(
             self.property_avail_binding.export_record,
             args=(self.backend, self.pms_property),
