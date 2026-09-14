@@ -1262,11 +1262,11 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
 class TestAvailabilityListener(TransactionComponentCase):
     """Property availability exports to Wubook. Two trigger paths:
 
-    * Calendar expansion (a new ``pms.availability`` row appears) fires
-      the ``pms.availability`` listener on create.
+    * A night that nothing had touched starts being occupied, so a
+      ``pms.availability`` row appears and its listener fires on create.
     * The declared inventory moves on a ``pms.inventory.rule``, which is
-      what caps ``sale_avail`` = min(real_avail, inventory), the value
-      actually shipped to Wubook. ``real_avail`` is intentionally NOT a
+      what caps the value shipped to Wubook, ``min(real_avail,
+      inventory)``. ``real_avail`` is intentionally NOT a
       trigger because the cap can absorb the change (no-op).
 
     Both paths share the same precommit buffer so simultaneous events

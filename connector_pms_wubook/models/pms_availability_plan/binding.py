@@ -1,13 +1,8 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-import datetime
-
 from odoo import _, api, fields, models
 
-# The window Wubook accepts for restriction updates: it rejects anything
-# older than 2 days and anything beyond roughly 2 years.
-WUBOOK_PAST_DAYS = 2
-WUBOOK_FUTURE_DAYS = 730
+from ..common.wubook_window import accepted_window
 
 
 class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
@@ -50,15 +45,6 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         help="Last night waiting to be pushed to Wubook.",
     )
 
-    @api.model
-    def _wubook_accepted_window(self):
-        """:return: the ``(first, last)`` nights Wubook takes, both included."""
-        today = fields.Date.today()
-        return (
-            today - datetime.timedelta(days=WUBOOK_PAST_DAYS),
-            today + datetime.timedelta(days=WUBOOK_FUTURE_DAYS),
-        )
-
     def _wubook_stage_pending_window(self, date_from, date_to):
         """Widen the window waiting to be exported so it also covers
         ``date_from``..``date_to``.
@@ -81,7 +67,7 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         left inside the window.
         """
         self.ensure_one()
-        accepted_from, accepted_to = self._wubook_accepted_window()
+        accepted_from, accepted_to = accepted_window()
         # Nothing staged means this is not an incremental push: a plan
         # connected for the first time, or a manual resynchronization.
         date_from = self.wubook_pending_date_from or accepted_from

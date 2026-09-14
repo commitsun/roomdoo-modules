@@ -53,10 +53,13 @@ class ChannelWubookPmsReservationListener(Component):
         # The availability footprint is defined by the rooms actually
         # assigned to the reservation lines — NOT by the reservation
         # header's preferred ``room_type_id``.
+        dates = record.reservation_line_ids.mapped("date")
         buffer_property_exports_for_rooms(
             self.env,
             record.pms_property_id,
             record.reservation_line_ids.mapped("room_id.room_type_id"),
+            min(dates) if dates else None,
+            max(dates) if dates else None,
         )
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
@@ -64,6 +67,9 @@ class ChannelWubookPmsReservationListener(Component):
         if not fields or not (set(fields) & _RESERVATION_RELEVANT_FIELDS):
             return
         if set(fields) & _RESERVATION_REASSIGNMENT_FIELDS:
+            # The room type it left is already gone from the record, so the
+            # nights cannot be narrowed down either: the reassignment may
+            # have moved the stay itself.
             buffer_property_exports(self.env, record.pms_property_id)
             return
         self._enqueue_property_exports(record)
