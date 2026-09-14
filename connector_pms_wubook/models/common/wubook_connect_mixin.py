@@ -44,6 +44,30 @@ class WubookConnectMixin(models.AbstractModel):
                 "connected" if rec.channel_wubook_bind_ids else "disconnected"
             )
 
+    def _wubook_candidate_properties(self):
+        """Properties this record belongs to. An empty recordset means the
+        record is not scoped to any property."""
+        self.ensure_one()
+        for field_name in ("pms_property_ids", "pms_property_id"):
+            if field_name in self._fields:
+                return self[field_name]
+        return self.env["pms.property"].browse()
+
+    def _wubook_candidate_backends(self):
+        """Backends this record can be bound to.
+
+        Only backends of a property the record belongs to are eligible: picking
+        the lowest id across the whole database silently connected records to a
+        backend of an unrelated hotel. A record scoped to no property is global,
+        so every backend applies.
+        """
+        self.ensure_one()
+        domain = []
+        properties = self._wubook_candidate_properties()
+        if properties:
+            domain = [("pms_property_id", "in", properties.ids)]
+        return self.env["channel.wubook.backend"].search(domain, order="id")
+
     def action_open_wubook_connect_wizard(self):
         """Pre-create the wizard with a default backend and the candidate
         list already loaded, then open its form. We pre-save it so the
@@ -52,18 +76,19 @@ class WubookConnectMixin(models.AbstractModel):
         empty for an unsaved transient record).
         """
         self.ensure_one()
-        backend = self.env["channel.wubook.backend"].search(
-            [], order="id", limit=1
-        )
-        if not backend:
+        backends = self._wubook_candidate_backends()
+        if not backends:
             raise UserError(
-                _("No Wubook backend is configured. Create one first.")
+                _(
+                    "No Wubook backend is configured for the properties of this "
+                    "record. Create one first."
+                )
             )
         wizard = self.env["channel.wubook.connect.wizard"].create(
             {
                 "res_model": self._name,
                 "res_id": self.id,
-                "backend_id": backend.id,
+                "backend_id": backends[0].id,
                 "mode": "existing",
             }
         )
