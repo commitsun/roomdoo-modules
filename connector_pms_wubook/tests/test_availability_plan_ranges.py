@@ -36,7 +36,7 @@ class RangeCase(TransactionComponentCase):
     def setUpClass(cls):
         super().setUpClass()
         _make_backend_environment(cls)
-        cls.env["channel.wubook.pms.room.type"].create(
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
                 "backend_id": cls.backend.id,
@@ -214,3 +214,130 @@ class TestPlanRuleRangeImport(RangeCase):
         self.assertEqual(op, 1)
         self.assertEqual(rule_id, rule.id)
         self.assertEqual(values["min_stay"], 4)
+
+
+@tagged("post_install", "-at_install")
+class TestPropertyAvailabilityExport(RangeCase):
+    """What Wubook is told a property has for sale, night by night.
+
+    There is no record per night behind it any more: the number is resolved
+    from the physical availability and the inventory declared for the night,
+    and a night nothing has touched has neither.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.rooms = cls.env["pms.room"].create(
+            [
+                {
+                    "name": f"Ranges 10{index}",
+                    # Set explicitly: created in one batch, the autocompleted
+                    # short name would be the same for both and collide.
+                    "short_name": f"RG0{index}",
+                    "pms_property_id": cls.pms_property.id,
+                    "room_type_id": cls.room_type_a.id,
+                    "capacity": 2,
+                }
+                for index in range(2)
+            ]
+        )
+        # The ceiling the connector applies when no rule declares one. It is
+        # resolved once, when the binding is created, so it has to be asked
+        # for again now that the room type has rooms.
+        cls.room_type_a_binding.default_max_avail = -1
+        cls.property_binding = cls.env[
+            "channel.wubook.pms.property.availability"
+        ].create(
+            {
+                "odoo_id": cls.pms_property.id,
+                "backend_id": cls.backend.id,
+                "external_id": cls.pms_property.id,
+            }
+        )
+
+    def _stage(self, date_from, date_to):
+        self.property_binding.with_context(
+            connector_no_export=True
+        )._wubook_stage_pending_window(date_from, date_to)
+
+    def _items(self):
+        with self.backend.work_on("channel.wubook.pms.property.availability") as work:
+            mapper = work.component(usage="export.mapper")
+        values = mapper.map_record(self.property_binding).values()
+        return values.get("availabilities") or []
+
+    def _make_inventory_rule(self, date_from, date_to, **values):
+        return (
+            self.env["pms.inventory.rule"]
+            .with_context(connector_no_export=True)
+            .create(
+                {
+                    "pms_property_id": self.pms_property.id,
+                    "room_type_id": self.room_type_a.id,
+                    "date_from": date_from,
+                    "date_to": date_to,
+                    **values,
+                }
+            )
+        )
+
+    def test_a_night_with_no_record_still_travels(self):
+        """The regression this replaces: nothing materializes a row for a
+        night nobody booked, and it has rooms for sale all the same."""
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=12))
+        self.assertFalse(
+            self.env["pms.availability"].search(
+                [
+                    ("pms_property_id", "=", self.pms_property.id),
+                    ("date", ">=", self.today + timedelta(days=10)),
+                ]
+            )
+        )
+        items = self._items()
+        self.assertEqual(len(items), 3)
+        self.assertEqual({item["avail"] for item in items}, {2})
+        self.assertEqual({item["id_room"] for item in items}, {ROOM_EXTERNAL_ID})
+
+    def test_declared_inventory_caps_what_is_published(self):
+        self._make_inventory_rule(
+            self.today + timedelta(days=10),
+            self.today + timedelta(days=11),
+            max_avail=1,
+        )
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=12))
+        by_date = {item["date"]: item["avail"] for item in self._items()}
+        self.assertEqual(by_date[self.today + timedelta(days=10)], 1)
+        self.assertEqual(by_date[self.today + timedelta(days=11)], 1)
+        # Out of the rule: both rooms are for sale again.
+        self.assertEqual(by_date[self.today + timedelta(days=12)], 2)
+
+    def test_the_connector_default_is_the_ceiling_with_no_rule(self):
+        """No rule declares anything, so what is published is the default
+        the connector holds for the room type, not the room count."""
+        self.room_type_a_binding.default_max_avail = 1
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=10))
+        self.assertEqual([item["avail"] for item in self._items()], [1])
+
+    def test_window_is_trimmed_to_what_wubook_accepts(self):
+        self._stage(self.today + timedelta(days=725), self.today + timedelta(days=800))
+        items = self._items()
+        self.assertEqual(
+            max(item["date"] for item in items), self.today + timedelta(days=730)
+        )
+
+    def test_nothing_pending_pushes_the_whole_window(self):
+        """A property connected for the first time has no window staged and
+        has to be told everything."""
+        items = self._items()
+        self.assertEqual(
+            min(item["date"] for item in items), self.today - timedelta(days=2)
+        )
+        self.assertEqual(
+            max(item["date"] for item in items), self.today + timedelta(days=730)
+        )
+
+    def test_a_room_type_not_sold_here_is_left_alone(self):
+        self.rooms.unlink()
+        self._stage(self.today, self.today + timedelta(days=1))
+        self.assertFalse(self._items())

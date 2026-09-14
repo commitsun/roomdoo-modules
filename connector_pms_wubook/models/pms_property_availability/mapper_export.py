@@ -1,8 +1,9 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
+import datetime
 
 from odoo.addons.component.core import Component
+from odoo.addons.connector.components.mapper import mapping
 
 
 class ChannelWubookPmsPropertyAvailabilityMapperExport(Component):
@@ -11,48 +12,49 @@ class ChannelWubookPmsPropertyAvailabilityMapperExport(Component):
 
     _apply_on = "channel.wubook.pms.property.availability"
 
-    children = [
-        (
-            "channel_wubook_availability_ids",
-            "availabilities",
-            "channel.wubook.pms.availability",
-        )
-    ]
+    @mapping
+    def availabilities(self, record):
+        """How many rooms of each type are on sale, night by night.
 
-
-class ChannelWubookPmsPropertyAvailabilityChildBinderMapperExport(Component):
-    _name = "channel.wubook.pms.property.availability.child.binder.mapper.export"
-    _inherit = "channel.wubook.child.binder.mapper.export"
-    _apply_on = "channel.wubook.pms.availability"
-
-    def skip_item(self, map_record):
-        # TODO: filter this on get_all_items, creating a hook on the mapper
-        #   to allow filtering them overriding the hook
-        # flake8: noqa: B950
-        return any(
-            [
-                map_record.source.room_type_id.class_id.default_code
-                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),
-                map_record.source.synced_export,
-                not map_record.source.odoo_id.wubook_date_valid(),
-                not map_record.source.room_type_id.channel_wubook_bind_ids.filtered(
-                    lambda x: x.backend_id == self.backend_record
-                ),
-            ]
+        The number is resolved here rather than read off a record: it is the
+        physical availability of the night capped by the inventory declared
+        for it, and neither of those is stored per night any more. A night
+        nothing has touched has no ``pms.availability`` row at all, and it
+        still has rooms to sell, which is exactly what the resolver falls
+        back to.
+        """
+        window = record._wubook_export_window()
+        if not window:
+            return None
+        date_from, date_to = window
+        room_type_bindings = record._wubook_export_room_types()
+        if not room_type_bindings:
+            return None
+        room_type_ids = room_type_bindings.mapped("odoo_id").ids
+        pms_property_id = record.backend_id.pms_property_id.id
+        real_avail = self.env["pms.availability"].get_real_avail_map(
+            pms_property_id, date_from, date_to, room_type_ids=room_type_ids
         )
-
-    def get_all_items(self, mapper, items, parent, to_attr, options):
-        # TODO: this is always the same on every child binder mapper
-        #   except 'rule_ids' try to move it to the parent
-        bindings = items.filtered(lambda x: x.backend_id == self.backend_record)
-        new_bindings = parent.source["availability_ids"].filtered(
-            lambda x: self.backend_record not in x.channel_wubook_bind_ids.backend_id
+        # The property as a whole, not a channel of its own: what Wubook
+        # sells is the inventory declared at the general scope.
+        caps = self.env["pms.inventory.rule"].get_inventory_caps(
+            pms_property_id, date_from, date_to, room_type_ids=room_type_ids
         )
-        items = (
-            items.browse(
-                [self.binder_for().wrap_record(x, force=True).id for x in new_bindings]
-            )
-            | bindings
-        )
-        mapper = super().get_all_items(mapper, items, parent, to_attr, options)
-        return mapper
+        items = []
+        for offset in range((date_to - date_from).days + 1):
+            date = date_from + datetime.timedelta(days=offset)
+            for binding in room_type_bindings:
+                room_type_id = binding.odoo_id.id
+                cap = caps.get((room_type_id, date))
+                if cap is None:
+                    # Nothing declared for this night: the ceiling is the
+                    # availability the connector defaults to for the type.
+                    cap = binding.default_availability
+                items.append(
+                    {
+                        "date": date,
+                        "id_room": binding.external_id,
+                        "avail": min(real_avail[(room_type_id, date)], cap),
+                    }
+                )
+        return {"availabilities": items}
