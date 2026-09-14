@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<templates xml:space="preserve">
+    <t t-name="connector_pms_channex.ChannexChannelsAction" owl="1">
+        <div class="o_action o_channex_channels">
+            <Layout
+        display="{ controlPanel: { 'top-right': false, 'bottom-right': false } }"
+      >
+                <t t-set-slot="control-panel-bottom-left">
+                    <button
+            t-if="state.step === 'connect'"
+            class="btn btn-primary"
+            t-att-disabled="state.busy"
+            t-on-click="() => this.toMap()"
+          >I have finished connecting</button>
+                    <button
+            t-else=""
+            class="btn btn-secondary"
+            t-att-disabled="state.busy"
+            t-on-click="() => this.toConnect()"
+          >Connect another channel</button>
+                </t>
+                <!-- The frame and the list take the height .o_content already
+                     has; min-height keeps them from growing past it. -->
+                <div class="d-flex flex-column h-100" style="min-height: 0">
+                    <div
+            class="d-flex align-items-center gap-2 px-3 py-2 border-bottom"
+          >
+                        <span
+              class="badge rounded-pill"
+              t-att-class="state.step === 'connect' ? 'bg-primary' : 'bg-light text-muted'"
+            >1</span>
+                        <span
+              t-att-class="state.step === 'connect' ? 'fw-bold' : 'text-muted'"
+            >Connect your channels</span>
+                        <span class="text-muted mx-1">›</span>
+                        <span
+              class="badge rounded-pill"
+              t-att-class="state.step === 'map' ? 'bg-primary' : 'bg-light text-muted'"
+            >2</span>
+                        <span
+              t-att-class="state.step === 'map' ? 'fw-bold' : 'text-muted'"
+            >Say who each channel is</span>
+                        <span class="ms-auto small text-muted">
+                            <t
+                t-if="state.step === 'connect'"
+              >Connect and map your OTAs on Channex, then come back with the button below.</t>
+                            <t
+                t-else=""
+              >Every channel needs its agency; create it from the dropdown if it is not in Odoo yet. The ones left without one, highlighted, take in bookings with nobody to attribute them to.</t>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1" style="min-height: 0">
+                        <iframe
+              t-if="state.step === 'connect'"
+              class="h-100 w-100 border-0"
+              t-att-src="state.url"
+            />
+                        <View t-else="" t-props="listProps" />
+                    </div>
+                </div>
+            </Layout>
+        </div>
+    </t>
+</templates>

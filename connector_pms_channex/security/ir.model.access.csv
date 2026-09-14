@@ -1,7 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_channel_channex_backend_manager,channel channex backend manager,model_channel_channex_backend,connector.group_connector_manager,1,1,1,1
 access_channel_channex_backend_type_manager,channel channex backend type manager,model_channel_channex_backend_type,connector.group_connector_manager,1,1,1,1
-access_channel_channex_backend_type_ota_manager,channel channex backend type ota manager,model_channel_channex_backend_type_ota,connector.group_connector_manager,1,1,1,1
+access_channel_channex_ota_manager,channel channex ota manager,model_channel_channex_ota,connector.group_connector_manager,1,1,1,1
+access_channel_channex_channel_manager,channel channex channel manager,model_channel_channex_channel,connector.group_connector_manager,1,1,1,1
 access_channel_channex_backend_type_room_kind_manager,channel channex backend type room kind manager,model_channel_channex_backend_type_room_kind,connector.group_connector_manager,1,1,1,1
 access_channel_channex_pms_property_manager,channel channex pms property manager,model_channel_channex_pms_property,connector.group_connector_manager,1,1,1,1
 access_channel_channex_pms_room_type_manager,channel channex pms room type manager,model_channel_channex_pms_room_type,connector.group_connector_manager,1,1,1,1

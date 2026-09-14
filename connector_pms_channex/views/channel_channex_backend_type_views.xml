@@ -23,15 +23,6 @@
                                 </tree>
                             </field>
                         </page>
-                        <page string="OTAs" name="otas">
-                            <field name="ota_ids" nolabel="1">
-                                <tree editable="bottom">
-                                    <field name="ota_name" />
-                                    <field name="agency_id" />
-                                    <field name="channel_external_id" />
-                                </tree>
-                            </field>
-                        </page>
                     </notebook>
                 </sheet>
             </form>
