@@ -442,7 +442,8 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
                 {
                     "availability_plan_id": self.plan.id,
                     "room_type_id": self.room_type_a.id,
-                    "date": d0 + timedelta(days=i),
+                    "date_from": d0 + timedelta(days=i),
+                    "date_to": d0 + timedelta(days=i),
                     "min_stay": 5,
                     "pms_property_id": self.pms_property.id,
                 }
@@ -475,7 +476,8 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
                 {
                     "availability_plan_id": bare_plan.id,
                     "room_type_id": self.room_type_a.id,
-                    "date": date.today() + timedelta(days=1),
+                    "date_from": date.today() + timedelta(days=1),
+                    "date_to": date.today() + timedelta(days=1),
                     "min_stay": 1,
                     "pms_property_id": self.pms_property.id,
                 }
@@ -678,7 +680,8 @@ class TestExportRecordIdentityKey(TransactionComponentCase):
             {
                 "availability_plan_id": self.plan.id,
                 "room_type_id": self.room_type_a.id,
-                "date": date.today() + timedelta(days=3),
+                "date_from": date.today() + timedelta(days=3),
+                "date_to": date.today() + timedelta(days=3),
                 "min_stay": 5,
                 "pms_property_id": self.pms_property.id,
             }
@@ -914,8 +917,8 @@ class TestExportDependencies(TransactionComponentCase):
 @tagged("post_install", "-at_install")
 class TestWubookDateValid(TransactionComponentCase):
     """Both bounds of ``wubook_date_valid``: max 2 days back, max ~2 years
-    ahead. Items / rules outside that window must be filtered out by the
-    mapper's ``skip_item``.
+    ahead. Items outside that window must be filtered out by the mapper's
+    ``skip_item``.
     """
 
     @classmethod
@@ -925,7 +928,6 @@ class TestWubookDateValid(TransactionComponentCase):
         cls.pricelist = cls.env["product.pricelist"].create(
             {"name": "Date valid PL", "company_id": cls.company.id}
         )
-        cls.plan = cls.env["pms.availability.plan"].create({"name": "Date valid plan"})
 
     def _make_item(self, dt):
         return self.env["product.pricelist.item"].create(
@@ -963,28 +965,6 @@ class TestWubookDateValid(TransactionComponentCase):
     def test_item_beyond_two_years_is_invalid(self):
         item = self._make_item(date.today() + timedelta(days=731))
         self.assertFalse(item.wubook_date_valid())
-
-    def test_rule_beyond_two_years_is_invalid(self):
-        rule = self.env["pms.availability.plan.rule"].create(
-            {
-                "availability_plan_id": self.plan.id,
-                "room_type_id": self.room_type_a.id,
-                "date": date.today() + timedelta(days=900),
-                "pms_property_id": self.pms_property.id,
-            }
-        )
-        self.assertFalse(rule.wubook_date_valid())
-
-    def test_rule_within_window_is_valid(self):
-        rule = self.env["pms.availability.plan.rule"].create(
-            {
-                "availability_plan_id": self.plan.id,
-                "room_type_id": self.room_type_a.id,
-                "date": date.today() + timedelta(days=400),
-                "pms_property_id": self.pms_property.id,
-            }
-        )
-        self.assertTrue(rule.wubook_date_valid())
 
 
 @tagged("post_install", "-at_install")
@@ -1086,7 +1066,8 @@ class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
             {
                 "availability_plan_id": cls.plan.id,
                 "room_type_id": cls.room_type_a.id,
-                "date": date.today() + timedelta(days=2),
+                "date_from": date.today() + timedelta(days=2),
+                "date_to": date.today() + timedelta(days=2),
                 "pms_property_id": cls.pms_property.id,
             }
         )
@@ -1340,7 +1321,8 @@ class TestAvailabilityListener(TransactionComponentCase):
             "availability_plan_id": self.plan.id,
             "room_type_id": self.room_type_a.id,
             "pms_property_id": self.pms_property.id,
-            "date": self.d0 + timedelta(days=day_offset),
+            "date_from": self.d0 + timedelta(days=day_offset),
+            "date_to": self.d0 + timedelta(days=day_offset),
             "min_stay": 5,
         }
         vals.update(overrides)
