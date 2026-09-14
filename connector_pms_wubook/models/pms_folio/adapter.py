@@ -112,7 +112,7 @@ class ChannelWubookPmsFolioAdapter(Component):
             if domain:
                 domain_code = self._extract_domain_clauses(domain, self._id)[0]
                 if domain_code:
-                    code_d = (self._domain_to_normalized_dict(domain_code),)
+                    code_d = self._domain_to_normalized_dict(domain_code)
                     reservation_codes = code_d.get(self._id)
             if reservation_codes:
                 if not isinstance(reservation_codes, (tuple, list)):
