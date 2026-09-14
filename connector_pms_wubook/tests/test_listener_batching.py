@@ -331,7 +331,8 @@ class TestPlanRulePerPlanPropertyBatching(TransactionComponentCase):
                     "availability_plan_id": self.plan.id,
                     "pms_property_id": self.pms_property.id,
                     "room_type_id": self.room_type_a.id,
-                    "date": d0 + timedelta(days=i),
+                    "date_from": d0 + timedelta(days=i),
+                    "date_to": d0 + timedelta(days=i),
                     "min_stay": i,
                 }
                 for i in range(n)
@@ -358,8 +359,8 @@ class TestPlanRulePerPlanPropertyBatching(TransactionComponentCase):
         trap.assert_jobs_count(1)
 
     def test_irrelevant_field_write_does_not_enqueue(self):
-        """Writes to fields outside ``_RULE_PLAN_FIELDS`` /
-        ``_RULE_AVAIL_FIELDS`` must not stage anything.
+        """Writes to fields outside ``_RULE_PLAN_FIELDS`` must not stage
+        anything.
         """
         rules = self._make_rules(3)
         self.env.cr.precommit.run()
@@ -431,7 +432,8 @@ class TestPlanRulePropertyScope(TransactionComponentCase):
                 "availability_plan_id": self.plan.id,
                 "pms_property_id": pms_property.id,
                 "room_type_id": self.room_type_a.id,
-                "date": date.today() + timedelta(days=day_offset),
+                "date_from": date.today() + timedelta(days=day_offset),
+                "date_to": date.today() + timedelta(days=day_offset),
                 "min_stay": 2,
             }
         )

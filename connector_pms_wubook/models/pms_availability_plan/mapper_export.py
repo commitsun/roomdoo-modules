@@ -1,9 +1,25 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import datetime
 
+from odoo import _
+from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping
+
+# What a night says when no rule covers it: nothing is restricted. Wubook
+# holds a value for every night, so saying nothing would leave whatever it
+# was last told, and a lifted restriction would never come off.
+_NO_RESTRICTION = {
+    "min_stay": 0,
+    "min_stay_arrival": 0,
+    "max_stay": 0,
+    "max_stay_arrival": 0,
+    "closed": False,
+    "closed_arrival": False,
+    "closed_departure": False,
+}
 
 
 class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
@@ -11,14 +27,6 @@ class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
     _inherit = "channel.wubook.mapper.export"
 
     _apply_on = "channel.wubook.pms.availability.plan"
-
-    children = [
-        (
-            "channel_wubook_rule_ids",
-            "items",
-            "channel.wubook.pms.availability.plan.rule",
-        )
-    ]
 
     @mapping
     def name(self, record):
@@ -33,57 +41,63 @@ class ChannelWubookPmsAvailabilityPlanMapperExport(Component):
             return None
         return {"name": record.name}
 
+    @mapping
+    def items(self, record):
+        """One item per (room type, night) of the window being pushed.
 
-class ChannelWubookPmsAvailabilityPlanChildBinderMapperExport(Component):
-    _name = "channel.wubook.pms.availability.plan.child.binder.mapper.export"
-    _inherit = "channel.wubook.child.binder.mapper.export"
-
-    _apply_on = "channel.wubook.pms.availability.plan.rule"
-
-    def skip_item(self, map_record):
-        # flake8: noqa: B950
-        return any(
-            [
-                map_record.source.room_type_id.class_id.default_code
-                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),  # noqa: E501
-                map_record.source.pms_property_id
-                != self.backend_record.pms_property_id,
-                map_record.source.synced_export,
-                not map_record.source.odoo_id.wubook_date_valid(),
-                not map_record.source.room_type_id.channel_wubook_bind_ids.filtered(
-                    lambda x: x.backend_id == self.backend_record
-                ),
-            ]
+        The rules are ranges and Wubook is written night by night, so the
+        ranges are expanded here. The expansion is dense on purpose: a night
+        no rule covers is sent as unrestricted, which is what it means, and
+        is how a restriction that was lifted actually comes off the channel.
+        """
+        window = record._wubook_export_window()
+        if not window:
+            return None
+        date_from, date_to = window
+        room_types = record._wubook_export_room_types()
+        if not room_types:
+            return None
+        external_ids = self._external_room_ids(room_types)
+        winner = self.env["pms.availability.plan.rule"]._resolve_rules(
+            record.odoo_id.id,
+            record.backend_id.pms_property_id.id,
+            date_from,
+            date_to,
+            room_type_ids=room_types.ids,
         )
+        items = []
+        for offset in range((date_to - date_from).days + 1):
+            date = date_from + datetime.timedelta(days=offset)
+            for room_type in room_types:
+                rule = winner.get((room_type.id, date))
+                values = (
+                    {field: rule[field] for field in _NO_RESTRICTION}
+                    if rule
+                    else dict(_NO_RESTRICTION)
+                )
+                items.append(
+                    {
+                        **values,
+                        "date": date,
+                        "id_room": external_ids[room_type.id],
+                    }
+                )
+        return {"items": items}
 
-    def get_all_items(self, mapper, items, parent, to_attr, options):
-        # Resolve "rules of this plan in this backend's property that
-        # don't have a binding for this backend yet" with a single SQL
-        # query. The naive ``parent.source["rule_ids"].filtered(...)``
-        # walks the whole plan's rule_ids in Python (~671k records for
-        # the global OTA'S plan), turning every export into a multi-
-        # minute job even when no new bindings need to be created.
-        backend = self.backend_record
-        bindings = items.filtered(lambda x: x.backend_id == backend)
-        self.env.cr.execute(
-            """
-            SELECT r.id
-            FROM pms_availability_plan_rule r
-            LEFT JOIN channel_wubook_pms_availability_plan_rule rb
-                ON rb.odoo_id = r.id AND rb.backend_id = %s
-            WHERE r.availability_plan_id = %s
-              AND r.pms_property_id = %s
-              AND rb.id IS NULL
-            """,
-            (backend.id, parent.source.odoo_id.id, backend.pms_property_id.id),
-        )
-        new_rule_ids = [row[0] for row in self.env.cr.fetchall()]
-        if new_rule_ids:
-            new_rules = self.env["pms.availability.plan.rule"].browse(new_rule_ids)
-            new_binding_ids = [
-                self.binder_for().wrap_record(r, force=True).id for r in new_rules
-            ]
-            items = items.browse(new_binding_ids) | bindings
-        else:
-            items = bindings
-        return super().get_all_items(mapper, items, parent, to_attr, options)
+    def _external_room_ids(self, room_types):
+        """:return: ``{room_type_id: external id}`` on this backend."""
+        binder = self.binder_for("channel.wubook.pms.room.type")
+        external_ids = {}
+        for room_type in room_types:
+            external_id = binder.to_external(room_type, wrap=True)
+            if not external_id:
+                raise ValidationError(
+                    _(
+                        "External record of Room Type id [%(code)s] %(room)s "
+                        "does not exists. It should be exported in "
+                        "_export_dependencies"
+                    )
+                    % {"code": room_type.id, "room": room_type.name}
+                )
+            external_ids[room_type.id] = external_id
+        return external_ids
