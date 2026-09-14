@@ -24,8 +24,6 @@ RESTRICTION_FIELDS_EXPORT = RESTRICTION_FIELDS_IMPORT + [
     "max_stay_arrival",
 ]
 
-AVAILABILITY_FIELDS = ["no_ota", "avail"]
-
 ID_WUBOOK_PLAN = -1
 
 
@@ -127,32 +125,18 @@ class ChannelWubookPmsAvailabilityPlanAdapter(Component):
                 )
                 plans_values.update(self._exec("rplan_get_rplan_values", *params))
 
-                # get availability data
-                rooms = set()
-                for plan_rooms in plans_values.values():
-                    rooms |= {int(x) for x in plan_rooms.keys()}
-                kw_params = {"rooms": list(rooms), **kw_base_params}
-                params = self._prepare_parameters(
-                    kw_params, ["date_from", "date_to"], ["rooms"]
-                )
-                avail_values = self._exec("fetch_rooms_values", *params)
-
                 date_from = datetime.datetime.strptime(
                     kw_base_params["date_from"], self._date_format
                 ).date()
                 for plan in base_chunk_plan:
                     plan["items"] = []
-                    for id_room, room in plans_values[str(plan["id"])].items():
+                    for room in plans_values[str(plan["id"])].values():
                         for day in range(len(room)):
                             plan["items"].append(
                                 {
                                     **{
                                         x: room[day][x]
                                         for x in RESTRICTION_FIELDS_IMPORT + ["id_room"]
-                                    },
-                                    **{
-                                        x: avail_values[id_room][day][x]
-                                        for x in AVAILABILITY_FIELDS
                                     },
                                     "date": date_from + datetime.timedelta(days=day),
                                 }
@@ -210,38 +194,30 @@ class ChannelWubookPmsAvailabilityPlanAdapter(Component):
                 raise ValidationError(_("The rooms exists twice with the same date"))
             items_by_room[room["id_room"]][room["date"]] = room
 
-        all_rules_by_room, rules_by_room, avail_by_room = {}, {}, {}
+        # Wubook takes a start date and one entry per day from there, so the
+        # days no item covers are sent empty, meaning "leave as is".
         rules_by_room = {}
         for id_room, room_by_date in items_by_room.items():
             for i in range((dto - dfrom).days + 1):
                 date = dfrom + datetime.timedelta(days=i)
                 room = room_by_date.get(date, {})
-                all_rules_by_room.setdefault(id_room, []).append(
-                    {
-                        x: room[x]
-                        for x in room
-                        if x in RESTRICTION_FIELDS_EXPORT + AVAILABILITY_FIELDS
-                    }
-                )
-                rules_by_room.setdefault(str(id_room), []).append(
+                rules_by_room.setdefault(id_room, []).append(
                     {x: room[x] for x in room if x in RESTRICTION_FIELDS_EXPORT}
                 )
-                avail_by_room.setdefault(id_room, []).append(
-                    {x: room[x] for x in room if x in AVAILABILITY_FIELDS}
-                )
 
-        # if rules_by_room:
         if _id == ID_WUBOOK_PLAN:
+            # The restrictions Wubook keeps outside any plan of its own are
+            # written through the availability call.
             # update_avail(token, lcode, dfrom, rooms)
             params = self._prepare_parameters(
                 {
                     "dfrom": dfrom.strftime(self._date_format),
                     "rooms": [
                         {
-                            "id": _id,
-                            "days": list(days),
+                            "id": id_room,
+                            "days": days,
                         }
-                        for _id, days in all_rules_by_room.items()
+                        for id_room, days in rules_by_room.items()
                     ],
                 },
                 ["dfrom", "rooms"],
@@ -253,27 +229,13 @@ class ChannelWubookPmsAvailabilityPlanAdapter(Component):
                 {
                     "pid": _id,
                     "dfrom": dfrom.strftime(self._date_format),
-                    "values": rules_by_room,
+                    "values": {
+                        str(id_room): days for id_room, days in rules_by_room.items()
+                    },
                 },
                 ["pid", "dfrom", "values"],
             )
             self._exec("rplan_update_rplan_values", *params)
-
-            # update_avail(token, lcode, dfrom, rooms)
-            params = self._prepare_parameters(
-                {
-                    "dfrom": dfrom.strftime(self._date_format),
-                    "rooms": [
-                        {
-                            "id": _id,
-                            "days": list(days),
-                        }
-                        for _id, days in avail_by_room.items()
-                    ],
-                },
-                ["dfrom", "rooms"],
-            )
-            self._exec("update_avail", *params)
 
     def _format_data(self, values):
         conv_mapper = {
