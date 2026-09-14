@@ -1,8 +1,13 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from dateutil.relativedelta import relativedelta
+import datetime
 
 from odoo import _, api, fields, models
+
+# The window Wubook accepts for restriction updates: it rejects anything
+# older than 2 days and anything beyond roughly 2 years.
+WUBOOK_PAST_DAYS = 2
+WUBOOK_FUTURE_DAYS = 730
 
 
 class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
@@ -18,13 +23,6 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         ondelete="cascade",
     )
 
-    channel_wubook_rule_ids = fields.One2many(
-        string="Wubook Availability Rules",
-        help="Rules in a availability plan",
-        comodel_name="channel.wubook.pms.availability.plan.rule",
-        inverse_name="channel_wubook_availability_plan_id",
-    )
-
     wubook_last_synced_name = fields.Char(
         string="Last name pushed to Wubook",
         readonly=True,
@@ -36,59 +34,103 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         ),
     )
 
-    def _is_synced_export(self):
-        synced = super()._is_synced_export()
-        if not synced:
-            return False
-        wubook_date_valid = fields.Date.today() - relativedelta(days=2)
-        room_types_ids = (
-            self.env["pms.room.type"]
-            .search(
-                [
-                    ("channel_wubook_bind_ids.backend_id", "=", self.backend_id.id),
-                ]
-            )
-            .ids
+    # The rules are ranges and Wubook is written night by night, so what
+    # decides the size of the payload is not how many rules moved but how
+    # many nights they span. The listener accumulates that span here and the
+    # export mapper expands exactly it; an empty window means the whole
+    # accepted window, which is what a first export or a manual resync wants.
+    wubook_pending_date_from = fields.Date(
+        string="Pending From",
+        readonly=True,
+        help="First night waiting to be pushed to Wubook.",
+    )
+    wubook_pending_date_to = fields.Date(
+        string="Pending To",
+        readonly=True,
+        help="Last night waiting to be pushed to Wubook.",
+    )
+
+    @api.model
+    def _wubook_accepted_window(self):
+        """:return: the ``(first, last)`` nights Wubook takes, both included."""
+        today = fields.Date.today()
+        return (
+            today - datetime.timedelta(days=WUBOOK_PAST_DAYS),
+            today + datetime.timedelta(days=WUBOOK_FUTURE_DAYS),
         )
+
+    def _wubook_stage_pending_window(self, date_from, date_to):
+        """Widen the window waiting to be exported so it also covers
+        ``date_from``..``date_to``.
+        """
+        for record in self:
+            pending_from = record.wubook_pending_date_from
+            pending_to = record.wubook_pending_date_to
+            values = {
+                "wubook_pending_date_from": min(pending_from or date_from, date_from),
+                "wubook_pending_date_to": max(pending_to or date_to, date_to),
+                # A rule changed, so the plan is no longer in sync. This is
+                # what the scheduler looks at to pick the plan up.
+                "actual_write_date": fields.Datetime.now(),
+            }
+            record.write(values)
+
+    def _wubook_export_window(self):
+        """:return: the ``(first, last)`` nights this export has to push,
+        clipped to what Wubook accepts, or ``None`` when there is nothing
+        left inside the window.
+        """
+        self.ensure_one()
+        accepted_from, accepted_to = self._wubook_accepted_window()
+        # Nothing staged means this is not an incremental push: a plan
+        # connected for the first time, or a manual resynchronization.
+        date_from = self.wubook_pending_date_from or accepted_from
+        date_to = self.wubook_pending_date_to or accepted_to
+        # A season can start before Wubook's floor or run past its ceiling.
+        # Trimming it keeps the part Wubook can hold; discarding the rule
+        # would stop exporting restrictions that are in force.
+        date_from = max(date_from, accepted_from)
+        date_to = min(date_to, accepted_to)
+        if date_from > date_to:
+            return None
+        return (date_from, date_to)
+
+    def _wubook_export_room_types(self):
+        """:return: the room types whose restrictions this backend publishes.
+
+        Only types this backend sells (bound, and not in a room type class
+        marked as not to be synchronized) and that the plan actually
+        configures on the backend's property. A type the plan has never had
+        a rule for is not managed from here, so its restrictions in Wubook
+        are left alone.
+        """
+        self.ensure_one()
+        backend = self.backend_id
         self.env.cr.execute(
             """
-            SELECT 1
-            FROM pms_availability_plan_rule AS rule
-                LEFT JOIN channel_wubook_pms_availability_plan_rule AS binding
-                    ON binding.odoo_id = rule.id
+            SELECT DISTINCT rule.room_type_id
+            FROM pms_availability_plan_rule rule
             WHERE rule.availability_plan_id = %s
-            AND rule.date >= %s
-            AND rule.pms_property_id = %s
-            AND rule.room_type_id IN %s
-            AND (
-                    (
-                        binding.backend_id IS NULL
-                        OR binding.backend_id != %s
-                    )
-                OR
-                    (
-                        binding.backend_id = %s
-                        AND (
-                            binding.sync_date_export IS NULL
-                            OR binding.sync_date_export < binding.actual_write_date
-                        )
-                    )
-                )
-            LIMIT 1
+              AND rule.pms_property_id = %s
             """,
-            (
-                self.odoo_id.id,
-                wubook_date_valid,
-                self.backend_id.pms_property_id.id,
-                tuple(room_types_ids) if room_types_ids else (0,),
-                self.backend_id.id,
-                self.backend_id.id,
-            ),
+            (self.odoo_id.id, backend.pms_property_id.id),
         )
-        rules_to_export = self.env.cr.fetchone()
-        if rules_to_export:
-            return False
-        return True
+        configured_ids = {row[0] for row in self.env.cr.fetchall()}
+        if not configured_ids:
+            return self.env["pms.room.type"].browse()
+        nosync = (
+            backend.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames()
+        )
+        bindings = self.env["channel.wubook.pms.room.type"].search(
+            [
+                ("backend_id", "=", backend.id),
+                ("odoo_id", "in", list(configured_ids)),
+                ("external_id", "!=", False),
+            ]
+        )
+        return bindings.odoo_id.filtered(
+            lambda room_type: room_type.class_id.default_code not in nosync
+        )
 
     @api.model
     def import_data(
@@ -133,8 +175,9 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
                 if not binding or not binding.external_id:
                     raise NotImplementedError(
                         _(
-                            "The Availability Plan %s has no binding. Import of Odoo records "
-                            "without binding is not supported yet"
+                            "The Availability Plan %s has no binding. "
+                            "Import of Odoo records without binding is not "
+                            "supported yet"
                         )
                         % plan.name
                     )
@@ -164,8 +207,8 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
                 lambda x: x.pms_property_id == self.backend_id.pms_property_id
             )
             if items:
-                date_from = min(items.mapped("date"))
-                date_to = max(items.mapped("date"))
+                date_from = min(items.mapped("date_from"))
+                date_to = max(items.mapped("date_to"))
                 room_types = items.mapped("room_type_id")
                 record.import_data(
                     self.backend_id,
