@@ -68,26 +68,29 @@ class TestConnectBackendScoping(TransactionComponentCase):
         )
 
     def test_candidate_backends_scoped_to_own_property(self):
-        self.assertEqual(self.room_type_a._wubook_candidate_backends(), self.backend)
         self.assertEqual(
-            self.other_room_type._wubook_candidate_backends(), self.other_backend
+            self.room_type_a._channel_candidate_backends(), self.backend.parent_id
+        )
+        self.assertEqual(
+            self.other_room_type._channel_candidate_backends(),
+            self.other_backend.parent_id,
         )
 
     def test_global_record_sees_every_backend(self):
         """A pricelist with no property is global, so any backend applies."""
         self.pricelist_default.pms_property_ids = [(5, 0, 0)]
-        candidates = self.pricelist_default._wubook_candidate_backends()
-        self.assertIn(self.backend, candidates)
-        self.assertIn(self.other_backend, candidates)
+        candidates = self.pricelist_default._channel_candidate_backends()
+        self.assertIn(self.backend.parent_id, candidates)
+        self.assertIn(self.other_backend.parent_id, candidates)
 
     @mute_logger(
-        "odoo.addons.connector_pms_wubook.wizards.wizard_connect",
-        "odoo.addons.connector_pms_wubook.models.common.wubook_connect_mixin",
+        "odoo.addons.connector_pms.wizards.wizard_connect",
+        "odoo.addons.connector_pms.models.common.channel_connect_mixin",
     )
     def test_wizard_never_defaults_to_another_hotels_backend(self):
-        action = self.other_room_type.action_open_wubook_connect_wizard()
-        wizard = self.env["channel.wubook.connect.wizard"].browse(action["res_id"])
-        self.assertEqual(wizard.backend_id, self.other_backend)
+        action = self.other_room_type.action_open_channel_connect_wizard()
+        wizard = self.env["channel.connect.wizard"].browse(action["res_id"])
+        self.assertEqual(wizard.backend_id, self.other_backend.parent_id)
 
     def test_wizard_refuses_when_no_backend_for_the_property(self):
         orphan_property = self.env["pms.property"].create(
@@ -115,4 +118,4 @@ class TestConnectBackendScoping(TransactionComponentCase):
             }
         )
         with self.assertRaises(UserError):
-            orphan_room_type.action_open_wubook_connect_wizard()
+            orphan_room_type.action_open_channel_connect_wizard()
