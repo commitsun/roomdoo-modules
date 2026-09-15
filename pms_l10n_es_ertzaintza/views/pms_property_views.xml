@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_property_form_pms_l10n_es_ertzaintza" model="ir.ui.view">
+        <field name="name">Property Form l10n_es_ertzaintza</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms_l10n_es.view_property_form_pms_l10n_es" />
+        <field name="arch" type="xml">
+            <field name="institution_user" position="attributes">
+                <attribute
+          name="attrs"
+        >{'invisible': [('institution','=','ertzaintza')]}</attribute>
+            </field>
+            <field name="institution_password" position="attributes">
+                <attribute
+          name="attrs"
+        >{'invisible': [('institution','=','ertzaintza')]}</attribute>
+            </field>
+            <field name="ses_url" position="after">
+                <group
+          name="ertzaintza_settings"
+          attrs="{'invisible': [('institution','!=','ertzaintza')]}"
+        >
+                    <field name="ertzaintza_environment" />
+                    <field name="ertzaintza_certificate_id" />
+                    <field name="ertzaintza_certificate_subject" readonly="1" />
+                    <field name="ertzaintza_certificate_expiry" readonly="1" />
+                    <field
+            name="ertzaintza_verify_tls"
+            attrs="{'invisible': [('ertzaintza_environment','=','prod')]}"
+          />
+                    <button
+            name="action_ertzaintza_test_connection"
+            type="object"
+            string="Test Ertzaintza connection"
+            class="btn-secondary"
+          />
+                    <field name="ertzaintza_ready" invisible="1" />
+                    <div
+            class="alert alert-warning"
+            role="alert"
+            attrs="{'invisible': ['|', ('institution','!=','ertzaintza'), ('ertzaintza_ready','=',True)]}"
+          >
+                        <field
+              name="ertzaintza_blocking_reasons"
+              nolabel="1"
+              readonly="1"
+            />
+                    </div>
+                </group>
+            </field>
+        </field>
+    </record>
+
+</odoo>
