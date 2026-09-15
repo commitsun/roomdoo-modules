@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-15 20:03+0000\n"
-"PO-Revision-Date: 2026-09-15 20:03+0000\n"
+"POT-Creation-Date: 2026-09-15 20:39+0000\n"
+"PO-Revision-Date: 2026-09-15 20:39+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -115,6 +115,11 @@ msgid "%s: the surname is missing."
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "480354"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
 #. odoo-python
 #: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
 #, python-format
@@ -126,6 +131,11 @@ msgstr ""
 #: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
 #, python-format
 msgid "A %s communication cannot be marked as sent."
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "A12345678"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
@@ -141,10 +151,36 @@ msgid "Cancelled"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_name
+msgid "Certificate in use"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
 #: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_id
 msgid ""
 "Certificate of the establishment owner used to sign the requests. Leave "
 "empty to use the active AEAT certificate of the company."
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_expiry
+msgid "Certificate valid until"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid ""
+"Code of the establishment given by the institution. For the Ertzaintza it is"
+" the code it assigned when the establishment was registered, sent as "
+"codigoEstablecimiento."
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid ""
+"Code of the lessor given by the institution. For the Ertzaintza it is the "
+"tax identifier (CIF) of the owner of the establishment, sent as "
+"codigoArrendador."
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
@@ -258,16 +294,6 @@ msgid "Ertzaintza Certificate"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
-#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_expiry
-msgid "Ertzaintza Certificate Expiry"
-msgstr ""
-
-#. module: pms_l10n_es_ertzaintza
-#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_subject
-msgid "Ertzaintza Certificate Subject"
-msgstr ""
-
-#. module: pms_l10n_es_ertzaintza
 #: model:ir.actions.act_window,name:pms_l10n_es_ertzaintza.open_pms_ertzaintza_communication_form_tree
 #: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_reservation__ertzaintza_communication_ids
 #: model:ir.ui.menu,name:pms_l10n_es_ertzaintza.menu_open_pms_ertzaintza_communication_form_tree
@@ -309,6 +335,11 @@ msgstr ""
 #: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
 #, python-format
 msgid "Ertzaintza connection"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "Establishment code"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
@@ -355,6 +386,13 @@ msgid "HTTP %s"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_name
+msgid ""
+"Holder of the certificate the requests are being signed with, whether it is "
+"the one selected here or the active certificate of the company."
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
 #: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__id
 msgid "ID"
 msgstr ""
@@ -389,6 +427,11 @@ msgstr ""
 #. module: pms_l10n_es_ertzaintza
 #: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__write_date
 msgid "Last Updated on"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "Lessor code"
 msgstr ""
 
 #. module: pms_l10n_es_ertzaintza

@@ -96,7 +96,7 @@ class TestErtzaintzaPropertyConfig(TestErtzaintzaCommon):
         public_key, private_key = self.pms_property1._ertzaintza_certificate_paths()
         self.assertEqual(public_key, public_key_path)
         self.assertEqual(private_key, private_key_path)
-        self.assertIn(common_name, self.pms_property1.ertzaintza_certificate_subject)
+        self.assertIn(common_name, self.pms_property1.ertzaintza_certificate_name)
 
     def _create_self_signed_certificate(self, common_name):
         """Generate a throwaway self-signed RSA certificate for tests.

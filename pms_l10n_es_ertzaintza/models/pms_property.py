@@ -1,6 +1,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from cryptography import x509
+from cryptography.x509.oid import NameOID
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -53,13 +54,16 @@ class PmsProperty(models.Model):
         help="Only untick in pre-production: its chain is an internal CA. "
         "Production always verifies.",
     )
-    ertzaintza_certificate_subject = fields.Char(
+    ertzaintza_certificate_name = fields.Char(
         compute="_compute_ertzaintza_certificate_info",
-        string="Ertzaintza Certificate Subject",
+        string="Certificate in use",
+        help="Holder of the certificate the requests are being signed with, "
+        "whether it is the one selected here or the active certificate of "
+        "the company.",
     )
     ertzaintza_certificate_expiry = fields.Date(
         compute="_compute_ertzaintza_certificate_info",
-        string="Ertzaintza Certificate Expiry",
+        string="Certificate valid until",
     )
     ertzaintza_ready = fields.Boolean(
         string="Ready for the Ertzaintza A19 service",
@@ -75,8 +79,9 @@ class PmsProperty(models.Model):
     )
 
     def _compute_ertzaintza_certificate_info(self):
+        """Show who signs and until when, or why no certificate can be read."""
         for record in self:
-            record.ertzaintza_certificate_subject = False
+            record.ertzaintza_certificate_name = False
             record.ertzaintza_certificate_expiry = False
             if record.institution != INSTITUTION_CODE:
                 continue
@@ -84,15 +89,20 @@ class PmsProperty(models.Model):
                 public_key, __ = record._ertzaintza_certificate_paths()
                 with open(public_key, "rb") as pem_file:
                     certificate = x509.load_pem_x509_certificate(pem_file.read())
-                record.ertzaintza_certificate_subject = (
-                    certificate.subject.rfc4514_string()
-                )
-                record.ertzaintza_certificate_expiry = (
-                    certificate.not_valid_after.date()
-                )
-            except Exception as error:  # noqa: BLE001
-                record.ertzaintza_certificate_subject = str(error)
-                record.ertzaintza_certificate_expiry = False
+            except Exception as error:  # noqa: BLE001 - shown, never raised
+                record.ertzaintza_certificate_name = str(error)
+                continue
+            # The common name is what identifies the holder; the whole
+            # distinguished name does not fit in a form and says no more.
+            common_names = certificate.subject.get_attributes_for_oid(
+                NameOID.COMMON_NAME
+            )
+            record.ertzaintza_certificate_name = (
+                common_names[0].value
+                if common_names
+                else certificate.subject.rfc4514_string()
+            )
+            record.ertzaintza_certificate_expiry = certificate.not_valid_after.date()
 
     @api.depends(
         "institution",

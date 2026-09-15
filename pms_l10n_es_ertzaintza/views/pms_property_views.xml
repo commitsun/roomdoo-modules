@@ -6,6 +6,26 @@
         <field name="model">pms.property</field>
         <field name="inherit_id" ref="pms_l10n_es.view_property_form_pms_l10n_es" />
         <field name="arch" type="xml">
+
+            <!-- The generic labels of these two say nothing about what has
+                 to be typed in them. -->
+            <field name="institution_lessor_id" position="attributes">
+                <attribute name="string">Lessor code</attribute>
+                <attribute
+          name="help"
+        >Code of the lessor given by the institution. For the Ertzaintza it is the tax identifier (CIF) of the owner of the establishment, sent as codigoArrendador.</attribute>
+                <attribute name="placeholder">A12345678</attribute>
+            </field>
+            <field name="institution_property_id" position="attributes">
+                <attribute name="string">Establishment code</attribute>
+                <attribute
+          name="help"
+        >Code of the establishment given by the institution. For the Ertzaintza it is the code it assigned when the establishment was registered, sent as codigoEstablecimiento.</attribute>
+                <attribute name="placeholder">480354</attribute>
+            </field>
+
+            <!-- SES credentials mean nothing to the Ertzaintza, which
+                 authenticates by certificate. -->
             <field name="institution_user" position="attributes">
                 <attribute
           name="attrs"
@@ -16,25 +36,43 @@
           name="attrs"
         >{'invisible': [('institution','=','ertzaintza')]}</attribute>
             </field>
+
+            <!-- Plain rows of the existing group: a nested group would be
+                 rendered in a single cell, one word per line. -->
             <field name="ses_url" position="after">
-                <group
-          name="ertzaintza_settings"
+                <field
+          name="ertzaintza_environment"
           attrs="{'invisible': [('institution','!=','ertzaintza')]}"
-        >
-                    <field name="ertzaintza_environment" />
-                    <field name="ertzaintza_certificate_id" />
-                    <field name="ertzaintza_certificate_subject" readonly="1" />
-                    <field name="ertzaintza_certificate_expiry" readonly="1" />
-                    <field
-            name="ertzaintza_verify_tls"
-            attrs="{'invisible': [('ertzaintza_environment','=','prod')]}"
-          />
-                    <button
-            name="action_ertzaintza_test_connection"
-            type="object"
-            string="Test Ertzaintza connection"
-            class="btn-secondary"
-          />
+        />
+                <field
+          name="ertzaintza_certificate_id"
+          attrs="{'invisible': [('institution','!=','ertzaintza')]}"
+          options="{'no_create': True}"
+        />
+                <field
+          name="ertzaintza_certificate_name"
+          attrs="{'invisible': [('institution','!=','ertzaintza')]}"
+        />
+                <field
+          name="ertzaintza_certificate_expiry"
+          attrs="{'invisible': [('institution','!=','ertzaintza')]}"
+        />
+                <field
+          name="ertzaintza_verify_tls"
+          attrs="{'invisible': ['|', ('institution','!=','ertzaintza'), ('ertzaintza_environment','=','prod')]}"
+        />
+                <button
+          name="action_ertzaintza_test_connection"
+          type="object"
+          string="Test Ertzaintza connection"
+          class="btn-secondary"
+          attrs="{'invisible': [('institution','!=','ertzaintza')]}"
+        />
+            </field>
+
+            <!-- Full width, under both columns, like the INE warnings. -->
+            <xpath expr="//div[@class='col-6 px-0']" position="after">
+                <div class="col-12">
                     <field name="ertzaintza_ready" invisible="1" />
                     <div
             class="alert alert-warning"
@@ -47,8 +85,9 @@
               readonly="1"
             />
                     </div>
-                </group>
-            </field>
+                </div>
+            </xpath>
+
         </field>
     </record>
 
