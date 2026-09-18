@@ -45,15 +45,17 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
         backend = binding.backend_id
         prop = backend.pms_property_id
 
+        # The whole inheritance chain, not just the plan: what it inherits
+        # is exported too, so those room types have to be connected as well.
         self.env.cr.execute(
             """
             SELECT DISTINCT r.room_type_id
             FROM pms_availability_plan_rule r
-            WHERE r.availability_plan_id = %s
+            WHERE r.availability_plan_id IN %s
               AND (r.pms_property_id = %s OR r.pms_property_id IS NULL)
               AND r.room_type_id IS NOT NULL
             """,
-            (binding.odoo_id.id, prop.id),
+            (tuple(binding.odoo_id._inheritance_chain()), prop.id),
         )
         ref_room_type_ids = [row[0] for row in self.env.cr.fetchall()]
         if not ref_room_type_ids:
