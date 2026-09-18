@@ -153,6 +153,52 @@ class TestPlanRuleRangeExport(RangeCase):
         self._stage(self.today, self.today + timedelta(days=2))
         self.assertFalse(self._items())
 
+    def test_a_child_plan_exports_what_it_inherits(self):
+        """A plan that inherits configures what its parents configure. The
+        room type is only in the parent here, and it still has to travel."""
+        parent = self.env["pms.availability.plan"].create({"name": "Parent plan"})
+        self.plan.parent_id = parent
+        self.env["pms.availability.plan.rule"].with_context(
+            connector_no_export=True
+        ).create(
+            {
+                "availability_plan_id": parent.id,
+                "room_type_id": self.room_type_a.id,
+                "pms_property_id": self.pms_property.id,
+                "date_from": self.today + timedelta(days=10),
+                "date_to": self.today + timedelta(days=12),
+                "min_stay": 4,
+            }
+        )
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=12))
+        items = self._items()
+        self.assertEqual(len(items), 3)
+        self.assertEqual({item["min_stay"] for item in items}, {4})
+
+    def test_a_child_rule_beats_the_inherited_one_on_export(self):
+        parent = self.env["pms.availability.plan"].create({"name": "Parent plan"})
+        self.plan.parent_id = parent
+        self.env["pms.availability.plan.rule"].with_context(
+            connector_no_export=True
+        ).create(
+            {
+                "availability_plan_id": parent.id,
+                "room_type_id": self.room_type_a.id,
+                "pms_property_id": self.pms_property.id,
+                "date_from": self.today + timedelta(days=10),
+                "date_to": self.today + timedelta(days=12),
+                "min_stay": 4,
+            }
+        )
+        self._make_rule(
+            self.today + timedelta(days=11), self.today + timedelta(days=11), min_stay=9
+        )
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=12))
+        by_date = {item["date"]: item["min_stay"] for item in self._items()}
+        self.assertEqual(by_date[self.today + timedelta(days=10)], 4)
+        self.assertEqual(by_date[self.today + timedelta(days=11)], 9)
+        self.assertEqual(by_date[self.today + timedelta(days=12)], 4)
+
 
 @tagged("post_install", "-at_install")
 class TestPlanRuleRangeImport(RangeCase):
