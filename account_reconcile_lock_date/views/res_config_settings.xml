@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.reconcile.lock.date</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='invoicing_settings']" position="inside">
+                <div
+          class="col-12 col-lg-6 o_setting_box"
+          id="reconcile_lock_date"
+        >
+                    <div class="o_setting_right_pane">
+                        <span
+              class="o_form_label"
+            >Reconciliation lock date</span>
+                        <div class="text-muted">
+                            Block breaking a reconciliation when either matched
+                            entry belongs to a closed period. Reconciling is never
+                            blocked, only undoing it.
+                        </div>
+                        <div class="content-group mt16">
+                            <field name="reconcile_lock_scope" widget="radio" />
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
