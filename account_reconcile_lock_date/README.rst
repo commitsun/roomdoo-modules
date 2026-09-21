@@ -22,24 +22,33 @@ Account Reconcile Lock Date
 
 |badge1| |badge2| |badge3|
 
-In Odoo, **undoing** a reconciliation checks no lock date at all. The standard
-guards (``_check_fiscalyear_lock_date``, ``_check_tax_lock_date``) fire when an
-entry's date or state is written, or when journal items are deleted; breaking a
-reconciliation does neither, so it goes through untouched. A payment can be
-detached from an invoice of a closed, already declared period without anything
-raising.
+In Odoo, the operations that undo accounting work check no lock date properly.
+The standard guards (``_check_fiscalyear_lock_date``,
+``_check_tax_lock_date``) resolve the date with
+``res.company._get_user_fiscal_lock_date()``, which *replaces* it with
+``fiscalyear_lock_date`` for holders of *Accounting / Adviser* instead of
+taking the maximum -- and ``base.user_root`` is one of them, so under any
+``sudo()`` call the monthly close is simply invisible. Breaking a
+reconciliation is worse still: it checks nothing at all, because it writes no
+date and deletes no journal item.
 
-This module adds the missing check. It guards
-``account.partial.reconcile.unlink()``, the single bottleneck every way of
-undoing a reconciliation goes through: the unreconcile button of the payment
-widget, ``remove_move_reconcile()``, the unreconcile wizard, undoing a bank
-statement reconciliation, ``button_draft()`` and ``_reverse_moves(cancel=True)``.
+This module adds the missing checks, with a date of its own:
 
-The check looks at **both** entries a partial matches, which is what no core
-guard does: the case this was written for is an invoice in a closed month
-matched against a payment in an open one.
+* **Undoing a reconciliation.** It guards
+  ``account.partial.reconcile.unlink()``, the single bottleneck every way of
+  undoing a reconciliation goes through: the unreconcile button of the payment
+  widget, ``remove_move_reconcile()``, the unreconcile wizard, undoing a bank
+  statement reconciliation, ``button_draft()`` and
+  ``_reverse_moves(cancel=True)``. It looks at **both** entries a partial
+  matches, which is what no core guard does: the case this was written for is
+  an invoice in a closed month matched against a payment in an open one.
 
-Reconciling is never blocked -- only undoing it.
+* **Resetting to draft or cancelling a posted entry.** The core already guards
+  this transition, but with the permissive date described above, so an adviser
+  -- or anything running as the superuser -- walks straight through the
+  monthly close.
+
+Reconciling and posting are never blocked. Only undoing them.
 
 **Table of contents**
 
@@ -52,7 +61,8 @@ Configuration
 Go to **Settings > Accounting**, section **Invoicing**, and set
 **Reconciliation lock date**. The setting is stored per company.
 
-It is a scope selector:
+It is a scope selector, and it governs **both** guarded operations --
+undoing a reconciliation, and resetting to draft or cancelling a posted entry:
 
 * **Do not block** -- the guard is disabled. This is the default, so installing
   the module changes nothing until somebody opts in.
@@ -97,18 +107,25 @@ Two escapes, both explicit:
   anybody else. That is deliberate, but it means enabling a scope other than
   *Do not block* will make any automated flow that undoes reconciliations of
   closed periods fail loudly.
-* The context key ``bypass_reconcile_lock_date``, for migration scripts. The
-  guard also sets it itself before delegating to ``super()``, so the core's own
-  reversal of cash basis and exchange difference entries -- which loops back
-  into ``unlink()`` -- does not deadlock against it.
+* The context key ``bypass_reconcile_lock_date``, for migration scripts. It
+  lifts both guards, so a script that undoes reconciliations and unposts
+  entries only needs to know one key. The reconciliation guard also sets it
+  itself before delegating to ``super()``, so the core's own reversal of cash
+  basis and exchange difference entries -- which loops back into ``unlink()``
+  -- does not deadlock against it.
 
 Usage
 =====
 
-With a scope configured and a lock date in place, any attempt to undo a
-reconciliation involving a locked entry raises an error naming the entries that
-block it and the date they are locked up to. The message surfaces in the
-backend payment widget and, as an HTTP 400, through any REST layer on top.
+With a scope configured and a lock date in place, both guarded operations
+raise an error naming the entries that block them and the date they are locked
+up to. The message surfaces in the backend and, as an HTTP 400, through any
+REST layer on top.
+
+Note that resetting a *reconciled* invoice to draft trips the reconciliation
+guard first, because ``button_draft()`` unreconciles before it writes the
+state. The second guard is what covers the case the first one cannot see: a
+posted entry of a closed period with nothing reconciled against it.
 
 What this module does **not** cover, and should not be assumed to:
 

@@ -1,6 +1,7 @@
 {
     "name": "Account Reconcile Lock Date",
-    "summary": "Prevent breaking a reconciliation that involves a locked period.",
+    "summary": "Enforce the closing date when undoing reconciliations or "
+    "unposting entries.",
     "version": "16.0.1.0.0",
     "category": "Accounting/Accounting",
     "author": "Commit [Sun]",

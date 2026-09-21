@@ -1,7 +1,8 @@
 Go to **Settings > Accounting**, section **Invoicing**, and set
 **Reconciliation lock date**. The setting is stored per company.
 
-It is a scope selector:
+It is a scope selector, and it governs **both** guarded operations --
+undoing a reconciliation, and resetting to draft or cancelling a posted entry:
 
 * **Do not block** -- the guard is disabled. This is the default, so installing
   the module changes nothing until somebody opts in.
@@ -46,7 +47,9 @@ Two escapes, both explicit:
   anybody else. That is deliberate, but it means enabling a scope other than
   *Do not block* will make any automated flow that undoes reconciliations of
   closed periods fail loudly.
-* The context key ``bypass_reconcile_lock_date``, for migration scripts. The
-  guard also sets it itself before delegating to ``super()``, so the core's own
-  reversal of cash basis and exchange difference entries -- which loops back
-  into ``unlink()`` -- does not deadlock against it.
+* The context key ``bypass_reconcile_lock_date``, for migration scripts. It
+  lifts both guards, so a script that undoes reconciliations and unposts
+  entries only needs to know one key. The reconciliation guard also sets it
+  itself before delegating to ``super()``, so the core's own reversal of cash
+  basis and exchange difference entries -- which loops back into ``unlink()``
+  -- does not deadlock against it.
