@@ -17,6 +17,15 @@ _logger = logging.getLogger(__name__)
 
 # Channex answers 404 with a body, so the id-missing case is detected by status.
 NOT_FOUND = 404
+#: Channex signs nothing it sends, so the only thing that tells its call from
+#: anybody else's is a secret we gave it. It travels in a header and not in the
+#: path: a URL ends up written in every access log on the way.
+SECRET_HEADER = "X-Roomdoo-Channex-Secret"
+#: Never written to ``channel.backend.log``, wherever they turn up in a body.
+#: Channex hands the webhook headers back when it answers, our secret among
+#: them, and a credential kept behind a password widget cannot be left lying in
+#: a log.
+CREDENTIAL_KEYS = ("user-api-key", "api_key", SECRET_HEADER)
 # Validation and auth problems are permanent: retrying them just burns the queue.
 PERMANENT_STATUSES = (400, 401, 403, 422)
 # Throttling and conflicts are worth retrying, and so is anything 5xx.
@@ -28,11 +37,17 @@ MAX_PAGES = 200
 
 
 class ChannexAPIError(ChannelAdapterError):
-    """A rejection from Channex, carrying the parsed error body."""
+    """A rejection from Channex, carrying the parsed error body and its status.
 
-    def __init__(self, message, payload=None):
+    The status is kept because the same status means different things on
+    different calls: a 404 is a failure on most of them and the expected
+    outcome on others.
+    """
+
+    def __init__(self, message, payload=None, status_code=None):
         super().__init__(message)
         self.payload = payload
+        self.status_code = status_code
 
 
 class ChannelChannexAdapter(AbstractComponent):
@@ -117,7 +132,9 @@ class ChannelChannexAdapter(AbstractComponent):
 
             raise IDMissingInBackend(message)
         if response.status_code in PERMANENT_STATUSES:
-            raise ChannexAPIError(message, payload=body)
+            raise ChannexAPIError(
+                message, payload=body, status_code=response.status_code
+            )
         if response.status_code in THROTTLED_STATUSES:
             raise RetryableJobError(
                 message, seconds=self._retry_after(response, THROTTLED_RETRY_SECONDS)
@@ -126,7 +143,7 @@ class ChannelChannexAdapter(AbstractComponent):
             raise RetryableJobError(
                 message, seconds=self._retry_after(response, DEFAULT_RETRY_SECONDS)
             )
-        raise ChannexAPIError(message, payload=body)
+        raise ChannexAPIError(message, payload=body, status_code=response.status_code)
 
     @staticmethod
     def _parse(response):
@@ -164,19 +181,29 @@ class ChannelChannexAdapter(AbstractComponent):
         return " ".join(str(p) for p in parts)
 
     def _redact(self, body):
-        """Never let credentials reach channel.backend.log."""
+        """Never let credentials reach channel.backend.log.
+
+        All the way down, because the one Channex hands back is nested two
+        levels inside the answer to registering a webhook.
+        """
+        if isinstance(body, list):
+            return [self._redact(item) for item in body]
         if not isinstance(body, dict):
             return body
-        return {k: v for k, v in body.items() if k not in ("user-api-key", "api_key")}
+        return {
+            key: self._redact(value)
+            for key, value in body.items()
+            if key not in CREDENTIAL_KEYS
+        }
 
     def _call_control(self, method, funcname, params, payload):
         """Rate limit bookkeeping. Returns ``None`` when the call must be
         skipped because exports are disabled on this backend.
 
         Anything but a GET is a write, whether or not it carries a body: a
-        DELETE has none. A backend with exports disabled is usually a copy of a
-        live one, and letting a bodiless write through would reach the real
-        Channex.
+        DELETE has none, and neither does acknowledging a booking. A backend
+        with exports disabled is usually a copy of a live one, and letting a
+        bodiless write through would reach the real Channex.
         """
         from .call_control import ChannexCallControl
 

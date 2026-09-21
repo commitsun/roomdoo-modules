@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector Channex",
     "summary": "Channel PMS connector Channex.io",
-    "version": "16.0.1.1.1",
+    "version": "16.0.1.6.0",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",
@@ -17,7 +17,9 @@
     "data": [
         "security/ir.model.access.csv",
         "data/queue_data.xml",
+        "data/cron_data.xml",
         "views/channel_channex_channel_views.xml",
+        "views/channel_channex_booking_revision_views.xml",
         "views/channel_channex_backend_views.xml",
         "views/channel_channex_backend_type_views.xml",
         "views/pms_property_views.xml",
