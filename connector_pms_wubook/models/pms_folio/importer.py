@@ -1,8 +1,6 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from psycopg2.extensions import AsIs
-
-from odoo import _, fields
+from odoo import _
 
 from odoo.addons.component.core import Component
 
@@ -65,7 +63,9 @@ class ChannelWubookPmsFolioImporter(Component):
             folio.with_context(confirm_all_reservations=True).action_confirm()
 
         # TODO: move get_all_items action_cancel here
-        # binding.reservation_ids.filtered(lambda x: x['wubook_status'] == '5').action_cancel()
+        # binding.reservation_ids.filtered(
+        #     lambda x: x['wubook_status'] == '5'
+        # ).action_cancel()
 
         # Pre payment Folio
         if binding.payment_gateway_fee > 0:
@@ -150,23 +150,17 @@ class ChannelWubookPmsFolioImporter(Component):
     def _refresh_availability_export(self, binding):
         """Re-publish the availability the imported folio just moved.
 
-        Two halves, and only the first one used to be here:
-
-        * mark the affected ``channel.wubook.pms.availability`` bindings
-          dirty, so the exporter picks them up (Wubook adds / deletes avail
-          by itself on the channel side, so our value has to win);
-        * actually schedule that export. The whole import runs under
-          ``connector_no_export=True`` (``connector_pms``'s importer sets
-          it on every record it creates or writes), which is exactly the
-          flag every availability listener checks
-          before staging a push — so an imported folio consumed or freed
-          rooms and nothing ever told Wubook. The dirty bindings then sat
-          there until an unrelated event happened to enqueue a job, and
-          the channel kept selling a room the PMS no longer had.
+        The whole import runs under ``connector_no_export=True``
+        (``connector_pms``'s importer sets it on every record it creates or
+        writes), which is exactly the flag every availability listener
+        checks before staging a push — so an imported folio consumed or
+        freed rooms and nothing ever told Wubook, and the channel kept
+        selling a room the PMS no longer had. Wubook moves availability on
+        its own side too, so our value has to win.
 
         Staging goes through the same precommit buffer as the listeners,
         so a burst of imports still collapses to one job per
-        (backend × property) pair.
+        (backend × property) pair, covering the nights they span.
         """
         folio = binding.odoo_id
         dates = folio.mapped("reservation_ids.reservation_line_ids.date")
@@ -178,25 +172,13 @@ class ChannelWubookPmsFolioImporter(Component):
         room_types = folio.mapped("reservation_ids.room_type_id") | folio.mapped(
             "reservation_ids.reservation_line_ids.room_id.room_type_id"
         )
-        avails = self.env["channel.wubook.pms.availability"].search(
-            [
-                ("backend_id", "=", binding.backend_id.id),
-                ("date", ">=", min(dates)),
-                ("date", "<=", max(dates)),
-                ("room_type_id", "in", room_types.ids),
-            ]
+        buffer_property_exports_for_rooms(
+            self.env,
+            folio.pms_property_id,
+            room_types,
+            min(dates),
+            max(dates),
         )
-        query = (
-            'UPDATE "channel_wubook_pms_availability" '
-            'SET "actual_write_date"=%s WHERE id IN %%s'
-            % (AsIs("(now() at time zone 'UTC')"),)
-        )
-        cr = self.env.cr
-        for sub_ids in cr.split_for_in_conditions(
-            set(avails.filtered(lambda i: i.date >= fields.Date.today()).ids)
-        ):
-            cr.execute(query, [sub_ids])
-        buffer_property_exports_for_rooms(self.env, folio.pms_property_id, room_types)
 
     def _create(self, model, values):
         """Create the Internal record"""
