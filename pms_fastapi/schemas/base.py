@@ -1,7 +1,7 @@
 from typing import Annotated, get_args, get_type_hints
 
 from extendable_pydantic import StrictExtendableBaseModel
-from pydantic import ConfigDict, model_validator
+from pydantic import ConfigDict, StringConstraints, model_validator
 
 from odoo import _, api
 from odoo.exceptions import AccessDenied
@@ -29,6 +29,11 @@ class _SearchTextMarker:
 # automatically (see PmsApiRouter in models/fastapi_endpoint.py). The marker is inert
 # for FastAPI, which only consumes FieldInfo/Query metadata.
 SearchText = Annotated[str | None, _SearchTextMarker()]
+
+
+# Type alias for text input whose surrounding whitespace carries no meaning: it
+# is stripped before validation, so a blank value arrives as an empty string.
+StrippedText = Annotated[str, StringConstraints(strip_whitespace=True)]
 
 
 class PmsBaseModel(StrictExtendableBaseModel):
