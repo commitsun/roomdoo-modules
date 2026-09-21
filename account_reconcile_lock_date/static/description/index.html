@@ -370,21 +370,31 @@ ul.auto-toc {
 !! source digest: sha256:421ba68077243dd9cef9e0e1b75a9bafd9dfeda79a73f85aa6573d0f90cc51af
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/license-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/account_reconcile_lock_date"><img alt="commitsun/roomdoo-modules" src="https://img.shields.io/badge/github-commitsun%2Froomdoo--modules-lightgray.png?logo=github" /></a></p>
-<p>In Odoo, <strong>undoing</strong> a reconciliation checks no lock date at all. The standard
-guards (<tt class="docutils literal">_check_fiscalyear_lock_date</tt>, <tt class="docutils literal">_check_tax_lock_date</tt>) fire when an
-entry’s date or state is written, or when journal items are deleted; breaking a
-reconciliation does neither, so it goes through untouched. A payment can be
-detached from an invoice of a closed, already declared period without anything
-raising.</p>
-<p>This module adds the missing check. It guards
+<p>In Odoo, the operations that undo accounting work check no lock date properly.
+The standard guards (<tt class="docutils literal">_check_fiscalyear_lock_date</tt>,
+<tt class="docutils literal">_check_tax_lock_date</tt>) resolve the date with
+<tt class="docutils literal">res.company._get_user_fiscal_lock_date()</tt>, which <em>replaces</em> it with
+<tt class="docutils literal">fiscalyear_lock_date</tt> for holders of <em>Accounting / Adviser</em> instead of
+taking the maximum – and <tt class="docutils literal">base.user_root</tt> is one of them, so under any
+<tt class="docutils literal">sudo()</tt> call the monthly close is simply invisible. Breaking a
+reconciliation is worse still: it checks nothing at all, because it writes no
+date and deletes no journal item.</p>
+<p>This module adds the missing checks, with a date of its own:</p>
+<ul class="simple">
+<li><strong>Undoing a reconciliation.</strong> It guards
 <tt class="docutils literal">account.partial.reconcile.unlink()</tt>, the single bottleneck every way of
 undoing a reconciliation goes through: the unreconcile button of the payment
 widget, <tt class="docutils literal">remove_move_reconcile()</tt>, the unreconcile wizard, undoing a bank
-statement reconciliation, <tt class="docutils literal">button_draft()</tt> and <tt class="docutils literal">_reverse_moves(cancel=True)</tt>.</p>
-<p>The check looks at <strong>both</strong> entries a partial matches, which is what no core
-guard does: the case this was written for is an invoice in a closed month
-matched against a payment in an open one.</p>
-<p>Reconciling is never blocked – only undoing it.</p>
+statement reconciliation, <tt class="docutils literal">button_draft()</tt> and
+<tt class="docutils literal">_reverse_moves(cancel=True)</tt>. It looks at <strong>both</strong> entries a partial
+matches, which is what no core guard does: the case this was written for is
+an invoice in a closed month matched against a payment in an open one.</li>
+<li><strong>Resetting to draft or cancelling a posted entry.</strong> The core already guards
+this transition, but with the permissive date described above, so an adviser
+– or anything running as the superuser – walks straight through the
+monthly close.</li>
+</ul>
+<p>Reconciling and posting are never blocked. Only undoing them.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -407,7 +417,8 @@ matched against a payment in an open one.</p>
 <h1><a class="toc-backref" href="#toc-entry-1">Configuration</a></h1>
 <p>Go to <strong>Settings &gt; Accounting</strong>, section <strong>Invoicing</strong>, and set
 <strong>Reconciliation lock date</strong>. The setting is stored per company.</p>
-<p>It is a scope selector:</p>
+<p>It is a scope selector, and it governs <strong>both</strong> guarded operations –
+undoing a reconciliation, and resetting to draft or cancelling a posted entry:</p>
 <ul class="simple">
 <li><strong>Do not block</strong> – the guard is disabled. This is the default, so installing
 the module changes nothing until somebody opts in.</li>
@@ -447,19 +458,25 @@ the acting user – so scheduled actions running as OdooBot are blocked like
 anybody else. That is deliberate, but it means enabling a scope other than
 <em>Do not block</em> will make any automated flow that undoes reconciliations of
 closed periods fail loudly.</li>
-<li>The context key <tt class="docutils literal">bypass_reconcile_lock_date</tt>, for migration scripts. The
-guard also sets it itself before delegating to <tt class="docutils literal">super()</tt>, so the core’s own
-reversal of cash basis and exchange difference entries – which loops back
-into <tt class="docutils literal">unlink()</tt> – does not deadlock against it.</li>
+<li>The context key <tt class="docutils literal">bypass_reconcile_lock_date</tt>, for migration scripts. It
+lifts both guards, so a script that undoes reconciliations and unposts
+entries only needs to know one key. The reconciliation guard also sets it
+itself before delegating to <tt class="docutils literal">super()</tt>, so the core’s own reversal of cash
+basis and exchange difference entries – which loops back into <tt class="docutils literal">unlink()</tt>
+– does not deadlock against it.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="usage">
 <h1><a class="toc-backref" href="#toc-entry-4">Usage</a></h1>
-<p>With a scope configured and a lock date in place, any attempt to undo a
-reconciliation involving a locked entry raises an error naming the entries that
-block it and the date they are locked up to. The message surfaces in the
-backend payment widget and, as an HTTP 400, through any REST layer on top.</p>
+<p>With a scope configured and a lock date in place, both guarded operations
+raise an error naming the entries that block them and the date they are locked
+up to. The message surfaces in the backend and, as an HTTP 400, through any
+REST layer on top.</p>
+<p>Note that resetting a <em>reconciled</em> invoice to draft trips the reconciliation
+guard first, because <tt class="docutils literal">button_draft()</tt> unreconciles before it writes the
+state. The second guard is what covers the case the first one cannot see: a
+posted entry of a closed period with nothing reconciled against it.</p>
 <p>What this module does <strong>not</strong> cover, and should not be assumed to:</p>
 <ul class="simple">
 <li><strong>Deleting an</strong> <tt class="docutils literal">account.full.reconcile</tt>. It leaves the partials alive and

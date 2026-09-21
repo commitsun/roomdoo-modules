@@ -1,8 +1,7 @@
 from odoo import _, models
 from odoo.exceptions import UserError
 
-BYPASS_CONTEXT_KEY = "bypass_reconcile_lock_date"
-BYPASS_GROUP = "account_reconcile_lock_date.group_bypass_reconcile_lock_date"
+from .account_move import BYPASS_CONTEXT_KEY, BYPASS_GROUP
 
 
 class AccountPartialReconcile(models.Model):

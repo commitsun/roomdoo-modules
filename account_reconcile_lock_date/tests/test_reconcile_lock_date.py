@@ -336,3 +336,119 @@ class TestAccountReconcileLockDate(AccountTestInvoicingCommon):
                 lambda line: line.account_id.account_type == "asset_receivable"
             ).matched_credit_ids
         )
+
+    # ------------------------------------------------------------------
+    # resetting to draft / cancelling an entry of a locked period
+    # ------------------------------------------------------------------
+    def _posted_invoice(self, invoice_date=LOCKED_DATE):
+        """A posted invoice with nothing reconciled against it, which is the
+        case the partial guard cannot see."""
+        invoice = self.init_invoice(
+            "out_invoice",
+            invoice_date=invoice_date,
+            post=True,
+            amounts=[100.0],
+            taxes=[],
+        )
+        self.assertFalse(invoice.line_ids.matched_credit_ids)
+        return invoice
+
+    def _become_account_manager(self):
+        """The core exempts advisers from period_lock_date, and base.user_root
+        is an adviser, so this is also what every sudo() path looks like."""
+        self.env.user.groups_id = [
+            (4, self.env.ref("account.group_account_manager").id)
+        ]
+        self.company.fiscalyear_lock_date = False
+
+    def test_reset_to_draft_is_blocked_in_a_locked_period(self):
+        invoice = self._posted_invoice()
+        self._lock()
+        with self.assertRaises(UserError):
+            invoice.button_draft()
+        self.assertEqual(invoice.state, "posted")
+
+    def test_cancel_is_blocked_in_a_locked_period(self):
+        """button_cancel() does not unreconcile anything, so the partial guard
+        never sees it: this is the gap this check exists for."""
+        invoice = self._posted_invoice()
+        self._lock()
+        with self.assertRaises(UserError):
+            invoice.button_cancel()
+        self.assertEqual(invoice.state, "posted")
+
+    def test_adviser_is_not_exempt_from_the_monthly_close(self):
+        """The whole point: the core would let this through, because it drops
+        period_lock_date for advisers and base.user_root is one."""
+        invoice = self._posted_invoice()
+        self._become_account_manager()
+        self._lock()
+        self.assertEqual(
+            self.company._get_user_fiscal_lock_date(),
+            datetime.date.min,
+            "precondition: the core exempts this user",
+        )
+        with self.assertRaises(UserError):
+            invoice.button_draft()
+
+    def test_posting_into_a_locked_period_still_works(self):
+        """Non-regression, and the reason the guard hangs off write() instead
+        of _check_fiscalyear_lock_date(): that hook is also what guards
+        posting, so hardening it there would make invoicing impossible."""
+        self._become_account_manager()
+        invoice = self.init_invoice(
+            "out_invoice", invoice_date=LOCKED_DATE, amounts=[100.0], taxes=[]
+        )
+        self._lock()
+        invoice.action_post()
+        self.assertEqual(invoice.state, "posted")
+
+    def test_editing_a_field_other_than_state_is_unaffected(self):
+        """The guard reads only the state transition; everything else on a
+        posted entry keeps behaving exactly as the core decides."""
+        invoice = self._posted_invoice()
+        self._lock()
+        invoice.write({"ref": "still editable"})
+        self.assertEqual(invoice.ref, "still editable")
+
+    def test_reset_to_draft_outside_the_locked_period_works(self):
+        invoice = self._posted_invoice(invoice_date=OPEN_DATE)
+        self._lock()
+        invoice.button_draft()
+        self.assertEqual(invoice.state, "draft")
+
+    def test_disabled_scope_allows_reset_to_draft(self):
+        invoice = self._posted_invoice()
+        self._lock(scope="disabled")
+        invoice.button_draft()
+        self.assertEqual(invoice.state, "draft")
+
+    def test_downpayment_scope_ignores_a_regular_invoice_reset(self):
+        invoice = self._posted_invoice()
+        self._lock(scope="downpayment")
+        invoice.button_draft()
+        self.assertEqual(invoice.state, "draft")
+
+    def test_downpayment_scope_blocks_a_down_payment_invoice_reset(self):
+        invoice = self._posted_invoice()
+        self._lock(scope="downpayment")
+        with patch.object(
+            type(self.env["account.move"]),
+            "_is_downpayment",
+            lambda move: move.move_type == "out_invoice",
+        ):
+            with self.assertRaises(UserError):
+                invoice.button_draft()
+
+    def test_bypass_group_allows_reset_to_draft(self):
+        invoice = self._posted_invoice()
+        self._lock()
+        self.bypass_group.users = [(4, self.env.uid)]
+        invoice.button_draft()
+        self.assertEqual(invoice.state, "draft")
+
+    def test_bypass_context_allows_reset_to_draft(self):
+        invoice = self._posted_invoice()
+        self._lock()
+        invoice.with_context(bypass_reconcile_lock_date=True).button_draft()
+        self.assertEqual(invoice.state, "draft")

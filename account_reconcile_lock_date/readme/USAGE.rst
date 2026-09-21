@@ -1,7 +1,12 @@
-With a scope configured and a lock date in place, any attempt to undo a
-reconciliation involving a locked entry raises an error naming the entries that
-block it and the date they are locked up to. The message surfaces in the
-backend payment widget and, as an HTTP 400, through any REST layer on top.
+With a scope configured and a lock date in place, both guarded operations
+raise an error naming the entries that block them and the date they are locked
+up to. The message surfaces in the backend and, as an HTTP 400, through any
+REST layer on top.
+
+Note that resetting a *reconciled* invoice to draft trips the reconciliation
+guard first, because ``button_draft()`` unreconciles before it writes the
+state. The second guard is what covers the case the first one cannot see: a
+posted entry of a closed period with nothing reconciled against it.
 
 What this module does **not** cover, and should not be assumed to:
 
