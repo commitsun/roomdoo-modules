@@ -130,6 +130,16 @@ jobs:
             if [ -f "$dep/test-requirements.txt" ]; then install_reqs "$dep/test-requirements.txt"; fi
           done
 
+          # The dependency requirements reinstall cryptography and pyOpenSSL on
+          # their own and leave an incompatible pair behind: pysaml2 pulls the
+          # latest pyOpenSSL and oletools drops cryptography back down, so
+          # pyOpenSSL ends up calling cryptography.utils.deprecated(..., name=...)
+          # and Odoo cannot even import odoo.addons.base ("TypeError: deprecated()
+          # got an unexpected keyword argument 'name'"). The pin above runs before
+          # this loop, so it has to be reasserted afterwards. Both versions move
+          # together: pyOpenSSL 22.1.0 requires cryptography>=38,<39.
+          pip install cryptography==38.0.4 pyOpenSSL==22.1.0
+
       - name: Build addons path
         id: addons
         run: |
