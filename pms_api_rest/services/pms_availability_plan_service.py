@@ -7,7 +7,10 @@ from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
-from ..pms_api_rest_utils import pms_api_check_access
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    pms_api_check_internal_user,
+)
 
 
 class PmsAvailabilityPlanService(Component):
@@ -195,6 +198,7 @@ class PmsAvailabilityPlanService(Component):
         return result
 
     def _create_or_update_avail_plan_rules(self, pms_avail_plan_rules_info):
+        pms_api_check_internal_user(self.env.user)
         rules_by_property = {}
         # Group rules by property to avoid multiple calls to the same property
         # when checking access rights

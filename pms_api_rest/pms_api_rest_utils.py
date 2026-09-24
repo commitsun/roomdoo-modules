@@ -30,6 +30,22 @@ def url_image_pms_api_rest(model, record_id, field):
     return result if result else ""
 
 
+def pms_api_check_internal_user(user):
+    """Refuse write operations coming from non-internal accounts.
+
+    The pricing and restriction endpoints write with ``sudo()``, so
+    neither ``ir.model.access`` nor the record rules ever run: holding a
+    ``jwt_api_pms`` token is enough to change real selling prices. Until
+    the API carries its own roles, writes stay with internal users. The
+    integration clients are portal accounts by construction, hence the
+    ``pms_api_client`` exemption.
+    """
+    if user.share and not user.pms_api_client:
+        raise AccessDenied(
+            _("Only internal users are allowed to modify prices and restrictions.")
+        )
+
+
 def pms_api_check_access(user, records=False):
     if not records or user.has_group("base.group_public"):
         return
