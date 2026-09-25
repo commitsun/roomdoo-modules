@@ -101,6 +101,17 @@ class FastapiEndpoint(models.Model):
             return [pms_api_router]
         return super()._get_fastapi_routers()
 
+    def _get_routing_info(self):
+        res = super()._get_routing_info()
+        if self.app == APP_NAME:
+            # Authentication here is entirely JWT based: nothing reads the Odoo
+            # session. Leaving it on makes the server issue a session cookie on
+            # every response, which a browser sending credentials would store
+            # and then share with the backoffice, besides writing a session file
+            # per request.
+            res["save_session"] = False
+        return res
+
     def _get_app(self):
         app = super()._get_app()
         if self.app == APP_NAME:
