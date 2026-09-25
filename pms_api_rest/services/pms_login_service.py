@@ -43,7 +43,13 @@ class PmsLoginService(Component):
         if not user_record:
             raise werkzeug.exceptions.Unauthorized(_("wrong user/pass"))
         try:
-            user_record.with_user(user_record)._check_credentials(user.password, None)
+            # This login cannot ask for a second factor, so it does not promise
+            # to: an account protected by one is refused here and has to use
+            # the login that can. An API key stays valid, which is the
+            # credential meant for callers with nobody in front of them.
+            user_record.with_user(user_record)._check_credentials(
+                user.password, {"interactive": False}
+            )
         except AccessDenied as e:
             raise werkzeug.exceptions.Unauthorized(_("wrong user/pass")) from e
 
