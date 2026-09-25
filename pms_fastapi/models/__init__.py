@@ -11,3 +11,4 @@ from . import account_partial_reconcile
 from . import account_payment_method_line
 from . import pms_payment_refund_line
 from . import account_payment
+from . import pms_mfa_challenge
