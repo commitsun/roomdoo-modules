@@ -68,7 +68,7 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
             path=validator.refresh_token_path or "/",
             secure=validator.cookie_secure,
             httponly=True,
-            samesite="None",
+            samesite="Lax",
         )
         return response
 
