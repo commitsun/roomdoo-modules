@@ -25,6 +25,45 @@ class PmsRoomTypeClassService(Component):
         [
             (
                 [
+                    "/current",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.api.rest.user.output", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_current_user(self):
+        """Profile of the authenticated user, without any credential.
+
+        Same payload as the login response minus the token and its expiry, so a
+        client that authenticates elsewhere can still obtain the data the login
+        used to carry along with it.
+        """
+        user = self.env.user.sudo()
+        PmsApiRestUserOutput = self.env.datamodels["pms.api.rest.user.output"]
+        return PmsApiRestUserOutput(
+            userId=user.id,
+            userName=user.name,
+            userFirstName=user.firstname or None,
+            userEmail=user.email or None,
+            userPhone=user.phone or None,
+            defaultPropertyId=user.pms_property_id.id,
+            defaultPropertyName=user.pms_property_id.name,
+            userImageBase64=user.partner_id.image_1024
+            if user.partner_id.image_1024
+            else None,
+            userImageUrl=url_image_pms_api_rest(
+                "res.partner", user.partner_id.id, "image_1024"
+            ),
+            availabilityRuleFields=user.availability_rule_field_ids.mapped("name"),
+            userRole=user.pms_api_user_role,
+        )
+
+    @restapi.method(
+        [
+            (
+                [
                     "/<int:user_id>",
                 ],
                 "GET",

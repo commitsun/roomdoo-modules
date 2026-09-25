@@ -15,3 +15,4 @@ from . import pms_availability
 from . import roomdoo_app_menu
 from . import pms_room
 from . import res_partner
+from . import ir_http
