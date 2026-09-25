@@ -27,3 +27,4 @@ from . import supplier_payment
 from . import internal_transfer
 from . import reservation_guest
 from . import pms_reservation
+from . import two_factor
