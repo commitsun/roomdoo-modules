@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.downpayment.transfer</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='invoicing_settings']" position="inside">
+                <div
+          class="col-12 col-lg-6 o_setting_box"
+          id="downpayment_transfer"
+        >
+                    <div class="o_setting_right_pane">
+                        <span
+              class="o_form_label"
+            >Down payment transfer journal</span>
+                        <div class="text-muted">
+                            Journal for the entry that moves a down payment from the
+                            customer it was invoiced to onto the customer of the
+                            final invoice.
+                        </div>
+                        <div class="content-group mt16">
+                            <field name="downpayment_transfer_journal_id" />
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_move_form_downpayment_transfer" model="ir.ui.view">
+        <field name="name">account.move.form.downpayment.transfer</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <div name="journal_div" position="after">
+                <field name="downpayment_transfer_state" invisible="1" />
+                <div
+          attrs="{'invisible': [('downpayment_transfer_state', 'in', (False, 'done'))]}"
+        >
+                    <field name="downpayment_transfer_message" readonly="1" />
+                </div>
+            </div>
+        </field>
+    </record>
+
+    <record
+    id="action_downpayment_transfer_pending"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Down payments pending transfer</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">tree,form</field>
+        <field
+      name="domain"
+    >[('downpayment_transfer_state', 'in', ('pending', 'manual', 'failed'))]</field>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing pending</p>
+            <p
+      >Final invoices whose down payment has not been transferred yet, or
+               needs someone to look at it.</p>
+        </field>
+    </record>
+
+    <menuitem
+    id="menu_downpayment_lifecycle"
+    name="Down payments"
+    parent="account.menu_finance_entries_accounting_miscellaneous"
+    sequence="99"
+  />
+
+    <menuitem
+    id="menu_downpayment_transfer_pending"
+    name="Pending transfer"
+    parent="menu_downpayment_lifecycle"
+    action="action_downpayment_transfer_pending"
+    sequence="10"
+  />
+</odoo>
