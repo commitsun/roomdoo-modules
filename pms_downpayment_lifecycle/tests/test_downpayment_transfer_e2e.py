@@ -16,7 +16,7 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
         payment = self._collect(downpayment)
         self.assertEqual(downpayment.payment_state, "paid")
 
-        final = self._final_invoice(folio, self.guest, 200.0)
+        final = self._final_invoice_via_pms(folio, self.guest)
         with trap_jobs() as trap:
             final.action_post()
             # Posting only marks and enqueues: the accounting work must never
@@ -52,18 +52,22 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
             )
         )
 
-    def test_same_customer_needs_no_transfer(self):
-        """B1: when the down payment was already issued to the guest, pms
-        deducts it in the final invoice and there is nothing to move."""
+    def test_same_customer_is_deducted_by_pms_and_left_alone(self):
+        """The ordinary case: the down payment already existed when the invoice
+        was built, so pms discounted it inside the invoice and there is nothing
+        for this module to do. Rectifying on top would credit it twice."""
         folio = self._folio()
         downpayment, _line = self._downpayment(folio, self.guest, 50.0)
         self._collect(downpayment)
-        final = self._final_invoice(folio, self.guest, 200.0)
+        final = self._final_invoice_via_pms(folio, self.guest)
+        self.assertTrue(
+            final.invoice_line_ids.folio_line_ids.filtered("is_downpayment"),
+            "pms must have discounted it inside the invoice",
+        )
         with trap_jobs() as trap:
             final.action_post()
             trap.assert_jobs_count(0)
         self.assertFalse(final.downpayment_transfer_state)
-        self.assertFalse(final._get_downpayments_to_transfer())
 
     def test_identified_third_party_is_left_for_accounting(self):
         """Art. 89.Cinco: rectifying VAT charged to a real customer without
@@ -73,7 +77,7 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
         third_party = self.env["res.partner"].create({"name": "Real company SL"})
         downpayment, _line = self._downpayment(folio, third_party, 50.0)
         self._collect(downpayment)
-        final = self._final_invoice(folio, self.guest, 200.0)
+        final = self._final_invoice_via_pms(folio, self.guest)
         with trap_jobs():
             final.action_post()
         final._transfer_downpayments()

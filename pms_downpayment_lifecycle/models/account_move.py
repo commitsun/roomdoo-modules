@@ -1,8 +1,12 @@
+import logging
+
 from markupsafe import Markup
 
 from odoo import _, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_is_zero
+from odoo.tools import float_compare, float_is_zero
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountMove(models.Model):
@@ -54,40 +58,119 @@ class AccountMove(models.Model):
             move.with_delay()._transfer_downpayments()
 
     def _get_downpayments_to_transfer(self):
-        """Down payment invoices of this invoice's folios that were issued to a
-        different customer.
+        """Down payment invoices of this invoice's folios that this invoice did
+        not take into account, and that still have something standing.
 
-        These are exactly the ones pms skips when building the final invoice
-        (`if down_payment.default_invoice_to.id != group["partner_id"]: continue`),
-        so the stay is invoiced in full and the down payment is left dangling on
-        the other customer's account.
+        pms applies a down payment by adding a line linked to its
+        folio.sale.line, and skips the ones issued to another customer with a
+        bare `continue` (pms_folio.py, the down payment section). So "not
+        applied here" is read off the invoice itself, and it covers the two
+        cases that need us -- the down payment left dangling on another
+        customer, and the one a draft made before it never discounted -- while
+        leaving alone the one this invoice already discounted. A down payment
+        that is already applied is settled business.
+
+        Deliberately not keyed on `qty_invoiced`: a partial credit note takes a
+        whole unit off it, so a down payment of 100 with 40 refunded drops to
+        zero and would disappear from here with 60 still standing on the
+        customer's account.
         """
         self.ensure_one()
+        applied = self.invoice_line_ids.folio_line_ids
         lines = self.folio_ids.sale_line_ids.filtered(
-            lambda sl: (
-                sl.is_downpayment
-                and sl.qty_invoiced > 0
-                and sl.default_invoice_to != self.partner_id
-            )
+            lambda sl: sl.is_downpayment and sl not in applied
         )
-        return lines.invoice_lines.mapped("move_id").filtered(
-            lambda m: (
-                m.state == "posted"
-                and m.move_type == "out_invoice"
-                and m.company_id == self.company_id
-                and m._is_downpayment()
+        rounding = self.company_id.currency_id.rounding
+        return (
+            lines.invoice_lines.mapped("move_id")
+            .filtered(
+                lambda m: (
+                    m.state == "posted"
+                    and m.move_type == "out_invoice"
+                    and m.company_id == self.company_id
+                    and m._is_downpayment()
+                    and float_compare(
+                        m._amount_open_to_rectify(), 0.0, precision_rounding=rounding
+                    )
+                    > 0
+                )
             )
+            .sorted(lambda m: (m.invoice_date or m.date, m.id))
         )
+
+    def _downpayment_association_ambiguity(self, downpayments):
+        """Why this invoice cannot be said to be the one a down payment belongs
+        to, or False when it plainly is.
+
+        Associating money by guesswork is worse than asking: when more than one
+        reading is possible the case is handed over with the reason written on
+        it, and nothing is posted.
+        """
+        self.ensure_one()
+        rounding = self.company_id.currency_id.rounding
+        standing = sum(d._amount_open_to_rectify() for d in downpayments)
+        if float_compare(standing, self.amount_total, precision_rounding=rounding) > 0:
+            return _(
+                "%(standing)s is standing as down payments on this folio while "
+                "this invoice only bills %(billed)s, so which part of it belongs "
+                "here cannot be told apart.",
+                standing=standing,
+                billed=self.amount_total,
+            )
+        pending = {
+            line_id: qty
+            for line_id, qty in (self.folio_ids._get_lines_to_invoice() or {}).items()
+            if qty > 0
+        }
+        if pending:
+            return _(
+                "The folio still has %s line(s) left to invoice, so it cannot be "
+                "told whether the down payment belongs to this invoice or to the "
+                "next one.",
+                len(pending),
+            )
+        return False
 
     # ------------------------------------------------------------------
     # the transfer itself (queue job)
     # ------------------------------------------------------------------
     def _transfer_downpayments(self):
-        """Rectify each dangling down payment and move its balance onto this
-        invoice's customer, without touching the period it was issued in."""
+        """Rectify each down payment this invoice did not apply and put its
+        balance where it belongs, without touching the period it was issued in.
+
+        Whatever goes wrong, the invoice is left saying so. A job that dies in
+        the queue and leaves the invoice on 'pending' with an empty message
+        gives the hotel nothing to act on, which is the same as losing it.
+        """
         self.ensure_one()
+        try:
+            with self.env.cr.savepoint():
+                return self._run_downpayment_transfer()
+        except Exception as error:  # noqa: BLE001 - recorded, not swallowed
+            message = str(error)
+            self.downpayment_transfer_state = "failed"
+            self.downpayment_transfer_message = message
+            self.message_post(
+                body=Markup("<p>%s</p><p>%s</p>")
+                % (_("Down payment transfer failed"), message)
+            )
+            _logger.exception("Down payment transfer failed for %s", self.display_name)
+            return False
+
+    def _run_downpayment_transfer(self):
+        self.ensure_one()
+        downpayments = self._get_downpayments_to_transfer()
+        ambiguity = self._downpayment_association_ambiguity(downpayments)
+        if ambiguity:
+            self.downpayment_transfer_state = "manual"
+            self.downpayment_transfer_message = ambiguity
+            self.message_post(
+                body=Markup("<p>%s</p><p>%s</p>")
+                % (_("Down payment left for review"), ambiguity)
+            )
+            return True
         notes = []
-        for downpayment in self._get_downpayments_to_transfer():
+        for downpayment in downpayments:
             notes.append(self._transfer_one_downpayment(downpayment))
         state = "manual" if any(n[0] == "manual" for n in notes) else "done"
         self.downpayment_transfer_state = state
@@ -106,6 +189,8 @@ class AccountMove(models.Model):
         'manual' instead of raising: one awkward down payment must not send the
         whole job to the failed queue and hide the others."""
         self.ensure_one()
+        if downpayment.partner_id == self.partner_id:
+            return self._apply_one_downpayment(downpayment)
         anonymous = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
         if not anonymous or downpayment.partner_id != anonymous:
             return (
@@ -177,6 +262,41 @@ class AccountMove(models.Model):
                 name=downpayment.name,
                 refund=credit_note.name,
                 entry=transfer.name,
+            ),
+        )
+
+    def _apply_one_downpayment(self, downpayment):
+        """Same customer on both documents: there is no balance to move between
+        accounts, only a document to issue.
+
+        This is the invoice that was drafted before the down payment existed --
+        it bills the stay in full and never discounted it. Rectifying the down
+        payment and settling its credit note against this invoice leaves the
+        customer owing exactly the difference, which is what the discount inside
+        the invoice would have achieved, but with its own document.
+        """
+        self.ensure_one()
+        date = fields.Date.context_today(self)
+        self._check_transfer_chronology(downpayment.journal_id, date)
+        credit_note = downpayment._rectify_downpayment(
+            date, ref=_("Applied to invoice %s", self.name)
+        )
+        pending = (credit_note.line_ids | self.line_ids).filtered(
+            lambda line: (
+                line.account_id.account_type == "asset_receivable"
+                and not line.reconciled
+            )
+        )
+        for account in pending.account_id:
+            pending.filtered(
+                lambda line, acc=account: line.account_id == acc
+            ).reconcile()
+        return (
+            "done",
+            _(
+                "%(name)s rectified as %(refund)s and applied to this invoice.",
+                name=downpayment.name,
+                refund=credit_note.name,
             ),
         )
 

@@ -35,6 +35,16 @@ posted into a closed period. Whatever has to change is done with a credit note
 dated in an open period, which is how it is settled in law and the only way it
 survives an audit.
 
+**An invoice that never discounted the down payment.** pms discounts a down
+payment by putting a line in the invoice that points back at it, and it does so
+when the invoice is built. An invoice drafted before the down payment existed --
+a proforma left pending for weeks, which is the common case -- carries no such
+line, so validating it bills the stay in full and the down payment stays
+standing. The module reads the discount off the invoice itself: what the invoice
+already applied is settled business and is never touched, and what it did not
+apply is rectified, with its credit note settled against the invoice. Nothing is
+ever subtracted twice.
+
 **A different customer on the final invoice.** ``pms`` skips the down payment
 while building the final invoice and bills the stay in full, leaving the down
 payment dangling on the other customer's account — normally the anonymous one,
@@ -99,6 +109,14 @@ re-issuing a down payment after its amount changed, which *is* the operation
 being asked for: if it cannot be done the change is refused, so the folio is
 never left quietly short of an invoice.
 
+Which down payment belongs to which invoice is decided, never guessed. A down
+payment is taken up only when this invoice is plainly the one it belongs to:
+what is standing has to fit within what the invoice bills, and the folio has to
+have nothing left to invoice. As soon as either fails -- more standing than this
+invoice bills, or another invoice still to come -- **nothing is posted** and the
+case is left for review with the figures written on it. Associating money by
+guesswork is worse than asking.
+
 A job that cannot complete leaves its record in **Manual review** with the
 reason written on it, in the chatter and in the pending list. The usual reasons:
 
@@ -108,6 +126,9 @@ reason written on it, in the chatter and in the pending list. The usual reasons:
 * Nothing was actually collected against the down payment.
 * More was given back than was ever invoiced as a down payment; the part that
   rectifies nothing is left unapplied rather than invented.
+* More is standing as down payments than this invoice bills, or the folio still
+  has lines to invoice, so which invoice the down payment belongs to is not
+  settled.
 * An older draft refund of the same journal blocks posting the credit note.
   ``account_invoice_constraint_chronology`` refuses it, so the message names
   the drafts to validate or cancel first.
