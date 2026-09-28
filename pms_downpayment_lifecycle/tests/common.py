@@ -210,3 +210,21 @@ class DownpaymentCase(TestPms, AccountTestInvoicingCommon):
         )
         invoice.invoice_payment_term_id = False
         return invoice
+
+    def _final_invoice_via_pms(self, folio, partner):
+        """The final invoice built the way production builds it.
+
+        `final=True` is what both APIs pass and what the wizard's "deduct down
+        payments" defaults to, so it is the only faithful setting: it is the
+        flag that makes pms discount the down payment inside the invoice. With
+        it off, pms never discounts anything and the case under test stops
+        being the production one.
+
+        Going through pms is also what consumes the folio's lines, and the
+        module reads exactly that to tell whether this invoice is the last word
+        on the folio. An invoice assembled by hand leaves every line still
+        pending and misrepresents the case.
+        """
+        invoice = folio._create_invoices(partner_invoice_id=partner.id, final=True)
+        invoice.invoice_payment_term_id = False
+        return invoice

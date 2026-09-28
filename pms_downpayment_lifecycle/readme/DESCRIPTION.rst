@@ -11,6 +11,16 @@ posted into a closed period. Whatever has to change is done with a credit note
 dated in an open period, which is how it is settled in law and the only way it
 survives an audit.
 
+**An invoice that never discounted the down payment.** pms discounts a down
+payment by putting a line in the invoice that points back at it, and it does so
+when the invoice is built. An invoice drafted before the down payment existed --
+a proforma left pending for weeks, which is the common case -- carries no such
+line, so validating it bills the stay in full and the down payment stays
+standing. The module reads the discount off the invoice itself: what the invoice
+already applied is settled business and is never touched, and what it did not
+apply is rectified, with its credit note settled against the invoice. Nothing is
+ever subtracted twice.
+
 **A different customer on the final invoice.** ``pms`` skips the down payment
 while building the final invoice and bills the stay in full, leaving the down
 payment dangling on the other customer's account — normally the anonymous one,
