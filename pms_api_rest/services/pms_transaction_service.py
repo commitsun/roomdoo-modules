@@ -382,6 +382,19 @@ class PmsTransactionService(Component):
         if not transaction.exists():
             raise MissingError(_("Transaction not found"))
         pms_api_check_access(user=self.env.user, records=transaction)
+        # A payment settled against a bank statement cannot be modified: every
+        # path below resets it to draft, which would break that settlement.
+        # Internal transfers move both legs together, so the counterpart counts
+        # as well. The FastAPI service already refuses this; without it here the
+        # same payment is blocked on one screen and editable on the other.
+        legs = transaction + transaction.paired_internal_transfer_payment_id
+        if any(legs.mapped("is_matched")):
+            raise UserError(
+                _(
+                    "This payment is reconciled against a bank statement and "
+                    "cannot be modified."
+                )
+            )
         vals = {}
         # TODO: Downpayment invoiced (search invoice, reverse it and create a new one)
         # Get generic update vals
