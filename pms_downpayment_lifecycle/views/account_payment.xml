@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_account_payment_form_downpayment" model="ir.ui.view">
+        <field name="name">account.payment.form.downpayment.refund</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form" />
+        <field name="arch" type="xml">
+            <field name="journal_id" position="after">
+                <field name="downpayment_refund_state" invisible="1" />
+                <field
+          name="downpayment_refund_message"
+          readonly="1"
+          attrs="{'invisible': [('downpayment_refund_state', 'in', (False, 'done'))]}"
+        />
+            </field>
+        </field>
+    </record>
+
+    <record
+    id="action_downpayment_refund_pending"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Refunds pending rectification</field>
+        <field name="res_model">account.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field
+      name="domain"
+    >[('downpayment_refund_state', 'in', ('pending', 'manual', 'failed'))]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing pending</p>
+            <p
+      >Refunds of money collected as a down payment whose rectification has
+               not been issued yet, or needs someone to look at it.</p>
+        </field>
+    </record>
+
+    <menuitem
+    id="menu_downpayment_refund_pending"
+    name="Pending rectification"
+    parent="menu_downpayment_lifecycle"
+    action="action_downpayment_refund_pending"
+    sequence="20"
+  />
+</odoo>

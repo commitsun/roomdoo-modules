@@ -130,3 +130,11 @@
   merges:
     - oca 16.0
   target: oca 16.0
+
+./deps/account-financial-tools:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/account-financial-tools.git
+  merges:
+    - oca 16.0
+  target: oca 16.0

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record
+    id="action_downpayment_cancel_pending"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Cancellations pending rectification</field>
+        <field name="res_model">pms.folio</field>
+        <field name="view_mode">tree,form</field>
+        <field
+      name="domain"
+    >[('downpayment_cancel_state', 'in', ('pending', 'failed'))]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing pending</p>
+            <p>Cancelled folios whose down payment is still standing.</p>
+        </field>
+    </record>
+
+    <menuitem
+    id="menu_downpayment_cancel_pending"
+    name="Cancellations pending"
+    parent="menu_downpayment_lifecycle"
+    action="action_downpayment_cancel_pending"
+    sequence="30"
+  />
+</odoo>

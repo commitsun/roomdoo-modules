@@ -1,0 +1,371 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_downpayment_lifecycle
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
+#, python-format
+msgid "%(amount)s of %(name)s rectified as %(refund)s."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(name)s has nothing actually collected against it, so there is no balance "
+"to move."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(name)s is invoiced to %(partner)s, an identified third party, so it is "
+"left for accounting: rectifying VAT charged to a real customer without "
+"refunding them is not the same operation as exchanging a simplified invoice."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(name)s or this invoice does not have exactly one customer line, so which "
+"balance to move is ambiguous."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(name)s rectified as %(refund)s and transferred with %(entry)s."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(name)s rectified as %(refund)s and transferred with %(entry)s. The final "
+"invoice was already settled, so the amount is left open in favour of the "
+"customer."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/pms_folio.py:0
+#, python-format
+msgid "%(name)s rectified as %(refund)s for %(amount)s."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%s cannot be partially rectified: it does not have exactly one line with an "
+"amount."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
+#, python-format
+msgid ""
+"%s of this refund does not correspond to any down payment and was left "
+"unapplied."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.res_config_settings_view_form
+msgid "<span class=\"o_form_label\">Down payment transfer journal</span>"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.ui.menu,name:pms_downpayment_lifecycle.menu_downpayment_cancel_pending
+msgid "Cancellations pending"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.actions.act_window,name:pms_downpayment_lifecycle.action_downpayment_cancel_pending
+msgid "Cancellations pending rectification"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_cancel_pending
+msgid "Cancelled folios whose down payment is still standing."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"Cannot build the transfer entry: %(down)s or %(invoice)s does not have "
+"exactly one customer line."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model,name:pms_downpayment_lifecycle.model_res_company
+msgid "Companies"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model,name:pms_downpayment_lifecycle.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__done
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__done
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__pms_folio__downpayment_cancel_state__done
+msgid "Done"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment %(down)s transferred to %(invoice)s"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/pms_folio.py:0
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_state
+#, python-format
+msgid "Down payment cancellation"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_message
+msgid "Down payment cancellation detail"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_refund_state
+#, python-format
+msgid "Down payment refund"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_refund_message
+msgid "Down payment refund detail"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_reissue_partner_id
+msgid "Down payment to re-issue to"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_bank_statement_line__downpayment_transfer_state
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_move__downpayment_transfer_state
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_transfer_state
+#, python-format
+msgid "Down payment transfer"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_bank_statement_line__downpayment_transfer_message
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_move__downpayment_transfer_message
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_transfer_message
+msgid "Down payment transfer detail"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_res_company__downpayment_transfer_journal_id
+#: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_res_config_settings__downpayment_transfer_journal_id
+msgid "Down payment transfer journal"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
+#, python-format
+msgid "Down payment voided: payment %s reset to draft"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.ui.menu,name:pms_downpayment_lifecycle.menu_downpayment_lifecycle
+msgid "Down payments"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.actions.act_window,name:pms_downpayment_lifecycle.action_downpayment_transfer_pending
+msgid "Down payments pending transfer"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__failed
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__failed
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__pms_folio__downpayment_cancel_state__failed
+msgid "Failed"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_transfer_pending
+msgid ""
+"Final invoices whose down payment has not been transferred yet, or\n"
+"               needs someone to look at it."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/pms_folio.py:0
+#, python-format
+msgid "Folio %s cancelled"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model,name:pms_downpayment_lifecycle.model_account_move
+msgid "Journal Entry"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.res_config_settings_view_form
+msgid ""
+"Journal for the entry that moves a down payment from the\n"
+"                            customer it was invoiced to onto the customer of the\n"
+"                            final invoice."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_company__downpayment_transfer_journal_id
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_config_settings__downpayment_transfer_journal_id
+msgid ""
+"Journal used for the entry that moves a down payment balance from the "
+"customer it was invoiced to onto the customer of the final invoice. Falls "
+"back to the first miscellaneous journal of the company."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__manual
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__manual
+msgid "Manual review"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "No journal configured to post the down payment transfer of company %s."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_cancel_pending
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_refund_pending
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_transfer_pending
+msgid "Nothing pending"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model,name:pms_downpayment_lifecycle.model_pms_folio
+msgid "PMS Folio"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model,name:pms_downpayment_lifecycle.model_account_payment
+msgid "Payments"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__pending
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__pending
+#: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__pms_folio__downpayment_cancel_state__pending
+msgid "Pending"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.ui.menu,name:pms_downpayment_lifecycle.menu_downpayment_refund_pending
+msgid "Pending rectification"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.ui.menu,name:pms_downpayment_lifecycle.menu_downpayment_transfer_pending
+msgid "Pending transfer"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
+#, python-format
+msgid "Refunded by payment %s"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_refund_pending
+msgid ""
+"Refunds of money collected as a down payment whose rectification has\n"
+"               not been issued yet, or needs someone to look at it."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.actions.act_window,name:pms_downpayment_lifecycle.action_downpayment_refund_pending
+msgid "Refunds pending rectification"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_state
+msgid ""
+"Set on a cancelled folio that still had a down payment invoice standing."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_bank_statement_line__downpayment_transfer_state
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_move__downpayment_transfer_state
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_payment__downpayment_transfer_state
+msgid ""
+"Set on a final invoice that absorbed a down payment issued to a different "
+"customer. The transfer itself runs in its own job, so that a down payment "
+"that will not settle can never stop the stay from being invoiced."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_payment__downpayment_refund_state
+msgid ""
+"Set on a refund that gives back money collected as a down payment: it "
+"rectifies the down payment invoice itself instead of producing an unrelated "
+"credit note."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_payment__downpayment_reissue_partner_id
+msgid ""
+"Set while a payment sits in draft with its down payment already rectified: "
+"the customer the replacement must be issued to once the new amount is known."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"The credit note cannot be posted in journal %(journal)s while these older "
+"drafts are open: %(drafts)s. Validate or cancel them first."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Transfer of down payment %s"
+msgstr ""
