@@ -575,3 +575,33 @@ class TestPmsFolioInvoice(TestPms):
             [],
             "Billed services and overnights invoicing wrong compute",
         )
+
+    # ------------------------------------------------------------------
+    # reference of the credit note that reverses a down payment
+    # ------------------------------------------------------------------
+    def _draft_invoice_for_ref(self):
+        partner = self.env["res.partner"].create({"name": "Ref test partner"})
+        return self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": partner.id,
+                "journal_id": self.simplified_journal.id,
+            }
+        )
+
+    def test_reverse_downpayment_ref_omits_a_missing_reference(self):
+        """An invoice with no ref used to raise TypeError here: the reference
+        was concatenated unconditionally, and False is not a string."""
+        invoice = self._draft_invoice_for_ref()
+        self.assertFalse(invoice.ref, "precondition: the invoice has a ref")
+        ref = invoice._reverse_downpayment_ref()
+        self.assertTrue(ref)
+        self.assertNotIn(" - ", ref)
+
+    def test_reverse_downpayment_ref_keeps_an_existing_reference(self):
+        invoice = self._draft_invoice_for_ref()
+        invoice.ref = "ORIGIN-123"
+        self.assertIn("ORIGIN-123", invoice._reverse_downpayment_ref())
+
+    def test_reverse_downpayment_invoices_is_a_noop_on_an_empty_recordset(self):
+        self.assertFalse(self.env["account.move"]._reverse_downpayment_invoices())
