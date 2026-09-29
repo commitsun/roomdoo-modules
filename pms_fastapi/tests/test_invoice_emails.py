@@ -49,6 +49,13 @@ class TestInvoiceEmailsEndpoints(CommonTestPmsApi):
             {"name": "Test Invoice Partner", "email": "customer@example.org"}
         )
 
+    def setUp(self):
+        super().setUp()
+        # Requests run in the test client's thread; like HttpCase, flag the
+        # registry so code outside the test thread knows it is under test.
+        self.registry.enter_test_mode(self.cr)
+        self.addCleanup(self.registry.leave_test_mode)
+
     def _create_invoice(self, move_type="out_invoice", amount=100.0):
         invoice = self.env["account.move"].create(
             {
