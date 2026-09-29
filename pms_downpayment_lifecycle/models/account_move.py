@@ -89,6 +89,10 @@ class AccountMove(models.Model):
                     and m.move_type == "out_invoice"
                     and m.company_id == self.company_id
                     and m._is_downpayment()
+                    # Never a document this module itself produced: an
+                    # out_invoice that reverses a credit note is a counter-invoice,
+                    # not a down payment, however much it looks like one.
+                    and not m.reversed_entry_id
                     and float_compare(
                         m._amount_open_to_rectify(), 0.0, precision_rounding=rounding
                     )
@@ -466,11 +470,19 @@ class AccountMove(models.Model):
                     invoice=self.display_name,
                 )
             )
+        folios = ", ".join(self.folio_ids.mapped("name"))
         label = _(
-            "Down payment %(down)s transferred to %(invoice)s",
+            "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s",
+            folio=folios,
             down=downpayment.name,
             invoice=self.name,
         )
+        # The property is what carries the analytic: pms creates an analytic
+        # account per property and an account.analytic.distribution.model keyed
+        # on pms_property_id, and account.move.line._compute_analytic_distribution
+        # feeds that property into the context. Set the property and the analytic
+        # follows by itself; leave it out and this is the one entry in the ledger
+        # with neither.
         transfer = self.env["account.move"].create(
             {
                 "move_type": "entry",
@@ -478,6 +490,7 @@ class AccountMove(models.Model):
                 "date": date,
                 "ref": label,
                 "company_id": self.company_id.id,
+                "pms_property_id": self.pms_property_id.id,
                 "line_ids": [
                     (
                         0,

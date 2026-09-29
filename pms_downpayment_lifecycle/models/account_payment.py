@@ -53,12 +53,27 @@ class AccountPayment(models.Model):
         return False
 
     def _downpayment_invoices(self):
-        """Posted down payment invoices settled by this payment."""
+        """Posted down payment invoices settled by this payment.
+
+        The two extra conditions are not decoration. `reconciled_invoice_ids`
+        includes credit notes, and a credit note that reverses a down payment
+        answers True to `_is_downpayment()`: the folio lines it keys on are
+        copied over by `_reverse_moves`, because `folio_line_ids` is `copy=True`.
+        Without them the module reads its own rectification as a down payment,
+        rectifies it in turn -- producing an `out_invoice` indistinguishable
+        from a real down payment -- and the selectors pick that up again. A
+        single down payment and one refund can end up as a dozen documents.
+        """
         self.ensure_one()
         if self.partner_type != "customer":
             return self.env["account.move"]
         return self.reconciled_invoice_ids.filtered(
-            lambda inv: inv.state == "posted" and inv._is_downpayment()
+            lambda inv: (
+                inv.state == "posted"
+                and inv.move_type == "out_invoice"
+                and not inv.reversed_entry_id
+                and inv._is_downpayment()
+            )
         )
 
     def action_draft(self):
@@ -162,6 +177,10 @@ class AccountPayment(models.Model):
                 and m.move_type == "out_invoice"
                 and m.company_id == self.company_id
                 and m._is_downpayment()
+                # Never a document this module itself produced: an
+                # out_invoice that reverses a credit note is a counter-invoice,
+                # not a down payment, however much it looks like one.
+                and not m.reversed_entry_id
             )
         )
         rounding = self.company_id.currency_id.rounding

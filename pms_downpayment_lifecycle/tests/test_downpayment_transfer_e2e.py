@@ -83,3 +83,36 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
         final._transfer_downpayments()
         self.assertEqual(final.downpayment_transfer_state, "manual")
         self.assertIn("identified third", final.downpayment_transfer_message)
+
+    def test_the_transfer_entry_carries_hotel_analytic_and_folio(self):
+        """An entry with no property is the odd one out in the ledger, and
+        without the property there is no analytic either: pms hangs the analytic
+        distribution off pms_property_id. The folio number goes in the reference
+        because the entry cannot be linked to the folio by relation."""
+        folio = self._folio()
+        downpayment, _line = self._downpayment(folio, self.anonymous, 50.0)
+        self._collect(downpayment)
+        final = self._final_invoice_via_pms(folio, self.guest)
+        final.action_post()
+        final._transfer_downpayments()
+
+        entry = self.env["account.move"].search(
+            [("move_type", "=", "entry"), ("ref", "like", downpayment.name)]
+        )
+        self.assertEqual(len(entry), 1)
+        self.assertEqual(entry.pms_property_id, self.property)
+        self.assertEqual(
+            entry.line_ids.mapped("pms_property_id"),
+            self.property,
+            "every line must carry the hotel, not just the header",
+        )
+        self.assertIn(folio.name, entry.ref)
+        for line in entry.line_ids:
+            self.assertIn(folio.name, line.name)
+        if self.property.analytic_account_id:
+            for line in entry.line_ids:
+                self.assertEqual(
+                    line.analytic_distribution,
+                    {str(self.property.analytic_account_id.id): 100.0},
+                    "the analytic must follow from the property by itself",
+                )
