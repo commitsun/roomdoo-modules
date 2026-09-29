@@ -152,6 +152,40 @@ class TestDownpaymentLifecycle(DownpaymentCase):
             trap.assert_jobs_count(0)
         self.assertFalse(refund.downpayment_refund_state)
 
+    def test_a_credit_note_is_never_mistaken_for_a_down_payment(self):
+        """`reconciled_invoice_ids` includes credit notes, and a credit note
+        reversing a down payment answers True to `_is_downpayment()` because
+        `folio_line_ids` is copied over by `_reverse_moves`. Read naively, the
+        module rectifies its own rectification and the documents multiply."""
+        folio = self._folio()
+        downpayment, _line = self._downpayment(folio, self.anonymous, 100.0)
+        self._collect(downpayment)
+        refund = self._refund(folio, self.anonymous, 40.0)
+        with trap_jobs():
+            refund.action_post()
+        refund._rectify_downpayments_for_refund()
+        credit_note = self.env["account.move"].search(
+            [("reversed_entry_id", "=", downpayment.id)]
+        )
+        self.assertEqual(len(credit_note), 1)
+        self.assertTrue(
+            credit_note._is_downpayment(),
+            "the trap: it does look like a down payment",
+        )
+        self.assertIn(credit_note, refund.reconciled_invoice_ids)
+
+        self.assertNotIn(credit_note, refund._downpayment_invoices())
+
+        refund.action_draft()
+
+        self.assertFalse(
+            self.env["account.move"].search(
+                [("reversed_entry_id", "=", credit_note.id)]
+            ),
+            "no counter-invoice may be issued against our own credit note",
+        )
+        self.assertFalse(refund.downpayment_reissue_partner_id)
+
     # ------------------------------------------------------------------
     # C2 -- cancelling the stay voids the down payment
     # ------------------------------------------------------------------

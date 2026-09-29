@@ -56,6 +56,10 @@ class PmsFolio(models.Model):
                 and m.move_type == "out_invoice"
                 and m.company_id == self.company_id
                 and m._is_downpayment()
+                # Never a document this module itself produced: an
+                # out_invoice that reverses a credit note is a counter-invoice,
+                # not a down payment, however much it looks like one.
+                and not m.reversed_entry_id
             )
         )
         return downpayments.filtered(
