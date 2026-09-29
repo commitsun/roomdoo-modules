@@ -4,3 +4,4 @@ from . import test_user
 from . import test_contacts
 from . import test_reports
 from . import test_feature_flag
+from . import test_logout
