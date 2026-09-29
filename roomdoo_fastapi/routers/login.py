@@ -44,6 +44,20 @@ async def refresh(request: Request, env: PublicEnv):
 class PmsFastapiLoginEndpoint(models.AbstractModel):
     _inherit = "pms.fastapi.login.endpoint"
 
+    def _drop_session_cookies(self, response):
+        res = super()._drop_session_cookies(response)
+        validator = (
+            self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
+        )
+        response.delete_cookie(
+            key=validator.refresh_cookie_name,
+            path=validator.refresh_token_path or "/",
+            secure=validator.cookie_secure,
+            httponly=True,
+            samesite="None",
+        )
+        return res
+
     def _get_login_response_with_cookies(self, user_record):
         validator = (
             self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
