@@ -161,8 +161,24 @@ jobs:
         id: modules
         run: |
           cd repo
+          # Addons listed in .github/ci-exclude-addons.txt (comments and blank
+          # lines ignored) are left out of both the -i list and TEST_TAGS: they
+          # depend on modules the runner does not have, and a single unknown
+          # dependency aborts the whole installation.
+          EXCLUDED=""
+          if [ -f .github/ci-exclude-addons.txt ]; then
+            EXCLUDED=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' .github/ci-exclude-addons.txt | grep -v '^$' || true)
+          fi
           MODULES=$(find . -maxdepth 2 -name "__manifest__.py" -exec dirname {} \; \
-            | xargs -I {} basename {} | tr '\n' ',' | sed 's/,$//')
+            | xargs -I {} basename {} \
+            | while read -r addon; do
+                if printf '%s\n' "$EXCLUDED" | grep -qxF "$addon"; then
+                  echo "Skipping $addon (listed in .github/ci-exclude-addons.txt)" >&2
+                else
+                  echo "$addon"
+                fi
+              done \
+            | tr '\n' ',' | sed 's/,$//')
 
           echo "modules=$MODULES" >> $GITHUB_OUTPUT
           echo "Testing: $MODULES"

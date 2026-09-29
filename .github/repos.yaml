@@ -138,3 +138,11 @@
   merges:
     - oca 16.0
   target: oca 16.0
+
+./deps/server-backend:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/server-backend.git
+  merges:
+    - oca 16.0
+  target: oca 16.0

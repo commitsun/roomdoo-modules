@@ -1,0 +1,7 @@
+# Addons that the CI neither installs nor tests, one technical name per line.
+#
+# The workflow installs every addon of the repository in a single `-i` call, so
+# one addon with a dependency that the runner cannot provide (Odoo Enterprise,
+# for instance) makes the whole run fail. List such addons here and test them
+# locally against a database that has the dependency.
+pms_user_roles_helpdesk_enterprise
