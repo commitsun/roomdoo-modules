@@ -39,6 +39,23 @@ async def login(user: PmsLoginInput, env: PublicEnv):
     )
 
 
+@pms_api_router.post(
+    "/logout",
+    status_code=204,
+    responses={204: {"model": None}},
+    tags=["login"],
+)
+async def logout(env: PublicEnv):
+    """
+    Ends the session.
+
+    What holds the session is out of reach of any script on the client side,
+    so dropping it has to happen here. The answer is the same whether there
+    was a session or not, so that a client can always clean up after itself.
+    """
+    return env["pms.fastapi.login.endpoint"]._get_logout_response()
+
+
 class PmsFastapiLoginEndpoint(models.AbstractModel):
     _name = "pms.fastapi.login.endpoint"
     _description = "login endpoint helper"
@@ -47,6 +64,24 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
         raise HTTPException(
             status_code=401,
             detail=_("wrong user/pass"),
+        )
+
+    def _get_logout_response(self):
+        response = Response(status_code=status.HTTP_204_NO_CONTENT)
+        self._drop_session_cookies(response)
+        return response
+
+    def _drop_session_cookies(self, response):
+        """Dropped by the same attributes they were set with, or they survive."""
+        validator = (
+            self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
+        )
+        response.delete_cookie(
+            key=validator.cookie_name,
+            path=validator.cookie_path or "/",
+            secure=validator.cookie_secure,
+            httponly=True,
+            samesite="None",
         )
 
     def _get_login_response_with_cookies(self, user_record):

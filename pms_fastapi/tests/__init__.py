@@ -26,3 +26,4 @@ from . import test_guests
 from . import test_suppliers
 from . import test_search_text_guard
 from . import test_reservation_offboarding
+from . import test_logout
