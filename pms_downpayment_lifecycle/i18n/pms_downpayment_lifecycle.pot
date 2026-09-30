@@ -25,8 +25,9 @@ msgstr ""
 #: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
 #, python-format
 msgid ""
-"%(name)s has nothing actually collected against it, so there is no balance "
-"to move."
+"%(name)s has nothing left standing against it -- either nothing was "
+"collected, or what was collected has already been given back -- so there is "
+"no balance to move."
 msgstr ""
 
 #. module: pms_downpayment_lifecycle
