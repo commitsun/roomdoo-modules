@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="product_category_form_view" model="ir.ui.view">
+        <field name="name">product.category.form.invoice.report.group</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view" />
+        <field name="arch" type="xml">
+            <group name="first" position="after">
+                <group name="invoice_report" string="Invoice report">
+                    <field name="invoice_report_group_mode" />
+                    <field name="invoice_report_sequence" />
+                    <field name="invoice_report_label" />
+                </group>
+            </group>
+        </field>
+    </record>
+
+</odoo>

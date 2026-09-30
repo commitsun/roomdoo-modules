@@ -1,0 +1,90 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_invoice_report_group_lines
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields.selection,name:account_invoice_report_group_lines.selection__product_category__invoice_report_group_mode__collapse
+msgid "A single line with a breakdown"
+msgstr "Una sola línea con desglose"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model,name:account_invoice_report_group_lines.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,help:account_invoice_report_group_lines.field_product_category__invoice_report_label
+msgid ""
+"Heading shown for this group in the invoice report. Empty means the "
+"category name is used."
+msgstr ""
+"Encabezado con el que sale este grupo en la factura. Si se deja vacío se "
+"usa el nombre de la categoría."
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,help:account_invoice_report_group_lines.field_product_category__invoice_report_group_mode
+msgid ""
+"How invoice lines of products in this category are rendered by reports "
+"that support grouping. 'One line per invoice line' is the standard "
+"behaviour. 'A single line with a breakdown' merges them into one line "
+"showing the total, with the amount per product underneath: useful for "
+"many small recurring charges such as bar or vending consumption."
+msgstr ""
+"Cómo salen en la factura las líneas de los productos de esta categoría, en "
+"los informes que admiten agrupación. «Una línea por línea de factura» es el "
+"comportamiento de siempre. «Una sola línea con desglose» las junta en una "
+"sola línea con el total, y debajo el importe por producto: útil para "
+"muchos cargos pequeños y repetidos, como los consumos de cafetería."
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,field_description:account_invoice_report_group_lines.field_product_category__invoice_report_label
+msgid "Invoice report label"
+msgstr "Encabezado en la factura"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,field_description:account_invoice_report_group_lines.field_product_category__invoice_report_sequence
+msgid "Invoice report order"
+msgstr "Orden en la factura"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,field_description:account_invoice_report_group_lines.field_product_category__invoice_report_group_mode
+msgid "Invoice report grouping"
+msgstr "Agrupación en la factura"
+
+#. module: account_invoice_report_group_lines
+#: model_terms:ir.ui.view,arch_db:account_invoice_report_group_lines.product_category_form_view
+msgid "Invoice report"
+msgstr "Factura"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields.selection,name:account_invoice_report_group_lines.selection__product_category__invoice_report_group_mode__detail
+msgid "One line per invoice line"
+msgstr "Una línea por línea de factura"
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model.fields,help:account_invoice_report_group_lines.field_product_category__invoice_report_sequence
+msgid ""
+"Order of this category's group in the invoice report. Lower comes first. "
+"Lines whose category shares the same order keep the order they have in the "
+"invoice."
+msgstr ""
+"Orden en que sale este grupo en la factura. Primero los números más bajos. "
+"Las líneas cuyas categorías comparten número conservan el orden que tienen "
+"en la factura."
+
+#. module: account_invoice_report_group_lines
+#: model:ir.model,name:account_invoice_report_group_lines.model_product_category
+msgid "Product Category"
+msgstr "Categoría de producto"
