@@ -221,21 +221,32 @@ class AccountMove(models.Model):
                 ),
             )
 
-        amount = downpayment._downpayment_reconciled_amount()
         rounding = self.company_id.currency_id.rounding
+        # Never more than what is left to rectify, and never more than what was
+        # collected. A down payment that was partly refunded already carries a
+        # credit note for that part and the money went back to the guest, so
+        # moving everything it ever collected would credit the new customer a
+        # balance that is no longer there.
+        amount = min(
+            downpayment._amount_open_to_rectify(),
+            downpayment._downpayment_reconciled_amount(),
+        )
         if float_is_zero(amount, precision_rounding=rounding):
             return (
                 "manual",
                 _(
-                    "%(name)s has nothing actually collected against it, so there "
-                    "is no balance to move.",
+                    "%(name)s has nothing left standing against it -- either "
+                    "nothing was collected, or what was collected has already "
+                    "been given back -- so there is no balance to move.",
                     name=downpayment.name,
                 ),
             )
 
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
-        credit_note = downpayment._rectify_downpayment(date)
+        credit_note = downpayment._rectify_downpayment(
+            date, amount=downpayment._partial_rectification_amount()
+        )
         transfer = self._create_transfer_entry(downpayment, amount, date)
 
         # A back to zero: the transfer's debit against the credit note.
@@ -283,7 +294,9 @@ class AccountMove(models.Model):
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
         credit_note = downpayment._rectify_downpayment(
-            date, ref=_("Applied to invoice %s", self.name)
+            date,
+            amount=downpayment._partial_rectification_amount(),
+            ref=_("Applied to invoice %s", self.name),
         )
         pending = (credit_note.line_ids | self.line_ids).filtered(
             lambda line: (
@@ -341,6 +354,27 @@ class AccountMove(models.Model):
             )
         )
         return self.amount_total - rectified
+
+    def _partial_rectification_amount(self):
+        """What to pass as ``amount`` to ``_rectify_downpayment``: the part of
+        this down payment still to rectify, or None when that is all of it.
+
+        None is not the same as the full figure. It leaves the credit note an
+        exact reversal of the original, which is what a full rectification has
+        to be, while a number goes through ``_scale_credit_note`` and its
+        rounding correction. Only the partial case needs that.
+        """
+        self.ensure_one()
+        rounding = self.company_id.currency_id.rounding
+        open_to_rectify = self._amount_open_to_rectify()
+        if (
+            float_compare(
+                open_to_rectify, self.amount_total, precision_rounding=rounding
+            )
+            < 0
+        ):
+            return open_to_rectify
+        return None
 
     def _rectify_downpayment(self, date, amount=None, ref=None):
         """Credit note for the down payment, posted in an open period.
