@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_pms_reservation_form_ertzaintza" model="ir.ui.view">
+        <field name="name">Reservation Form Ertzaintza</field>
+        <field name="model">pms.reservation</field>
+        <field name="inherit_id" ref="pms.pms_reservation_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='others']" position="before">
+                <page
+          string="Ertzaintza"
+          name="ertzaintza_communications"
+          attrs="{'invisible': [('is_ertzaintza', '=', False)]}"
+        >
+                    <field name="is_ertzaintza" invisible="1" />
+                    <group>
+                        <field name="ertzaintza_status_reservation" />
+                        <field name="ertzaintza_status_traveller_report" />
+                    </group>
+                    <field name="ertzaintza_communication_ids">
+                        <tree
+              create="false"
+              decoration-danger="state in ('error_sending', 'rejected')"
+              decoration-muted="state in ('processed', 'cancelled')"
+              decoration-info="state == 'incomplete'"
+            >
+                            <field name="entity" />
+                            <field name="contract_reference" />
+                            <field name="create_date" />
+                            <field name="communication_time" />
+                            <field name="state" />
+                            <field name="result_code" />
+                            <field name="errors" />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

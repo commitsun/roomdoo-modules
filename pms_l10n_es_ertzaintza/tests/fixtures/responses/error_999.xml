@@ -1,0 +1,8 @@
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+><soapenv:Body><ns0:envioFicheroXMLResponse
+      xmlns:ns0="https://ws.negocio.registroHostelero.a19.gvdi.com"
+    ><ns0:return><respuesta><error><codigo>999</codigo><descripcion
+            >Error GENERAL. Su petición no se ha podido procesar debido a problemas técnicos. Inténtelo de nuevo más tarde</descripcion></error><peticion
+          /></respuesta><resultado
+        /></ns0:return></ns0:envioFicheroXMLResponse></soapenv:Body></soapenv:Envelope>
