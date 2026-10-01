@@ -94,9 +94,12 @@ async def offboarding(
 ):
     """Confirm departure for eligible in-house guests of a reservation.
 
-    Eligible guests are those currently in-house. Idempotent: returns 204
-    even if no guests are eligible. Returns 409 if the reservation is in a
-    state that does not allow confirming departures (e.g. draft, cancelled).
+    Eligible guests are those currently in-house. When the reservation is
+    in-house and its checkout date is today or earlier, the whole stay is
+    checked out: the reservation is closed together with its guests.
+    Idempotent: returns 204 even if no guests are eligible. Returns 409 if
+    the reservation is in a state that does not allow confirming departures
+    (e.g. draft, cancelled).
     """
     return env["pms_api_reservation.router.helper"].new()._offboarding(reservation_id)
 
@@ -207,6 +210,13 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
                 },
                 media_type="application/problem+json",
             )
+
+        if reservation.allowed_checkout:
+            # Check out the whole stay, not only its guests: otherwise the
+            # reservation stays in-house and the checkout side effects (room
+            # marked dirty, third-party checkout notices) never run.
+            reservation.sudo().action_reservation_checkout()
+            return Response(status_code=204)
 
         eligible = reservation.checkin_partner_ids.filtered(
             lambda c: c.state == "onboard"
