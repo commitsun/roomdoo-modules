@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="survey_user_input_view_tree_pms" model="ir.ui.view">
+        <field name="name">survey.user_input.tree.pms</field>
+        <field name="model">survey.user_input</field>
+        <field name="inherit_id" ref="survey.survey_user_input_view_tree" />
+        <field name="arch" type="xml">
+            <field name="survey_id" position="after">
+                <field name="folio_id" optional="show" />
+                <field name="pms_property_id" optional="show" />
+            </field>
+        </field>
+    </record>
+
+    <record id="survey_user_input_view_form_pms" model="ir.ui.view">
+        <field name="name">survey.user_input.form.pms</field>
+        <field name="model">survey.user_input</field>
+        <field name="inherit_id" ref="survey.survey_user_input_view_form" />
+        <field name="arch" type="xml">
+            <field name="survey_id" position="after">
+                <field name="folio_id" readonly="1" />
+                <field name="pms_property_id" readonly="1" />
+            </field>
+        </field>
+    </record>
+
+    <record id="survey_user_input_view_search_pms" model="ir.ui.view">
+        <field name="name">survey.user_input.search.pms</field>
+        <field name="model">survey.user_input</field>
+        <field name="inherit_id" ref="survey.survey_user_input_view_search" />
+        <field name="arch" type="xml">
+            <field name="survey_id" position="after">
+                <field name="folio_id" />
+                <field name="pms_property_id" />
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter
+          name="group_by_pms_property"
+          string="Property"
+          context="{'group_by': 'pms_property_id'}"
+        />
+                <filter
+          name="group_by_folio"
+          string="Folio"
+          context="{'group_by': 'folio_id'}"
+        />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

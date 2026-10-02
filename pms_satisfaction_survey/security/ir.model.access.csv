@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_survey_survey_pms_user,survey.survey pms user,survey.model_survey_survey,pms.group_pms_user,1,0,0,0
+access_survey_question_pms_user,survey.question pms user,survey.model_survey_question,pms.group_pms_user,1,0,0,0
+access_survey_question_answer_pms_user,survey.question.answer pms user,survey.model_survey_question_answer,pms.group_pms_user,1,0,0,0
+access_survey_user_input_pms_user,survey.user_input pms user,survey.model_survey_user_input,pms.group_pms_user,1,0,0,0
+access_survey_user_input_line_pms_user,survey.user_input.line pms user,survey.model_survey_user_input_line,pms.group_pms_user,1,0,0,0
