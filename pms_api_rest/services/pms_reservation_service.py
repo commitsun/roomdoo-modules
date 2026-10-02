@@ -173,7 +173,9 @@ class PmsReservationService(Component):
                 isSplitted=reservation.splitted,
                 pendingCheckinData=reservation.pending_checkin_data,
                 createDate=create_date_local.isoformat(),
-                createdBy=reservation.create_uid.name,
+                createdBy=reservation.create_uid.name
+                if reservation.create_uid
+                else "Unknown",
                 segmentationId=reservation.segmentation_ids[0].id
                 if reservation.segmentation_ids
                 else None,
@@ -1879,6 +1881,32 @@ class PmsReservationService(Component):
             text="",
         )
 
+    def _guest_label_use_room(self):
+        """Whether guest-facing labels must name the room instead of its type.
+
+        Per-database switch: this filesystem is shared by every tenant, so the
+        behaviour cannot be keyed on the database name. Absent row == off.
+        """
+        param = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("roomdoo.guest_label_use_room")
+        )
+        return param in ("1", "True", "true", "yes", "on")
+
+    def _guest_room_label(self, reservation):
+        """Room label for the guest: the assigned room, not the type sold.
+
+        Read off the nights, not from reservation.rooms: preferred_room_id is
+        only refreshed when every night of the stay is present
+        (pms.reservation._compute_splitted), so it still holds the previous
+        room while a modification is half applied.
+        """
+        if not self._guest_label_use_room():
+            return reservation.room_type_id.name
+        rooms = ", ".join(reservation.reservation_line_ids.mapped("room_id.name"))
+        return rooms or reservation.room_type_id.name
+
     # PUBLIC ENDPOINTS
     @restapi.method(
         [
@@ -1944,7 +1972,7 @@ class PmsReservationService(Component):
         )
         reservations = [
             self.env.datamodels["pms.reservation.public.info"](
-                roomTypeName=reservation_record.room_type_id.name,
+                roomTypeName=self._guest_room_label(reservation_record),
                 checkinNamesCompleted=reservation_checkin_partner_names,
                 # Same datamodel as the one the folio endpoint fills, so it
                 # carries the same field: a caller should not have to know

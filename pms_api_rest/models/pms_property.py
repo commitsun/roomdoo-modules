@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+from datetime import timedelta
 
 import requests
 
@@ -674,6 +675,23 @@ class PmsProperty(models.Model):
             date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
             if date_to <= date_from:
                 date_to = date_from
+        # The api client (e.g. Neobookings) cannot process a long range in a
+        # single message: split it into windows of at most one month, pushed
+        # sequentially (records within each window are batched to <=100 below).
+        if (date_to - date_from).days > 30:
+            window_from = date_from
+            while window_from <= date_to:
+                window_to = min(window_from + timedelta(days=29), date_to)
+                self.pms_api_push_batch(
+                    call_type,
+                    window_from,
+                    window_to,
+                    filter_room_type_id=filter_room_type_id,
+                    pms_property_codes=pms_property_codes,
+                    client=client,
+                )
+                window_from = window_to + timedelta(days=1)
+            return
         for client in clients:
             if not pms_property_codes:
                 pms_properties = client.pms_property_ids
@@ -757,8 +775,11 @@ class PmsProperty(models.Model):
                             key_data = "prices"
                         else:
                             raise ValidationError(_("Invalid call type"))
-                    if data:
-                        payload[key_data] = data
+                    for batch_start in range(0, len(data), 100):
+                        payload = {
+                            "pmsPropertyId": pms_property.id,
+                            key_data: data[batch_start : batch_start + 100],
+                        }
                         response = self.pms_api_push_payload(payload, endpoint, client)
                         _logger.info(
                             f"""PMS API push batch response to
@@ -832,3 +853,58 @@ class PmsProperty(models.Model):
                 limit=1,
             )
         return support_url
+
+    @api.model
+    def pms_cron_rule_push(self):
+        api_clients = self.env["res.users"].search([("pms_api_client", "=", True)])
+        if not api_clients:
+            return
+        allowed_property_ids = api_clients.mapped("pms_property_ids").ids
+        rules_to_export = self.env["pms.availability.plan.rule"].search(
+            [
+                ("date", ">=", fields.Date.today()),
+                ("pms_property_id", "in", allowed_property_ids),
+                ("write_date", ">", fields.Datetime.now() - timedelta(minutes=10)),
+            ]
+        )
+        if not rules_to_export:
+            return
+        for client in api_clients:
+            client_properties = rules_to_export.mapped("pms_property_id").filtered(
+                lambda p, _c=client: p in _c.pms_property_ids
+            )
+            for pms_property in client_properties:
+                ota_settings = pms_property.ota_property_settings_ids.filtered(
+                    lambda r, _c=client: r.agency_id == _c.partner_id
+                )
+                if not ota_settings or not ota_settings.main_avail_plan_id:
+                    continue
+                availability_plan_id = ota_settings.main_avail_plan_id.id
+                items_to_upload = rules_to_export.filtered(
+                    lambda r, _ppid=pms_property.id, _apid=availability_plan_id: (
+                        r.pms_property_id.id == _ppid
+                        and r.availability_plan_id.id == _apid
+                    )
+                )
+                if not items_to_upload:
+                    continue
+                payload, endpoint = pms_property.get_payload_rules(
+                    rules=items_to_upload, client=client
+                )
+                if not payload:
+                    continue
+                response = pms_property.pms_api_push_payload(
+                    payload=payload, endpoint=endpoint, client=client
+                )
+                self.env["pms.api.log"].sudo().create(
+                    {
+                        "pms_property_id": pms_property.id,
+                        "client_id": client.id,
+                        "request": payload,
+                        "response": str(response),
+                        "status": "success" if response.ok else "error",
+                        "request_date": fields.Datetime.now(),
+                        "method": "PUSH",
+                        "endpoint": endpoint,
+                    }
+                )
