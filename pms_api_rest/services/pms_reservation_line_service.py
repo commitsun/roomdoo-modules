@@ -37,14 +37,48 @@ class PmsReservationLineService(Component):
         pms_api_check_access(user=self.env.user, records=reservation_line)
         if reservation_line:
             PmsReservationLineInfo = self.env.datamodels["pms.reservation.line.info"]
+            company = reservation_line.reservation_id.company_id
+            company_currency = (
+                True if reservation_line.currency_id == company.currency_id else False
+            )
+            price = (
+                reservation_line.price
+                if company_currency
+                else reservation_line.currency_id._convert(
+                    reservation_line.price,
+                    company.currency_id,
+                    company,
+                    reservation_line.date,
+                )
+            )
+            discount = (
+                reservation_line.discount
+                if company_currency
+                else reservation_line.currency_id._convert(
+                    reservation_line.discount,
+                    company.currency_id,
+                    company,
+                    reservation_line.date,
+                )
+            )
+            cancel_discount = (
+                reservation_line.cancel_discount
+                if company_currency
+                else reservation_line.currency_id._convert(
+                    reservation_line.cancel_discount,
+                    company.currency_id,
+                    company,
+                    reservation_line.date,
+                )
+            )
             return PmsReservationLineInfo(
                 id=reservation_line.id,
                 date=datetime.combine(
                     reservation_line.date, datetime.min.time()
                 ).isoformat(),
-                price=round(reservation_line.price, 2),
-                discount=round(reservation_line.discount, 2),
-                cancelDiscount=round(reservation_line.cancel_discount, 2),
+                price=round(price, 2),
+                discount=round(discount, 2),
+                cancelDiscount=round(cancel_discount, 2),
                 roomId=reservation_line.room_id.id,
                 reservationId=reservation_line.reservation_id.id,
                 pmsPropertyId=reservation_line.pms_property_id.id,
@@ -92,16 +126,61 @@ class PmsReservationLineService(Component):
             PmsReservationLineInfo = self.env.datamodels["pms.reservation.line.info"]
             reservation_lines = self.env["pms.reservation.line"].sudo().search(domain)
             pms_api_check_access(user=self.env.user, records=reservation_lines)
+            company = (
+                (reservation_lines[0].reservation_id.company_id)
+                if reservation_lines
+                else None
+            )
+            company_currency = (
+                (
+                    True
+                    if company
+                    and company.currency_id == reservation_lines[0].currency_id
+                    else False
+                )
+                if reservation_lines
+                else None
+            )
             for reservation_line in reservation_lines:
+                price = (
+                    reservation_line.price
+                    if company_currency
+                    else reservation_line.currency_id._convert(
+                        reservation_line.price,
+                        company.currency_id,
+                        company,
+                        reservation_line.date,
+                    )
+                )
+                discount = (
+                    reservation_line.discount
+                    if company_currency
+                    else reservation_line.currency_id._convert(
+                        reservation_line.discount,
+                        company.currency_id,
+                        company,
+                        reservation_line.date,
+                    )
+                )
+                cancel_discount = (
+                    reservation_line.cancel_discount
+                    if company_currency
+                    else reservation_line.currency_id._convert(
+                        reservation_line.cancel_discount,
+                        company.currency_id,
+                        company,
+                        reservation_line.date,
+                    )
+                )
                 result.append(
                     PmsReservationLineInfo(
                         id=reservation_line.id,
                         date=datetime.combine(
                             reservation_line.date, datetime.min.time()
                         ).isoformat(),
-                        price=round(reservation_line.price, 2),
-                        discount=round(reservation_line.discount, 2),
-                        cancelDiscount=round(reservation_line.cancel_discount, 2),
+                        price=round(price, 2),
+                        discount=round(discount, 2),
+                        cancelDiscount=round(cancel_discount, 2),
                         roomId=reservation_line.room_id.id,
                         reservationId=reservation_line.reservation_id.id,
                         pmsPropertyId=reservation_line.pms_property_id.id,
