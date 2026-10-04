@@ -46,7 +46,11 @@ class ChannelWubookPmsReservationLineListener(Component):
 
     def _enqueue_property_exports(self, record):
         buffer_property_exports_for_rooms(
-            self.env, record.pms_property_id, record.room_id.room_type_id
+            self.env,
+            record.pms_property_id,
+            record.room_id.room_type_id,
+            record.date,
+            record.date,
         )
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
@@ -57,10 +61,10 @@ class ChannelWubookPmsReservationLineListener(Component):
     def on_record_write(self, record, fields=None):
         if not fields or not (set(fields) & _LINE_RELEVANT_FIELDS):
             return
-        if "room_id" in fields:
-            # The line moved between rooms: the availability freed on the
-            # room type it left has to be published too, and the record only
-            # carries the new one.
+        if {"room_id", "date"} & set(fields):
+            # The line moved. The record only carries where it landed, so
+            # neither the room type it left nor the night it freed can be
+            # read off it: publish the rest of the calendar.
             buffer_property_exports(self.env, record.pms_property_id)
             return
         self._enqueue_property_exports(record)

@@ -24,12 +24,16 @@ _PLAN_RULES_BUFFER_KEY = "connector_pms_wubook.plan_rules_buffer"
 _PENDING_PLAN_RULES_KEY = "connector_pms_wubook.pending_plan_rules"
 
 
-# Rule fields whose change must re-push the parent plan (rules payload):
-# stay restrictions / closures / OTA opt-out. ``real_avail`` and ``avail_id``
-# are intentionally NOT here — those are technical recomputes that flow from
-# reservation line changes.
+# Rule fields whose change must re-push the parent plan. The dates are in
+# here because moving a range moves the nights the restrictions land on,
+# which is what Wubook is told.
 _RULE_PLAN_FIELDS = frozenset(
     {
+        "availability_plan_id",
+        "room_type_id",
+        "pms_property_id",
+        "date_from",
+        "date_to",
         "min_stay",
         "min_stay_arrival",
         "max_stay",
@@ -37,7 +41,6 @@ _RULE_PLAN_FIELDS = frozenset(
         "closed",
         "closed_arrival",
         "closed_departure",
-        "no_ota",
     }
 )
 
@@ -73,7 +76,7 @@ def _flush_pending_plan_rules(env):
     if not data:
         return
     Plan = env["pms.availability.plan"]
-    for plan_id, property_ids in data.items():
+    for plan_id, windows in data.items():
         plan = Plan.browse(plan_id).exists()
         if not plan:
             continue
@@ -85,8 +88,10 @@ def _flush_pending_plan_rules(env):
             # one binding per backend. A rule belongs to a single
             # property, so only the binding whose backend covers an
             # affected property needs the push.
-            if binding.backend_id.pms_property_id.id not in property_ids:
+            window = windows.get(binding.backend_id.pms_property_id.id)
+            if not window:
                 continue
+            binding._wubook_stage_pending_window(*window)
             _buffer_plan_export_at(env, binding)
 
 
@@ -110,9 +115,16 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     of the parent plan payload, so a change on a rule schedules a
     re-export of its parent **plan**.
 
-    A rule no longer moves the property availability: the commercial
-    inventory lives in ``pms.inventory.rule`` and its own listener
-    schedules that push.
+    A rule covers a range of nights, and Wubook is written per night, so
+    what travels with the request is the window to push. The listener
+    accumulates the union of the windows touched during the transaction
+    and hands it to the plan binding, which is what the export mapper
+    expands back into one value per night.
+
+    Known limit: shortening or moving a range only stages where it is
+    now, not the nights it vacated, so those keep whatever Wubook was
+    last told until something else touches them. Deleting a rule does
+    stage its window, because the record is still readable at unlink.
 
     The path coalesces through a per-transaction buffer so that massive
     operations (e.g. the ``pms.massive.changes.wizard`` touching hundreds
@@ -121,8 +133,8 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     Performance: on write/create/unlink, the listener appends to a
     cheap per-(plan|property) staging buffer in ``cr.precommit.data``
     and lets a single precommit callback walk
-    ``plan.channel_wubook_bind_ids`` / ``prop.channel_wubook_bind_ids``
-    once per (plan, property) pair (instead of once per rule).
+    ``plan.channel_wubook_bind_ids`` once per (plan, property) pair
+    (instead of once per rule).
     """
 
     _name = "channel.wubook.pms.availability.plan.rule.listener"
@@ -132,15 +144,15 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
     # --- staging helpers --------------------------------------------
 
     def _stage_plan_rule(self, record):
-        """Append a (plan_id, property_id) fingerprint to the staging
-        buffer. Cheap (dict / set). Binding resolution happens later,
-        once per (plan, property), at precommit.
+        """Append the rule's window to the staging buffer, keyed by
+        (plan, property). Cheap (dicts). Binding resolution happens
+        later, once per (plan, property), at precommit.
         """
         plan = record.availability_plan_id
         if not plan:
             return
         rule_property_id = record.pms_property_id.id
-        if not rule_property_id:
+        if not rule_property_id or not record.date_from or not record.date_to:
             return
         cr = self.env.cr
         data = cr.precommit.data
@@ -148,7 +160,15 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
             data[_PENDING_PLAN_RULES_KEY] = {}
             env = self.env
             cr.precommit.add(lambda env=env: _flush_pending_plan_rules(env))
-        data[_PENDING_PLAN_RULES_KEY].setdefault(plan.id, set()).add(rule_property_id)
+        windows = data[_PENDING_PLAN_RULES_KEY].setdefault(plan.id, {})
+        window = windows.get(rule_property_id)
+        if window:
+            windows[rule_property_id] = (
+                min(window[0], record.date_from),
+                max(window[1], record.date_to),
+            )
+        else:
+            windows[rule_property_id] = (record.date_from, record.date_to)
 
     # --- event handlers ---------------------------------------------
 
@@ -166,5 +186,5 @@ class ChannelWubookPmsAvailabilityPlanRuleListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_unlink(self, record, fields=None):
-        # Read the plan / property before the rule is gone.
+        # Read the plan / property / window before the rule is gone.
         self._stage_plan_rule(record)

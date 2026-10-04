@@ -6,8 +6,21 @@ from odoo.exceptions import MissingError, ValidationError
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
+from odoo.addons.pms.models.date_ranges import collapse_dates
 
 from ..pms_api_rest_utils import pms_api_check_access
+
+# What a night says when no rule covers it: nothing is restricted. Ordered,
+# because the value tuples that group the nights into ranges are built from it.
+RESTRICTION_DEFAULTS = {
+    "min_stay": 0,
+    "min_stay_arrival": 0,
+    "max_stay": 0,
+    "max_stay_arrival": 0,
+    "closed": False,
+    "closed_departure": False,
+    "closed_arrival": False,
+}
 
 
 class PmsAvailabilityPlanService(Component):
@@ -120,46 +133,23 @@ class PmsAvailabilityPlanService(Component):
         pms_api_check_access(user=self.env.user, records=rooms)
         room_type_ids = rooms.mapped("room_type_id").ids
         if not room_type_ids or not target_dates:
-            # The query below interpolates these as SQL tuples, and an empty
-            # one renders as "IN ()", which is a syntax error. A property with
-            # no rooms configured, or a reversed date range, has no rules by
-            # definition: answer with an empty list instead of a 500.
+            # A property with no rooms configured, or a reversed date range,
+            # has no rules by definition: answer with an empty list.
             return []
-        selected_fields = [
-            "id",
-            "date",
-            "room_type_id",
-            "min_stay",
-            "min_stay_arrival",
-            "max_stay",
-            "max_stay_arrival",
-            "closed",
-            "closed_departure",
-            "closed_arrival",
-        ]
-        sql_select = "SELECT %s" % ", ".join(selected_fields)
-        self.env.cr.execute(
-            f"""
-            {sql_select}
-            FROM    pms_availability_plan_rule  rule
-            WHERE   (pms_property_id = %s)
-                AND (date in %s)
-                AND (availability_plan_id = %s)
-                AND (room_type_id in %s)
-            """,
-            (
-                pms_property_id,
-                tuple(target_dates),
+        # The restrictions are stored by date range, and the payload is by
+        # night, so the ranges are expanded here. Overlaps resolve to the rule
+        # written last, which is the model's own reading rule.
+        rules_by_night = (
+            self.env["pms.availability.plan.rule"]
+            .sudo()
+            ._resolve_rules(
                 record_availability_plan_id.id,
-                tuple(room_type_ids),
-            ),
-        )
-        result_sql = self.env.cr.fetchall()
-        rules = []
-        for res in result_sql:
-            rules.append(
-                {field: res[selected_fields.index(field)] for field in selected_fields}
+                pms_property_id,
+                date_from,
+                date_to,
+                room_type_ids=room_type_ids,
             )
+        )
         # The inventory left the plan rules, so it is resolved at the general
         # scope, which is all this plan bound payload can express.
         inventory = (
@@ -182,35 +172,29 @@ class PmsAvailabilityPlanService(Component):
 
         for date in target_dates:
             for room_type_id in room_type_ids:
-                rule = next(
-                    (
-                        rule
-                        for rule in rules
-                        if rule["room_type_id"] == room_type_id and rule["date"] == date
-                    ),
-                    False,
-                )
+                rule = rules_by_night.get((room_type_id, date))
+                if not rule:
+                    continue
                 resolved_inventory = inventory.get(
                     (room_type_id, date), {"quota": -1, "max_avail": -1}
                 )
-
-                if rule:
-                    availability_plan_rule_info = PmsAvailabilityPlanRuleInfo(
-                        roomTypeId=rule["room_type_id"],
+                result.append(
+                    PmsAvailabilityPlanRuleInfo(
+                        roomTypeId=room_type_id,
                         date=datetime.combine(date, datetime.min.time()).isoformat(),
-                        availabilityRuleId=rule["id"],
-                        minStay=rule["min_stay"],
-                        minStayArrival=rule["min_stay_arrival"],
-                        maxStay=rule["max_stay"],
-                        maxStayArrival=rule["max_stay_arrival"],
-                        closed=rule["closed"],
-                        closedDeparture=rule["closed_departure"],
-                        closedArrival=rule["closed_arrival"],
+                        availabilityRuleId=rule.id,
+                        minStay=rule.min_stay,
+                        minStayArrival=rule.min_stay_arrival,
+                        maxStay=rule.max_stay,
+                        maxStayArrival=rule.max_stay_arrival,
+                        closed=rule.closed,
+                        closedDeparture=rule.closed_departure,
+                        closedArrival=rule.closed_arrival,
                         quota=resolved_inventory["quota"],
                         maxAvailability=resolved_inventory["max_avail"],
                         availabilityPlanId=availability_plan_id,
                     )
-                    result.append(availability_plan_rule_info)
+                )
 
         return result
 
@@ -306,51 +290,87 @@ class PmsAvailabilityPlanService(Component):
             # shape is a dedicated endpoint by date range; this stays until
             # the front moves to it.
             self._bridge_inventory(rules)
-            for avail_plan_rule in rules:
-                vals = dict()
-                date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
-                if avail_plan_rule.minStay is not None:
-                    vals.update({"min_stay": avail_plan_rule.minStay})
-                if avail_plan_rule.minStayArrival is not None:
-                    vals.update({"min_stay_arrival": avail_plan_rule.minStayArrival})
-                if avail_plan_rule.maxStay is not None:
-                    vals.update({"max_stay": avail_plan_rule.maxStay})
-                if avail_plan_rule.maxStayArrival is not None:
-                    vals.update({"max_stay_arrival": avail_plan_rule.maxStayArrival})
-                if avail_plan_rule.closed is not None:
-                    vals.update({"closed": avail_plan_rule.closed})
-                if avail_plan_rule.closedDeparture is not None:
-                    vals.update({"closed_departure": avail_plan_rule.closedDeparture})
-                if avail_plan_rule.closedArrival is not None:
-                    vals.update({"closed_arrival": avail_plan_rule.closedArrival})
-                avail_rule = (
-                    self.env["pms.availability.plan.rule"]
-                    .sudo()
-                    .search(
-                        [
-                            (
-                                "availability_plan_id",
-                                "=",
-                                avail_plan_rule.availabilityPlanId,
-                            ),
-                            ("pms_property_id", "=", avail_plan_rule.pmsPropertyId),
-                            ("room_type_id", "=", avail_plan_rule.roomTypeId),
-                            ("date", "=", date),
-                        ]
-                    )
+            self._write_restriction_ranges(property_id, rules)
+
+    def _write_restriction_ranges(self, pms_property_id, avail_plan_rules):
+        """Write the restrictions the front sends by night as date ranges.
+
+        The payload carries one item per night and only the fields being
+        changed, while ``pms.availability.plan.rule`` expresses a period as
+        one record. So what each night ends up saying is resolved first (what
+        applies there, overridden by what the payload sends), and the nights
+        that end up saying the same thing are collapsed into ranges. A
+        fortnight closed for five room types lands as five rules, not seventy.
+        """
+        Rule = self.env["pms.availability.plan.rule"].sudo()
+        nights_by_scope = {}
+        for avail_plan_rule in avail_plan_rules:
+            date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
+            overrides = {
+                field: value
+                for field, value in (
+                    ("min_stay", avail_plan_rule.minStay),
+                    ("min_stay_arrival", avail_plan_rule.minStayArrival),
+                    ("max_stay", avail_plan_rule.maxStay),
+                    ("max_stay_arrival", avail_plan_rule.maxStayArrival),
+                    ("closed", avail_plan_rule.closed),
+                    ("closed_departure", avail_plan_rule.closedDeparture),
+                    ("closed_arrival", avail_plan_rule.closedArrival),
                 )
-                if avail_rule:
-                    avail_rule.write(vals)
-                else:
-                    vals.update(
+                if value is not None
+            }
+            key = (avail_plan_rule.availabilityPlanId, avail_plan_rule.roomTypeId)
+            nights_by_scope.setdefault(key, {})[date] = overrides
+
+        for (plan_id, room_type_id), overrides_by_night in nights_by_scope.items():
+            nights = sorted(overrides_by_night)
+            applied = Rule._resolve_rules(
+                plan_id,
+                pms_property_id,
+                nights[0],
+                nights[-1],
+                room_type_ids=[room_type_id],
+            )
+            by_values = {}
+            for night in nights:
+                rule = applied.get((room_type_id, night))
+                values = {
+                    field: rule[field] if rule else default
+                    for field, default in RESTRICTION_DEFAULTS.items()
+                }
+                values.update(overrides_by_night[night])
+                by_values.setdefault(
+                    tuple(values[field] for field in RESTRICTION_DEFAULTS), []
+                ).append(night)
+
+            for values, dates in by_values.items():
+                rule_values = dict(zip(RESTRICTION_DEFAULTS, values, strict=True))
+                for date_from, date_to in collapse_dates(dates):
+                    existing = Rule.search(
+                        [
+                            ("availability_plan_id", "=", plan_id),
+                            ("pms_property_id", "=", pms_property_id),
+                            ("room_type_id", "=", room_type_id),
+                            ("date_from", "=", date_from),
+                            ("date_to", "=", date_to),
+                        ],
+                        limit=1,
+                    )
+                    if existing:
+                        existing.write(rule_values)
+                        continue
+                    # Written on top of whatever else covers those nights:
+                    # overlapping is how the model says the last word wins.
+                    Rule.create(
                         {
-                            "room_type_id": avail_plan_rule.roomTypeId,
-                            "date": date,
-                            "pms_property_id": avail_plan_rule.pmsPropertyId,
-                            "availability_plan_id": avail_plan_rule.availabilityPlanId,
+                            **rule_values,
+                            "availability_plan_id": plan_id,
+                            "pms_property_id": pms_property_id,
+                            "room_type_id": room_type_id,
+                            "date_from": date_from,
+                            "date_to": date_to,
                         }
                     )
-                    self.env["pms.availability.plan.rule"].sudo().create(vals)
 
     @restapi.method(
         [

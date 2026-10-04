@@ -1,8 +1,9 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
+
+from ..common.wubook_window import accepted_window
 
 
 class ChannelWubookPmsPropertyAvailabilityBinding(models.Model):
@@ -19,63 +20,83 @@ class ChannelWubookPmsPropertyAvailabilityBinding(models.Model):
         ondelete="cascade",
     )
 
-    channel_wubook_availability_ids = fields.One2many(
-        string="Wubook Availability",
-        help="Property availability",
-        comodel_name="channel.wubook.pms.availability",
-        inverse_name="channel_wubook_property_availability_id",
+    # What the channel is told is one number per room type and night, but
+    # that number is not stored anywhere: it is resolved from the physical
+    # availability and the declared inventory when the export runs. So what
+    # the binding has to remember is not a value, it is which nights still
+    # have to be published. An empty window means a full push, which is what
+    # a property connected for the first time or a manual resync wants.
+    wubook_pending_date_from = fields.Date(
+        string="Pending From",
+        readonly=True,
+        help="First night waiting to be pushed to Wubook.",
+    )
+    wubook_pending_date_to = fields.Date(
+        string="Pending To",
+        readonly=True,
+        help="Last night waiting to be pushed to Wubook.",
     )
 
-    def _is_synced_export(self):
-        synced = super()._is_synced_export()
-        if not synced:
-            return False
-        wubook_date_valid = fields.Date.today() - relativedelta(days=2)
-        room_types_ids = (
-            self.env["pms.room.type"]
-            .search(
-                [
-                    ("channel_wubook_bind_ids.backend_id", "=", self.backend_id.id),
-                ]
+    def _wubook_stage_pending_window(self, date_from, date_to):
+        """Widen the window waiting to be exported so it also covers
+        ``date_from``..``date_to``.
+        """
+        for record in self:
+            pending_from = record.wubook_pending_date_from
+            pending_to = record.wubook_pending_date_to
+            record.write(
+                {
+                    "wubook_pending_date_from": min(
+                        pending_from or date_from, date_from
+                    ),
+                    "wubook_pending_date_to": max(pending_to or date_to, date_to),
+                    # Availability moved, so the property is no longer in
+                    # sync. This is what the scheduler looks at to pick it up.
+                    "actual_write_date": fields.Datetime.now(),
+                }
             )
-            .ids
+
+    def _wubook_export_window(self):
+        """:return: the ``(first, last)`` nights this export has to push,
+        clipped to what Wubook accepts, or ``None`` when there is nothing
+        left inside the window.
+        """
+        self.ensure_one()
+        accepted_from, accepted_to = accepted_window()
+        date_from = max(self.wubook_pending_date_from or accepted_from, accepted_from)
+        date_to = min(self.wubook_pending_date_to or accepted_to, accepted_to)
+        if date_from > date_to:
+            return None
+        return (date_from, date_to)
+
+    def _wubook_export_room_types(self):
+        """:return: the room type BINDINGS whose availability this backend
+        publishes.
+
+        The room types that actually have rooms in the property, bound on
+        the backend and not in a room type class marked as not to be
+        synchronized. The binding is what is returned because the export
+        needs its external id and its default availability, which is the
+        ceiling to apply when no inventory rule declares one.
+        """
+        self.ensure_one()
+        backend = self.backend_id
+        nosync = (
+            backend.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames()
         )
-        self.env.cr.execute(
-            """
-            SELECT avail.id
-            FROM pms_availability AS avail
-                LEFT JOIN channel_wubook_pms_availability AS binding
-                    ON binding.odoo_id = avail.id
-            WHERE avail.date >= %s
-            AND avail.pms_property_id = %s
-            AND avail.room_type_id IN %s
-            AND (
-                    (
-                        binding.backend_id IS NULL
-                        OR binding.backend_id != %s
-                    )
-                OR
-                    (
-                        binding.backend_id = %s
-                        AND (
-                            binding.sync_date_export IS NULL
-                            OR binding.sync_date_export < binding.actual_write_date
-                        )
-                    )
-                )
-            """,
-            (
-                wubook_date_valid,
-                self.backend_id.pms_property_id.id,
-                tuple(room_types_ids) if room_types_ids else (0,),
-                self.backend_id.id,
-                self.backend_id.id,
-            ),
+        room_type_ids = self.odoo_id.room_ids.filtered("active").mapped("room_type_id")
+        if not room_type_ids:
+            return self.env["channel.wubook.pms.room.type"].browse()
+        bindings = self.env["channel.wubook.pms.room.type"].search(
+            [
+                ("backend_id", "=", backend.id),
+                ("odoo_id", "in", room_type_ids.ids),
+                ("external_id", "!=", False),
+            ]
         )
-        avails_to_export = self.env.cr.fetchone()
-        if avails_to_export:
-            return False
-        return True
+        return bindings.filtered(
+            lambda binding: binding.odoo_id.class_id.default_code not in nosync
+        )
 
     @api.model
     def export_data(self, backend_record=None):

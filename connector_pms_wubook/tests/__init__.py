@@ -10,6 +10,7 @@ from . import test_auth
 # from . import test_product_pricelist
 # from . import test_availability_plan
 # from . import test_folio
+from . import test_availability_plan_ranges
 from . import test_backend_scoping
 from . import test_binding_registry
 from . import test_call_control
