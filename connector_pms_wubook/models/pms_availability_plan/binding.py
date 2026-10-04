@@ -89,6 +89,10 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
         configures on the backend's property. A type the plan has never had
         a rule for is not managed from here, so its restrictions in Wubook
         are left alone.
+
+        A plan that inherits configures what its parents configure, so the
+        whole chain counts: leaving out a type the child does not restate
+        would stop publishing it instead of publishing what it inherits.
         """
         self.ensure_one()
         backend = self.backend_id
@@ -96,10 +100,13 @@ class ChannelWubookPmsAvailabilityPlanBinding(models.Model):
             """
             SELECT DISTINCT rule.room_type_id
             FROM pms_availability_plan_rule rule
-            WHERE rule.availability_plan_id = %s
+            WHERE rule.availability_plan_id IN %s
               AND rule.pms_property_id = %s
             """,
-            (self.odoo_id.id, backend.pms_property_id.id),
+            (
+                tuple(self.odoo_id._inheritance_chain()),
+                backend.pms_property_id.id,
+            ),
         )
         configured_ids = {row[0] for row in self.env.cr.fetchall()}
         if not configured_ids:
