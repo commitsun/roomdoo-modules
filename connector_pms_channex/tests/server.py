@@ -144,6 +144,7 @@ class FakeChannexServer:
             "groups": "group",
             "properties": "property",
             "room_types": "room_type",
+            "channels": "channel",
         }.get(resource, resource)
 
     def _wrap(self, resource, record):
@@ -222,8 +223,45 @@ class FakeChannexServer:
         self.store.setdefault(resource, []).append(record)
         return FakeResponse(201, {"data": self._wrap(resource, record)})
 
+    #: what Channex accepts inside a mapping's ``derived_option``
+    RATE_LOGICS = (
+        "increase_by_amount",
+        "decrease_by_amount",
+        "increase_by_percent",
+        "decrease_by_percent",
+    )
+
+    def _validate_mappings(self, values):
+        """Channex rejects a malformed ``derived_option``, so the fake does too."""
+        for mapping in values.get("rate_plans") or []:
+            option = (mapping.get("settings") or {}).get("derived_option")
+            if option is None:
+                continue
+            rules = option.get("rate") if isinstance(option, dict) else None
+            if not isinstance(rules, list) or not rules:
+                return {
+                    "code": "validation",
+                    "title": "derived_option.rate is required",
+                }
+            for rule in rules:
+                if not isinstance(rule, list) or len(rule) != 2:
+                    return {
+                        "code": "validation",
+                        "title": "each modification rule is a 2 item array",
+                    }
+                if rule[0] not in self.RATE_LOGICS:
+                    return {
+                        "code": "validation",
+                        "title": f"unknown modification rule {rule[0]}",
+                    }
+        return None
+
     def _update(self, resource, external_id, body):
         values = (body or {}).get(self._payload_root(resource)) or {}
+        if resource == "channels":
+            error = self._validate_mappings(values)
+            if error:
+                return FakeResponse(422, {"errors": error})
         for record in self.store.get(resource, []):
             if str(record["id"]) == str(external_id):
                 record.update(values)

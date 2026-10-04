@@ -132,6 +132,17 @@ class TestChannexAdapter(ChannexConnectorCase):
         self.assertIsNone(self._adapter(PROPERTIES).create({"title": "New"}))
         self.assertFalse(self.server.calls_to("POST"))
 
+    def test_export_disabled_blocks_a_write_that_carries_no_body(self):
+        """A DELETE has no body and is still a write. Whether a call changes
+        anything on Channex is told by the method, not by what it carries."""
+        self.backend.export_disabled = True
+        self.server.seed(
+            "properties", [{"id": "p-1", "title": "Hotel", "currency": "EUR"}]
+        )
+        self._adapter(PROPERTIES).delete("p-1")
+        self.assertFalse(self.server.calls_to("DELETE"))
+        self.assertTrue(self.server.store["properties"])
+
     def test_rate_limit_is_retryable_once_configured(self):
         method = self.env["channel.backend.method"].create(
             {

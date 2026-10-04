@@ -22,6 +22,19 @@
           options="{'no_quick_create': True}"
           placeholder="Pick or create the agency"
         />
+                <field name="ota_price_modifier_type" readonly="1" />
+                <field
+          name="ota_price_modifier_value"
+          readonly="1"
+          attrs="{'invisible': [('ota_price_modifier_type', '=', False)]}"
+        />
+                <button
+          name="action_push_price_modifier"
+          type="object"
+          title="Push the rate logic to the Channex mapping"
+          class="fa fa-upload"
+          attrs="{'invisible': [('agency_id', '=', False)]}"
+        />
                 <field name="sync_date" optional="hide" readonly="1" />
                 <field name="external_id" optional="hide" readonly="1" />
                 <field name="active" optional="hide" readonly="1" />
