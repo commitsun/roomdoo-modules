@@ -1,3 +1,4 @@
+from . import test_availability_plan_inventory_bridge
 from . import test_availability_plan_service
 from . import test_external_folio_guest_name
 from . import test_folio_invoiced_error_code
