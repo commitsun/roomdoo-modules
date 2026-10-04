@@ -11,10 +11,30 @@
                 <!-- change the invisible attribute to 0 when used
                      in submodules -->
                 <page
-                    string="Connectors"
-                    name="connector"
-                    groups="connector.group_connector_manager"
-                />
+          string="Connectors"
+          name="connector"
+          groups="connector.group_connector_manager"
+        >
+                <group name="channel_connect">
+                    <field name="channel_connection_state" widget="badge" />
+                    <field name="channel_backend_ids" widget="many2many_tags" />
+                    <div>
+                        <button
+                name="action_open_channel_connect_wizard"
+                type="object"
+                string="Connect to a channel"
+                class="btn-primary"
+              />
+                        <button
+                name="action_view_channel_connections"
+                type="object"
+                string="View connections"
+                class="btn-secondary"
+                attrs="{'invisible': [('channel_connection_state', '!=', 'connected')]}"
+              />
+                    </div>
+                </group>
+                </page>
             </xpath>
         </field>
     </record>

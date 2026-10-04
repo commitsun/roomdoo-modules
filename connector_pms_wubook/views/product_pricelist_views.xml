@@ -11,44 +11,27 @@
                 <separator string="Wubook" />
                 <group>
                     <field name="wubook_flatten_to_daily" />
-                    <field name="wubook_connection_state" widget="badge" />
-                    <div>
-                        <button
-                            name="action_open_wubook_connect_wizard"
-                            type="object"
-                            string="Connect to Wubook"
-                            class="btn-primary"
-                            attrs="{'invisible': [('wubook_connection_state', '=', 'connected')]}"
-                        />
-                        <button
-                            name="action_view_wubook_connection"
-                            type="object"
-                            string="Wubook Connection"
-                            class="btn-secondary"
-                            attrs="{'invisible': [('wubook_connection_state', '!=', 'connected')]}"
-                        />
-                    </div>
                 </group>
                 <field name="channel_wubook_bind_ids" nolabel="1">
                     <tree editable="bottom">
                         <field
-                            name="backend_id"
-                            attrs="{'readonly': [('id', '!=', False)]}"
-                        />
+              name="backend_id"
+              attrs="{'readonly': [('id', '!=', False)]}"
+            />
                         <field name="external_id" />
                         <button
-                            type="object"
-                            title="Resynchronize (import)"
-                            name="resync_import"
-                            class="fa fa-download"
-                        />
+              type="object"
+              title="Resynchronize (import)"
+              name="resync_import"
+              class="fa fa-download"
+            />
                         <field name="sync_date" />
                         <button
-                            type="object"
-                            title="Resynchronize (export)"
-                            name="resync_export"
-                            class="fa fa-upload"
-                        />
+              type="object"
+              title="Resynchronize (export)"
+              name="resync_export"
+              class="fa fa-upload"
+            />
                         <field name="synced_export" />
                         <field name="sync_date_export" />
                     </tree>
