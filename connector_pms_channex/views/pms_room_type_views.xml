@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="pms_room_type_view_form" model="ir.ui.view">
+        <field name="name">pms.room.type.connector.channex.form</field>
+        <field name="model">pms.room.type</field>
+        <field name="inherit_id" ref="connector_pms.pms_room_type_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='connector']">
+                <separator string="Channex" />
+                <field name="channel_channex_bind_ids" nolabel="1">
+                    <tree editable="bottom">
+                        <field name="backend_id" />
+                        <field name="external_id" />
+                        <field name="count_of_rooms" />
+                        <field name="occ_adults" />
+                        <field name="default_occupancy" />
+                        <field name="occ_children" />
+                        <field name="occ_infants" />
+                        <field name="room_kind" />
+                        <field
+              name="heterogeneous_capacity"
+              widget="boolean_toggle"
+              readonly="1"
+            />
+                    </tree>
+                </field>
+            </xpath>
+        </field>
+    </record>
+</odoo>
