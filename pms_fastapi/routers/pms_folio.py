@@ -646,7 +646,10 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
                 ),
                 invoiceIds=invoices.ids,
             )
-        invoices.narration = payload.narration
+        # An empty narration means "not provided": keep the note that
+        # _create_invoices copied from the folio or the company invoice terms.
+        if payload.narration:
+            invoices.narration = payload.narration
         return invoices
 
     @staticmethod
