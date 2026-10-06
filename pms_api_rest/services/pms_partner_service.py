@@ -9,7 +9,7 @@ from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
-from ..pms_api_rest_utils import pms_api_check_access
+from ..pms_api_rest_utils import invoice_is_reversed, pms_api_check_access
 
 _ref_vat = {
     "al": "J91402501L",
@@ -592,7 +592,7 @@ class PmsPartnerService(Component):
                         moveLines=move_lines if move_lines else None,
                         portalUrl=portal_url,
                         moveType=move.move_type,
-                        isReversed=move.payment_state == "reversed",
+                        isReversed=invoice_is_reversed(move),
                         isDownPaymentInvoice=move._is_downpayment(),
                         isSimplifiedInvoice=move.journal_id.is_simplified_invoice,
                     )

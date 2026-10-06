@@ -208,3 +208,22 @@ msgstr "Esta reserva ha quedado con un cargo pendiente de %.2f€. Cuando gestio
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Reservation ready for checkout. You can check out directly from here."
 msgstr "Reserva lista para el checkout. Marca la salida directamente desde aquí."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_folio_service.py:0
+#, python-format
+msgid ""
+"The channel changed payment %(payment)s from %(old).2f to %(new).2f, but it "
+"was not updated: it settles an invoice that has already been rectified, and "
+"changing it would make that invoice owe it again. Register the difference by"
+" hand."
+msgstr ""
+"El canal cambió el cobro %(payment)s de %(old).2f a %(new).2f, pero no se ha "
+"actualizado: paga una factura que ya está rectificada, y cambiarlo haría que"
+" esa factura volviera a deberlo. Registra la diferencia a mano."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_invoice_service.py:0
+#, python-format
+msgid "This change on a posted invoice needs a rectification."
+msgstr "Este cambio en una factura validada requiere una rectificación."

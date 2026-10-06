@@ -50,6 +50,26 @@ def precheckin_share_url(env, kind, record_id, token, lang=None):
     )
 
 
+def invoice_is_reversed(invoice):
+    """Whether an invoice no longer stands: the app must neither list it as
+    live nor let it be rectified again.
+
+    ``payment_state == 'reversed'`` is the core way of saying it, but an invoice
+    rectified keeping its payment -- with a credit note issued with
+    ``cancel=False`` -- stays 'paid'. That one is covered by its posted credit
+    notes instead.
+    """
+    if invoice.payment_state == "reversed":
+        return True
+    credit_notes = invoice.reversal_move_id.filtered(lambda m: m.state == "posted")
+    return bool(credit_notes) and (
+        invoice.currency_id.compare_amounts(
+            sum(credit_notes.mapped("amount_total")), invoice.amount_total
+        )
+        >= 0
+    )
+
+
 def pms_api_check_access(user, records=False):
     if not records or user.has_group("base.group_public"):
         return

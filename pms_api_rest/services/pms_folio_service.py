@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 import pytz
+from markupsafe import Markup, escape
 
 from odoo import _, fields
 from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
@@ -16,6 +17,7 @@ from odoo.addons.component.core import Component
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
 from ..pms_api_rest_utils import (
+    invoice_is_reversed,
     pms_api_check_access,
     precheckin_share_url,
     url_image_pms_api_rest,
@@ -1257,6 +1259,11 @@ class PmsFolioService(Component):
                 or proposed_transaction.amount != transaction.amount
             ):
                 if proposed_transaction:
+                    if self._payment_settles_reversed_invoice(proposed_transaction):
+                        self._warn_payment_not_updated(
+                            folio, proposed_transaction, transaction.amount
+                        )
+                        continue
                     proposed_transaction.action_draft()
                     proposed_transaction.amount = transaction.amount
                     proposed_transaction.action_post()
@@ -1287,6 +1294,40 @@ class PmsFolioService(Component):
                             date=datetime.strptime(transaction.date, "%Y-%m-%d"),
                             ref=reference,
                         )
+
+    def _payment_settles_reversed_invoice(self, payment):
+        """Whether ``payment`` settles an invoice that no longer stands.
+
+        Rectified keeping its payment, an invoice still holds it, while the
+        money its credit note took over has moved on to the invoice that
+        replaced it: changing the payment unreconciles it, and the rectified
+        invoice would owe it again.
+        """
+        return any(
+            invoice_is_reversed(invoice)
+            for invoice in payment.reconciled_invoice_ids.filtered(
+                lambda move: move.state == "posted" and move.move_type == "out_invoice"
+            )
+        )
+
+    def _warn_payment_not_updated(self, folio, payment, amount):
+        """Changing the payment would fail the whole update of the folio, and
+        the channel would keep sending it. The rest of the update goes through,
+        and the hotel is told what is left to do by hand, once: the channel
+        sends the same amount again with every update of the reservation."""
+        message = _(
+            "The channel changed payment %(payment)s from %(old).2f to "
+            "%(new).2f, but it was not updated: it settles an invoice that has "
+            "already been rectified, and changing it would make that invoice owe "
+            "it again. Register the difference by hand.",
+            payment=payment.name,
+            old=payment.amount,
+            new=amount,
+        )
+        if any(str(escape(message)) in (msg.body or "") for msg in folio.message_ids):
+            return
+        _logger.warning("Folio %s: %s", folio.name, message)
+        folio.sudo().message_post(body=Markup("<p>%s</p>") % message)
 
     @restapi.method(
         [
@@ -1666,7 +1707,7 @@ class PmsFolioService(Component):
                             moveLines=move_lines if move_lines else None,
                             portalUrl=portal_url,
                             moveType=move.move_type,
-                            isReversed=move.payment_state == "reversed",
+                            isReversed=invoice_is_reversed(move),
                             isDownPaymentInvoice=move._is_downpayment(),
                             isSimplifiedInvoice=move.journal_id.is_simplified_invoice,
                             narration=move.narration if move.narration else None,
@@ -2117,7 +2158,7 @@ class PmsFolioService(Component):
         has_posted_invoice = any(
             move.state == "posted"
             and move.move_type == "out_invoice"
-            and move.payment_state != "reversed"
+            and not invoice_is_reversed(move)
             for move in folio.move_ids
         )
         if has_posted_invoice:

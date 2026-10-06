@@ -11,7 +11,7 @@ from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
-from ..pms_api_rest_utils import pms_api_check_access
+from ..pms_api_rest_utils import invoice_is_reversed, pms_api_check_access
 
 # Reported as the invoice date while the reservation invoice lock blocks a
 # draft, so the legacy front-end does not offer the validation button.
@@ -213,7 +213,7 @@ class PmsInvoiceService(Component):
                     folioId=invoice.folio_ids[0] if invoice.folio_ids else None,
                     portalUrl=portal_url,
                     moveType=invoice.move_type,
-                    isReversed=invoice.payment_state == "reversed",
+                    isReversed=invoice_is_reversed(invoice),
                     isDownPaymentInvoice=invoice._is_downpayment(),
                     isSimplifiedInvoice=invoice.journal_id.is_simplified_invoice,
                     originAgencyId=invoice.origin_agency_id.id
@@ -250,7 +250,9 @@ class PmsInvoiceService(Component):
         pms_api_check_access(user=self.env.user, records=invoice)
         if invoice.move_type in ["in_refund", "out_refund"]:
             raise UserError(_("You can't update a refund invoice"))
-        if invoice.payment_state == "reversed":
+        # Not only payment_state == 'reversed': rectified keeping its payment,
+        # the original stays 'paid' and would be rectified a second time.
+        if invoice_is_reversed(invoice):
             raise UserError(_("You can't update a reversed invoice"))
         # TODO: _check_fiscalyear_lock_date with sudo is unsafe, we need to check the access
         # invoice._check_fiscalyear_lock_date()
@@ -273,6 +275,7 @@ class PmsInvoiceService(Component):
         # If invoice lines are updated, we expect that all lines will be
         # send to service, the lines that are not sent we assume that
         # they have been eliminated
+        cmd_invoice_lines = []
         if pms_invoice_info.moveLines is not None:
             cmd_invoice_lines = self._get_invoice_lines_commands(
                 invoice, pms_invoice_info
@@ -281,15 +284,7 @@ class PmsInvoiceService(Component):
                 new_vals["invoice_line_ids"] = cmd_invoice_lines
         # Update Journal by partner if necessary (simplified invoice -> normal invoice)
         if pms_invoice_info.isSimplifiedInvoice is not None:
-            if (
-                invoice.journal_id.is_simplified_invoice
-                != pms_invoice_info.isSimplifiedInvoice
-            ):
-                new_vals["journal_id"] = (
-                    invoice.pms_property_id.journal_simplified_invoice_id.id
-                    if pms_invoice_info.isSimplifiedInvoice
-                    else invoice.pms_property_id.journal_normal_invoice_id.id
-                )
+            self._set_invoice_journal_vals(invoice, pms_invoice_info, new_vals)
         new_invoice = False
         if new_vals:
             # Update Invoice
@@ -338,26 +333,16 @@ class PmsInvoiceService(Component):
                     }
                     for move in invoice
                 ]
-                invoice._reverse_moves(default_values_list, cancel=True)
                 new_invoice.write(new_vals)
-                new_invoice.sudo().action_post()
+                # Lines of a posted invoice cannot be deleted: the sections left
+                # without lines go before the new invoice is posted.
+                self._unlink_empty_sections(new_invoice)
+                self._replace_posted_invoice(invoice, new_invoice, default_values_list)
             else:
                 new_invoice = self._direct_move_update(invoice, new_vals)
         invoice_to_update = new_invoice or invoice
-        # Clean sections without lines
-        folio_lines_invoiced = invoice_to_update.invoice_line_ids.folio_line_ids
-        for folio_line in folio_lines_invoiced.filtered(
-            lambda l: l.display_type == "line_section"
-        ):
-            if (
-                folio_line.id
-                not in folio_lines_invoiced.filtered(
-                    lambda l: l.display_type != "line_section"
-                ).section_id.ids
-            ):
-                folio_line.invoice_lines.filtered(
-                    lambda l: l.move_id == invoice_to_update
-                ).unlink()
+        if invoice_to_update.state == "draft":
+            self._unlink_empty_sections(invoice_to_update)
 
         if pms_invoice_info.narration is not None:
             invoice_to_update.write({"narration": pms_invoice_info.narration})
@@ -391,10 +376,82 @@ class PmsInvoiceService(Component):
         else:
             raise MissingError(_("Invoice not found"))
 
+    def _unlink_empty_sections(self, invoice):
+        """Remove the section lines of ``invoice`` left with no line under
+        them."""
+        folio_lines = invoice.invoice_line_ids.folio_line_ids
+        used_sections = folio_lines.filtered(
+            lambda line: line.display_type != "line_section"
+        ).section_id
+        for section in folio_lines.filtered(
+            lambda line: line.display_type == "line_section"
+            and line not in used_sections
+        ):
+            section.invoice_lines.filtered(
+                lambda line: line.move_id == invoice
+            ).unlink()
+
+    def _set_invoice_journal_vals(self, invoice, pms_invoice_info, new_vals):
+        """Put in ``new_vals`` the journal the invoice must end up in, chosen
+        the way the folio invoicing chooses it: by the customer it ends up with.
+        The anonymous customer gets a simplified invoice, a named one a normal
+        invoice, whatever the flag says.
+
+        The legacy edit modal never loads isSimplifiedInvoice and sends False
+        on every save, so False alone is not a request: with the customer
+        unchanged the invoice stays in its journal. Taken literally, a plain
+        save of a simplified invoice moved it to the normal journal -- on a
+        posted invoice, a rectification and a normal invoice for the anonymous
+        customer. Ticking it with no customer, or with the one already loaded
+        (the modal hides the customer while the option shows), asks for a
+        simplified invoice, so the invoice goes to the anonymous customer.
+        """
+        anonymous = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        to_simplified = pms_invoice_info.isSimplifiedInvoice
+        keeps_customer = (
+            not pms_invoice_info.partnerId
+            or pms_invoice_info.partnerId == invoice.partner_id.id
+        )
+        if (
+            to_simplified
+            and keeps_customer
+            and anonymous
+            and invoice.partner_id != anonymous
+        ):
+            new_vals["partner_id"] = anonymous.id
+        new_partner_id = new_vals.get("partner_id")
+        if anonymous and new_partner_id == anonymous.id:
+            to_simplified = True
+        elif new_partner_id:
+            to_simplified = False
+        elif not to_simplified:
+            to_simplified = invoice.journal_id.is_simplified_invoice
+        if invoice.journal_id.is_simplified_invoice != to_simplified:
+            new_vals["journal_id"] = (
+                invoice.pms_property_id.journal_simplified_invoice_id.id
+                if to_simplified
+                else invoice.pms_property_id.journal_normal_invoice_id.id
+            )
+
+    def _replace_posted_invoice(self, invoice, new_invoice, default_values_list):
+        """Rectify ``invoice`` and post ``new_invoice``, the draft copy that
+        replaces it.
+
+        The core way: a credit note with ``cancel=True``, which starts by
+        unreconciling the original, so that its payment is released and the
+        folio autoreconciliation can take it to the new invoice when it is
+        posted. pms_api_rest_reconcile_lock_date replaces it with a
+        rectification that keeps the original's reconciliations.
+        """
+        invoice.with_context(
+            sii_refund_type="I", supplier_invoice_number=invoice.name
+        )._reverse_moves(default_values_list, cancel=True)
+        new_invoice.sudo().action_post()
+
     def _direct_move_update(self, invoice, new_vals):
         previus_state = invoice.state
         if previus_state == "posted":
-            invoice.button_draft()
+            return self._rename_posted_invoice_lines(invoice, new_vals)
         if new_vals:
             updated_invoice_lines_name = False
             # REVIEW: If invoice lines are updated (lines that already existed),
@@ -436,7 +493,40 @@ class PmsInvoiceService(Component):
             invoice.action_post()
         return invoice
 
+    def _rename_posted_invoice_lines(self, invoice, new_vals):
+        """A posted invoice is never reset to draft here.
+
+        button_draft() unreconciles it, and the payments, transfer entries and
+        credit notes it was settled with are lost: re-posting only brings back
+        the payments the folio autoreconciliation can find. check_blocked_fields
+        sends every real change to the rectification, so what is left here is
+        renaming lines, which is written in place: line names are not protected
+        by the lock dates, and the SII uses a fixed description.
+        """
+        names = {}
+        for command in new_vals.get("invoice_line_ids", []):
+            if command[0] != 1 or set(command[2]) - {"name"}:
+                raise UserError(
+                    _("This change on a posted invoice needs a rectification.")
+                )
+            names[command[1]] = command[2]["name"]
+        if set(new_vals) - {"invoice_line_ids"}:
+            raise UserError(_("This change on a posted invoice needs a rectification."))
+        for line in invoice.invoice_line_ids.filtered(
+            lambda move_line: move_line.id in names
+            and move_line.name != names[move_line.id]
+        ):
+            line.name = names[line.id]
+        return invoice
+
     def check_blocked_fields(self, invoice, new_vals):
+        # A posted invoice cannot change its journal (core refuses it once it
+        # has been posted) nor, once sent to the SII, its date: both are a
+        # rectification and a new invoice.
+        if invoice.state == "posted" and (
+            "journal_id" in new_vals or "invoice_date" in new_vals
+        ):
+            return True
         # Check partner and amounts
         if (
             new_vals.get("partner_id")
