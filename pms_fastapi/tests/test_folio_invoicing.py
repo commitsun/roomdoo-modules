@@ -809,3 +809,75 @@ class TestFolioInvoicing(CommonTestPmsApi):
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/taxes-price-excluded")
+
+    # ------------------------------------------------------------------
+    # A rectified invoice no longer stands
+    # ------------------------------------------------------------------
+    def test_edit_rectified_invoice_returns_409(self):
+        """Editing it again would credit it twice."""
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=1)
+            test_client.post(f"/invoices/{invoice_id}/validate")
+            first = test_client.put(
+                f"/invoices/{invoice_id}?confirmRefund=true",
+                json=self._edit_payload(line, quantity=1),
+            )
+            self.assertEqual(first.status_code, status.HTTP_200_OK, first.text)
+            response = test_client.put(
+                f"/invoices/{invoice_id}?confirmRefund=true",
+                json=self._edit_payload(line, quantity=1),
+            )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/invoice-not-editable")
+
+    def test_delete_rectified_invoice_returns_409(self):
+        """Cancelling it again would credit it twice."""
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, _line = self._create_draft_invoice(test_client, folio, qty=1)
+            test_client.post(f"/invoices/{invoice_id}/validate")
+            first = test_client.delete(f"/invoices/{invoice_id}?confirmRefund=true")
+            self.assertEqual(first.status_code, status.HTTP_200_OK, first.text)
+            response = test_client.delete(f"/invoices/{invoice_id}?confirmRefund=true")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/invoice-not-deletable")
+
+    def test_the_credit_note_gets_the_sii_refund_type(self):
+        """The credit note copies the invoice's empty sii_refund_type: the SII
+        module only sets it from the context."""
+        folio = self._confirmed_folio()
+        move_class = type(self.env["account.move"])
+        reverse_moves = move_class._reverse_moves
+        seen = []
+
+        def spy(moves, *args, **kwargs):
+            seen.append(moves.env.context.get("sii_refund_type"))
+            return reverse_moves(moves, *args, **kwargs)
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, _line = self._create_draft_invoice(test_client, folio, qty=1)
+            test_client.post(f"/invoices/{invoice_id}/validate")
+            with patch.object(move_class, "_reverse_moves", spy):
+                response = test_client.delete(
+                    f"/invoices/{invoice_id}?confirmRefund=true"
+                )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(seen, ["I"])
+
+    def test_a_copy_of_a_replacement_replaces_nothing(self):
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=1)
+            test_client.post(f"/invoices/{invoice_id}/validate")
+            response = test_client.put(
+                f"/invoices/{invoice_id}?confirmRefund=true",
+                json=self._edit_payload(line, quantity=1),
+            )
+        replacement = self.env["account.move"].browse(response.json()["id"])
+        self.assertTrue(replacement.replaces_invoice_id)
+        self.assertFalse(replacement.copy_data()[0].get("replaces_invoice_id"))

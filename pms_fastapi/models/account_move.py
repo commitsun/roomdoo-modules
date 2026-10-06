@@ -23,6 +23,9 @@ class AccountMove(models.Model):
         string="Replaces Invoice",
         readonly=True,
         index=True,
+        # A copy of a replacement replaces nothing: carrying the link over
+        # would make it take over the original's credit note as well.
+        copy=False,
     )
     replaced_by_invoice_ids = fields.One2many(
         comodel_name="account.move",

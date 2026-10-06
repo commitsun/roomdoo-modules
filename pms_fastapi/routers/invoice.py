@@ -545,6 +545,16 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             if invoice.state == "draft":
                 invoice.unlink()
                 return Response(status_code=204)
+            if self._invoice_is_reversed(invoice):
+                self._raise_problem(
+                    409,
+                    "/errors/invoice-not-deletable",
+                    _("Invoice not deletable"),
+                    _(
+                        "This invoice has already been rectified, so cancelling "
+                        "it again would credit it twice."
+                    ),
+                )
             if not confirm_refund:
                 self._raise_problem(
                     409,
@@ -594,6 +604,16 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                         "/errors/invoice-not-editable",
                         _("Invoice not editable"),
                         _("Cancelled invoices cannot be edited."),
+                    )
+                if invoice.state == "posted" and self._invoice_is_reversed(invoice):
+                    self._raise_problem(
+                        409,
+                        "/errors/invoice-not-editable",
+                        _("Invoice not editable"),
+                        _(
+                            "This invoice has already been rectified, so "
+                            "editing it again would credit it twice."
+                        ),
                     )
                 if invoice.state == "posted" and not confirm_refund:
                     self._raise_problem(
@@ -914,7 +934,10 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             if reason
             else _("Reversal of: %s", invoice.name)
         )
-        return invoice._reverse_moves(
+        # The credit note copies the invoice's sii_refund_type, which is empty:
+        # it is a stored computed field that can be edited, and the SII module
+        # only sets it from the context. The key means nothing without it.
+        return invoice.with_context(sii_refund_type="I")._reverse_moves(
             default_values_list=[
                 {
                     "ref": ref,
@@ -944,15 +967,47 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
             credit_note.action_post()
         return credit_note
 
-    def _edit_posted_invoice(
-        self, invoice, payload, sale_lines, downpayment_lines, partner
-    ):
+    def _invoice_is_reversed(self, invoice):
+        """Whether an invoice no longer stands, so it cannot be rectified or
+        cancelled again.
+
+        ``payment_state == 'reversed'`` is the core way of saying it, but an
+        invoice rectified keeping its payment -- with a credit note issued with
+        ``cancel=False`` -- stays 'paid'. That one is covered by its posted
+        credit notes instead.
+        """
+        if invoice.payment_state == "reversed":
+            return True
+        credit_notes = invoice.reversal_move_id.filtered(
+            lambda move: move.state == "posted"
+        )
+        return bool(credit_notes) and (
+            invoice.currency_id.compare_amounts(
+                sum(credit_notes.mapped("amount_total")), invoice.amount_total
+            )
+            >= 0
+        )
+
+    def _rectify_posted_invoice(self, invoice):
+        """Rectify a posted invoice that a new one is going to replace, and
+        return the credit note.
+
+        The core way: everything reconciled with the invoice is released and a
+        credit note issued with ``cancel=True`` settles it, so its payments are
+        free for the new invoice. pms_fastapi_reconcile_lock_date replaces it
+        with a rectification that keeps the original's reconciliations.
+        """
         receivable_lines = invoice.line_ids.filtered(
             lambda line: line.account_id.account_type
             in ("asset_receivable", "liability_payable")
         )
         receivable_lines.remove_move_reconcile()
-        self._reverse_invoice_move(invoice)
+        return self._reverse_invoice_move(invoice)
+
+    def _edit_posted_invoice(
+        self, invoice, payload, sale_lines, downpayment_lines, partner
+    ):
+        self._rectify_posted_invoice(invoice)
         vals = self._edit_compute_invoice_vals(
             payload, sale_lines, downpayment_lines, partner
         )
@@ -1332,6 +1387,18 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     "/errors/invoice-not-editable",
                     _("Invoice not editable"),
                     _("The invoice state does not allow undoing reconciliations."),
+                )
+            if self._invoice_is_reversed(invoice):
+                # Its money may already pay the invoice that replaced it: the
+                # rectified invoice would owe it again.
+                self._raise_problem(
+                    409,
+                    "/errors/invoice-not-editable",
+                    _("Invoice not editable"),
+                    _(
+                        "This invoice has already been rectified, so its "
+                        "payments cannot be removed."
+                    ),
                 )
             payment = (
                 self.env["account.payment"]

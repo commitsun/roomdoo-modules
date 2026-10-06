@@ -1529,3 +1529,32 @@ msgstr "supplierPayment requiere partnerId."
 #, python-format
 msgid "wrong user/pass"
 msgstr "usuario/contraseña incorrectos"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so cancelling it again would credit"
+" it twice."
+msgstr ""
+"Esta factura ya está rectificada: anularla otra vez la abonaría dos veces."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so editing it again would credit it"
+" twice."
+msgstr ""
+"Esta factura ya está rectificada: editarla otra vez la abonaría dos veces."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so its payments cannot be removed."
+msgstr ""
+"Esta factura ya está rectificada: no se le pueden quitar los cobros."
