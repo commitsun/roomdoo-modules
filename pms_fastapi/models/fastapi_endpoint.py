@@ -101,30 +101,40 @@ class FastapiEndpoint(models.Model):
             return [pms_api_router]
         return super()._get_fastapi_routers()
 
+    def _get_routing_info(self):
+        res = super()._get_routing_info()
+        if self.app == APP_NAME:
+            # Authentication here is entirely JWT based: nothing reads the Odoo
+            # session. Leaving it on makes the server issue a session cookie on
+            # every response, which a browser sending credentials would store
+            # and then share with the backoffice, besides writing a session file
+            # per request.
+            res["save_session"] = False
+        return res
+
     def _get_app(self):
         app = super()._get_app()
         if self.app == APP_NAME:
-            # modify temporarily CORS middleware for PMS FastAPI app until
-            # pms_api_rest is removed.
-            # app_url = (
-            #     self.env["ir.config_parameter"]
-            #     .sudo()
-            #     .get_param("roomdoo_app_url", default="*")
-            # )
-            # app.add_middleware(
-            #     CORSMiddleware,
-            #     allow_origins=[app_url],
-            #     allow_credentials=True,
-            #     allow_methods=["*"],
-            #     allow_headers=["*"],
-            #     expose_headers=["set-cookie"],
-            # )
-            app.add_middleware(
-                CORSMiddleware,
-                allow_origins=["*"],
-                allow_methods=["*"],
-                allow_headers=["*"],
+            app_url = (
+                self.env["ir.config_parameter"].sudo().get_param("roomdoo_app_url")
             )
+            if app_url and app_url != "*":
+                # Cookie based authentication needs the concrete origin: browsers
+                # reject a credentialed response whose origin is "*".
+                app.add_middleware(
+                    CORSMiddleware,
+                    allow_origins=[app_url],
+                    allow_credentials=True,
+                    allow_methods=["*"],
+                    allow_headers=["*"],
+                )
+            else:
+                app.add_middleware(
+                    CORSMiddleware,
+                    allow_origins=["*"],
+                    allow_methods=["*"],
+                    allow_headers=["*"],
+                )
             if os.getenv("ENABLE_PROFILER", "0") == "1":
                 app.add_middleware(ProfilerMiddleware)
         return app
