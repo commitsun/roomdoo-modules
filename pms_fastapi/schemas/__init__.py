@@ -32,3 +32,4 @@ from . import internal_transfer
 from . import journal
 from . import cash_session
 from . import reservation_guest
+from . import two_factor

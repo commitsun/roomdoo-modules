@@ -24,6 +24,7 @@ class User(PmsBaseModel):
     lang: str = Field("", alias="lang")
     image: AnyHttpUrl | None = None
     defaultPmsProperty: PropertyId | None = None
+    twoFactorEnabled: bool = False
 
     @classmethod
     def from_res_users(cls, user_record):
@@ -34,6 +35,7 @@ class User(PmsBaseModel):
             data["defaultPmsProperty"] = PropertyId.from_pms_property(
                 user_record.pms_property_id
             )
+        data["twoFactorEnabled"] = bool(user_record.totp_enabled)
         image_url = cls.url_image_pms_api_rest(
             user_record.env, "res.partner", user_record.partner_id.id, "image_1024"
         )
