@@ -91,6 +91,16 @@ class TestTwoFactorSetup(CommonTestPmsApi):
 
             self.assertEqual(response.json()["type"], "/errors/mfa-setup-required")
 
+    def test_the_account_tells_whether_it_is_already_protected(self):
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            self.assertFalse(test_client.get("/user").json()["twoFactorEnabled"])
+
+            offer = self._offer(test_client)
+            self._activate(test_client, self._code_for(offer["secret"]))
+
+            self.assertTrue(test_client.get("/user").json()["twoFactorEnabled"])
+
     def test_a_protected_account_is_not_offered_another_one(self):
         with self._create_test_client() as test_client:
             self._login(test_client)
