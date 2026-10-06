@@ -130,6 +130,8 @@ class PmsReservationPublicInfo(Datamodel):
     reservationReference = fields.String(required=False, allow_none=True)
     checkinNamesCompleted = fields.List(fields.String(required=False, allow_none=True))
     accessToken = fields.String(required=False, allow_none=True)
+    # Per-reservation counterpart of pms.folio.public.info.shareUrl.
+    shareUrl = fields.String(required=False, allow_none=True)
     nights = fields.Integer(required=False, allow_none=True)
     checkin = fields.String(required=False, allow_none=True)
     checkout = fields.String(required=False, allow_none=True)

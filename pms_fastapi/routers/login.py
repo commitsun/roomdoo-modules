@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Response, status
 
-from odoo import models
+from odoo import _, models
 from odoo.exceptions import AccessDenied
 
 from odoo.addons.pms_fastapi.dependencies import PublicEnv
@@ -27,19 +27,13 @@ async def login(user: PmsLoginInput, env: PublicEnv):
     user_record = env["res.users"].sudo().search([("login", "=", user.username)])
 
     if not user_record:
-        raise HTTPException(
-            status_code=401,
-            detail="wrong user/pass",
-        )
+        env["pms.fastapi.login.endpoint"]._raise_wrong_credentials()
     try:
         user_record.with_user(user_record)._check_credentials(
             user.password.get_secret_value(), {"interactive": False}
         )
-    except AccessDenied as e:
-        raise HTTPException(
-            status_code=401,
-            detail="wrong user/pass",
-        ) from e
+    except AccessDenied:
+        env["pms.fastapi.login.endpoint"]._raise_wrong_credentials()
     return env["pms.fastapi.login.endpoint"]._get_login_response_with_cookies(
         user_record
     )
@@ -48,6 +42,12 @@ async def login(user: PmsLoginInput, env: PublicEnv):
 class PmsFastapiLoginEndpoint(models.AbstractModel):
     _name = "pms.fastapi.login.endpoint"
     _description = "login endpoint helper"
+
+    def _raise_wrong_credentials(self):
+        raise HTTPException(
+            status_code=401,
+            detail=_("wrong user/pass"),
+        )
 
     def _get_login_response_with_cookies(self, user_record):
         validator = (

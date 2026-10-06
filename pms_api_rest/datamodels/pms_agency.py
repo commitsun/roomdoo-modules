@@ -15,3 +15,4 @@ class PmsAgencyInfo(Datamodel):
     name = fields.String(required=True, allow_none=False)
     imageUrl = fields.String(required=False, allow_none=True)
     saleChannelId = fields.Integer(required=False, allow_none=True)
+    excludePaymentReminders = fields.Boolean(required=False, allow_none=True)

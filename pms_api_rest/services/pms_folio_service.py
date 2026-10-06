@@ -1,11 +1,12 @@
 import base64
+import json
 import logging
 from datetime import datetime, timedelta
 
 import pytz
 
 from odoo import _, fields
-from odoo.exceptions import AccessError, MissingError, ValidationError
+from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
 
@@ -14,7 +15,11 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
-from ..pms_api_rest_utils import pms_api_check_access, url_image_pms_api_rest
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    precheckin_share_url,
+    url_image_pms_api_rest,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -1020,6 +1025,15 @@ class PmsFolioService(Component):
                     "blocked": True if external_app else False,
                     "partner_requests": reservation.partnerRequests or "",
                 }
+                # The guest of each reservation can differ from the folio
+                # holder (e.g. company folios with the occupant name sent
+                # per reservation)
+                if reservation.partnerName:
+                    vals["partner_name"] = reservation.partnerName
+                if reservation.partnerEmail:
+                    vals["email"] = reservation.partnerEmail
+                if reservation.partnerPhone:
+                    vals["mobile"] = reservation.partnerPhone
                 if reservation.preferredRoomId:
                     vals["preferred_room_id"] = reservation.preferredRoomId
                 if reservation.reservationLines:
@@ -2042,7 +2056,7 @@ class PmsFolioService(Component):
                     )
                     message_body = self.parse_message_body(message)
                     if message.message_type == "email":
-                        subject = "Email enviado: " + message.subject
+                        subject = "Email enviado: " + (message.subject or "")
                     else:
                         subject = message.subject if message.subject else None
                     reservation_messages.append(
@@ -2056,9 +2070,9 @@ class PmsFolioService(Component):
                             date=reservation_message_date.strftime("%d/%m/%y %H:%M:%S"),
                             messageType=message.message_type,
                             authorImageBase64=base64.b64encode(
-                                message.author_id.image_1024
+                                message.author_id.image_128
                             ).decode("utf-8")
-                            if message.author_id.image_1024
+                            if message.author_id.image_128
                             else None,
                             authorImageUrl=url_image_pms_api_rest(
                                 "res.partner", message.author_id.id, "image_1024"
@@ -2069,7 +2083,7 @@ class PmsFolioService(Component):
             for folio_message in folio.message_ids:
                 message_body = self.parse_message_body(folio_message)
                 if folio_message.message_type == "email":
-                    subject = "Email enviado: " + folio_message.subject
+                    subject = "Email enviado: " + (folio_message.subject or "")
                 else:
                     subject = folio_message.subject if folio_message.subject else None
                 folio_message_date = pytz.UTC.localize(folio_message.date)
@@ -2084,9 +2098,9 @@ class PmsFolioService(Component):
                         date=folio_message_date.strftime("%d/%m/%y %H:%M:%S"),
                         messageType=folio_message.message_type,
                         authorImageBase64=base64.b64encode(
-                            folio_message.author_id.image_1024
+                            folio_message.author_id.image_128
                         ).decode("utf-8")
-                        if folio_message.author_id.image_1024
+                        if folio_message.author_id.image_128
                         else None,
                         authorImageUrl=url_image_pms_api_rest(
                             "res.partner", folio_message.author_id.id, "image_1024"
@@ -2231,6 +2245,35 @@ class PmsFolioService(Component):
 
     # TEMP
 
+    def _folio_has_locked_invoiced_lines(self, folio):
+        """Return True if the folio has posted (non-reversed) customer invoices
+        or any sale line with quantity already invoiced. Callers use this to
+        surface a specific API error code when a PUT fails because the folio
+        cannot be modified due to invoicing."""
+        if not folio or not folio.exists():
+            return False
+        has_posted_invoice = any(
+            move.state == "posted"
+            and move.move_type == "out_invoice"
+            and move.payment_state != "reversed"
+            for move in folio.move_ids
+        )
+        if has_posted_invoice:
+            return True
+        return any(line.qty_invoiced > 0 for line in folio.sale_line_ids)
+
+    def _raise_folio_invoiced_error(self, error):
+        """Re-raise a UserError as a structured API error so external clients
+        can react to the specific "folio has invoiced lines" case."""
+        raise ValidationError(
+            json.dumps(
+                {
+                    "code": "FOLIO_HAS_INVOICED_LINES",
+                    "message": str(error),
+                }
+            )
+        ) from error
+
     @restapi.method(
         [
             (
@@ -2252,6 +2295,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = (
                 self.env["pms.folio"]
@@ -2316,6 +2360,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
@@ -2342,6 +2390,7 @@ class PmsFolioService(Component):
         max_checkout_payload = max(
             pms_folio_info.reservations, key=lambda x: x.checkout
         ).checkout
+        folio = self.env["pms.folio"]
         try:
             folio = self.env["pms.folio"].sudo().browse(folio_id)
             if not folio:
@@ -2398,6 +2447,10 @@ class PmsFolioService(Component):
                     "request_type": "folios",
                 }
             )
+            if isinstance(e, UserError) and self._folio_has_locked_invoiced_lines(
+                folio
+            ):
+                self._raise_folio_invoiced_error(e)
             if not external_app:
                 raise ValidationError(_("Error updating folio from API: %s") % e) from e
             else:
@@ -2458,10 +2511,15 @@ class PmsFolioService(Component):
             and self.get_language(pms_folio_info.language) != folio.lang
         ):
             folio_vals.update({"lang": self.get_language(pms_folio_info.language)})
+        if (
+            pms_folio_info.pricelistId
+            and folio.pricelist_id.id != pms_folio_info.pricelistId
+        ):
+            folio_vals.update({"pricelist_id": pms_folio_info.pricelistId})
         reservations_vals = []
         if pms_folio_info.reservations:
             reservations_vals = self.wrapper_reservations(
-                folio, pms_folio_info.reservations
+                folio, pms_folio_info.reservations, pms_folio_info.pricelistId
             )
             if reservations_vals:
                 update_reservation_ids = []
@@ -2599,7 +2657,9 @@ class PmsFolioService(Component):
                 ]
         return pms_folio_info.transactions
 
-    def wrapper_reservations(self, folio, info_reservations):  # noqa: C901
+    def wrapper_reservations(  # noqa: C901
+        self, folio, info_reservations, folio_pricelist_id=None
+    ):
         """
         This method is used to create or update the reservations in folio
         We try to find the reservation in the folio, if it exists we update it
@@ -2655,17 +2715,24 @@ class PmsFolioService(Component):
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
                     vals.update({"checkout": info_reservation.checkout})
-            if info_reservation.pricelistId:
+            # OTAs send the pricelist at folio level on modifications, while the
+            # reservation payload may omit it. Fall back to the folio pricelist so
+            # reservations re-created by a modification keep the right rate instead
+            # of the stale one (symmetric with the create flow).
+            reservation_pricelist_id = (
+                info_reservation.pricelistId or folio_pricelist_id
+            )
+            if reservation_pricelist_id:
                 if new_res or (
-                    proposed_reservation.pricelist_id.id != info_reservation.pricelistId
+                    proposed_reservation.pricelist_id.id != reservation_pricelist_id
                     and proposed_reservation.state in ["draft", "confirm"]
                 ):
-                    vals.update({"pricelist_id": info_reservation.pricelistId})
+                    vals.update({"pricelist_id": reservation_pricelist_id})
             board_service_id = self.get_board_service_room_type_id(
                 info_reservation.roomTypeId,
                 folio.pms_property_id.id,
                 info_reservation.boardServiceId,
-                info_reservation.pricelistId,
+                reservation_pricelist_id,
             )
             if board_service_id:
                 if (
@@ -2687,6 +2754,26 @@ class PmsFolioService(Component):
                     != info_reservation.partnerRequests
                 ):
                     vals.update({"partner_requests": info_reservation.partnerRequests})
+            # The guest of each reservation can differ from the folio holder
+            # (e.g. company folios with the occupant name sent per reservation)
+            if info_reservation.partnerName:
+                if (
+                    new_res
+                    or proposed_reservation.partner_name != info_reservation.partnerName
+                ):
+                    vals.update({"partner_name": info_reservation.partnerName})
+            if info_reservation.partnerEmail:
+                if (
+                    new_res
+                    or proposed_reservation.email != info_reservation.partnerEmail
+                ):
+                    vals.update({"email": info_reservation.partnerEmail})
+            if info_reservation.partnerPhone:
+                if (
+                    new_res
+                    or proposed_reservation.mobile != info_reservation.partnerPhone
+                ):
+                    vals.update({"mobile": info_reservation.partnerPhone})
             if info_reservation.adults:
                 if new_res or proposed_reservation.adults != info_reservation.adults:
                     vals.update({"adults": info_reservation.adults})
@@ -2734,31 +2821,34 @@ class PmsFolioService(Component):
                                     room_type_id=info_reservation.roomTypeId,
                                     pms_property_id=folio.pms_property_id.id,
                                     board_service_id=info_reservation.boardServiceId,
-                                    pricelist_id=info_reservation.pricelistId,
+                                    pricelist_id=reservation_pricelist_id,
                                 )
                             )
                         )
-                        pms_api_check_access(user=self.env.user, records=board)
-                        pricelist = (
-                            self.env["product.pricelist"]
-                            .sudo()
-                            .browse(info_reservation.pricelistId)
-                            if info_reservation.pricelistId
-                            else folio.pricelist_id
-                        )
-                        for rline in info_reservation.reservationLines:
-                            board_day_prices[rline.date] = board._get_billed_day_price(
-                                pricelist=pricelist,
-                                consumption_date=rline.date,
-                                pms_property_id=folio.pms_property_id.id,
-                                adults=info_reservation.adults,
-                                children=info_reservation.children,
-                                partner_id=folio.partner_id.id
-                                if folio.partner_id
-                                else False,
-                                fiscal_position=folio.fiscal_position_id,
-                                company=folio.company_id,
+                        if board:
+                            pms_api_check_access(user=self.env.user, records=board)
+                            pricelist = (
+                                self.env["product.pricelist"]
+                                .sudo()
+                                .browse(reservation_pricelist_id)
+                                if reservation_pricelist_id
+                                else folio.pricelist_id
                             )
+                            for rline in info_reservation.reservationLines:
+                                board_day_prices[
+                                    rline.date
+                                ] = board._get_billed_day_price(
+                                    pricelist=pricelist,
+                                    consumption_date=rline.date,
+                                    pms_property_id=folio.pms_property_id.id,
+                                    adults=info_reservation.adults,
+                                    children=info_reservation.children,
+                                    partner_id=folio.partner_id.id
+                                    if folio.partner_id
+                                    else False,
+                                    fiscal_position=folio.fiscal_position_id,
+                                    company=folio.company_id,
+                                )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
                     board_day_prices=board_day_prices,
@@ -2975,12 +3065,22 @@ class PmsFolioService(Component):
                 for checkin_partner in reservation.checkin_partner_ids
                 if checkin_partner.state in ["precheckin", "onboard", "done"]
             ]
+            # Once, not once per use: the first call mints and writes the
+            # token when the reservation has none.
+            reservation_access_token = self._get_reservation_access_token(reservation)
             reservations.append(
                 self.env.datamodels["pms.reservation.public.info"](
                     id=reservation.id,
                     roomTypeName=reservation.room_type_id.name,
                     checkinNamesCompleted=reservation_checkin_partner_names,
-                    accessToken=self._get_reservation_access_token(reservation),
+                    accessToken=reservation_access_token,
+                    shareUrl=precheckin_share_url(
+                        self.env,
+                        "precheckin-reservation",
+                        reservation.id,
+                        reservation_access_token,
+                        lang=folio_record.lang,
+                    ),
                     nights=reservation.nights,
                     checkin=datetime.combine(
                         reservation.checkin, datetime.min.time()
@@ -3114,6 +3214,13 @@ class PmsFolioService(Component):
             folioPendingAmount=folio_record.pending_amount,
             folioPaymentLink=folio_payment_link if folio_payment_link else "",
             folioPortalLink=folio_portal_link,
+            shareUrl=precheckin_share_url(
+                self.env,
+                "precheckin",
+                folio_record.id,
+                token,
+                lang=folio_record.lang,
+            ),
             folioNumCheckins=sum(
                 len(r.checkin_partner_ids) for r in folio_record.reservation_ids
             ),

@@ -1,0 +1,141 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* account_reconcile_lock_date
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-21 15:56+0000\n"
+"PO-Revision-Date: 2026-09-21 15:56+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: es\n"
+"Plural-Forms: \n"
+
+#. module: account_reconcile_lock_date
+#: model_terms:ir.ui.view,arch_db:account_reconcile_lock_date.res_config_settings_view_form
+msgid "<span class=\"o_form_label\">Reconciliation lock date</span>"
+msgstr "<span class=\"o_form_label\">Fecha de bloqueo de conciliación</span>"
+
+#. module: account_reconcile_lock_date
+#: model:res.groups,name:account_reconcile_lock_date.group_bypass_reconcile_lock_date
+msgid "Accounting / Skip reconciliation lock date"
+msgstr "Contabilidad / Saltar la fecha de bloqueo de conciliación"
+
+#. module: account_reconcile_lock_date
+#: model_terms:ir.ui.view,arch_db:account_reconcile_lock_date.res_config_settings_view_form
+msgid ""
+"Block breaking a reconciliation when either matched\n"
+"                            entry belongs to a closed period. Reconciling is never\n"
+"                            blocked, only undoing it."
+msgstr ""
+"Impide romper una conciliación cuando alguno de los dos\n"
+"                            asientos pertenece a un periodo cerrado. Conciliar\n"
+"                            nunca se bloquea, solo deshacerlo."
+
+#. module: account_reconcile_lock_date
+#: model:ir.model,name:account_reconcile_lock_date.model_res_company
+msgid "Companies"
+msgstr "Compañías"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model,name:account_reconcile_lock_date.model_res_config_settings
+msgid "Config Settings"
+msgstr "Ajustes de configuración"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields.selection,name:account_reconcile_lock_date.selection__res_company__reconcile_lock_scope__disabled
+msgid "Do not block"
+msgstr "No bloquear"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields.selection,name:account_reconcile_lock_date.selection__res_company__reconcile_lock_scope__downpayment
+msgid "Down payment invoices only"
+msgstr "Solo facturas de anticipo"
+
+#. module: account_reconcile_lock_date
+#. odoo-python
+#: code:addons/account_reconcile_lock_date/models/account_move.py:0
+#: code:addons/account_reconcile_lock_date/models/account_partial_reconcile.py:0
+#, python-format
+msgid "Entries in a locked period:"
+msgstr "Asientos en un periodo cerrado:"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields.selection,name:account_reconcile_lock_date.selection__res_company__reconcile_lock_scope__all
+msgid "Every reconciliation"
+msgstr "Todas las conciliaciones"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model,name:account_reconcile_lock_date.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model,name:account_reconcile_lock_date.model_account_partial_reconcile
+msgid "Partial Reconcile"
+msgstr "Conciliación parcial"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,field_description:account_reconcile_lock_date.field_res_company__reconcile_lock_scope
+#: model:ir.model.fields,field_description:account_reconcile_lock_date.field_res_config_settings__reconcile_lock_scope
+msgid "Reconciliation lock scope"
+msgstr "Alcance del bloqueo de conciliación"
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,help:account_reconcile_lock_date.field_res_company__reconcile_lock_scope
+#: model:ir.model.fields,help:account_reconcile_lock_date.field_res_config_settings__reconcile_lock_scope
+msgid ""
+"Which reconciliations cannot be broken once they involve a locked period. "
+"'Do not block' disables the guard; 'Down payment invoices only' guards a "
+"reconciliation as soon as either matched entry is a down payment invoice; "
+"'Every reconciliation' guards them all. The date used is the company's own "
+"accounting lock date."
+msgstr ""
+"Qué conciliaciones no se pueden romper cuando afectan a un periodo cerrado. "
+"'No bloquear' desactiva la guarda; 'Solo facturas de anticipo' la aplica en "
+"cuanto alguno de los dos asientos conciliados es una factura de anticipo; "
+"'Todas las conciliaciones' la aplica siempre. La fecha utilizada es la propia "
+"fecha de bloqueo contable de la compañía."
+
+#. module: account_reconcile_lock_date
+#. odoo-python
+#: code:addons/account_reconcile_lock_date/models/account_partial_reconcile.py:0
+#, python-format
+msgid ""
+"You cannot break this reconciliation: it matches accounting entries that "
+"belong to a closed period."
+msgstr ""
+"No puede romper esta conciliación: incluye asientos contables que "
+"pertenecen a un periodo cerrado."
+
+#. module: account_reconcile_lock_date
+#. odoo-python
+#: code:addons/account_reconcile_lock_date/models/account_move.py:0
+#, python-format
+msgid ""
+"You cannot reset to draft or cancel this entry: it belongs to a closed "
+"period."
+msgstr ""
+"No puede pasar a borrador ni cancelar este asiento: pertenece a un "
+"periodo cerrado."
+
+#. module: account_reconcile_lock_date
+#. odoo-python
+#: code:addons/account_reconcile_lock_date/models/account_move.py:0
+#: code:addons/account_reconcile_lock_date/models/account_partial_reconcile.py:0
+#, python-format
+msgid "draft entry"
+msgstr "asiento en borrador"
+
+#. module: account_reconcile_lock_date
+#. odoo-python
+#: code:addons/account_reconcile_lock_date/models/account_move.py:0
+#: code:addons/account_reconcile_lock_date/models/account_partial_reconcile.py:0
+#, python-format
+msgid "• %(name)s dated %(date)s (period locked up to %(lock)s)"
+msgstr "• %(name)s con fecha %(date)s (periodo cerrado hasta %(lock)s)"

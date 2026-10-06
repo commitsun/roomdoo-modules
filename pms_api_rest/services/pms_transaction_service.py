@@ -331,12 +331,12 @@ class PmsTransactionService(Component):
             # Review this in pms_folio_service (/charge & /refund)
             # and in pms_transaction_service (POST)
             last_session = self._get_last_cash_session(journal_id=journal.id)
-            if not last_session or last_session.balance_end:
+            if not last_session or last_session.is_complete:
                 self._action_open_cash_session(
                     pms_property_id=journal.pms_property_ids[0].id
                     if journal.pms_property_ids
                     else False,
-                    amount=last_session.balance_end,
+                    amount=last_session.balance_end_real,
                     journal_id=journal.id,
                     force=False,
                 )
@@ -353,12 +353,12 @@ class PmsTransactionService(Component):
                 # Review this in pms_folio_service (/charge & /refund)
                 # and in pms_transaction_service (POST)
                 last_session = self._get_last_cash_session(journal_id=journal.id)
-                if not last_session or last_session.balance_end:
+                if not last_session or last_session.is_complete:
                     self._action_open_cash_session(
                         pms_property_id=journal.pms_property_ids[0].id
                         if journal.pms_property_ids
                         else False,
-                        amount=last_session.balance_end,
+                        amount=last_session.balance_end_real,
                         journal_id=pms_transaction_info.destinationJournalId,
                         force=False,
                     )
@@ -382,6 +382,19 @@ class PmsTransactionService(Component):
         if not transaction.exists():
             raise MissingError(_("Transaction not found"))
         pms_api_check_access(user=self.env.user, records=transaction)
+        # A payment settled against a bank statement cannot be modified: every
+        # path below resets it to draft, which would break that settlement.
+        # Internal transfers move both legs together, so the counterpart counts
+        # as well. The FastAPI service already refuses this; without it here the
+        # same payment is blocked on one screen and editable on the other.
+        legs = transaction + transaction.paired_internal_transfer_payment_id
+        if any(legs.mapped("is_matched")):
+            raise UserError(
+                _(
+                    "This payment is reconciled against a bank statement and "
+                    "cannot be modified."
+                )
+            )
         vals = {}
         # TODO: Downpayment invoiced (search invoice, reverse it and create a new one)
         # Get generic update vals
@@ -460,7 +473,7 @@ class PmsTransactionService(Component):
                 balance=0,
                 dateTime=fields.Datetime.now().isoformat(),
             )
-        isOpen = True if not statement.is_complete else False
+        isOpen = self._is_cash_session_open(statement)
         timezone = pytz.timezone(self.env.context.get("tz") or "UTC")
         create_date_utc = pytz.UTC.localize(statement.create_date)
         create_date = create_date_utc.astimezone(timezone)
@@ -525,6 +538,11 @@ class PmsTransactionService(Component):
             journal_id=journal_id,
             pms_property_id=pms_property_id,
         )
+        # If a cash session is already open, do not create a duplicate one: a
+        # second open statement would steal the day's payments and lead to a
+        # double count of those payments when closing. Just reuse the open one.
+        if last_statement and self._is_cash_session_open(last_statement):
+            return {"result": True, "diff": 0}
         compute_end_balance = (
             round(last_statement.balance_end_real, 2) if last_statement else 0
         )
@@ -563,6 +581,23 @@ class PmsTransactionService(Component):
             journal_id=journal_id,
             pms_property_id=pms_property_id,
         )
+        if not statement:
+            return {"result": True, "diff": 0}
+        # Serialize concurrent close requests on the same session (e.g. a
+        # double click on the front close button): the second request waits
+        # on the row lock until the first one commits, and then sees the
+        # session already closed instead of pouring the payments again.
+        self.env.cr.execute(
+            "SELECT id FROM account_bank_statement WHERE id = %s FOR UPDATE",
+            (statement.id,),
+        )
+        statement.invalidate_recordset()
+        # Only the explicit flag here: the is_complete fallback of
+        # _is_cash_session_open would misread a force-opened session (whose
+        # difference line makes it compute complete) as closed and skip
+        # pouring its payments.
+        if "cash_session_closed" in statement._fields and statement.cash_session_closed:
+            return {"result": True, "diff": 0}
         session_payments = (
             self.env["account.payment"]
             .sudo()
@@ -575,6 +610,13 @@ class PmsTransactionService(Component):
                 ]
             )
         )
+        # A payment already matched against a statement line was poured by a
+        # previous close request: pouring it again would duplicate the line.
+        session_payments = session_payments.filtered(lambda p: not p.is_matched)
+        if statement.line_ids and not session_payments:
+            # Repeated close request: the session lines were already created.
+            self._mark_cash_session_closed(statement)
+            return {"result": True, "diff": 0}
         session_payments_amount = sum(
             session_payments.filtered(lambda x: x.payment_type == "inbound").mapped(
                 "amount"
@@ -600,6 +642,7 @@ class PmsTransactionService(Component):
             )
             # Force to complete the statement
             statement._compute_balance_start()
+            self._mark_cash_session_closed(statement)
             return {
                 "result": True,
                 "diff": 0,
@@ -617,6 +660,7 @@ class PmsTransactionService(Component):
             )
             # Force to complete the statement
             statement._compute_balance_start()
+            self._mark_cash_session_closed(statement)
             return {
                 "result": True,
                 "diff": diff,
@@ -741,6 +785,41 @@ class PmsTransactionService(Component):
                     lines_to_reconcile = payment_move_line + statement_move_line
                     lines_to_reconcile.reconcile()
 
+    def _is_cash_session_open(self, statement):
+        """Whether the session is open, keyed off cash_session_closed when
+        pms_fastapi is installed (see _mark_cash_session_closed). The
+        is_complete fallback misreads force-opened sessions (their difference
+        line makes them compute complete), so it is only a fallback.
+        """
+        if "cash_session_closed" in statement._fields:
+            return not statement.cash_session_closed
+        return not statement.is_complete
+
+    def _mark_cash_session_closed(self, statement):
+        """TEMPORARY bridge to the FastAPI cash-session state. REMOVE WITH THIS MODULE.
+
+        ``cash_session_closed`` is owned by pms_fastapi (the surviving API),
+        which keys the open/closed state off it. While both APIs coexist behind
+        feature flags a cash session may be opened on one and closed on the
+        other, so this legacy API must also stamp the flag — otherwise a session
+        closed here would still look open to pms_fastapi.
+
+        This is throwaway glue: pms_api_rest is legacy and will be retired. When
+        it is, delete this method (and its callers) outright; nothing here needs
+        to migrate, the field stays in pms_fastapi. The field only exists when
+        pms_fastapi is installed (the only case where anyone reads it), so the
+        write is guarded on its presence.
+        """
+        if "cash_session_closed" not in statement._fields:
+            return
+        statement.write(
+            {
+                "cash_session_closed": True,
+                "cash_session_closed_uid": self.env.user.id,
+                "cash_session_closed_date": fields.Datetime.now(),
+            }
+        )
+
     def _get_last_cash_session(self, journal_id, pms_property_id=False):
         domain = [("journal_id", "=", journal_id)]
         if pms_property_id:
@@ -750,7 +829,10 @@ class PmsTransactionService(Component):
             .sudo()
             .search(
                 domain,
-                order="date desc, id desc",
+                # Order by create_date, not date: an open session without lines
+                # has date=NULL, which sorts first (NULLS FIRST) on "date desc"
+                # and would shadow a more recent, already completed session.
+                order="create_date desc, id desc",
                 limit=1,
             )
         )

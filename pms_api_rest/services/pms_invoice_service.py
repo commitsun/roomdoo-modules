@@ -13,6 +13,10 @@ from odoo.addons.component.core import Component
 
 from ..pms_api_rest_utils import pms_api_check_access
 
+# Reported as the invoice date while the reservation invoice lock blocks a
+# draft, so the legacy front-end does not offer the validation button.
+LOCKED_INVOICE_YEARS = 1
+
 
 class PmsInvoiceService(Component):
     _inherit = "base.rest.service"
@@ -154,10 +158,17 @@ class PmsInvoiceService(Component):
                     if d
                 ]
                 display_date = (
-                    max(autoinvoice_dates)
-                    if autoinvoice_dates
-                    else fields.Date.today()
+                    max(autoinvoice_dates) if autoinvoice_dates else fields.Date.today()
                 )
+                # While the reservation invoice lock blocks this move, report a
+                # future date so the front-end does not offer the manual
+                # validation button for something _post() is going to refuse
+                # anyway. It takes precedence over the autoinvoice preview: it
+                # is the harder constraint of the two.
+                if self._is_reservation_invoice_locked(invoice):
+                    display_date = fields.Date.add(
+                        fields.Date.today(), years=LOCKED_INVOICE_YEARS
+                    )
                 invoice_date = datetime.combine(
                     display_date, datetime.min.time()
                 ).isoformat()
@@ -339,8 +350,8 @@ class PmsInvoiceService(Component):
             lambda l: l.display_type == "line_section"
         ):
             if (
-                not folio_line.id
-                in folio_lines_invoiced.filtered(
+                folio_line.id
+                not in folio_lines_invoiced.filtered(
                     lambda l: l.display_type != "line_section"
                 ).section_id.ids
             ):
@@ -444,7 +455,11 @@ class PmsInvoiceService(Component):
                         "quantity"
                     ):
                         return True
-                if line[0] == 0 and not line[2].get("display_type") or line[2].get("display_type") == "product":
+                if (
+                    line[0] == 0
+                    and not line[2].get("display_type")
+                    or line[2].get("display_type") == "product"
+                ):
                     return True
         return False
 
@@ -688,6 +703,21 @@ class PmsInvoiceService(Component):
                 ][0]
             cmd_invoice_lines.extend(new_invoice_lines)
         return cmd_invoice_lines
+
+    def _is_reservation_invoice_locked(self, invoice):
+        """True when pms_reservation_invoice_lock would refuse to post it.
+
+        Asked by catching the UserError that the check raises, because the
+        lock module exposes no predicate for it. Doing it here, rather than
+        adding one to that module, keeps the posting path it guards
+        untouched -- and this module is the one being discontinued, so it is
+        the right place for the workaround to die with.
+        """
+        try:
+            invoice._check_reservation_invoice_lock()
+        except UserError:
+            return True
+        return False
 
     def _get_mapped_order_by_field(self, field):
         if field == "name":

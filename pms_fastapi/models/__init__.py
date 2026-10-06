@@ -4,7 +4,10 @@ from . import pms_folio
 from . import res_partner
 from . import id_number_category
 from . import account_journal
+from . import account_bank_statement
 from . import account_move
 from . import account_move_line
 from . import account_partial_reconcile
 from . import account_payment_method_line
+from . import pms_payment_refund_line
+from . import account_payment

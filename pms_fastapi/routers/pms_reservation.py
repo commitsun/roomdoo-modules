@@ -1,7 +1,7 @@
 from fastapi import Response
 from fastapi.responses import JSONResponse
 
-from odoo import fields, models
+from odoo import _, fields, models
 from odoo.exceptions import MissingError
 from odoo.osv import expression
 
@@ -94,9 +94,12 @@ async def offboarding(
 ):
     """Confirm departure for eligible in-house guests of a reservation.
 
-    Eligible guests are those currently in-house. Idempotent: returns 204
-    even if no guests are eligible. Returns 409 if the reservation is in a
-    state that does not allow confirming departures (e.g. draft, cancelled).
+    Eligible guests are those currently in-house. When the reservation is
+    in-house and its checkout date is today or earlier, the whole stay is
+    checked out: the reservation is closed together with its guests.
+    Idempotent: returns 204 even if no guests are eligible. Returns 409 if
+    the reservation is in a state that does not allow confirming departures
+    (e.g. draft, cancelled).
     """
     return env["pms_api_reservation.router.helper"].new()._offboarding(reservation_id)
 
@@ -132,9 +135,9 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
             status_code=404,
             content={
                 "type": "/errors/reservation-not-found",
-                "title": "Reservation not found",
+                "title": _("Reservation not found"),
                 "status": 404,
-                "detail": f"Reservation {reservation_id} does not exist.",
+                "detail": _("Reservation %s does not exist.") % reservation_id,
                 "instance": f"/reservations/{reservation_id}/{action}",
             },
             media_type="application/problem+json",
@@ -169,12 +172,12 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
                 status_code=409,
                 content={
                     "type": "/errors/reservation-state-invalid",
-                    "title": ("Reservation state does not allow reverting arrival"),
+                    "title": _("Reservation state does not allow reverting arrival"),
                     "status": 409,
-                    "detail": (
-                        f"Reservation {reservation_id} cannot revert "
-                        f"arrival in its current state."
-                    ),
+                    "detail": _(
+                        "Reservation %s cannot revert " "arrival in its current state."
+                    )
+                    % reservation_id,
                     "instance": f"/reservations/{reservation_id}/onboarding",
                 },
                 media_type="application/problem+json",
@@ -194,19 +197,26 @@ class PmsApiReservationRouterHelper(models.AbstractModel):
                 status_code=409,
                 content={
                     "type": "/errors/reservation-state-invalid",
-                    "title": (
+                    "title": _(
                         "Reservation state does not allow " "confirming departures"
                     ),
                     "status": 409,
-                    "detail": (
-                        f"Reservation {reservation_id} is in "
-                        f"'{reservation.state}' state and cannot be "
-                        f"confirmed as departed."
-                    ),
+                    "detail": _(
+                        "Reservation %s cannot be confirmed as departed in "
+                        "its current state."
+                    )
+                    % reservation_id,
                     "instance": (f"/reservations/{reservation_id}/offboarding"),
                 },
                 media_type="application/problem+json",
             )
+
+        if reservation.allowed_checkout:
+            # Check out the whole stay, not only its guests: otherwise the
+            # reservation stays in-house and the checkout side effects (room
+            # marked dirty, third-party checkout notices) never run.
+            reservation.sudo().action_reservation_checkout()
+            return Response(status_code=204)
 
         eligible = reservation.checkin_partner_ids.filtered(
             lambda c: c.state == "onboard"

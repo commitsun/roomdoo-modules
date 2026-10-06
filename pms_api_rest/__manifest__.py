@@ -3,7 +3,7 @@
     "author": "Commit [Sun], Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/pms",
     "category": "Generic Modules/Property Management System",
-    "version": "16.0.1.4.1",
+    "version": "16.0.1.5.0",
     "license": "AGPL-3",
     "depends": [
         "pms",
@@ -18,6 +18,7 @@
         "feed_rss",
         "pms_partner_type_residence",
         "pms_autoinvoice",
+        "pms_reservation_invoice_lock",
     ],
     "external_dependencies": {
         "python": ["simplejson", "marshmallow", "jose"],

@@ -35,6 +35,16 @@ class TestVariousPartnerProtection(TransactionCase):
         with self.assertRaises(UserError):
             self.various.sudo().write({"vat": "ES12345678Z"})
 
+    def test_write_protected_field_in_install_mode_passes(self):
+        # Module data loads (BaseModel._load_records) run with
+        # install_mode=True and must be able to touch protected fields:
+        # pms_l10n_es_sii sets aeat_anonymous_cash_customer on this
+        # partner from its data XML on a fresh install.
+        self.various.with_context(install_mode=True).write(
+            {"comment": "set by module data"}
+        )
+        self.assertEqual(self.various.comment, "set by module data")
+
     def test_write_unprotected_field_passes(self):
         # ``ref`` is not in the protected set; nothing prevents touching it.
         self.various.write({"ref": "VARIOUS-REF"})

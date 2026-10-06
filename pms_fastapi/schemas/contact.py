@@ -8,7 +8,7 @@ from pydantic import AnyHttpUrl, Field
 from odoo import api
 from odoo.osv import expression
 
-from .base import BaseSearch, PmsBaseModel
+from .base import BaseSearch, PmsBaseModel, SearchText
 from .contact_id_number import ContactIdNumberId
 from .contact_tag import ContactTagId
 from .country import CountryId, CountrySummary
@@ -95,6 +95,19 @@ class ContactId(PmsBaseModel):
     def from_res_partner(cls, partner):
         return cls(**cls.parse_common_fields(partner))
 
+    @classmethod
+    def from_res_partner_optional(cls, partner):
+        """Serialize a partner, hiding the system 'various' simplified-invoice
+        contact. Returns None when there's no partner or it's the 'various'
+        contact, so simplified invoices/payments appear as having no contact.
+        """
+        if not partner:
+            return None
+        various = partner.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        if various and partner.commercial_partner_id.id == various.id:
+            return None
+        return cls.from_res_partner(partner)
+
 
 class ContactIdImage(ContactId):
     image: AnyHttpUrl | None = None
@@ -112,6 +125,16 @@ class ContactIdImage(ContactId):
             if image_url:
                 record_dict["image"] = image_url
         return cls(**record_dict)
+
+
+class ContactIdImageEmail(ContactIdImage):
+    email: str = ""
+
+    @classmethod
+    def from_res_partner(cls, partner):
+        record = super().from_res_partner(partner)
+        record.email = partner.email or ""
+        return record
 
 
 class ContactBase(PmsBaseModel):
@@ -301,26 +324,33 @@ class ContactUpdate(ContactInsert):
 class ContactSearch(BaseSearch):
     def __init__(
         self,
-        globalSearch: str | None = Query(
-            default=None,
-            description="Search across name, email, phone and VAT fields"
-            "this value (case-insensitive).",
-        ),
-        name: str | None = Query(
-            default=None,
-            description="Search for contacts whose name contains "
-            "this value (case-insensitive).",
-        ),
-        phone: str | None = Query(
-            default=None,
-            min_length=3,
-            description="Search for contacts whose phones contains " "this value.",
-        ),
-        email: str | None = Query(
-            default=None,
-            description="Search for contacts whose email contains this "
-            "value (case-insensitive).",
-        ),
+        globalSearch: Annotated[
+            SearchText,
+            Query(
+                description="Search across name, email, phone and VAT fields"
+                "this value (case-insensitive).",
+            ),
+        ] = None,
+        name: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose name contains "
+                "this value (case-insensitive).",
+            ),
+        ] = None,
+        phone: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose phones contains " "this value.",
+            ),
+        ] = None,
+        email: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose email contains this "
+                "value (case-insensitive).",
+            ),
+        ] = None,
         types: Annotated[
             list[ContactType] | None,
             Query(
@@ -356,9 +386,8 @@ class ContactSearch(BaseSearch):
                 ("vat", "ilike", self.globalSearch),
                 ("identification_number", "ilike", self.globalSearch),
             ]
-            if len(self.globalSearch) >= 3:
-                phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
-                domain = expression.OR([domain, phone_domain])
+            phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
+            domain = expression.OR([domain, phone_domain])
         if self.name:
             domain.append(("display_name", "ilike", self.name))
         if self.phone:

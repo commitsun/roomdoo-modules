@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 import pytz
 
 from odoo import SUPERUSER_ID, _, fields
-from odoo.exceptions import AccessError, MissingError
+from odoo.exceptions import AccessError, MissingError, ValidationError
+from odoo.http import content_disposition, request
 from odoo.osv import expression
 from odoo.tools.safe_eval import safe_eval
 
@@ -16,7 +17,15 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
-from ..pms_api_rest_utils import pms_api_check_access, url_image_pms_api_rest
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    precheckin_share_url,
+    url_image_pms_api_rest,
+)
+
+# Cap for the guardian authorization upload. Generous for a scanned document,
+# small enough that a mistaken upload does not fill the filestore.
+MAX_MINORS_AUTHORIZATION_SIZE = 10 * 1024 * 1024
 
 
 def is_adult(birthdate):
@@ -34,17 +43,20 @@ def is_adult(birthdate):
 def find_opposite_relationship(relationship_code):
     inverse_relationships = {
         "PM": "HJ",  # Padre o Madre -> Hijo
+        "HJ": "PM",  # Hijo -> Padre o Madre
         "TU": "OT",  # Tutor -> Otro (sin inverso claro)
         "TI": "SB",  # Tío -> Sobrino
         "HR": "HR",  # Hermano -> Hermano
         "AB": "NI",  # Abuelo -> Nieto
+        "NI": "AB",  # Nieto -> Abuelo
         "BA": "BN",  # Bisabuelo -> Bisnieto
+        "BN": "BA",  # Bisnieto -> Bisabuelo
         "CD": "CD",  # Cuñado -> Cuñado
         "CY": "CY",  # Cónyuge -> Cónyuge
         "SB": "TI",  # Sobrino -> Tío
         "SG": "YN",  # Suegro -> Yerno o Nuera
         "YN": "SG",  # Yerno o Nuera -> Suegro
-        "OT": "OT",  # Otro -> Tutor (arbitrario)
+        "OT": "OT",  # Otro -> Otro
     }
     # Buscar la relación inversa
     related_code = inverse_relationships.get(
@@ -873,7 +885,7 @@ class PmsReservationService(Component):
                 "GET",
             )
         ],
-        output_param=Datamodel("pms.checkin.partner.info", is_list=True),
+        output_param=Datamodel("pms.checkin.partner.info.output", is_list=True),
         auth="jwt_api_pms",
     )
     def get_checkin_partners(self, reservation_id):
@@ -882,7 +894,7 @@ class PmsReservationService(Component):
             raise MissingError(_("Reservation not found"))
         pms_api_check_access(user=self.env.user, records=reservation)
         checkin_partners = []
-        PmsCheckinPartnerInfo = self.env.datamodels["pms.checkin.partner.info"]
+        PmsCheckinPartnerInfo = self.env.datamodels["pms.checkin.partner.info.output"]
         if not reservation.exists():
             pass
         else:
@@ -958,12 +970,33 @@ class PmsReservationService(Component):
                         signature=checkin_partner.signature
                         if checkin_partner.signature
                         else None,
-                        relationship=checkin_partner.ses_partners_relationship
+                        # ses_partners_relationship is stored from the guest's
+                        # own perspective (e.g. "HJ"), but the API contract
+                        # exchanges the responsible adult's perspective
+                        # (e.g. "PM"), so it is inverted back here
+                        relationship=find_opposite_relationship(
+                            checkin_partner.ses_partners_relationship
+                        )
                         if checkin_partner.ses_partners_relationship
                         else "",
                         responsibleCheckinPartnerId=checkin_partner.ses_related_checkin_partner_id.id
                         if checkin_partner.ses_related_checkin_partner_id
                         else None,
+                        # The unaccompanied minors declaration and its
+                        # authorization belong to the folio, not to the guest:
+                        # the guardians may be booked in one reservation and the
+                        # minors in another one of the same folio. Every guest
+                        # reports the same value.
+                        unaccompaniedMinors=(
+                            checkin_partner.folio_id.ses_unaccompanied_minors
+                        ),
+                        allGuestsMinors=(
+                            checkin_partner.folio_id.ses_all_guests_minors
+                        ),
+                        minorsAuthorizationFilename=(
+                            checkin_partner.folio_id.ses_minors_authorization_filename
+                            or None
+                        ),
                     )
                 )
         return checkin_partners
@@ -996,6 +1029,13 @@ class PmsReservationService(Component):
         if not checkin_partner:
             raise MissingError(_("Checkin partner not found"))
         pms_api_check_access(user=self.env.user, records=checkin_partner)
+        # Stored before the boarding branch below, which returns early: a
+        # request that declares the unaccompanied minors and boards the guest at
+        # once would otherwise lose the declaration and then be rejected for
+        # missing the relationship the declaration waives.
+        self._write_unaccompanied_minors(
+            checkin_partner, pms_checkin_partner_info.unaccompaniedMinors
+        )
         if (
             pms_checkin_partner_info.actionOnBoard
             and pms_checkin_partner_info.actionOnBoard is not None
@@ -1018,7 +1058,10 @@ class PmsReservationService(Component):
                     [("id", "=", pms_checkin_partner_info.responsibleCheckinPartnerId)]
                 )
             )
-            if responsible_checkin_partner_record:
+            if (
+                responsible_checkin_partner_record
+                and pms_checkin_partner_info.relationship
+            ):
                 responsible_checkin_partner_record.ses_partners_relationship = (
                     pms_checkin_partner_info.relationship
                 )
@@ -1322,6 +1365,9 @@ class PmsReservationService(Component):
                     else False,
                 )
             )
+            self._write_unaccompanied_minors(
+                checkin_partner_last, pms_checkin_partner_info.unaccompaniedMinors
+            )
             return checkin_partner_last.id
         else:
             raise MissingError(
@@ -1411,7 +1457,7 @@ class PmsReservationService(Component):
             vals.update({"signature": base64.b64encode(signature_image)})
         else:
             vals.update({"signature": False})
-        if pms_checkin_partner_info.relationship != "":
+        if pms_checkin_partner_info.relationship:
             vals.update(
                 {
                     "ses_partners_relationship": find_opposite_relationship(
@@ -1426,6 +1472,160 @@ class PmsReservationService(Component):
                 }
             )
         return vals
+
+    def _write_unaccompanied_minors(self, checkin_partner, unaccompanied_minors):
+        """Store the unaccompanied minors declaration, which lives on the folio.
+
+        ``None`` means the field was not sent, and the declaration is left as it
+        was. This is not the usual mapping behaviour, where an absent field is
+        written as empty, and it cannot be: the declaration is folio wide, so
+        that would silently withdraw a declaration made through another guest on
+        every request that writes any other guest of the folio.
+        """
+        if unaccompanied_minors is None:
+            return
+        checkin_partner.folio_id.ses_unaccompanied_minors = unaccompanied_minors
+
+    def _get_reservation_checkin_partner(self, reservation_id, checkin_partner_id):
+        checkin_partner = (
+            self.env["pms.checkin.partner"]
+            .sudo()
+            .search(
+                [
+                    ("id", "=", checkin_partner_id),
+                    ("reservation_id", "=", reservation_id),
+                ]
+            )
+        )
+        if not checkin_partner:
+            raise MissingError(_("Checkin partner not found"))
+        pms_api_check_access(user=self.env.user, records=checkin_partner)
+        return checkin_partner
+
+    def _store_minors_authorization(self, checkin_partner, content, filename):
+        if not content:
+            raise ValidationError(_("The uploaded authorization is empty"))
+        if len(content) > MAX_MINORS_AUTHORIZATION_SIZE:
+            raise ValidationError(
+                _("The uploaded authorization is larger than %s MB")
+                % (MAX_MINORS_AUTHORIZATION_SIZE // (1024 * 1024))
+            )
+        checkin_partner.folio_id.write(
+            {
+                "ses_minors_authorization": base64.b64encode(content),
+                "ses_minors_authorization_filename": filename,
+            }
+        )
+
+    def _read_minors_authorization(self, checkin_partner):
+        folio = checkin_partner.folio_id
+        if not folio.ses_minors_authorization:
+            raise MissingError(_("There is no authorization stored"))
+        return (
+            base64.b64decode(folio.ses_minors_authorization),
+            folio.ses_minors_authorization_filename or "authorization",
+        )
+
+    # The upload has a path of its own, unlike the download and the removal
+    # below, because a cors preflight only advertises the methods of the single
+    # route it matches, and every http method is a route of its own here. On a
+    # shared path the browser would be told that only DELETE is allowed and
+    # would block the upload. GET needs no such permission, being safelisted.
+    @restapi.method(
+        [
+            (
+                [
+                    "/p/<int:reservation_id>/checkin-partners/"
+                    "<int:checkin_partner_id>/minors-authorization",
+                ],
+                "PUT",
+            )
+        ],
+        auth="jwt_api_pms",
+    )
+    def upload_minors_authorization(self, reservation_id, checkin_partner_id):
+        """Store the guardian authorization of the unaccompanied minors.
+
+        The document is uploaded as ``multipart/form-data`` under the ``file``
+        part, so a scanned document does not pay the base64 overhead of the
+        datamodel fields. It is read straight from the request because
+        ``restapi.MultipartFormData`` cannot be used: the base_rest dispatcher
+        leaves the uploaded files out of ``request.params``, so declaring the
+        parts would never reach them.
+
+        There is a single authorization per folio, whichever of its guests it is
+        uploaded through.
+        """
+        checkin_partner = self._get_reservation_checkin_partner(
+            reservation_id, checkin_partner_id
+        )
+        upload = request.httprequest.files.get("file")
+        if not upload:
+            raise ValidationError(
+                _("The authorization must be uploaded in the 'file' part")
+            )
+        self._store_minors_authorization(
+            checkin_partner, upload.read(), upload.filename
+        )
+        return checkin_partner.id
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:reservation_id>/checkin-partners/"
+                    "<int:checkin_partner_id>/minors-authorization",
+                ],
+                "GET",
+            )
+        ],
+        auth="jwt_api_pms",
+        output_param=restapi.BinaryData(),
+    )
+    def download_minors_authorization(self, reservation_id, checkin_partner_id):
+        """Download the stored guardian authorization of the unaccompanied minors."""
+        checkin_partner = self._get_reservation_checkin_partner(
+            reservation_id, checkin_partner_id
+        )
+        content, filename = self._read_minors_authorization(checkin_partner)
+        return request.make_response(
+            content,
+            headers=[
+                # Served as an opaque download and never inline: the file comes
+                # from whatever the establishment scanned, and letting the
+                # browser render it would turn an HTML or SVG upload into a
+                # script running on the API origin.
+                ("Content-Type", "application/octet-stream"),
+                ("X-Content-Type-Options", "nosniff"),
+                ("Content-Disposition", content_disposition(filename)),
+                ("Content-Length", len(content)),
+            ],
+        )
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:reservation_id>/checkin-partners/"
+                    "<int:checkin_partner_id>/minors-authorization",
+                ],
+                "DELETE",
+            )
+        ],
+        auth="jwt_api_pms",
+    )
+    def delete_minors_authorization(self, reservation_id, checkin_partner_id):
+        """Remove the stored guardian authorization of the unaccompanied minors."""
+        checkin_partner = self._get_reservation_checkin_partner(
+            reservation_id, checkin_partner_id
+        )
+        checkin_partner.folio_id.write(
+            {
+                "ses_minors_authorization": False,
+                "ses_minors_authorization_filename": False,
+            }
+        )
+        return checkin_partner.id
 
     @restapi.method(
         [
@@ -1966,10 +2166,22 @@ class PmsReservationService(Component):
                 folio_checkin_partner_names.append(checkin_partner.firstname)
 
         # append reservation public info
+        reservation_share_url = precheckin_share_url(
+            self.env,
+            "precheckin-reservation",
+            reservation_record.id,
+            token,
+            lang=reservation_record.folio_id.lang,
+        )
         reservations = [
             self.env.datamodels["pms.reservation.public.info"](
                 roomTypeName=reservation_record.room_type_id.name,
                 checkinNamesCompleted=reservation_checkin_partner_names,
+                # Same datamodel as the one the folio endpoint fills, so it
+                # carries the same field: a caller should not have to know
+                # which of the two endpoints it happened to call to find out
+                # where the share URL of a reservation lives.
+                shareUrl=reservation_share_url,
                 nights=reservation_record.nights,
                 checkin=datetime.combine(
                     reservation_record.checkin, datetime.min.time()
@@ -2046,6 +2258,7 @@ class PmsReservationService(Component):
             pmsPropertyId=reservation_record.pms_property_id.id,
             folioPartnerName=reservation_record.folio_id.partner_name,
             reservations=reservations,
+            shareUrl=reservation_share_url,
             cardexWarning=reservation_record.pms_property_id.cardex_warning
             if reservation_record.pms_property_id.cardex_warning
             else "",

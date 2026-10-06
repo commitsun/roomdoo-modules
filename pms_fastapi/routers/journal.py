@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import Query
 
 from odoo import models
-from odoo.osv import expression
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -31,15 +30,15 @@ async def list_journals(
         Query(description="Filter journals of the given property."),
     ] = None,
     journalType: Annotated[
-        JournalType | None,
-        Query(description="Filter by journal type."),
+        list[JournalType] | None,
+        Query(description="Filter by journal type. Repeat to filter by several."),
     ] = None,
 ) -> list[JournalSummary]:
     """List journals, optionally filtered by type and property."""
     helper = env["pms_api_journal.journal_router.helper"].new()
     journals = helper.search_journals(
         pms_property_id=pmsPropertyId,
-        journal_type=journalType.value if journalType else None,
+        journal_type=[t.value for t in journalType] if journalType else None,
     )
     return [JournalSummary.from_account_journal(journal) for journal in journals]
 
@@ -62,34 +61,16 @@ class PmsApiJournalRouterHelper(models.AbstractModel):
                 domain.append(("type", "=", journal_type))
             else:
                 domain.append(("type", "in", list(journal_type)))
-        if pms_property_id:
-            domain = expression.AND(
-                [
-                    domain,
-                    expression.OR(
-                        [
-                            [("pms_property_ids", "in", [pms_property_id])],
-                            [("pms_property_ids", "=", False)],
-                        ]
-                    ),
-                ]
-            )
-        else:
-            domain = expression.AND(
-                [
-                    domain,
-                    expression.OR(
-                        [
-                            [
-                                (
-                                    "pms_property_ids",
-                                    "in",
-                                    self.env.user.pms_property_ids.ids,
-                                )
-                            ],
-                            [("pms_property_ids", "=", False)],
-                        ]
-                    ),
-                ]
-            )
+        # A journal with no property is NOT returned. Elsewhere in PMS an empty
+        # pms_property_ids conventionally means "every property", but a generic
+        # company journal is not something a hotel should be offered: nobody at
+        # reception is meant to pick it, and the listings already dropped them
+        # one by one after the fact (see the filtered() calls in
+        # schemas/payment.py and in pms_api_rest's journal and transaction
+        # services). Excluding them here is what finally makes the selector and
+        # the listing agree.
+        property_ids = (
+            [pms_property_id] if pms_property_id else self.env.user.pms_property_ids.ids
+        )
+        domain.append(("pms_property_ids", "in", property_ids))
         return self.env["account.journal"].sudo().search(domain)

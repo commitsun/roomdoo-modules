@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--
+        Crawler-facing document of a shared pre-check-in link.
+
+        Social crawlers (WhatsApp, Facebook, ...) do not run JavaScript, so the
+        SPA cannot set per-link Open Graph tags. This document carries them for
+        the crawler and bounces a real browser to the SPA.
+
+        The bounce is JavaScript only, and that is the whole trick: the same
+        blindness that stops a crawler from reading the SPA also stops it from
+        following this redirect, so it reads the head and stops. A 302 or a
+        meta refresh would be honoured by crawlers too, sending them on to the
+        SPA and its generic card — the feature would silently do nothing.
+        Verified the hard way: with a meta refresh in place, neither WhatsApp
+        nor Telegram rendered a preview.
+
+        Nothing is lost by dropping it. A browser with JavaScript disabled
+        cannot use the destination either, since it is a JavaScript SPA, and it
+        still gets the visible link below.
+
+        Every value arrives already translated and is written through t-out or
+        t-att/t-attf, so QWeb owns the escaping. The redirect target travels in
+        a data attribute rather than inside the script, because QWeb escaping
+        is meant for markup and would corrupt a JavaScript string literal.
+    -->
+    <template
+    id="precheckin_share_document"
+    name="Pre-check-in Share Document"
+  >&lt;!DOCTYPE html&gt;
+<html t-att-lang="html_lang" t-att-data-redirect-url="redirect_url">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+        The URLs of this document carry an access token, so keep it out of the
+        search indexes, exactly like the SPA does.
+    -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title t-out="title" />
+    <meta property="og:type" content="website" />
+    <!--
+        The group above the hotel: clients render it as the small line over the
+        title, and without it they fall back to the bare domain.
+    -->
+    <meta t-if="site_name" property="og:site_name" t-att-content="site_name" />
+    <meta property="og:title" t-att-content="title" />
+    <meta property="og:description" t-att-content="description" />
+    <meta property="og:image" t-att-content="image" />
+    <t t-if="image_width and image_height">
+        <meta property="og:image:width" t-att-content="image_width" />
+        <meta property="og:image:height" t-att-content="image_height" />
+    </t>
+    <meta t-if="share_url" property="og:url" t-att-content="share_url" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" t-att-content="title" />
+    <meta name="twitter:description" t-att-content="description" />
+    <meta name="twitter:image" t-att-content="image" />
+</head>
+<body>
+    <p t-out="description" />
+    <p t-if="redirect_url"><a
+            t-att-href="redirect_url"
+            t-out="link_label"
+          /></p>
+    <script t-if="redirect_url">
+        window.location.replace(document.documentElement.dataset.redirectUrl);
+    </script>
+</body>
+</html>
+</template>
+</odoo>

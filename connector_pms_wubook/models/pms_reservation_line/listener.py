@@ -5,8 +5,8 @@ from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
 from ..pms_availability.listener import (
-    _AVAILABILITY_BUFFER_KEY,
-    _flush_availability_buffer,
+    buffer_property_exports,
+    buffer_property_exports_for_rooms,
 )
 
 # Fields whose public write on a reservation line shifts the
@@ -44,36 +44,10 @@ class ChannelWubookPmsReservationLineListener(Component):
     _inherit = "base.connector.listener"
     _apply_on = "pms.reservation.line"
 
-    def _buffer_property_export(self, property_binding):
-        cr = self.env.cr
-        data = cr.precommit.data
-        if _AVAILABILITY_BUFFER_KEY not in data:
-            data[_AVAILABILITY_BUFFER_KEY] = {}
-            env = self.env
-            cr.precommit.add(
-                lambda env=env: _flush_availability_buffer(env)
-            )
-        data[_AVAILABILITY_BUFFER_KEY].setdefault(
-            property_binding.id, property_binding
-        )
-
     def _enqueue_property_exports(self, record):
-        prop = record.pms_property_id
-        room = record.room_id
-        room_type = room.room_type_id if room else False
-        if not prop or not room_type:
-            return
-        for property_binding in prop.channel_wubook_bind_ids:
-            if not property_binding.external_id:
-                continue
-            backend = property_binding.backend_id
-            room_type_bound = room_type.channel_wubook_bind_ids.filtered(
-                lambda b, backend=backend: b.backend_id == backend
-                and b.external_id
-            )
-            if not room_type_bound:
-                continue
-            self._buffer_property_export(property_binding)
+        buffer_property_exports_for_rooms(
+            self.env, record.pms_property_id, record.room_id.room_type_id
+        )
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
@@ -82,6 +56,12 @@ class ChannelWubookPmsReservationLineListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if not fields or not (set(fields) & _LINE_RELEVANT_FIELDS):
+            return
+        if "room_id" in fields:
+            # The line moved between rooms: the availability freed on the
+            # room type it left has to be published too, and the record only
+            # carries the new one.
+            buffer_property_exports(self.env, record.pms_property_id)
             return
         self._enqueue_property_exports(record)
 

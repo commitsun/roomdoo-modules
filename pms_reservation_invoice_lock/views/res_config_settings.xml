@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.reservation.invoice.lock</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='invoicing_settings']" position="inside">
+                <div
+          class="col-12 col-lg-6 o_setting_box"
+          id="reservation_invoice_lock"
+        >
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Reservation invoice lock</span>
+                        <div class="text-muted">
+                            Block validating reservation invoices too early. Draft
+                            invoices can still be created (proforma); down payment
+                            invoices are never blocked.
+                        </div>
+                        <div class="content-group mt16">
+                            <field
+                name="reservation_invoice_block_policy"
+                widget="radio"
+              />
+                        </div>
+                        <div
+              class="content-group mt16"
+              attrs="{'invisible': [('reservation_invoice_block_policy', '!=', 'other')]}"
+            >
+                            <label
+                for="reservation_invoice_block_domain"
+                class="o_form_label"
+              />
+                            <field
+                name="reservation_invoice_block_domain"
+                widget="domain"
+                options="{'model': 'pms.reservation'}"
+              />
+                        </div>
+                        <div class="content-group mt16">
+                            <label
+                for="reservation_invoice_block_message"
+                class="o_form_label"
+              />
+                            <field
+                name="reservation_invoice_block_message"
+                placeholder="Ex.: Invoices cannot be validated before the guest checks out."
+              />
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

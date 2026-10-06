@@ -1,7 +1,10 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import datetime
 import json
 import logging
+
+from odoo.tests import tagged
 
 from . import common
 
@@ -588,3 +591,113 @@ class TestPmsFolio(common.TestWubookConnector):
 #             wubook_values,
 #             "The room type data on Odoo does not match the data on Wubook",
 #         )
+
+
+# post_install so the accounting set up by other modules (chart of accounts and
+# its payment method lines) is already in place when the backend is created.
+@tagged("post_install", "-at_install")
+class TestPmsFolioOccupancy(common.TestWubookConnector):
+    """Unit tests for ``_reorg_folio_data`` occupancy parsing."""
+
+    def _build_adapter(self):
+        p1 = self.browse_ref("pms.main_pms_property")
+        payment_method_line = self.env["account.payment.method.line"].search(
+            [("company_id", "=", p1.company_id.id)], limit=1
+        ) or self.env["account.payment.method.line"].search([], limit=1)
+        backend = self.env["channel.wubook.backend"].create(
+            {
+                "name": "Test backend",
+                "pms_property_id": p1.id,
+                "user_id": self.user1(p1).id,
+                "backend_type_id": self.backend_type1.parent_id.id,
+                "pricelist_external_id": 1,
+                "wubook_payment_method_line_id": payment_method_line.id,
+                **self.fake_credentials,
+            }
+        )
+        with backend.work_on("channel.wubook.pms.folio") as work:
+            return work.component(usage="backend.adapter")
+
+    def _booking_value(self):
+        """Booking.com (id_channel=2) reservation with TWO rooms of the SAME
+        room type (same room_id) but a different number of adults per room.
+
+        WuBook returns the per-room occupancy in ``rooms_occupancies`` keyed by a
+        non-unique room id, and the authoritative per-room guest counts in each
+        booked_room's ancillary (``guests_adults`` / ``guests_children``).
+        """
+        day = datetime.date(2026, 6, 27)
+        return {
+            "reservation_code": 1782427170,
+            "id_channel": 2,  # Booking.com
+            "men": 3,
+            "children": 0,
+            "arrival_hour": "14:00",
+            "channel_reservation_code": "6347634839-6347634840",
+            "channel_data": {},
+            "customer_notes": "",
+            "boards": {},
+            "ancillary": {"Detected Board": "nb"},
+            # both entries collapse on the same room id -> per-room data is lost
+            # unless we read it from each booked_room's ancillary
+            "rooms_occupancies": [
+                {"id": 100, "occupancy": 1},
+                {"id": 100, "occupancy": 2},
+            ],
+            "booked_rooms": [
+                {
+                    "room_id": 100,
+                    "ancillary": {"guests_adults": 1, "guests_children": 0},
+                    "roomdays": [
+                        {
+                            "rate_id": 1,
+                            "price": 75.4,
+                            "day": day,
+                            "ancillary": None,
+                        }
+                    ],
+                },
+                {
+                    "room_id": 100,
+                    "ancillary": {"guests_adults": 2, "guests_children": 1},
+                    "roomdays": [
+                        {
+                            "rate_id": 1,
+                            "price": 83.78,
+                            "day": day,
+                            "ancillary": None,
+                        }
+                    ],
+                },
+            ],
+        }
+
+    def test_reorg_multiroom_same_type_keeps_per_room_occupancy(self):
+        """
+        PRE:    - Booking reservation, 2 rooms of the same type, 1 and 2 adults
+        ACT:    - run _reorg_folio_data
+        POST:   - each reservation keeps its own occupancy (1 and 2), not the
+                  collapsed minimum (1 and 1)
+        """
+        adapter = self._build_adapter()
+        value = self._booking_value()
+
+        adapter._reorg_folio_data([value])
+
+        reservations = value["reservations"]
+        self.assertEqual(len(reservations), 2)
+        occupancies = sorted(r["occupancy"] for r in reservations)
+        self.assertEqual(
+            occupancies,
+            [1, 2],
+            "Per-room adults must be preserved for same-room-type Booking "
+            "reservations (regression: both collapsed to 1)",
+        )
+        # children are parsed per room from the booked_room ancillary too
+        children = sorted(r["children"] for r in reservations)
+        self.assertEqual(children, [0, 1])
+        # the reservation lines must carry the same per-room occupancy
+        for reservation in reservations:
+            for line in reservation["lines"]:
+                self.assertEqual(line["occupancy"], reservation["occupancy"])
+                self.assertEqual(line["children"], reservation["children"])

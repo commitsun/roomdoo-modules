@@ -18,6 +18,7 @@
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
         "wizards/lock_code_pin_viewer_views.xml",
+        "wizards/lock_list_wizard_views.xml",
         "views/lock_vendor_views.xml",
         "views/lock_code_views.xml",
         "views/lock_code_access_log_views.xml",

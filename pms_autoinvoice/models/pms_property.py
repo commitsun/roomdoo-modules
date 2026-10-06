@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class PmsProperty(models.Model):
@@ -74,7 +77,13 @@ class PmsProperty(models.Model):
             if with_delay:
                 self.with_delay().autoinvoice_folio(folio, delay_post=True)
             else:
-                self.autoinvoice_folio(folio)
+                # Isolate failures per folio: a single folio that cannot be
+                # invoiced (e.g. simplified invoice over the limit without
+                # enough fiscal data) must not abort the whole cron run.
+                try:
+                    self.autoinvoice_folio(folio)
+                except Exception as e:
+                    _logger.warning("Autoinvoicing skipped folio %s: %s", folio.name, e)
         # 2- Validate draft invoices ready for posting. Invoices created
         # in step 1 schedule their own posting job from inside
         # autoinvoice_folio; this search catches orphan drafts left over
@@ -101,7 +110,14 @@ class PmsProperty(models.Model):
             if with_delay:
                 self.with_delay().autovalidate_folio_invoice(invoice)
             else:
-                self.autovalidate_folio_invoice(invoice)
+                # Isolate failures per invoice so one draft that cannot be
+                # posted does not abort posting of the remaining drafts.
+                try:
+                    self.autovalidate_folio_invoice(invoice)
+                except Exception as e:
+                    _logger.warning(
+                        "Autovalidate skipped invoice %s: %s", invoice.name, e
+                    )
 
         if not with_delay:
             # 3- Reverse the downpayment invoices not included in final invoice
@@ -114,24 +130,15 @@ class PmsProperty(models.Model):
                 ]
             )
             downpayment_invoices = downpayments_invoices_to_reverse.mapped("move_id")
-            if downpayment_invoices:
-                for downpayment_invoice in downpayment_invoices:
-                    default_values_list = [
-                        {
-                            "ref": _("Reversal of: " f'{move.name + " - " + move.ref}'),
-                        }
-                        for move in downpayment_invoice
-                    ]
-                    downpayment_invoice.with_context(
-                        sii_refund_type="I"
-                    )._reverse_moves(default_values_list, cancel=True)
-                    downpayment_invoice.message_post(
-                        body=_(
-                            "The downpayment invoice has been reversed "
-                            "because it was not included in the "
-                            "final invoice"
-                        )
+            for downpayment_invoice in downpayment_invoices:
+                downpayment_invoice._reverse_downpayment_invoices()
+                downpayment_invoice.message_post(
+                    body=_(
+                        "The downpayment invoice has been reversed "
+                        "because it was not included in the "
+                        "final invoice"
                     )
+                )
 
         return True
 
@@ -173,16 +180,7 @@ class PmsProperty(models.Model):
                     dp_invoices = (
                         downpayments.invoice_lines.mapped("move_id")
                     ).filtered(lambda i: i.is_simplified_invoice)
-                    if dp_invoices:
-                        default_values_list = [
-                            {
-                                "ref": _("Reversal of: " f'{m.name + " - " + m.ref}'),
-                            }
-                            for m in dp_invoices
-                        ]
-                        dp_invoices.with_context(sii_refund_type="I")._reverse_moves(
-                            default_values_list, cancel=True
-                        )
+                    dp_invoices._reverse_downpayment_invoices()
         except Exception as e:
             raise ValidationError(
                 _("Error in autovalidate invoice: %s") % str(e)
@@ -298,17 +296,6 @@ class PmsProperty(models.Model):
                             lambda d: d.qty_invoiced > 0
                         ).invoice_lines.mapped("move_id")
                     ).filtered(lambda i: i.is_simplified_invoice)
-                    if downpayment_invoices:
-                        default_values_list = [
-                            {
-                                "ref": _(
-                                    f'Reversal of: {move.name + " - " + move.ref}'
-                                ),
-                            }
-                            for move in downpayment_invoices
-                        ]
-                        downpayment_invoices.with_context(
-                            sii_refund_type="I"
-                        )._reverse_moves(default_values_list, cancel=True)
+                    downpayment_invoices._reverse_downpayment_invoices()
         except Exception as e:
             raise ValidationError(_("Error in autoinvoicing folio: %s") % str(e)) from e

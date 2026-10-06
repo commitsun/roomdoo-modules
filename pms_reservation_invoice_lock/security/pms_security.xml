@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data noupdate="0">
+        <!-- Users in this group can validate reservation invoices even when the
+             property block domain would otherwise prevent it. -->
+        <record id="group_bypass_reservation_invoice_lock" model="res.groups">
+            <field
+        name="name"
+      >Property Management / Skip reservation invoice lock</field>
+        </record>
+    </data>
+</odoo>

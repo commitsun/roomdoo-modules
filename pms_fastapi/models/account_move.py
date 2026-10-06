@@ -18,6 +18,18 @@ class AccountMove(models.Model):
     min_overdue_date = fields.Date(
         string="Minimum Overdue Payment Date", compute="_compute_min_overdue_date"
     )
+    replaces_invoice_id = fields.Many2one(
+        comodel_name="account.move",
+        string="Replaces Invoice",
+        readonly=True,
+        index=True,
+    )
+    replaced_by_invoice_ids = fields.One2many(
+        comodel_name="account.move",
+        inverse_name="replaces_invoice_id",
+        string="Replaced By Invoices",
+        readonly=True,
+    )
 
     def _compute_payment_method_ids(self):
         for move in self:

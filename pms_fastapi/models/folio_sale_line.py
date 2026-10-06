@@ -1,5 +1,7 @@
 from odoo import api, fields, models
 
+FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX = "folio_invoice_line_descriptions"
+
 
 class FolioSaleLine(models.Model):
     _inherit = "folio.sale.line"
@@ -24,3 +26,14 @@ class FolioSaleLine(models.Model):
                 partner=line.folio_id.partner_id,
             )
             line.amount_to_invoice = taxes["total_included"]
+
+    def _prepare_invoice_line(self, qty=False, invoice_fpos=None, **optional_values):
+        res = super()._prepare_invoice_line(
+            qty=qty, invoice_fpos=invoice_fpos, **optional_values
+        )
+        descriptions = self.env.context.get(FOLIO_INVOICE_LINE_DESCRIPTIONS_CTX) or {}
+        description = descriptions.get(self.id)
+        if description is not None:
+            res["name"] = description
+            res["name_changed_by_user"] = True
+        return res

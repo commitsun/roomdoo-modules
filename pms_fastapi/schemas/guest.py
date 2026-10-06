@@ -8,7 +8,7 @@ from fastapi.params import Query as QueryType
 from odoo import api
 from odoo.osv import expression
 
-from odoo.addons.pms_fastapi.schemas.base import BaseSearch
+from odoo.addons.pms_fastapi.schemas.base import BaseSearch, SearchText
 from odoo.addons.pms_fastapi.schemas.contact import ContactBase
 from odoo.addons.pms_fastapi.schemas.id_document import IdDocument
 
@@ -50,35 +50,44 @@ class GuestSearch(BaseSearch):
             default=None,
             description="Filter guests of the given property.",
         ),
-        globalSearch: str | None = Query(
-            default=None,
-            description="Search across name, email, phone and VAT fields"
-            "this value (case-insensitive).",
-        ),
-        vat: str | None = Query(
-            default=None,
-            description="Search for contacts whose VAT contains this "
-            "value (case-insensitive).",
-        ),
+        globalSearch: Annotated[
+            SearchText,
+            Query(
+                description="Search across name, email, phone and VAT fields"
+                "this value (case-insensitive).",
+            ),
+        ] = None,
+        vat: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose VAT contains this "
+                "value (case-insensitive).",
+            ),
+        ] = None,
         inHouse: bool | None = Query(
             default=False,
             description="Search for contacts in house. Boolean value ",
         ),
-        name: str | None = Query(
-            default=None,
-            description="Search for contacts whose name contains "
-            "this value (case-insensitive).",
-        ),
-        phone: str | None = Query(
-            default=None,
-            min_length=3,
-            description="Search for contacts whose phones contains " "this value.",
-        ),
-        email: str | None = Query(
-            default=None,
-            description="Search for contacts whose email contains this "
-            "value (case-insensitive).",
-        ),
+        name: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose name contains "
+                "this value (case-insensitive).",
+            ),
+        ] = None,
+        phone: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose phones contains " "this value.",
+            ),
+        ] = None,
+        email: Annotated[
+            SearchText,
+            Query(
+                description="Search for contacts whose email contains this "
+                "value (case-insensitive).",
+            ),
+        ] = None,
         countries: Annotated[
             list[str] | None,
             Query(
@@ -175,9 +184,8 @@ class GuestSearch(BaseSearch):
                 ("vat", "ilike", self.globalSearch),
                 ("identification_number", "ilike", self.globalSearch),
             ]
-            if len(self.globalSearch) >= 3:
-                phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
-                domain = expression.OR([domain, phone_domain])
+            phone_domain = [("phone_mobile_search", "ilike", self.globalSearch)]
+            domain = expression.OR([domain, phone_domain])
         if self.vat:
             id_numbers = (
                 env["res.partner.id_number"]

@@ -340,6 +340,160 @@ class TestPmsFolioInvoice(TestPms):
             "Billed services and overnights invoicing wrong compute",
         )
 
+    def test_autoinvoice_folio_keeps_reservation_sections(self):
+        """
+        Test that the automatic invoice keeps the reservation sections
+        --------------------------------------
+        Set property default_invoicing_policy to checkout with 0 days of
+        margin, create a reservation already checked out and run the
+        autoinvoicing. The created invoice must include the section line of
+        the reservation, whose name carries the room that the client checks
+        the invoice against.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=3),
+                "checkout": datetime.date.today(),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        self.property.autoinvoicing()
+
+        # ASSERT
+        invoice_sections = reservation.folio_id.move_ids.line_ids.filtered(
+            lambda line: line.display_type == "line_section"
+        )
+        self.assertEqual(
+            invoice_sections.folio_line_ids,
+            reservation.sale_line_ids.filtered(
+                lambda line: line.display_type == "line_section"
+            ),
+            "The automatic invoice must include the reservation section",
+        )
+        self.assertIn(
+            reservation.rooms,
+            invoice_sections.name,
+            "The invoice section must show the rooms of the reservation",
+        )
+
+    def test_manual_invoice_ignores_checkout_invoicing_policy(self):
+        """
+        Test that manual invoicing does not date the invoice on the checkout
+        --------------------------------------
+        Set property default_invoicing_policy to checkout with 0 days of
+        margin, create a reservation checked out a week ago and invoice its
+        folio manually (no autoinvoice context, like the backend wizard and
+        the app do). The draft invoice must not take the checkout as its
+        date: it stays empty so that the invoice is dated the day it is
+        posted, instead of being booked in a past period.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        invoices = reservation.folio_id._create_invoices()
+
+        # ASSERT
+        self.assertFalse(
+            invoices.invoice_date,
+            "A manually created invoice must not be dated on the checkout",
+        )
+        self.assertNotEqual(
+            invoices.invoice_date_due,
+            reservation.checkout,
+            "A manually created invoice must not be due on the checkout",
+        )
+
+    def test_manual_invoice_keeps_the_requested_date(self):
+        """
+        Test that manual invoicing honours the date asked for by the caller
+        --------------------------------------
+        Same property policy as above, but the caller (the app sends the date
+        chosen by the user) asks for an explicit invoice date: that date must
+        be the one used, not the checkout of the reservation.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        invoice_date = datetime.date.today() - datetime.timedelta(days=1)
+
+        # ACT
+        invoices = reservation.folio_id._create_invoices(date=invoice_date)
+
+        # ASSERT
+        self.assertEqual(
+            invoices.invoice_date,
+            invoice_date,
+            "The manually created invoice must keep the requested date",
+        )
+
+    def test_autoinvoice_dates_the_invoice_on_the_checkout(self):
+        """
+        Test that the automatic invoicing keeps applying the policy date
+        --------------------------------------
+        The invoicing policy of the property (checkout + margin days) is the
+        one that dates the invoices issued by the autoinvoicing cron, so that
+        every stay is invoiced in the period it was consumed.
+        """
+        # ARRANGE
+        self.property.default_invoicing_policy = "checkout"
+        self.property.margin_days_autoinvoice = 0
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.date.today() - datetime.timedelta(days=10),
+                "checkout": datetime.date.today() - datetime.timedelta(days=7),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        invoices = reservation.folio_id.with_context(autoinvoice=True)._create_invoices(
+            grouped=True, final=False
+        )
+
+        # ASSERT
+        self.assertEqual(
+            invoices.invoice_date,
+            reservation.checkout,
+            "The automatic invoice must be dated on the checkout of the stay",
+        )
+
     def test_not_autoinvoice_unpaid_cancel_folio_partner_policy(self):
         """
         Test create and invoice the cron by partner preconfig automation
@@ -421,3 +575,33 @@ class TestPmsFolioInvoice(TestPms):
             [],
             "Billed services and overnights invoicing wrong compute",
         )
+
+    # ------------------------------------------------------------------
+    # reference of the credit note that reverses a down payment
+    # ------------------------------------------------------------------
+    def _draft_invoice_for_ref(self):
+        partner = self.env["res.partner"].create({"name": "Ref test partner"})
+        return self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": partner.id,
+                "journal_id": self.simplified_journal.id,
+            }
+        )
+
+    def test_reverse_downpayment_ref_omits_a_missing_reference(self):
+        """An invoice with no ref used to raise TypeError here: the reference
+        was concatenated unconditionally, and False is not a string."""
+        invoice = self._draft_invoice_for_ref()
+        self.assertFalse(invoice.ref, "precondition: the invoice has a ref")
+        ref = invoice._reverse_downpayment_ref()
+        self.assertTrue(ref)
+        self.assertNotIn(" - ", ref)
+
+    def test_reverse_downpayment_ref_keeps_an_existing_reference(self):
+        invoice = self._draft_invoice_for_ref()
+        invoice.ref = "ORIGIN-123"
+        self.assertIn("ORIGIN-123", invoice._reverse_downpayment_ref())
+
+    def test_reverse_downpayment_invoices_is_a_noop_on_an_empty_recordset(self):
+        self.assertFalse(self.env["account.move"]._reverse_downpayment_invoices())

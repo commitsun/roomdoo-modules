@@ -116,6 +116,10 @@ class PmsFolioPublicInfo(Datamodel):
     folioReference = fields.String(required=False, allow_none=True)
     folioPaymentLink = fields.String(required=False, allow_none=True)
     folioPortalLink = fields.String(required=False, allow_none=True)
+    # URL to hand to a guest instead of the plain SPA one: it previews with the
+    # hotel name and picture in WhatsApp and the like, then forwards here.
+    # Empty when roomdoo_precheckin_share is not installed.
+    shareUrl = fields.String(required=False, allow_none=True)
     folioPendingAmount = fields.Float(required=False, allow_none=True)
     folioNumCheckins = fields.Integer(required=False, allow_none=True)
     folioCheckinNamesCompleted = fields.List(

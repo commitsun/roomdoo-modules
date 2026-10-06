@@ -40,28 +40,6 @@ class ChannelWubookPmsAvailabilityPlanRuleBinding(models.Model):
         "except to the Online Reception (booking engine)",
     )
 
-    inconsistent_binding_rules = fields.Many2many(
-        readonly=True,
-        store=False,
-        comodel_name="channel.wubook.pms.availability.plan.rule",
-        compute="_compute_inconsistent_binding_rules",
-    )
-
-    @api.depends("no_ota")
-    def _compute_inconsistent_binding_rules(self):
-        for rec in self:
-            inconsistent_binding_rules = self.search(
-                [
-                    ("id", "not in", rec.ids),
-                    ("room_type_id", "=", rec.room_type_id.id),
-                    ("date", "=", rec.date),
-                    ("backend_id", "=", rec.backend_id.id),
-                    ("no_ota", "!=", rec.no_ota),
-                ]
-            )
-            inconsistent_binding_rules.no_ota = rec.no_ota
-            rec.inconsistent_binding_rules = inconsistent_binding_rules
-
     @api.constrains("pms_property_id")
     def _check_pms_property_id(self):
         for rec in self:

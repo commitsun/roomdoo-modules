@@ -1,0 +1,167 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* roomdoo_payments_exporter
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Amount"
+msgstr "Importe"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Currency"
+msgstr "Moneda"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_report.py:0
+#, python-format
+msgid "Customer payment"
+msgstr "Cobro de cliente"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_report.py:0
+#, python-format
+msgid "Customer refund"
+msgstr "Devolución a cliente"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Date"
+msgstr "Fecha"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Folio"
+msgstr "Folio"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_report.py:0
+#, python-format
+msgid "Internal transfer"
+msgstr "Transferencia interna"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Journal"
+msgstr "Diario"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Number"
+msgstr "Número"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Payment Method"
+msgstr "Forma de pago"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Payments"
+msgstr "Pagos"
+
+#. module: roomdoo_payments_exporter
+#: model:ir.actions.report,name:roomdoo_payments_exporter.action_report_payments_xlsx
+msgid "Payments (Excel)"
+msgstr "Pagos (Excel)"
+
+#. module: roomdoo_payments_exporter
+#: model:ir.actions.report,name:roomdoo_payments_exporter.action_report_payments_pdf
+msgid "Payments (PDF)"
+msgstr "Pagos (PDF)"
+
+#. module: roomdoo_payments_exporter
+#: model:ir.model,name:roomdoo_payments_exporter.model_report_roomdoo_payments_exporter_report_payments
+msgid "Payments PDF Report"
+msgstr "Informe de pagos PDF"
+
+#. module: roomdoo_payments_exporter
+#: model:ir.model,name:roomdoo_payments_exporter.model_report_roomdoo_payments_exporter_payment_report
+msgid "Payments XLSX Report"
+msgstr "Informe de pagos XLSX"
+
+#. module: roomdoo_payments_exporter
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+msgid "Payments report"
+msgstr "Informe de pagos"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Reference"
+msgstr "Referencia"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Registered By"
+msgstr "Registrado por"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_report.py:0
+#, python-format
+msgid "Supplier payment"
+msgstr "Pago a proveedor"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_report.py:0
+#, python-format
+msgid "Supplier refund"
+msgstr "Devolución de proveedor"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
+#, python-format
+msgid "Type"
+msgstr "Tipo"

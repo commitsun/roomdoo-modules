@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from odoo.tests import tagged
 
 from odoo.addons.pms.tests.common import TestPms
@@ -8,6 +10,19 @@ class TestBookaiCommon(TestPms):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Stub the BooKAI webhook HTTP call for the whole test class. The
+        # scaffold built below (and most tests) create/write bookai records
+        # that fire a fire-and-forget webhook to the configured endpoint.
+        # Without this stub every such write hits the network and fails DNS
+        # on bookai.test, spraying ConnectionError tracebacks and slowing the
+        # suite. Tests that assert webhook behaviour re-patch the same target
+        # locally, which shadows this stub inside their ``with`` block.
+        webhook_patcher = patch(
+            "odoo.addons.pms_bookai.models.bookai_webhook_mixin.requests.post"
+        )
+        cls.webhook_post_mock = webhook_patcher.start()
+        cls.addClassCleanup(webhook_patcher.stop)
+
         # Disable all notification rules to avoid side effects
         cls.env["pms.property.notification.rule"].search([("active", "=", True)]).write(
             {"active": False}

@@ -19,9 +19,16 @@ from . import supplier
 from . import guest
 from . import pms_reservation
 from . import pms_folio
+from . import folio_sale_line
 from . import pms_service
 from . import pms_room
 from . import invoice
+from . import email_template
 from . import payment_method
+from . import payment
+from . import customer_payment
+from . import supplier_payment
+from . import internal_transfer
 from . import journal
+from . import cash_session
 from . import reservation_guest
