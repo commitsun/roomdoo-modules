@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="pms_property_children_form" model="ir.ui.view">
+        <field name="name">pms.property.children.form</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='default_departure_hour']" position="after">
+                <field name="children_max_age" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_pricelist_children_fee_form" model="ir.ui.view">
+        <field name="name">product.pricelist.children.fee.form</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="pms.product_pricelist_view_form" />
+        <field name="arch" type="xml">
+            <xpath
+        expr="//page[@name='pricelist_occupancy']//group[@name='occupancy_below']"
+        position="after"
+      >
+                <group string="Children">
+                    <field name="children_fee" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="pms_reservation_children_ages_form" model="ir.ui.view">
+        <field name="name">pms.reservation.children.ages.form</field>
+        <field name="model">pms.reservation</field>
+        <field name="inherit_id" ref="pms.pms_reservation_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='children']" position="after">
+                <field
+          name="children_ages"
+          attrs="{'invisible': [('children', '=', 0)]}"
+        />
+            </xpath>
+        </field>
+    </record>
+</odoo>
