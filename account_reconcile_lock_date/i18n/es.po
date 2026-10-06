@@ -139,3 +139,109 @@ msgstr "asiento en borrador"
 #, python-format
 msgid "• %(name)s dated %(date)s (period locked up to %(lock)s)"
 msgstr "• %(name)s con fecha %(date)s (periodo cerrado hasta %(lock)s)"
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"Rectified with %(refund)s and replaced by %(invoice)s, keeping its "
+"payments. The balance was moved with %(entry)s."
+msgstr ""
+"Rectificada con %(refund)s y sustituida por %(invoice)s, conservando sus "
+"cobros. El saldo se ha traspasado con %(entry)s."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"Rectified with %(refund)s and replaced by %(invoice)s, keeping its payments."
+msgstr ""
+"Rectificada con %(refund)s y sustituida por %(invoice)s, conservando sus "
+"cobros."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"The credit note cannot be posted in journal %(journal)s while these older "
+"drafts are open: %(drafts)s. Validate or cancel them first."
+msgstr ""
+"La rectificativa no se puede validar en el diario %(journal)s mientras "
+"estén abiertos estos borradores anteriores: %(drafts)s. Valídalos o "
+"cancélalos primero."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"%s cannot be partially rectified: it does not have exactly one line with an "
+"amount."
+msgstr ""
+"%s no se puede rectificar parcialmente: no tiene exactamente una línea con "
+"importe."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"No journal configured to post the balance transfer entries of company %s."
+msgstr ""
+"No hay ningún diario configurado para los asientos de traspaso de saldo de "
+"la compañía %s."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"%(refund)s or %(invoice)s does not have exactly one customer line, so which "
+"balance to move is ambiguous."
+msgstr ""
+"%(refund)s o %(invoice)s no tiene exactamente una línea de cliente, así que "
+"no está claro qué saldo hay que mover."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid "%(refund)s transferred to %(invoice)s"
+msgstr "%(refund)s traspasada a %(invoice)s"
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"%s already has credit notes issued against it, so rectifying it again would "
+"credit part of it twice. Ask accounting to finish the rectification."
+msgstr ""
+"%s ya tiene rectificativas, así que volver a rectificarla abonaría parte de "
+"ella dos veces. Pide a contabilidad que termine la rectificación."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid ""
+"%s has more than one customer line, so which balance to move is ambiguous. "
+"Ask accounting to rectify it."
+msgstr ""
+"%s tiene más de una línea de cliente, así que no está claro qué saldo hay "
+"que mover. Pide a contabilidad que la rectifique."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid "Rectification of %s"
+msgstr "Rectificación de %s"
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid ""
+"Payment %(payment)s cannot be changed: it settles %(invoices)s, which has "
+"already been rectified and replaced by a new invoice that received its "
+"money. Changing the payment would make the rectified invoice owe it again. "
+"Register the difference as a new payment or refund, or ask accounting."
+msgstr ""
+"El cobro %(payment)s no se puede modificar: paga %(invoices)s, que ya está "
+"rectificada y sustituida por una factura nueva que recibió su dinero. "
+"Modificar el cobro haría que la factura rectificada volviera a deberlo. "
+"Registra la diferencia como un cobro o una devolución nuevos, o avisa a "
+"contabilidad."

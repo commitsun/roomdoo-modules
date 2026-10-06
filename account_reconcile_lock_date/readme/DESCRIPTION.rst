@@ -25,3 +25,24 @@ This module adds the missing checks, with a date of its own:
   monthly close.
 
 Reconciling and posting are never blocked. Only undoing them.
+
+Blocking is only half of it: the module also provides the sanctioned way of
+doing what used to require breaking a reconciliation. ``_reissue_invoice()``
+rectifies a posted invoice that is being replaced without unreconciling
+anything. The credit note is issued with ``cancel=False``, the original keeps
+the payment it was settled with, and the money is moved onto the replacement
+with a balance transfer entry dated today. The pieces it is made of
+(``_keeps_reconciliation_on_rectify()``, ``_rectify_for_replacement()``,
+``_rectify_keep_reconciliation()``, ``_settle_rectification()``,
+``_create_balance_transfer_entry()``, ``_is_rectified()``) are public, so that
+other flows can reuse them -- an API that posts the replacement later, for
+instance.
+
+A company opts in by having a transfer journal
+(``res.company._get_rectification_transfer_journal()``, empty here). Without
+one, ``_reissue_invoice()`` keeps the core behaviour.
+
+The payment of an invoice rectified this way cannot be reset to draft: the
+money its credit note took over has already moved on to the replacement, so
+reopening the rectified invoice would charge the customer twice. Members of
+the bypass group, and code passing the bypass context key, still can.

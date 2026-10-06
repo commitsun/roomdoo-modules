@@ -395,6 +395,24 @@ this transition, but with the permissive date described above, so an adviser
 monthly close.</li>
 </ul>
 <p>Reconciling and posting are never blocked. Only undoing them.</p>
+<p>Blocking is only half of it: the module also provides the sanctioned way of
+doing what used to require breaking a reconciliation. <tt class="docutils literal">_reissue_invoice()</tt>
+rectifies a posted invoice that is being replaced without unreconciling
+anything. The credit note is issued with <tt class="docutils literal">cancel=False</tt>, the original keeps
+the payment it was settled with, and the money is moved onto the replacement
+with a balance transfer entry dated today. The pieces it is made of
+(<tt class="docutils literal">_keeps_reconciliation_on_rectify()</tt>, <tt class="docutils literal">_rectify_for_replacement()</tt>,
+<tt class="docutils literal">_rectify_keep_reconciliation()</tt>, <tt class="docutils literal">_settle_rectification()</tt>,
+<tt class="docutils literal">_create_balance_transfer_entry()</tt>, <tt class="docutils literal">_is_rectified()</tt>) are public, so that
+other flows can reuse them – an API that posts the replacement later, for
+instance.</p>
+<p>A company opts in by having a transfer journal
+(<tt class="docutils literal">res.company._get_rectification_transfer_journal()</tt>, empty here). Without
+one, <tt class="docutils literal">_reissue_invoice()</tt> keeps the core behaviour.</p>
+<p>The payment of an invoice rectified this way cannot be reset to draft: the
+money its credit note took over has already moved on to the replacement, so
+reopening the rectified invoice would charge the customer twice. Members of
+the bypass group, and code passing the bypass context key, still can.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

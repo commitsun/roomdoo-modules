@@ -43,3 +43,13 @@ class ResCompany(models.Model):
             self.period_lock_date or date.min,
             self.fiscalyear_lock_date or date.min,
         )
+
+    def _get_rectification_transfer_journal(self):
+        """Journal for the entries that move a balance between customers when
+        an invoice is rectified without breaking its reconciliations.
+
+        None here, which keeps the core behaviour (``cancel=True``) for every
+        company. A module that configures one opts the company in.
+        """
+        self.ensure_one()
+        return self.env["account.journal"]

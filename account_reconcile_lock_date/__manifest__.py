@@ -2,7 +2,7 @@
     "name": "Account Reconcile Lock Date",
     "summary": "Enforce the closing date when undoing reconciliations or "
     "unposting entries.",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "category": "Accounting/Accounting",
     "author": "Commit [Sun]",
     "website": "https://github.com/commitsun/roomdoo-modules",
