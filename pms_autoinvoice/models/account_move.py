@@ -26,6 +26,9 @@ class AccountMove(models.Model):
         ``cancel=True`` is what makes the core unreconcile the original before
         copying it, which is precisely what a module handling a closed period
         needs to replace: hence the hook.
+
+        Returns the credit notes issued, none for a down payment an override
+        leaves alone.
         """
         if not self:
             return self.browse()

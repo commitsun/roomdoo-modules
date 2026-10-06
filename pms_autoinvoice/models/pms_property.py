@@ -131,7 +131,9 @@ class PmsProperty(models.Model):
             )
             downpayment_invoices = downpayments_invoices_to_reverse.mapped("move_id")
             for downpayment_invoice in downpayment_invoices:
-                downpayment_invoice._reverse_downpayment_invoices()
+                # Only when it was: a module can leave it to another process.
+                if not downpayment_invoice._reverse_downpayment_invoices():
+                    continue
                 downpayment_invoice.message_post(
                     body=_(
                         "The downpayment invoice has been reversed "
