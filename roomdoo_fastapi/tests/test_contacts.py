@@ -24,7 +24,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
         with self._create_test_client() as test_client:
             response = self._login(test_client)
             create_data = {
-                "firstname": "jane",
+                "name": "jane",
                 "lastname": "smith",
                 "street": "123 Main St",
                 "city": "Anytown",
@@ -59,7 +59,7 @@ class TestContactsEndpoints(CommonTestPmsApi):
         with self._create_test_client() as test_client:
             response = self._login(test_client)
             create_data = {
-                "firstname": "alice",
+                "name": "alice",
                 "lastname": "johnson",
                 "street": "789 Oak St",
                 "city": "Sometown",
