@@ -112,6 +112,39 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
             "The invoice should be marked as paid after posting the payment.",
         )
 
+    def test_autoreconcile_can_be_skipped_on_post(self):
+        """The invoice that replaces a rectified one is posted first and settled
+        with the money of the invoice it replaces: the folio's other payments
+        must not be proposed to it in between."""
+        reservation = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        invoice = reservation.folio_id._create_invoices()
+        payment = self.env["account.payment"].create(
+            {
+                "payment_type": "inbound",
+                "payment_method_id": self.payment_method_manual_in.id,
+                "journal_id": self.payment_journal.id,
+                "amount": reservation.folio_id.amount_total,
+                "currency_id": reservation.folio_id.currency_id.id,
+                "partner_id": reservation.folio_id.partner_id.id,
+                "folio_ids": [(4, reservation.folio_id.id)],
+            }
+        )
+        payment.action_post()
+        invoice.with_context(skip_folio_autoreconcile=True).action_post()
+        self.assertEqual(invoice.payment_state, "not_paid")
+        invoice._autoreconcile_folio_payments()
+        self.assertEqual(invoice.payment_state, "paid")
+
     def test_autoreconcile_folio_payments_do_payment(self):
         reservation = self.env["pms.reservation"].create(
             {

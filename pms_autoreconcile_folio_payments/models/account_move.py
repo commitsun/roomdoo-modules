@@ -167,5 +167,10 @@ class AccountMove(models.Model):
 
     def _post(self, soft=True):
         res = super()._post(soft)
-        self._autoreconcile_folio_payments()
+        # An invoice that replaces a rectified one is settled first with the
+        # money of the invoice it replaces (account_reconcile_lock_date's
+        # _reissue_invoice); proposing it the folio's other open payments before
+        # that would let them take its balance.
+        if not self.env.context.get("skip_folio_autoreconcile"):
+            self._autoreconcile_folio_payments()
         return res
