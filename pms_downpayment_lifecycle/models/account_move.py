@@ -391,12 +391,15 @@ class AccountMove(models.Model):
         by unreconciling every line of the original, which would release the
         payment -- the one thing this whole module exists to avoid.
 
-        Nothing about the SII is passed on purpose. Its own module computes
-        ``sii_refund_type`` as 'I' for any ``out_refund``, so the value is right
-        without this module knowing that the SII exists.
+        The SII refund type goes through the context, as every other caller of
+        ``_reverse_moves`` does. ``sii_refund_type`` is a stored computed field
+        that can be edited, so the reversal copies the down payment's empty
+        value onto the credit note and the compute never runs: without the
+        context the AEAT rejects the credit note (TipoRectificativa). The
+        context key means nothing when the SII module is not installed.
         """
         self.ensure_one()
-        credit_note = self._reverse_moves(
+        credit_note = self.with_context(sii_refund_type="I")._reverse_moves(
             default_values_list=[
                 {
                     "date": date,
