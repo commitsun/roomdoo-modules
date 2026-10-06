@@ -194,6 +194,60 @@ class PmsProperty(models.Model):
             for id_number in mappable_id_numbers:
                 id_number.set_partner_id_field()
 
+    def _autoinvoice_deduct_downpayments(
+        self, invoices, downpayments, switched_partners
+    ):
+        """Deduct each down payment of the folio from at most one of the invoices.
+
+        A down payment goes to the largest invoice of its own customer, as long
+        as that invoice does not end up negative. Adding it to every invoice of
+        the customer, as this used to do, deducts it twice (or fails with
+        "Expected singleton") when the folio is split in two invoices for the
+        same customer.
+
+        It is not deducted anywhere, and is left to the final invoice to
+        settle (pms_downpayment_lifecycle rectifies and transfers it when that
+        invoice is posted), when:
+
+        - the lines of its customer were moved to a named host because the
+          simplified invoice went over the limit: the host's invoice bills
+          the stay the down payment paid for;
+        - it does not fit in any invoice of its customer without leaving it
+          negative, e.g. the stay was already invoiced by hand and only some
+          extras are left.
+
+        Returns the down payments of the second kind, the ones a person has
+        to look at.
+        """
+        not_fitting = self.env["folio.sale.line"]
+        for downpayment in downpayments:
+            partner = downpayment.default_invoice_to
+            if partner in switched_partners:
+                continue
+            candidates = invoices.filtered(lambda inv, p=partner: inv.partner_id == p)
+            if not candidates:
+                continue
+            for invoice in candidates.sorted("amount_total", reverse=True):
+                vals = downpayment._prepare_invoice_line(
+                    sequence=max(invoice.invoice_line_ids.mapped("sequence")) + 1,
+                    # pms maps the taxes through the invoice fiscal position
+                    # and has no default for it.
+                    invoice_fpos=invoice.fiscal_position_id,
+                )
+                invoice.write({"invoice_line_ids": [(0, 0, vals)]})
+                if invoice.currency_id.compare_amounts(invoice.amount_total, 0.0) >= 0:
+                    break
+                # It would leave the invoice negative: take it back out.
+                deduction = invoice.invoice_line_ids.filtered(
+                    lambda line, d=downpayment: d in line.folio_line_ids
+                )
+                invoice.write(
+                    {"invoice_line_ids": [(2, line.id) for line in deduction]}
+                )
+            else:
+                not_fitting |= downpayment
+        return not_fitting
+
     def autoinvoice_folio(self, folio, delay_post=False):
         try:
             with self.env.cr.savepoint():
@@ -239,6 +293,10 @@ class PmsProperty(models.Model):
                 downpayments = folio.sale_line_ids.filtered(
                     lambda r: r.is_downpayment and r.qty_invoiced > 0
                 )
+                # Move every simplified invoice over the limit to a host with
+                # full fiscal data before deducting any down payment, so that
+                # the deduction knows which customers were moved away.
+                switched_partners = self.env["res.partner"]
                 for invoice in invoices:
                     if (
                         invoice.amount_total
@@ -257,6 +315,7 @@ class PmsProperty(models.Model):
                                 lambda p: p._check_enought_invoice_data()
                             ).mapped("id")
                         if hosts_to_invoice:
+                            switched_partners |= invoice.partner_id
                             invoice.partner_id = hosts_to_invoice[0]
                             invoice.journal_id = (
                                 invoice.pms_property_id.journal_normal_invoice_id
@@ -270,19 +329,23 @@ class PmsProperty(models.Model):
                             )
                             folio.sudo().message_post(body=mens)
                             raise ValidationError(mens)
-                    for downpayment in downpayments.filtered(
-                        lambda d, i=invoice: d.default_invoice_to == i.partner_id
-                    ):
-                        # If the downpayment invoice partner is the same that the
-                        # folio partner, we include the downpayment in the
-                        #  normal invoice
-                        invoice_down_payment_vals = downpayment._prepare_invoice_line(
-                            sequence=max(invoice.invoice_line_ids.mapped("sequence"))
-                            + 1,
+                not_fitting = self._autoinvoice_deduct_downpayments(
+                    invoices, downpayments, switched_partners
+                )
+                if not_fitting:
+                    folio.sudo().message_post(
+                        body=_(
+                            "Down payments not deducted in the automatic invoice, "
+                            "because they are larger than what it bills: %s. "
+                            "They are left for review."
                         )
-                        invoice.write(
-                            {"invoice_line_ids": [(0, 0, invoice_down_payment_vals)]}
+                        % ", ".join(
+                            not_fitting.invoice_lines.move_id.filtered(
+                                lambda m: m.move_type == "out_invoice"
+                            ).mapped("name")
                         )
+                    )
+                for invoice in invoices:
                     if delay_post:
                         eta = datetime.now() + timedelta(minutes=15)
                         self.with_delay(eta=eta).autovalidate_folio_invoice(invoice)
