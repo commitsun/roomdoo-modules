@@ -1,3 +1,9 @@
+from unittest.mock import patch
+
+import psycopg2
+from psycopg2 import errorcodes
+
+from odoo import fields
 from odoo.tests import tagged
 
 from odoo.addons.queue_job.tests.common import trap_jobs
@@ -173,3 +179,100 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
                     {str(self.property.analytic_account_id.id): 100.0},
                     "the analytic must follow from the property by itself",
                 )
+
+    # ------------------------------------------------------------------
+    # job robustness
+    # ------------------------------------------------------------------
+    def _marked_final_invoice(self):
+        folio = self._folio()
+        downpayment, _line = self._downpayment(folio, self.anonymous, 50.0)
+        self._collect(downpayment)
+        final = self._final_invoice_via_pms(folio, self.guest)
+        with trap_jobs():
+            final.action_post()
+        self.assertEqual(final.downpayment_transfer_state, "pending")
+        return final, downpayment
+
+    def test_a_lock_conflict_is_retried_not_recorded_as_a_failure(self):
+        """Every entry of the company takes the same entry sequence, so a
+        transfer can collide with any other posting. That is queue_job's to
+        retry; recording it as 'failed' left it there for good. It goes up as
+        it is: queue_job's runner retries concurrency errors with no limit,
+        while a RetryableJobError raised inside the job counts against
+        max_retries."""
+        final, _downpayment = self._marked_final_invoice()
+
+        class LockConflict(psycopg2.OperationalError):
+            pgcode = errorcodes.LOCK_NOT_AVAILABLE
+
+        def conflict(*args, **kwargs):
+            raise LockConflict("could not obtain lock")
+
+        with patch.object(type(final), "_run_downpayment_transfer", conflict):
+            with self.assertRaises(LockConflict):
+                final._transfer_downpayments()
+        self.assertEqual(final.downpayment_transfer_state, "pending")
+
+    def test_nothing_left_to_transfer_is_said_so(self):
+        """Marked at posting, settled by something else before the job ran: the
+        invoice says so instead of closing 'done' with an empty message, which
+        looked exactly like a transfer that had been made."""
+        final, downpayment = self._marked_final_invoice()
+        downpayment._rectify_downpayment(fields.Date.today())
+
+        final._transfer_downpayments()
+
+        self.assertEqual(final.downpayment_transfer_state, "done")
+        self.assertIn("Nothing left to transfer", final.downpayment_transfer_message)
+
+    def test_without_a_transfer_journal_it_is_left_for_review(self):
+        """Nowhere to post the transfer entry: the job says so instead of
+        failing, and the down payment is not touched."""
+        final, downpayment = self._marked_final_invoice()
+        self.company.downpayment_transfer_journal_id = False
+
+        final._transfer_downpayments()
+
+        self.assertEqual(final.downpayment_transfer_state, "manual")
+        self.assertIn("transfer journal", final.downpayment_transfer_message)
+        self.assertFalse(
+            self.env["account.move"].search(
+                [("reversed_entry_id", "=", downpayment.id)]
+            )
+        )
+
+    def test_a_down_payment_another_invoice_deducted_is_not_transferred(self):
+        """A folio billed in two invoices: the first one deducted the down
+        payment, so giving it to the second one would deduct it twice."""
+        folio = self._folio()
+        downpayment, line = self._downpayment(folio, self.anonymous, 50.0)
+        self._collect(downpayment)
+        # pms deducts it in the invoice of its own customer.
+        first = self._final_invoice_via_pms(folio, self.anonymous)
+        self.assertIn(line, first.invoice_line_ids.folio_line_ids)
+        first.action_post()
+        second = self._final_invoice(folio, self.guest)
+
+        self.assertFalse(second._get_downpayments_to_transfer())
+
+        # Once the first invoice is rectified its deduction no longer stands.
+        first._rectify_keep_reconciliation(fields.Date.today())
+        self.assertEqual(second._get_downpayments_to_transfer(), downpayment)
+
+    def test_an_invoice_rectified_before_its_transfer_leaves_it_alone(self):
+        """Edited from the app right after posting: the invoice that replaces
+        it has its own transfer. Transferring to the rectified one would leave
+        the money open on a document that no longer stands."""
+        final, downpayment = self._marked_final_invoice()
+        final._rectify_keep_reconciliation(fields.Date.today())
+
+        final._transfer_downpayments()
+
+        self.assertEqual(final.downpayment_transfer_state, "done")
+        self.assertIn("Nothing transferred", final.downpayment_transfer_message)
+        self.assertFalse(
+            self.env["account.move"].search(
+                [("reversed_entry_id", "=", downpayment.id)]
+            )
+        )
+        self.assertEqual(downpayment._amount_open_to_rectify(), 50.0)

@@ -1,7 +1,9 @@
 Go to **Settings > Accounting**, section **Invoicing**, and set **Down payment
 transfer journal**: the journal the transfer entry is posted in. It is stored
-per company, and falls back to the first miscellaneous journal of the company
-when left empty.
+per company, and without it nothing is transferred automatically: the first
+miscellaneous journal of a company is whatever happens to come first, and a
+transfer posted there is worse than none. ``account_reconcile_lock_date`` uses
+the same journal for the invoices it rectifies without unreconciling them.
 
 Nothing else needs configuring. The module acts by itself on every final
 invoice that absorbs a down payment issued to another customer, on every refund

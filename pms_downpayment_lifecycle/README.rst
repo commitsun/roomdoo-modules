@@ -50,7 +50,10 @@ while building the final invoice and bills the stay in full, leaving the down
 payment dangling on the other customer's account — normally the anonymous one,
 because at the time of collection there was no guest data yet. The module
 rectifies the down payment and posts an entry moving the balance from one
-customer account to the other.
+customer account to the other. The down payments the automatic invoicing does
+not deduct are left to this transfer too: ``pms_autoinvoice`` would reverse
+them with ``cancel=True``, which leaves the payment loose on the anonymous
+customer and the final invoice unpaid.
 
 Only the branch where the down payment was issued to the anonymous customer is
 automated. When it was issued to an identified third party the case is flagged
@@ -75,7 +78,10 @@ which unreconciles the payment and can rewrite a closed period, or unlinks it
 outright, and in neither case does it issue a replacement: the folio is left
 short of an invoice nobody notices is missing. The module rectifies it instead,
 settles the credit note against it, and issues the down payment again for the
-amount the payment ended up having.
+amount the payment ended up having. A down payment that has already been
+rectified -- transferred to a final invoice, or replaced from the app -- is never
+rectified again: its payment cannot be reset at all, because the money it
+collected already reached another invoice (see ``account_reconcile_lock_date``).
 
 **Table of contents**
 
@@ -87,8 +93,10 @@ Configuration
 
 Go to **Settings > Accounting**, section **Invoicing**, and set **Down payment
 transfer journal**: the journal the transfer entry is posted in. It is stored
-per company, and falls back to the first miscellaneous journal of the company
-when left empty.
+per company, and without it nothing is transferred automatically: the first
+miscellaneous journal of a company is whatever happens to come first, and a
+transfer posted there is worse than none. ``account_reconcile_lock_date`` uses
+the same journal for the invoices it rectifies without unreconciling them.
 
 Nothing else needs configuring. The module acts by itself on every final
 invoice that absorbs a down payment issued to another customer, on every refund

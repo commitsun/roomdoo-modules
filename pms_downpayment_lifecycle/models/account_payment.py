@@ -63,16 +63,26 @@ class AccountPayment(models.Model):
         rectifies it in turn -- producing an `out_invoice` indistinguishable
         from a real down payment -- and the selectors pick that up again. A
         single down payment and one refund can end up as a dozen documents.
+
+        Nor one that has nothing left to rectify, like the selectors of the
+        other cases: a down payment already transferred to a final invoice, or
+        replaced from the app, still holds this payment, and rectifying it
+        again would credit it twice.
         """
         self.ensure_one()
         if self.partner_type != "customer":
             return self.env["account.move"]
+        rounding = self.company_id.currency_id.rounding
         return self.reconciled_invoice_ids.filtered(
             lambda inv: (
                 inv.state == "posted"
                 and inv.move_type == "out_invoice"
                 and not inv.reversed_entry_id
                 and inv._is_downpayment()
+                and float_compare(
+                    inv._amount_open_to_rectify(), 0.0, precision_rounding=rounding
+                )
+                > 0
             )
         )
 

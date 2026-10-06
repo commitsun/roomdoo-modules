@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
-    <!-- No retry_pattern on purpose: everything this job can hit that a retry
-         would fix is already handled inline, and a UserError is not a
-         RetryableJobError, so a failed transfer stays visible in the queue
-         instead of being retried into silence. -->
+    <!-- No retry_pattern on purpose. The transfer records any failure on the
+         invoice itself, except lock and serialization conflicts, which it
+         raises as they are so that queue_job's runner retries them, with no
+         limit, unlike a RetryableJobError raised inside the job. -->
     <record id="transfer_downpayments_job_function" model="queue.job.function">
         <field
       name="model_id"

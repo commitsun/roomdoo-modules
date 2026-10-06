@@ -3,7 +3,7 @@
     "summary": "Keep a down payment invoice correct when the stay it was "
     "collected for changes: a different customer, a refund, a cancellation or a "
     "change of amount -- always without rewriting a closed period.",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "category": "Generic Modules/Property Management System",
     "author": "Commit [Sun]",
     "website": "https://github.com/commitsun/roomdoo-modules",
@@ -13,6 +13,7 @@
         "pms_autoinvoice",
         "queue_job",
         "account_invoice_constraint_chronology",
+        "account_reconcile_lock_date",
     ],
     "data": [
         "data/queue_data.xml",

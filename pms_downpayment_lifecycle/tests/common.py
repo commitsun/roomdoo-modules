@@ -89,6 +89,17 @@ class DownpaymentCase(TestPms, AccountTestInvoicingCommon):
                 "max_amount_simplified_invoice": 1000.0,
             }
         )
+        # No fallback to "the first miscellaneous journal": the company has to
+        # name the journal its transfers go to, as every company in production
+        # does.
+        cls.company.downpayment_transfer_journal_id = cls.env["account.journal"].create(
+            {
+                "name": "Transfer misc",
+                "code": "TRMS",
+                "type": "general",
+                "company_id": cls.company.id,
+            }
+        )
         cls.guest = cls.env["res.partner"].create({"name": "Transfer Guest"})
         cls.sale_channel = cls.env["pms.sale.channel"].create(
             {"name": "Direct Transfer", "channel_type": "direct"}

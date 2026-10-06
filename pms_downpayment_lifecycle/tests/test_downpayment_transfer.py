@@ -18,6 +18,9 @@ class TestDownpaymentTransferBlocks(AccountTestInvoicingCommon):
     def setUpClass(cls, chart_template_ref=None):
         super().setUpClass(chart_template_ref=chart_template_ref)
         cls.company = cls.company_data["company"]
+        cls.company.downpayment_transfer_journal_id = cls.company_data[
+            "default_journal_misc"
+        ]
 
     def _invoice(self, partner, amount, post=True, date=TODAY, term=None):
         """Created without a payment term unless one is asked for: an
@@ -84,6 +87,16 @@ class TestDownpaymentTransferBlocks(AccountTestInvoicingCommon):
         invoice._rectify_downpayment(TODAY, amount=60.0)
         self.assertEqual(invoice._amount_open_to_rectify(), 40.0)
         self.assertEqual(invoice._partial_rectification_amount(), 40.0)
+        # A credit note is not money collected.
+        self.assertEqual(invoice._downpayment_reconciled_amount(), 0.0)
+
+    def test_a_full_rectification_is_not_money_collected(self):
+        """Fully rectified, the down payment is matched against its own credit
+        note, which collected nothing."""
+        invoice = self._invoice(self.partner_a, 100.0)
+        self._pay(invoice, 60.0)
+        invoice._rectify_downpayment(TODAY)
+        self.assertEqual(invoice._downpayment_reconciled_amount(), 60.0)
 
     def test_receivable_line_is_empty_when_there_is_more_than_one(self):
         """With instalment terms there are several customer lines and which
@@ -182,3 +195,26 @@ class TestDownpaymentTransferBlocks(AccountTestInvoicingCommon):
         )
         self.assertEqual(older.state, "draft")
         final._check_transfer_chronology(journal, TODAY)
+
+    # ------------------------------------------------------------------
+    # transfer journal
+    # ------------------------------------------------------------------
+    def test_transfer_journal_has_no_fallback(self):
+        """Without a journal named on the company nothing is transferred: the
+        first miscellaneous journal is whatever happens to come first."""
+        self.company.downpayment_transfer_journal_id = False
+        self.assertFalse(self.company._get_downpayment_transfer_journal())
+        self.assertFalse(self.company._get_rectification_transfer_journal())
+        downpayment = self._invoice(self.partner_a, 100.0)
+        final = self._invoice(self.partner_b, 250.0)
+        with self.assertRaises(UserError):
+            final._create_transfer_entry(downpayment, 100.0, TODAY)
+
+    def test_the_transfer_journal_opts_the_company_in_for_rectifications(self):
+        """The same journal serves account_reconcile_lock_date's rectification
+        of any invoice, which is what makes the company keep reconciliations
+        when an invoice is edited."""
+        self.assertEqual(
+            self.company._get_rectification_transfer_journal(),
+            self.company_data["default_journal_misc"],
+        )

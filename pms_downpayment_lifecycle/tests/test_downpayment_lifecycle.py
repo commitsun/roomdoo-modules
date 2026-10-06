@@ -1,3 +1,4 @@
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.queue_job.tests.common import trap_jobs
@@ -87,6 +88,46 @@ class TestDownpaymentLifecycle(DownpaymentCase):
 
         self.assertFalse(payment.downpayment_reissue_partner_id)
         self.assertEqual(downpayment._amount_open_to_rectify(), 0.0)
+
+    def _transferred_downpayment(self):
+        """A down payment collected from the anonymous customer and already
+        transferred to the guest's final invoice: the payment still settles
+        it, and its money now pays the final invoice."""
+        folio = self._folio()
+        downpayment, _line = self._downpayment(folio, self.anonymous, 50.0)
+        payment = self._collect(downpayment)
+        final = self._final_invoice_via_pms(folio, self.guest)
+        with trap_jobs():
+            final.action_post()
+        final._transfer_downpayments()
+        self.assertEqual(final.downpayment_transfer_state, "done")
+        return downpayment, payment
+
+    def _reversals(self, downpayment):
+        return self.env["account.move"].search(
+            [("reversed_entry_id", "=", downpayment.id)]
+        )
+
+    def test_the_payment_of_a_transferred_down_payment_cannot_be_reset(self):
+        """Reset, C3 rectified the down payment a second time and issued it
+        again to the anonymous customer, so the guest ended up credited twice
+        for the same money."""
+        downpayment, payment = self._transferred_downpayment()
+
+        with self.assertRaisesRegex(UserError, "already been rectified"):
+            payment.action_draft()
+
+        self.assertEqual(len(self._reversals(downpayment)), 1)
+        self.assertEqual(payment.state, "posted")
+
+    def test_c3_never_rectifies_a_down_payment_twice(self):
+        """Not even when the reset is forced through the bypass."""
+        downpayment, payment = self._transferred_downpayment()
+
+        payment.with_context(bypass_reconcile_lock_date=True).action_draft()
+
+        self.assertEqual(len(self._reversals(downpayment)), 1)
+        self.assertFalse(payment.downpayment_reissue_partner_id)
 
     # ------------------------------------------------------------------
     # C1 -- a refund rectifies the down payment it gives back

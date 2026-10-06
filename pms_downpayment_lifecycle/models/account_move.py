@@ -1,10 +1,11 @@
 import logging
-from datetime import date
 
 from markupsafe import Markup
+from psycopg2 import OperationalError
 
 from odoo import _, fields, models
 from odoo.exceptions import UserError
+from odoo.service.model import PG_CONCURRENCY_ERRORS_TO_RETRY
 from odoo.tools import float_compare, float_is_zero
 
 _logger = logging.getLogger(__name__)
@@ -75,11 +76,18 @@ class AccountMove(models.Model):
         whole unit off it, so a down payment of 100 with 40 refunded drops to
         zero and would disappear from here with 60 still standing on the
         customer's account.
+
+        Nor one that another invoice of the folio already discounts. A folio
+        billed in several invoices -- rooms checking out on different days --
+        has the down payment deducted in the first one, and the later ones do
+        not carry the line: transferring it to them would deduct it twice.
         """
         self.ensure_one()
         applied = self.invoice_line_ids.folio_line_ids
         lines = self.folio_ids.sale_line_ids.filtered(
-            lambda sl: sl.is_downpayment and sl not in applied
+            lambda sl: sl.is_downpayment
+            and sl not in applied
+            and not self._downpayment_deducted_elsewhere(sl)
         )
         rounding = self.company_id.currency_id.rounding
         return (
@@ -101,6 +109,21 @@ class AccountMove(models.Model):
                 )
             )
             .sorted(lambda m: (m.invoice_date or m.date, m.id))
+        )
+
+    def _downpayment_deducted_elsewhere(self, sale_line):
+        """Whether another invoice that still stands discounts the down payment
+        line ``sale_line``: a final invoice, posted or still in draft, with the
+        line at a negative quantity. A rectified one no longer counts."""
+        self.ensure_one()
+        return any(
+            line.quantity < 0
+            and line.move_id != self
+            and line.move_id.move_type == "out_invoice"
+            and line.move_id.state != "cancel"
+            and not line.move_id._is_downpayment()
+            and not line.move_id._is_rectified()
+            for line in sale_line.invoice_lines
         )
 
     def _downpayment_association_ambiguity(self, downpayments):
@@ -151,20 +174,59 @@ class AccountMove(models.Model):
         try:
             with self.env.cr.savepoint():
                 return self._run_downpayment_transfer()
+        except OperationalError as error:
+            # A lock or a serialization conflict with another posting -- every
+            # entry of the company takes the same entry sequence -- is not a
+            # failure of the transfer. Raised as it is, queue_job's runner
+            # retries it with no limit; turned into a RetryableJobError here it
+            # would count against max_retries, and after the fifth the job
+            # would fail leaving the invoice 'pending' with no message.
+            if error.pgcode in PG_CONCURRENCY_ERRORS_TO_RETRY:
+                raise
+            return self._record_downpayment_transfer_failure(error)
         except Exception as error:  # noqa: BLE001 - recorded, not swallowed
-            message = str(error)
-            self.downpayment_transfer_state = "failed"
-            self.downpayment_transfer_message = message
-            self.message_post(
-                body=Markup("<p>%s</p><p>%s</p>")
-                % (_("Down payment transfer failed"), message)
-            )
-            _logger.exception("Down payment transfer failed for %s", self.display_name)
-            return False
+            return self._record_downpayment_transfer_failure(error)
+
+    def _record_downpayment_transfer_failure(self, error):
+        message = str(error)
+        self.downpayment_transfer_state = "failed"
+        self.downpayment_transfer_message = message
+        self.message_post(
+            body=Markup("<p>%s</p><p>%s</p>")
+            % (_("Down payment transfer failed"), message)
+        )
+        _logger.exception("Down payment transfer failed for %s", self.display_name)
+        return False
 
     def _run_downpayment_transfer(self):
         self.ensure_one()
+        if self._is_rectified():
+            # Rectified while the job waited, typically edited from the app
+            # right after posting. Transferring to it would leave the money
+            # open on a document that no longer stands: the invoice that
+            # replaces it was posted with a transfer of its own.
+            message = _(
+                "Nothing transferred: this invoice was rectified before the "
+                "transfer ran. The invoice that replaces it, if any, takes the "
+                "down payments when it is posted."
+            )
+            self.downpayment_transfer_state = "done"
+            self.downpayment_transfer_message = message
+            self.message_post(body=Markup("<p>%s</p>") % message)
+            return True
         downpayments = self._get_downpayments_to_transfer()
+        if not downpayments:
+            # Marked at posting, rectified by something else before the job
+            # ran. Saying so is what tells this apart from a transfer that was
+            # done.
+            message = _(
+                "Nothing left to transfer: when the transfer ran, the down "
+                "payments of this folio had already been rectified."
+            )
+            self.downpayment_transfer_state = "done"
+            self.downpayment_transfer_message = message
+            self.message_post(body=Markup("<p>%s</p>") % message)
+            return True
         ambiguity = self._downpayment_association_ambiguity(downpayments)
         if ambiguity:
             self.downpayment_transfer_state = "manual"
@@ -243,6 +305,16 @@ class AccountMove(models.Model):
                 ),
             )
 
+        if not self.company_id._get_rectification_transfer_journal():
+            return (
+                "manual",
+                _(
+                    "%(name)s was not transferred: %(company)s has no down "
+                    "payment transfer journal configured.",
+                    name=downpayment.name,
+                    company=self.company_id.display_name,
+                ),
+            )
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
         credit_note = downpayment._rectify_downpayment(
@@ -323,13 +395,9 @@ class AccountMove(models.Model):
     # ------------------------------------------------------------------
     def _receivable_line_for_transfer(self):
         """The single customer line of this move, or an empty recordset when
-        there is not exactly one (instalment payment terms, for instance):
-        with several, which balance to move stops being obvious."""
-        self.ensure_one()
-        lines = self.line_ids.filtered(
-            lambda line: line.account_id.account_type == "asset_receivable"
-        )
-        return lines if len(lines) == 1 else self.env["account.move.line"]
+        there is not exactly one. Kept under its old name for the callers of
+        this module; the logic lives in account_reconcile_lock_date."""
+        return self._get_single_receivable_line()
 
     def _downpayment_reconciled_amount(self):
         """What was actually collected against this down payment, not what it
@@ -338,7 +406,14 @@ class AccountMove(models.Model):
         leave a phantom debt on the old one."""
         self.ensure_one()
         line = self._receivable_line_for_transfer()
-        return sum(line.matched_credit_ids.mapped("amount"))
+        # Its own credit notes are not money: a full rectification is matched
+        # against what the down payment still owed.
+        return sum(
+            line.matched_credit_ids.filtered(
+                lambda partial: partial.credit_move_id.move_id
+                not in self.reversal_move_id
+            ).mapped("amount")
+        )
 
     def _amount_open_to_rectify(self):
         """What of this down payment has not been rectified yet.
@@ -378,7 +453,10 @@ class AccountMove(models.Model):
         return None
 
     def _rectify_downpayment(self, date, amount=None, ref=None):
-        """Credit note for the down payment, posted in an open period.
+        """Credit note for the down payment, posted in an open period, issued
+        with ``cancel=False`` so that the payment stays applied to the down
+        payment in the period it was issued in -- the one thing this whole
+        module exists to keep.
 
         ``amount`` rectifies only part of it -- a partial refund gives back
         part of what was collected, and the rest of the down payment stays
@@ -386,119 +464,26 @@ class AccountMove(models.Model):
 
         ``ref`` says on the credit note itself why it was issued; every caller
         rectifies for a different reason and the hotel reads that field.
-
-        ``cancel=False`` is not negotiable: with ``cancel=True`` the core starts
-        by unreconciling every line of the original, which would release the
-        payment -- the one thing this whole module exists to avoid.
-
-        The SII refund type goes through the context, as every other caller of
-        ``_reverse_moves`` does. ``sii_refund_type`` is a stored computed field
-        that can be edited, so the reversal copies the down payment's empty
-        value onto the credit note and the compute never runs: without the
-        context the AEAT rejects the credit note (TipoRectificativa). The
-        context key means nothing when the SII module is not installed.
         """
         self.ensure_one()
-        credit_note = self.with_context(sii_refund_type="I")._reverse_moves(
-            default_values_list=[
-                {
-                    "date": date,
-                    "invoice_date": date,
-                    "ref": ref or _("Transfer of down payment %s", self.name),
-                }
-            ],
-            cancel=False,
+        return self._rectify_keep_reconciliation(
+            date,
+            amount=amount,
+            ref=ref or _("Transfer of down payment %s", self.name),
         )
-        if amount is not None:
-            self._scale_credit_note(credit_note, amount)
-        credit_note.action_post()
-        return credit_note
-
-    def _scale_credit_note(self, credit_note, amount):
-        """Bring the credit note down to ``amount``, read as a gross total.
-
-        ``price_unit`` is net of tax, so it is scaled by the ratio rather than
-        set to the amount: setting it directly would rectify the amount plus its
-        VAT. Writing on the line is enough to resync the tax line -- in 16.0
-        ``account.move.line.write`` runs inside ``_sync_dynamic_lines``."""
-        self.ensure_one()
-        rounding = self.currency_id.rounding
-        line = credit_note.invoice_line_ids
-        if len(line) != 1 or float_is_zero(
-            self.amount_total, precision_rounding=rounding
-        ):
-            raise UserError(
-                _(
-                    "%s cannot be partially rectified: it does not have exactly "
-                    "one line with an amount.",
-                    self.display_name,
-                )
-            )
-        line.write({"price_unit": line.price_unit * amount / self.amount_total})
-        # Rounding the net figure can leave the gross a cent short. One
-        # correction on the same ratio is exact for a proportional tax.
-        delta = amount - credit_note.amount_total
-        if not float_is_zero(delta, precision_rounding=rounding):
-            line.write(
-                {
-                    "price_unit": line.price_unit
-                    + delta * line.price_unit / credit_note.amount_total
-                }
-            )
-        return credit_note
 
     def _check_transfer_chronology(self, journal, date):
-        """account_invoice_constraint_chronology refuses to post while an older
-        draft of the same journal and year exists. Checking first turns an
-        opaque core error into something the hotel can act on."""
-        if not journal.check_chronology:
-            return
-        domain = [
-            ("journal_id", "=", journal.id),
-            ("state", "=", "draft"),
-            ("invoice_date", "!=", False),
-            ("invoice_date", "<", date),
-            ("date", ">=", date.replace(month=1, day=1)),
-            ("date", "<=", date.replace(month=12, day=31)),
-        ]
-        # With a dedicated refund sequence the constraint only looks at other
-        # refunds, which is what keeps the pile of draft invoices from blocking
-        # every transfer.
-        domain.append(
-            ("move_type", "=", "out_refund")
-            if journal.refund_sequence
-            else ("move_type", "!=", "entry")
-        )
-
-        blocking = self.env["account.move"].search(domain, limit=3)
-        if blocking:
-            raise UserError(
-                _(
-                    "The credit note cannot be posted in journal %(journal)s "
-                    "while these older drafts are open: %(drafts)s. Validate or "
-                    "cancel them first.",
-                    journal=journal.display_name,
-                    drafts=", ".join(blocking.mapped("display_name")),
-                )
-            )
+        """Kept under its old name for the callers of this module; the logic
+        lives in account_reconcile_lock_date."""
+        return self._check_rectification_chronology(journal, date)
 
     def _create_transfer_entry(self, downpayment, amount, date):
-        """Two lines, on the customer accounts taken from the real journal
-        items. Never from the partner's property field: if the down payment was
-        issued on another account, reconcile() would refuse with 'Entries are
-        not from the same account'."""
+        """The entry that moves a down payment balance onto this invoice's
+        customer, built by account_reconcile_lock_date on the accounts and the
+        partners of the real journal items."""
         self.ensure_one()
-        journal = self.company_id._get_downpayment_transfer_journal()
-        if not journal:
-            raise UserError(
-                _(
-                    "No journal configured to post the down payment transfer of "
-                    "company %s.",
-                    self.company_id.display_name,
-                )
-            )
-        source = downpayment._receivable_line_for_transfer()
-        target = self._receivable_line_for_transfer()
+        source = downpayment._get_single_receivable_line()
+        target = self._get_single_receivable_line()
         if not source or not target:
             raise UserError(
                 _(
@@ -508,80 +493,68 @@ class AccountMove(models.Model):
                     invoice=self.display_name,
                 )
             )
-        folios = ", ".join(self.folio_ids.mapped("name"))
         label = _(
             "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s",
-            folio=folios,
+            folio=", ".join(self.folio_ids.mapped("name")),
             down=downpayment.name,
             invoice=self.name,
         )
-        # The property is what carries the analytic: pms creates an analytic
-        # account per property and an account.analytic.distribution.model keyed
-        # on pms_property_id, and account.move.line._compute_analytic_distribution
-        # feeds that property into the context. Set the property and the analytic
-        # follows by itself; leave it out and this is the one entry in the ledger
-        # with neither.
-        transfer = self.env["account.move"].create(
-            {
-                "move_type": "entry",
-                "journal_id": journal.id,
-                "date": date,
-                "ref": label,
-                "company_id": self.company_id.id,
-                "pms_property_id": self.pms_property_id.id,
-                "line_ids": [
-                    (
-                        0,
-                        0,
-                        {
-                            "name": label,
-                            "account_id": source.account_id.id,
-                            "partner_id": downpayment.partner_id.id,
-                            "debit": amount,
-                            "credit": 0.0,
-                        },
-                    ),
-                    (
-                        0,
-                        0,
-                        {
-                            "name": label,
-                            "account_id": target.account_id.id,
-                            "partner_id": self.partner_id.id,
-                            "debit": 0.0,
-                            "credit": amount,
-                        },
-                    ),
-                ],
-            }
+        return self._create_balance_transfer_entry(
+            source,
+            target,
+            amount,
+            date,
+            label,
+            move_vals=self._rectification_transfer_vals(),
         )
-        transfer.action_post()
-        return transfer
+
+    def _rectification_transfer_vals(self):
+        """The property is what carries the analytic: pms creates an analytic
+        account per property and an account.analytic.distribution.model keyed
+        on pms_property_id, and account.move.line._compute_analytic_distribution
+        feeds that property into the context. Set the property and the analytic
+        follows by itself; leave it out and the transfer is the one entry in the
+        ledger with neither."""
+        vals = super()._rectification_transfer_vals()
+        vals["pms_property_id"] = self.pms_property_id.id
+        return vals
 
     # ------------------------------------------------------------------
     # pms_autoinvoice
     # ------------------------------------------------------------------
     def _reverse_downpayment_invoices(self):
-        """Keep the down payments of a locked period out of pms_autoinvoice's
-        reversal, and leave them to the transfer above.
+        """Keep out of pms_autoinvoice's reversal the down payments the transfer
+        above settles, and the ones of a locked period.
 
         pms_autoinvoice reverses the down payments that a final invoice did not
         deduct with ``cancel=True``, which starts by unreconciling them from
-        their payment: in a locked period that rewrites the customer balances
-        of a month that is already closed. The transfer settles the same down
-        payments when the final invoice is posted, rectifying them with
-        ``cancel=False`` and moving the balance with a transfer entry.
+        their payment. The payment is then left loose on the down payment's
+        customer, and the final invoice shows the stay unpaid: its folio
+        autoreconciliation ran when it was posted, before the reversal. The
+        transfer, queued when the final invoice was posted, moves the money of
+        an anonymous down payment to the final invoice instead, so those are
+        left to it whenever they collected money and the company has a transfer
+        journal. In a locked period the reversal would also rewrite the customer
+        balances of a month that is already closed, so none is reversed there.
+
+        The rest is reversed the usual way: a down payment that collected
+        nothing, and one issued to a named customer in an open period, which
+        the transfer would only leave for accounting.
         """
-        locked = self.filtered(lambda move: move._is_in_locked_period())
-        return super(AccountMove, self - locked)._reverse_downpayment_invoices()
+        anonymous = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        to_transfer = self.filtered(
+            lambda move: move._is_in_locked_period()
+            or (
+                anonymous
+                and move.partner_id == anonymous
+                and move._keeps_reconciliation_on_rectify()
+            )
+        )
+        return super(AccountMove, self - to_transfer)._reverse_downpayment_invoices()
 
     def _is_in_locked_period(self):
-        """Read from the company, not from ``_get_user_fiscal_lock_date``: the
-        cron runs as a user that only sees the fiscal year lock, and the
-        closed month is locked through ``period_lock_date``."""
+        """The company's own lock date, not ``_get_user_fiscal_lock_date``: the
+        cron runs as a user that only sees the fiscal year lock, and the closed
+        month is locked through ``period_lock_date``."""
         self.ensure_one()
-        lock_date = max(
-            self.company_id.period_lock_date or date.min,
-            self.company_id.fiscalyear_lock_date or date.min,
-        )
-        return self.date <= lock_date
+        return self.date <= self.company_id._get_reconcile_lock_date()

@@ -395,7 +395,10 @@ while building the final invoice and bills the stay in full, leaving the down
 payment dangling on the other customer’s account — normally the anonymous one,
 because at the time of collection there was no guest data yet. The module
 rectifies the down payment and posts an entry moving the balance from one
-customer account to the other.</p>
+customer account to the other. The down payments the automatic invoicing does
+not deduct are left to this transfer too: <tt class="docutils literal">pms_autoinvoice</tt> would reverse
+them with <tt class="docutils literal">cancel=True</tt>, which leaves the payment loose on the anonymous
+customer and the final invoice unpaid.</p>
 <p>Only the branch where the down payment was issued to the anonymous customer is
 automated. When it was issued to an identified third party the case is flagged
 for accounting instead: rectifying VAT charged to a real customer without
@@ -416,7 +419,10 @@ which unreconciles the payment and can rewrite a closed period, or unlinks it
 outright, and in neither case does it issue a replacement: the folio is left
 short of an invoice nobody notices is missing. The module rectifies it instead,
 settles the credit note against it, and issues the down payment again for the
-amount the payment ended up having.</p>
+amount the payment ended up having. A down payment that has already been
+rectified – transferred to a final invoice, or replaced from the app – is never
+rectified again: its payment cannot be reset at all, because the money it
+collected already reached another invoice (see <tt class="docutils literal">account_reconcile_lock_date</tt>).</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -435,8 +441,10 @@ amount the payment ended up having.</p>
 <h1><a class="toc-backref" href="#toc-entry-1">Configuration</a></h1>
 <p>Go to <strong>Settings &gt; Accounting</strong>, section <strong>Invoicing</strong>, and set <strong>Down payment
 transfer journal</strong>: the journal the transfer entry is posted in. It is stored
-per company, and falls back to the first miscellaneous journal of the company
-when left empty.</p>
+per company, and without it nothing is transferred automatically: the first
+miscellaneous journal of a company is whatever happens to come first, and a
+transfer posted there is worse than none. <tt class="docutils literal">account_reconcile_lock_date</tt> uses
+the same journal for the invoices it rectifies without unreconciling them.</p>
 <p>Nothing else needs configuring. The module acts by itself on every final
 invoice that absorbs a down payment issued to another customer, on every refund
 of money collected as a down payment, on every cancelled folio that still has
