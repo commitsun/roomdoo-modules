@@ -410,9 +410,9 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def _get_payment_lock_date(self, company):
         """Last date of the period closed to payments: nothing can be
-        registered, cancelled or moved on or before it. The cancellation runs as
-        superuser, so by default it is the lock date Odoo enforces on the draft
-        transition, which for the superuser is only the fiscal year close."""
+        registered, cancelled or moved on or before it. By default the lock
+        date Odoo enforces on the draft transition, which depends on the user:
+        an adviser only gets the fiscal year close."""
         return company._get_user_fiscal_lock_date()
 
     def _ensure_date_not_locked(self, company, payment_date):
@@ -553,7 +553,50 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         vals = self._partner_payment_update_vals(payment, payload)
         if not vals:
             return
+        self._apply_partner_payment_update(payment, vals)
+
+    def _apply_partner_payment_update(self, payment, vals):
+        """Reset ``payment`` to draft, write ``vals`` and post it again. That
+        releases the invoices it settled: it is reconciled again with them,
+        unless its customer changed. Hook: pms_fastapi_reconcile_lock_date
+        handles the payments of a locked period, never reset to draft."""
+        settled = self.env["account.move.line"]
+        if "partner_id" not in vals:
+            settled = self._settled_invoice_lines(payment)
         self._ensure_open_cash_session(payment.journal_id)
         payment.action_draft()
         payment.write(vals)
         payment.action_post()
+        self._reconcile_with_settled_lines(payment, settled)
+
+    @staticmethod
+    def _payment_counterpart_lines(payment):
+        return payment.move_id.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+
+    def _settled_invoice_lines(self, payment):
+        """The invoice lines ``payment`` is reconciled with."""
+        lines = self._payment_counterpart_lines(payment)
+        partials = lines.matched_debit_ids | lines.matched_credit_ids
+        counterparts = (partials.debit_move_id | partials.credit_move_id) - lines
+        return counterparts.filtered(
+            lambda line: line.move_id.is_invoice(include_receipts=True)
+        )
+
+    def _reconcile_with_settled_lines(self, payment, settled):
+        """Reconcile ``payment`` again with the invoice lines it settled before
+        it was reset to draft, as far as both are still open."""
+        settled = settled.filtered(lambda line: not line.reconciled)
+        if not settled:
+            return
+        lines = self._payment_counterpart_lines(payment).filtered(
+            lambda line: not line.reconciled
+        )
+        for account in lines.account_id:
+            group = (lines | settled).filtered(
+                lambda line, acc=account: line.account_id == acc
+            )
+            if len(group.move_id) > 1:
+                group.reconcile()
