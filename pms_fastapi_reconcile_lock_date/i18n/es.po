@@ -37,3 +37,21 @@ msgid ""
 msgstr ""
 "%(invoice)s sustituye a %(original)s, y el dinero de esa factura la espera "
 "en su rectificativa. Edítala en vez de borrarla o cancelarla."
+
+#. module: pms_fastapi_reconcile_lock_date
+#: model:ir.model.fields,field_description:pms_fastapi_reconcile_lock_date.field_account_bank_statement_line__rectification_released_line_ids
+#: model:ir.model.fields,field_description:pms_fastapi_reconcile_lock_date.field_account_move__rectification_released_line_ids
+#: model:ir.model.fields,field_description:pms_fastapi_reconcile_lock_date.field_account_payment__rectification_released_line_ids
+msgid "Payments released by the rectification"
+msgstr "Cobros liberados por la rectificación"
+
+#. module: pms_fastapi_reconcile_lock_date
+#: model:ir.model.fields,help:pms_fastapi_reconcile_lock_date.field_account_bank_statement_line__rectification_released_line_ids
+#: model:ir.model.fields,help:pms_fastapi_reconcile_lock_date.field_account_move__rectification_released_line_ids
+#: model:ir.model.fields,help:pms_fastapi_reconcile_lock_date.field_account_payment__rectification_released_line_ids
+msgid ""
+"Payment lines that settled this invoice until it was rectified the core "
+"way. The invoice that replaces it takes them over when it is posted."
+msgstr ""
+"Apuntes de cobro que saldaban esta factura hasta que se rectificó por la "
+"vía estándar. La factura que la sustituye se los queda al validarse."

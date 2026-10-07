@@ -2,7 +2,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     "name": "PMS FastAPI - Reconcile Lock Date",
-    "summary": "Edit posted invoices through the API without unreconciling them",
+    "summary": "Edit invoices and payments through the API without touching closed "
+    "periods",
     "version": "16.0.1.0.0",
     "category": "Generic Modules/Property Management System",
     "author": "Commit [Sun]",

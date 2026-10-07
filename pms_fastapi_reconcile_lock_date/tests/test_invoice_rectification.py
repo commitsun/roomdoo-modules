@@ -1,8 +1,12 @@
 # Copyright 2026 Commit [Sun]
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 """Editing a validated invoice through the API (PUT /invoices/{id} with
-confirmRefund=true) must not unreconcile it: the original keeps its payment,
-and the money reaches the replacement when it is validated."""
+confirmRefund=true).
+
+In a locked period it must not unreconcile it: the original keeps its payment,
+and the money reaches the replacement when it is validated. In an open period
+the original is reversed the core way, and the replacement takes over the same
+payments when it is validated."""
 import datetime
 from unittest.mock import patch
 
@@ -187,13 +191,52 @@ class TestInvoiceRectification(CommonTestPmsApi):
             [("journal_id", "=", self.transfer_journal.id)]
         )
 
-    # -- tests -----------------------------------------------------------
+    def _close_period(self):
+        """Lock the period the invoices built here belong to (they are dated
+        today)."""
+        patcher = patch.object(
+            type(self.env["res.company"]),
+            "_get_reconcile_lock_date",
+            lambda company: fields.Date.today(),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    # -- an open period --------------------------------------------------
+    def test_in_an_open_period_the_replacement_takes_the_same_payment(self):
+        line = self._room_line()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            original = self._validated_invoice(test_client, line)
+            payment = self._pay(original)
+
+            response = self._edit(test_client, original, line)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            replacement = self.env["account.move"].browse(response.json()["id"])
+
+            # Reversed the core way: the payment was released...
+            self.assertEqual(original.payment_state, "reversed")
+            self.assertFalse(payment.is_reconciled)
+            self.assertEqual(
+                original.rectification_released_line_ids.payment_id, payment
+            )
+
+            validate = test_client.post(f"/invoices/{replacement.id}/validate")
+            self.assertEqual(validate.status_code, status.HTTP_200_OK, validate.text)
+
+        # ...and the replacement took it over when validated.
+        self.assertEqual(replacement.amount_residual, 0.0)
+        self.assertEqual(payment.reconciled_invoice_ids, replacement)
+        self.assertFalse(self._transfers())
+
+    # -- a locked period -------------------------------------------------
     def test_editing_a_paid_invoice_keeps_its_payment(self):
         line = self._room_line()
         with self._create_test_client() as test_client:
             self._login(test_client)
             original = self._validated_invoice(test_client, line)
             payment = self._pay(original)
+            self._close_period()
 
             response = self._edit(test_client, original, line)
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
@@ -236,6 +279,7 @@ class TestInvoiceRectification(CommonTestPmsApi):
             self._login(test_client)
             original = self._validated_invoice(test_client, line)
             self._pay(original)
+            self._close_period()
             self.assertEqual(
                 self._edit(test_client, original, line).status_code,
                 status.HTTP_200_OK,
@@ -252,6 +296,7 @@ class TestInvoiceRectification(CommonTestPmsApi):
             self._login(test_client)
             original = self._validated_invoice(test_client, line)
             payment = self._pay(original)
+            self._close_period()
             self.assertEqual(
                 self._edit(test_client, original, line).status_code,
                 status.HTTP_200_OK,
@@ -271,6 +316,7 @@ class TestInvoiceRectification(CommonTestPmsApi):
             self._login(test_client)
             original = self._validated_invoice(test_client, line)
             self._pay(original)
+            self._close_period()
             response = self._edit(test_client, original, line)
             replacement = self.env["account.move"].browse(response.json()["id"])
             # The test client lets the UserError through; served, it is a 400.
@@ -289,6 +335,7 @@ class TestInvoiceRectification(CommonTestPmsApi):
             self._login(test_client)
             original = self._validated_invoice(test_client, line)
             self._pay(original)
+            self._close_period()
             response = self._edit(test_client, original, line)
             replacement = self.env["account.move"].browse(response.json()["id"])
             replacement.invoice_payment_term_id = self.env.ref(

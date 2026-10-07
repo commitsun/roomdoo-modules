@@ -376,11 +376,23 @@ ul.auto-toc {
 credit note with <tt class="docutils literal">cancel=True</tt>, so the payment that settled it is released.
 When that payment belongs to a closed period, the customer balances of a month
 that is already closed change.</p>
-<p>This module rectifies with <tt class="docutils literal">account_reconcile_lock_date</tt> instead. The
-original keeps its payment, the credit note is issued with <tt class="docutils literal">cancel=False</tt> and
-holds the money the original collected, open, until the replacement is
-validated. Then a balance transfer entry dated that day moves the money onto
-the replacement, before the folio’s free payments are proposed to it.</p>
+<p>This module rectifies with <tt class="docutils literal">account_reconcile_lock_date</tt> instead, where
+unreconciling does harm: the invoice or what it is reconciled with belongs to a
+locked period, it is a down payment invoice, or something other than a payment
+settles it. The original keeps its payment, the credit note is issued with
+<tt class="docutils literal">cancel=False</tt> and holds the money the original collected, open, until the
+replacement is validated. Then a balance transfer entry dated that day moves
+the money onto the replacement, before the folio’s free payments are proposed
+to it.</p>
+<p>Otherwise the original is still reversed the core way, but the payments it
+releases are written down on it, and the replacement takes those same payments
+over when it is validated, instead of whatever the folio autoreconciliation
+would match.</p>
+<p>The payments API posts as the superuser, for whom the core only applies the
+fiscal year close. This module makes it apply the company’s monthly close as
+well (<tt class="docutils literal">res.company._get_reconcile_lock_date()</tt>): no payment, refund or
+internal transfer can be registered or moved into a closed month, nor cancelled
+there, and an internal transfer of a closed month cannot be edited.</p>
 <p>Odoo installs it by itself when the second of <tt class="docutils literal">pms_fastapi</tt> and
 <tt class="docutils literal">account_reconcile_lock_date</tt> is installed. On a database that already has
 both, install it explicitly. A company without a transfer journal keeps the
