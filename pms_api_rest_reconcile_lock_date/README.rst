@@ -45,6 +45,20 @@ Odoo installs it by itself when the second of ``pms_api_rest`` and
 both, install it explicitly. A company without a transfer journal keeps the
 core behaviour.
 
+Payments follow the same rule (``PATCH /transactions/p/<id>`` and the channel
+updates of a folio). A payment of a closed period -- its own date, or that of
+something it settles -- is never reset to draft: its reference is written in
+place; a change of amount is registered as a payment or a refund for the
+difference, dated today and linked to it (the channels see the amount with its
+corrections); its customer cannot change when it settles an invoice, whose own
+edit moves the money, and moves with a transfer entry otherwise; its journal
+cannot change; its date cannot change, except for a payment of an open month
+locked only by what it settles, moved in place to another open date. No payment
+or refund can be moved or dated into a closed period, which the core would
+otherwise do silently. In an open period, an edited payment is reconciled
+again with the invoices it settled (``pms_api_rest``). The members of the bypass
+group keep the usual behaviour.
+
 **Table of contents**
 
 .. contents::

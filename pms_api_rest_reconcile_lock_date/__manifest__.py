@@ -2,7 +2,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 {
     "name": "PMS API REST - Reconcile Lock Date",
-    "summary": "Edit posted invoices from the app without unreconciling them",
+    "summary": "Edit invoices and payments from the app without touching closed "
+    "periods",
     "version": "16.0.1.0.0",
     "category": "Generic Modules/Property Management System",
     "author": "Commit [Sun]",

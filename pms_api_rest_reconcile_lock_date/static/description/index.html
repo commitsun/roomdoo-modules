@@ -390,6 +390,19 @@ payments, as usual.</p>
 <tt class="docutils literal">account_reconcile_lock_date</tt> is installed. On a database that already has
 both, install it explicitly. A company without a transfer journal keeps the
 core behaviour.</p>
+<p>Payments follow the same rule (<tt class="docutils literal">PATCH <span class="pre">/transactions/p/&lt;id&gt;</span></tt> and the channel
+updates of a folio). A payment of a closed period – its own date, or that of
+something it settles – is never reset to draft: its reference is written in
+place; a change of amount is registered as a payment or a refund for the
+difference, dated today and linked to it (the channels see the amount with its
+corrections); its customer cannot change when it settles an invoice, whose own
+edit moves the money, and moves with a transfer entry otherwise; its journal
+cannot change; its date cannot change, except for a payment of an open month
+locked only by what it settles, moved in place to another open date. No payment
+or refund can be moved or dated into a closed period, which the core would
+otherwise do silently. In an open period, an edited payment is reconciled
+again with the invoices it settled (<tt class="docutils literal">pms_api_rest</tt>). The members of the bypass
+group keep the usual behaviour.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
