@@ -375,8 +375,8 @@ The standard guards (<tt class="docutils literal">_check_fiscalyear_lock_date</t
 <tt class="docutils literal">_check_tax_lock_date</tt>) resolve the date with
 <tt class="docutils literal">res.company._get_user_fiscal_lock_date()</tt>, which <em>replaces</em> it with
 <tt class="docutils literal">fiscalyear_lock_date</tt> for holders of <em>Accounting / Adviser</em> instead of
-taking the maximum – and <tt class="docutils literal">base.user_root</tt> is one of them, so under any
-<tt class="docutils literal">sudo()</tt> call the monthly close is simply invisible. Breaking a
+taking the maximum – advisers, and <tt class="docutils literal">base.user_root</tt>, which crons and queue
+jobs run as – so for them the monthly close is simply invisible. Breaking a
 reconciliation is worse still: it checks nothing at all, because it writes no
 date and deletes no journal item.</p>
 <p>This module adds the missing checks, with a date of its own:</p>
@@ -455,7 +455,8 @@ the module changes nothing until somebody opts in.</li>
 replaces the date with <tt class="docutils literal">fiscalyear_lock_date</tt> for users holding <em>Accounting /
 Adviser</em> instead of taking the maximum, which would make the month-end close
 invisible to the very people doing the closing, and it resolves against the
-acting user, which is the superuser under any <tt class="docutils literal">sudo()</tt> call.</p>
+acting user: an adviser, or the superuser crons and queue jobs run as, only
+gets the fiscal year close.</p>
 <div class="section" id="scope">
 <h2><a class="toc-backref" href="#toc-entry-2">Scope</a></h2>
 <p><strong>Down payment invoices only</strong> delegates to <tt class="docutils literal">account.move._is_downpayment()</tt>.

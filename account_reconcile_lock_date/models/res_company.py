@@ -30,8 +30,9 @@ class ResCompany(models.Model):
         the date with ``fiscalyear_lock_date`` for users holding
         ``account.group_account_manager`` instead of taking the maximum, so the
         month-end close would be invisible to the very people doing the closing;
-        and it resolves against the current user, which is uid 1 under the
-        ``sudo()`` calls both PMS APIs make.
+        and it resolves against the current user, so it changes with who acts:
+        an adviser, or the superuser crons and queue jobs run as, only gets the
+        fiscal year close.
 
         Returns ``date.min`` when nothing is locked, mirroring the core so that
         callers can always compare with ``<=``.

@@ -3,8 +3,8 @@ The standard guards (``_check_fiscalyear_lock_date``,
 ``_check_tax_lock_date``) resolve the date with
 ``res.company._get_user_fiscal_lock_date()``, which *replaces* it with
 ``fiscalyear_lock_date`` for holders of *Accounting / Adviser* instead of
-taking the maximum -- and ``base.user_root`` is one of them, so under any
-``sudo()`` call the monthly close is simply invisible. Breaking a
+taking the maximum -- advisers, and ``base.user_root``, which crons and queue
+jobs run as -- so for them the monthly close is simply invisible. Breaking a
 reconciliation is worse still: it checks nothing at all, because it writes no
 date and deletes no journal item.
 

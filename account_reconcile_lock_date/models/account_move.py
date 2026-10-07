@@ -38,10 +38,10 @@ class AccountMove(models.Model):
         move.state == 'posted'`` case). It resolves the date with
         ``_get_user_fiscal_lock_date()`` though, which *replaces* it with
         ``fiscalyear_lock_date`` for holders of ``account.group_account_manager``
-        -- and ``base.user_root`` is in that group, so under the ``sudo()``
-        calls both PMS APIs make, the monthly close is simply invisible and
-        only the fiscal year close applies. This guard closes that gap with the
-        module's own date, scope and bypasses.
+        -- advisers, and ``base.user_root``, which crons and queue jobs run as.
+        For them the monthly close is simply invisible and only the fiscal year
+        close applies. This guard closes that gap with the module's own date,
+        scope and bypasses.
 
         Only transitions *away* from ``posted`` are checked. Posting is never
         blocked here: that is a different operation, guarded elsewhere by the

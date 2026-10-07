@@ -132,3 +132,114 @@ msgstr ""
 #, python-format
 msgid "%(payment)s transferred to %(invoice)s"
 msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s belongs to a closed period (locked up to %(lock)s): its journal cannot be changed. Ask accounting to correct it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s belongs to a closed period (locked up to %(lock)s), so it cannot be changed this way. Ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s belongs to a closed period (locked up to %(lock)s) and settles %(documents)s: its customer cannot be changed, because the customer of a payment follows the invoice it settles."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "%s has already been rectified: its money is already on the invoice that replaced it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "%s is a down payment: the final invoice takes it to whichever customer it is issued to."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Change the customer of %s instead: its money moves with it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s is dated within a closed period (locked up to %(lock)s): its date cannot be changed. Ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "The new date %(date)s falls within a closed period (locked up to %(lock)s). Use a later date."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Date moved from %(old)s to %(new)s in place: the payment settles a document of a closed period, so it was not reset to draft."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s belongs to a closed period and has no single open customer line, so its customer cannot be changed. Ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "%(payment)s transferred to %(partner)s"
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "The payment belongs to a closed period, so its customer was not changed: %(entry)s moves its balance to %(partner)s, who has it in their favour until an invoice is reconciled with it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Journal %(journal)s has no payment method to register the difference of %(payment)s. Ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Correction of %s"
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "The payment belongs to a closed period, so its amount was not changed: %(correction)s registers the difference of %(amount)s."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,field_description:account_reconcile_lock_date.field_account_payment__amended_payment_id
+msgid "Corrected payment"
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,help:account_reconcile_lock_date.field_account_payment__amended_payment_id
+msgid "The payment of a locked period this one corrects. That payment is never modified itself: the difference, or the refund, is registered with the date of the day and linked to it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,field_description:account_reconcile_lock_date.field_account_payment__amendment_ids
+msgid "Corrections"
+msgstr ""

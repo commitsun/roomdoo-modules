@@ -229,9 +229,66 @@ class AccountMove(models.Model):
         transfer.action_post()
         return transfer
 
+    @api.model
+    def _create_partner_transfer_entry(
+        self, source_line, partner, amount, date, label, move_vals=None
+    ):
+        """Two-line entry that moves ``amount`` of the open balance of
+        ``source_line`` to ``partner``, on the same account, and reconciles it
+        with ``source_line``. The line of ``partner`` is left open, in their
+        favour (or against them, for a payable). Returns the entry."""
+        company = source_line.company_id
+        journal = company._get_rectification_transfer_journal()
+        if not journal:
+            raise UserError(
+                _(
+                    "No journal configured to post the balance transfer entries "
+                    "of company %s.",
+                    company.display_name,
+                )
+            )
+        # A credit is settled with a debit, and the other way round.
+        settles_credit = source_line.balance < 0
+        line_vals = []
+        for line_partner, debit in (
+            (source_line.partner_id, settles_credit),
+            (partner, not settles_credit),
+        ):
+            line_vals.append(
+                (
+                    0,
+                    0,
+                    {
+                        "name": label,
+                        "account_id": source_line.account_id.id,
+                        "partner_id": line_partner.id,
+                        "debit": amount if debit else 0.0,
+                        "credit": 0.0 if debit else amount,
+                    },
+                )
+            )
+        vals = {
+            "move_type": "entry",
+            "journal_id": journal.id,
+            "date": date,
+            "ref": label,
+            "company_id": company.id,
+            "line_ids": line_vals,
+        }
+        vals.update(move_vals or {})
+        transfer = self.create(vals)
+        transfer.action_post()
+        settling = transfer.line_ids.filtered(
+            lambda line: line.partner_id == source_line.partner_id
+            and (line.balance > 0) == settles_credit
+        )[:1]
+        (settling | source_line).reconcile()
+        return transfer
+
     def _rectification_transfer_vals(self):
-        """Extra values for the transfer entries this invoice receives. Hook for
-        modules that carry more on the entry (a hotel, an analytic)."""
+        """Extra values for the transfer entries made for this invoice, or for
+        this payment entry. Hook for modules that carry more on the entry (a
+        hotel, an analytic)."""
         self.ensure_one()
         return {}
 

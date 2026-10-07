@@ -17,7 +17,8 @@ This is **not** ``_get_user_fiscal_lock_date()`` on purpose. That method
 replaces the date with ``fiscalyear_lock_date`` for users holding *Accounting /
 Adviser* instead of taking the maximum, which would make the month-end close
 invisible to the very people doing the closing, and it resolves against the
-acting user, which is the superuser under any ``sudo()`` call.
+acting user: an adviser, or the superuser crons and queue jobs run as, only
+gets the fiscal year close.
 
 Scope
 ~~~~~
