@@ -1252,11 +1252,12 @@ class PmsFolioService(Component):
                         ("create_uid", "=", self.env.user.id),
                         ("journal_id", "=", journal.id),
                     ]
+                    + self._ota_payment_extra_domain()
                 )
             )
             if (
                 not proposed_transaction
-                or proposed_transaction.amount != transaction.amount
+                or self._ota_payment_amount(proposed_transaction) != transaction.amount
             ):
                 if proposed_transaction:
                     if self._payment_settles_reversed_invoice(proposed_transaction):
@@ -1264,9 +1265,9 @@ class PmsFolioService(Component):
                             folio, proposed_transaction, transaction.amount
                         )
                         continue
-                    proposed_transaction.action_draft()
-                    proposed_transaction.amount = transaction.amount
-                    proposed_transaction.action_post()
+                    self._update_ota_payment_amount(
+                        proposed_transaction, transaction.amount
+                    )
                 else:
                     if transaction.transactionType == "inbound":
                         payment_method_line = self._get_pms_payment_method_line(journal)
@@ -1294,6 +1295,24 @@ class PmsFolioService(Component):
                             date=datetime.strptime(transaction.date, "%Y-%m-%d"),
                             ref=reference,
                         )
+
+    def _ota_payment_extra_domain(self):
+        """Extra criteria to find the payment a channel transaction updates.
+        Hook: pms_api_rest_reconcile_lock_date leaves out its corrections."""
+        return []
+
+    def _ota_payment_amount(self, payment):
+        """The amount the channel sees for ``payment``. Hook:
+        pms_api_rest_reconcile_lock_date counts its corrections."""
+        return payment.amount
+
+    def _update_ota_payment_amount(self, payment, amount):
+        """Change the amount of ``payment`` to the one the channel sends.
+        Hook: pms_api_rest_reconcile_lock_date registers the difference instead
+        on a payment of a locked period."""
+        payment.action_draft()
+        payment.amount = amount
+        payment.action_post()
 
     def _payment_settles_reversed_invoice(self, payment):
         """Whether ``payment`` settles an invoice that no longer stands.

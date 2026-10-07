@@ -414,8 +414,10 @@ class PmsTransactionService(Component):
             and pms_transaction_info.reference != transaction.ref
         ):
             vals["ref"] = pms_transaction_info.reference
-        if pms_transaction_info.date and pms_transaction_info.date != transaction.date:
-            vals["date"] = fields.Date.from_string(pms_transaction_info.date)
+        if pms_transaction_info.date:
+            new_date = fields.Date.from_string(pms_transaction_info.date)
+            if new_date != transaction.date:
+                vals["date"] = new_date
         if (
             pms_transaction_info.journalId
             and pms_transaction_info.journalId != transaction.journal_id.id
@@ -438,15 +440,65 @@ class PmsTransactionService(Component):
                             "before the last cash session"
                         )
                     )
+            vals["journal_id"] = new_journal.id
+        transaction = self._apply_transaction_update(transaction, vals)
+        return transaction.id
+
+    def _apply_transaction_update(self, transaction, vals):
+        """Apply ``vals`` to ``transaction`` and return the payment that carries
+        them: the payment itself, or the copy that replaces it when the journal
+        changes.
+
+        The payment is reset to draft, written and posted again, which releases
+        the invoices it settled: it is then reconciled again with them, unless
+        its customer changed. pms_api_rest_reconcile_lock_date handles the
+        payments of a locked period, which are never reset to draft."""
+        if not vals:
+            return transaction
+        settled = self.env["account.move.line"]
+        if "partner_id" not in vals:
+            settled = self._settled_invoice_lines(transaction)
+        if "journal_id" in vals:
             transaction.action_draft()
             transaction.action_cancel()
-            vals["journal_id"] = new_journal.id
             transaction = transaction.copy()
-        if vals:
-            transaction.action_draft()
-            transaction.write(vals)
-            transaction.action_post()
-        return transaction.id
+        transaction.action_draft()
+        transaction.write(vals)
+        transaction.action_post()
+        self._reconcile_with_settled_lines(transaction, settled)
+        return transaction
+
+    @staticmethod
+    def _payment_counterpart_lines(payment):
+        return payment.move_id.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+
+    def _settled_invoice_lines(self, payment):
+        """The invoice lines ``payment`` is reconciled with."""
+        lines = self._payment_counterpart_lines(payment)
+        partials = lines.matched_debit_ids | lines.matched_credit_ids
+        counterparts = (partials.debit_move_id | partials.credit_move_id) - lines
+        return counterparts.filtered(
+            lambda line: line.move_id.is_invoice(include_receipts=True)
+        )
+
+    def _reconcile_with_settled_lines(self, payment, settled):
+        """Reconcile ``payment`` again with the invoice lines it settled before
+        it was reset to draft, as far as both are still open."""
+        settled = settled.filtered(lambda line: not line.reconciled)
+        if not settled:
+            return
+        lines = self._payment_counterpart_lines(payment).filtered(
+            lambda line: not line.reconciled
+        )
+        for account in lines.account_id:
+            group = (lines | settled).filtered(
+                lambda line, acc=account: line.account_id == acc
+            )
+            if len(group.move_id) > 1:
+                group.reconcile()
 
     @restapi.method(
         [
