@@ -1,8 +1,12 @@
 # Copyright 2026 Commit [Sun]
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-"""Editing a posted invoice from the app (PATCH /invoices/p/<id>) must not
-unreconcile it: the original keeps the payment it was settled with, and the
-money reaches the new invoice through the credit note."""
+"""Editing a posted invoice from the app (PATCH /invoices/p/<id>).
+
+In a locked period it must not unreconcile it: the original keeps the payment
+it was settled with, and the money reaches the new invoice through the credit
+note. In an open period the original is reversed the core way, and the new
+invoice takes over its payments."""
+import datetime
 from unittest.mock import patch
 
 from odoo.exceptions import UserError
@@ -30,9 +34,53 @@ class TestInvoiceRectification(InvoiceServiceCase):
             [("journal_id", "=", self.transfer_journal.id)]
         )
 
+    def _close_period(self):
+        """Lock the period the invoices built here belong to (they are dated
+        around today)."""
+        patcher = patch.object(
+            type(self.env["res.company"]),
+            "_get_reconcile_lock_date",
+            lambda company: datetime.date.today(),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    # ------------------------------------------------------------------
+    # an open period
+    # ------------------------------------------------------------------
+    def test_in_an_open_period_the_new_invoice_takes_the_payment(self):
+        original = self._posted_invoice()
+        payment = self._pay(original)
+
+        new = self._patch(original, partnerId=self.company_customer.id)
+
+        self.assertEqual(new.partner_id, self.company_customer)
+        self.assertEqual(original.payment_state, "reversed")
+        self.assertEqual(payment.reconciled_invoice_ids, new)
+        self.assertEqual(new.amount_residual, 0.0)
+        self.assertFalse(self._transfers())
+
+    def test_in_an_open_period_a_simplified_invoice_reissued_takes_the_payment(self):
+        original = self._posted_invoice(self.anonymous)
+        payment = self._pay(original)
+
+        new = self._patch(
+            original, partnerId=self.company_customer.id, isSimplifiedInvoice=False
+        )
+
+        self.assertEqual(new.journal_id, self.normal_journal)
+        self.assertEqual(original.payment_state, "reversed")
+        self.assertEqual(payment.reconciled_invoice_ids, new)
+        self.assertFalse(self._transfers())
+
+    # ------------------------------------------------------------------
+    # a locked period
+    # ------------------------------------------------------------------
+
     def test_customer_change_keeps_the_payment_on_the_original(self):
         original = self._posted_invoice()
         payment = self._pay(original)
+        self._close_period()
 
         new = self._patch(original, partnerId=self.company_customer.id)
 
@@ -53,6 +101,7 @@ class TestInvoiceRectification(InvoiceServiceCase):
         as a normal invoice for the guest who asks for one."""
         original = self._posted_invoice(self.anonymous)
         payment = self._pay(original)
+        self._close_period()
 
         new = self._patch(
             original, partnerId=self.company_customer.id, isSimplifiedInvoice=False
@@ -71,6 +120,7 @@ class TestInvoiceRectification(InvoiceServiceCase):
     def test_a_rectified_invoice_cannot_be_edited_again(self):
         original = self._posted_invoice()
         self._pay(original)
+        self._close_period()
         self._patch(original, partnerId=self.company_customer.id)
         with self.assertRaises(UserError):
             self._patch(original, partnerId=self.guest.id)
@@ -87,6 +137,7 @@ class TestInvoiceRectification(InvoiceServiceCase):
         what the new one already received."""
         original = self._posted_invoice()
         payment = self._pay(original)
+        self._close_period()
         self._patch(original, partnerId=self.company_customer.id)
         info = self.env.datamodels["pms.transaction.info"](amount=payment.amount - 10.0)
 
