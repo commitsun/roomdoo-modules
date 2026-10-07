@@ -11,6 +11,11 @@ issued with ``cancel=False``, the original keeps its payment, and the money it
 collected is moved to the replacement with a transfer entry dated today. It is
 what pms_downpayment_lifecycle does with down payments, without the down payment
 specifics, so that any invoice edit can use it.
+
+``_reissue_invoice`` only takes that way where unreconciling does harm (see
+``_keeps_reconciliation_on_rectify``). An invoice of an open period settled by
+payments is still reversed the core way, and its replacement takes over the
+same payments.
 """
 from markupsafe import Markup
 
@@ -282,19 +287,105 @@ class AccountMove(models.Model):
     # ------------------------------------------------------------------
     # the operation
     # ------------------------------------------------------------------
-    def _keeps_reconciliation_on_rectify(self):
-        """Whether replacing this invoice rectifies it without unreconciling
-        anything: something is reconciled on its customer line, and its company
-        has a journal for the transfer entries. Otherwise there is nothing to
-        keep, or nowhere to move the money, and the core way applies."""
+    def _rectification_counterpart_lines(self):
+        """The journal items reconciled with the customer lines of this
+        invoice: its payments, and whatever else settled it."""
         self.ensure_one()
         receivables = self.line_ids.filtered(
             lambda line: line.account_id.account_type == "asset_receivable"
         )
         partials = receivables.matched_debit_ids | receivables.matched_credit_ids
-        return bool(partials) and bool(
-            self.company_id._get_rectification_transfer_journal()
+        return (partials.debit_move_id | partials.credit_move_id) - receivables
+
+    def _rectification_payment_lines(self):
+        """The payment lines reconciled with this invoice: the money the core
+        way releases, which the replacement takes over."""
+        return self._rectification_counterpart_lines().filtered(
+            lambda line: line.move_id.payment_id
         )
+
+    def _keeps_reconciliation_on_rectify(self):
+        """Whether replacing this invoice rectifies it without unreconciling
+        anything, the money reaching the replacement through a transfer entry.
+
+        Only where unreconciling does harm, and only when the company has a
+        journal for the transfer entries:
+
+        - the invoice, or something reconciled with it, belongs to a locked
+          period: unreconciling would change the customer balances of a month
+          that is already closed;
+        - it is a down payment invoice, whose payment stays applied in the
+          period the down payment was issued in;
+        - it is settled by something other than a payment -- a transfer entry,
+          a credit note, a bank statement line. Released, nothing would bring
+          it back to the replacement.
+
+        Otherwise -- an open period and nothing but payments -- the core way
+        is fine, and ``_reissue_invoice`` hands those same payments over to the
+        replacement.
+        """
+        self.ensure_one()
+        counterparts = self._rectification_counterpart_lines()
+        if (
+            not counterparts
+            or not self.company_id._get_rectification_transfer_journal()
+        ):
+            return False
+        if self._is_downpayment():
+            return True
+        if any(not line.move_id.payment_id for line in counterparts):
+            return True
+        return any(
+            move.date <= move.company_id._get_reconcile_lock_date()
+            for move in self | counterparts.move_id
+        )
+
+    def _reconcile_released_payment_lines(self, lines):
+        """Settle this invoice with ``lines``, payments that the core
+        rectification of the invoice it replaces released, as far as they are
+        still open. What it does not take stays open on the payment, for the
+        next invoice of the customer.
+
+        A payment on another customer account -- the replacement is billed to
+        a group company on 433, the payment sat on 430 -- cannot be reconciled
+        with it. Its money reaches the replacement through a transfer entry,
+        when the company has a journal for them; otherwise it stays open, as
+        the core way leaves it.
+        """
+        self.ensure_one()
+        target = self._get_single_receivable_line()
+        if not target:
+            return
+        lines = lines.filtered(lambda line: not line.reconciled)
+        same_account = lines.filtered(lambda line: line.account_id == target.account_id)
+        if same_account and not target.reconciled:
+            (target | same_account).reconcile()
+        if not self.company_id._get_rectification_transfer_journal():
+            return
+        currency = self.company_id.currency_id
+        date = fields.Date.context_today(self)
+        for line in lines - same_account:
+            amount = min(-line.amount_residual, target.amount_residual)
+            if currency.compare_amounts(amount, 0.0) <= 0:
+                break
+            transfer = self._create_balance_transfer_entry(
+                line,
+                target,
+                amount,
+                date,
+                _(
+                    "%(payment)s transferred to %(invoice)s",
+                    payment=line.move_id.name,
+                    invoice=self.name,
+                ),
+                move_vals=self._rectification_transfer_vals(),
+            )
+            (
+                transfer.line_ids.filtered(lambda move_line: move_line.debit) | line
+            ).reconcile()
+            (
+                transfer.line_ids.filtered(lambda move_line: move_line.credit) | target
+            ).reconcile()
 
     def _rectify_for_replacement(self, ref=None):
         """Rectify this posted invoice, which a new one is about to replace,
@@ -330,19 +421,25 @@ class AccountMove(models.Model):
         """Rectify this posted invoice and post ``new_invoice``, the draft that
         replaces it. Returns the credit note.
 
-        Nothing reconciled on the customer line, or no transfer journal for the
-        company: the core way, a credit note with ``cancel=True`` and the
-        original ends 'reversed'. Otherwise nothing is unreconciled: the
+        Where unreconciling does no harm (see
+        ``_keeps_reconciliation_on_rectify``): the core way, a credit note with
+        ``cancel=True``, the original ends 'reversed' and the replacement takes
+        over the payments it released. Otherwise nothing is unreconciled: the
         original keeps its payment, the credit note settles what it still had
         open, and the money moves to the replacement with a transfer entry
         dated today.
         """
         self.ensure_one()
         if not self._keeps_reconciliation_on_rectify():
+            payments = self._rectification_payment_lines()
             credit_note = self.with_context(sii_refund_type="I")._reverse_moves(
                 default_values_list, cancel=True
             )
-            new_invoice.action_post()
+            # The released payments go to the replacement before anything else
+            # of the folio is proposed to it: left to the autoreconciliation,
+            # they are only matched when the amounts make it obvious.
+            new_invoice.with_context(skip_folio_autoreconcile=True).action_post()
+            new_invoice._reconcile_released_payment_lines(payments)
             return credit_note
         ref = (default_values_list or [{}])[0].get("ref")
         credit_note = self._rectify_for_replacement(ref=ref)

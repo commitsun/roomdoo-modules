@@ -7,6 +7,8 @@ from odoo.tests import tagged
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
 INVOICE_DATE = datetime.date(2026, 9, 20)
+LOCK_DATE = datetime.date(2026, 9, 30)
+OPEN_DATE = datetime.date(2026, 10, 2)
 
 
 @tagged("post_install", "-at_install")
@@ -19,6 +21,16 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         super().setUpClass(chart_template_ref=chart_template_ref)
         cls.company = cls.company_data["company"]
         cls.transfer_journal = cls.company_data["default_journal_misc"]
+        # partner_b has a receivable account of its own; partner_c shares
+        # partner_a's, as most customers do.
+        cls.partner_c = cls.env["res.partner"].create(
+            {
+                "name": "partner_c",
+                "property_account_receivable_id": (
+                    cls.partner_a.property_account_receivable_id.id
+                ),
+            }
+        )
 
     def _opt_in(self):
         """The company has a transfer journal, as a module would configure."""
@@ -28,11 +40,15 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
             lambda company: self.transfer_journal,
         )
 
-    def _invoice(self, partner, amount):
+    def _close_period(self):
+        """Close the month of INVOICE_DATE, as the monthly close does."""
+        self.company.period_lock_date = LOCK_DATE
+
+    def _invoice(self, partner, amount, date=INVOICE_DATE):
         invoice = self.init_invoice(
             "out_invoice",
             partner=partner,
-            invoice_date=INVOICE_DATE,
+            invoice_date=date,
             post=False,
             amounts=[amount],
             taxes=[],
@@ -41,14 +57,14 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         invoice.action_post()
         return invoice
 
-    def _pay(self, invoice, amount):
+    def _pay(self, invoice, amount, date=None):
         payment = self.env["account.payment"].create(
             {
                 "payment_type": "inbound",
                 "partner_type": "customer",
                 "partner_id": invoice.partner_id.id,
                 "amount": amount,
-                "date": invoice.date,
+                "date": date or invoice.date,
                 "journal_id": self.company_data["default_journal_bank"].id,
             }
         )
@@ -69,20 +85,33 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
             [("reversed_entry_id", "=", original.id)]
         )
 
+    def _transfers(self):
+        return self.env["account.move"].search(
+            [("journal_id", "=", self.transfer_journal.id)]
+        )
+
+    @staticmethod
+    def _receivable(move):
+        return move.line_ids.filtered(
+            lambda line: line.account_id.account_type == "asset_receivable"
+        )
+
     # ------------------------------------------------------------------
     # when the core way is kept
     # ------------------------------------------------------------------
     def test_without_a_transfer_journal_the_core_way_is_kept(self):
-        """No journal means the company did not opt in: nothing changes."""
+        """No journal means the company did not opt in: the core way, even in
+        a locked period, and the replacement takes over the payment."""
         original = self._invoice(self.partner_a, 100.0)
         payment = self._pay(original, 100.0)
+        self._close_period()
         new = self._replacement(original, self.partner_a)
 
         original._reissue_invoice(new)
 
         self.assertEqual(original.payment_state, "reversed")
-        self.assertFalse(payment.is_reconciled)
         self.assertEqual(new.state, "posted")
+        self.assertEqual(payment.reconciled_invoice_ids, new)
 
     def test_an_unpaid_invoice_is_reversed_the_core_way(self):
         """Nothing is reconciled, so there is nothing to keep."""
@@ -101,14 +130,176 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         )
 
     # ------------------------------------------------------------------
+    # an open period: the core way, with the same payments
+    # ------------------------------------------------------------------
+    def test_in_an_open_period_the_replacement_takes_the_same_payment(self):
+        original = self._invoice(self.partner_a, 100.0)
+        payment = self._pay(original, 100.0)
+        new = self._replacement(original, self.partner_c)
+
+        with self._opt_in():
+            credit_note = original._reissue_invoice(new)
+
+        self.assertEqual(original.payment_state, "reversed")
+        self.assertEqual(credit_note.reversed_entry_id, original)
+        self.assertEqual(credit_note.amount_residual, 0.0)
+        self.assertEqual(new.amount_residual, 0.0)
+        self.assertEqual(payment.reconciled_invoice_ids, new)
+        self.assertFalse(self._transfers())
+
+    def test_in_an_open_period_what_the_replacement_leaves_stays_on_the_payment(
+        self,
+    ):
+        original = self._invoice(self.partner_a, 100.0)
+        payment = self._pay(original, 100.0)
+        new = self.init_invoice(
+            "out_invoice",
+            partner=self.partner_c,
+            invoice_date=OPEN_DATE,
+            post=False,
+            amounts=[60.0],
+            taxes=[],
+        )
+        new.invoice_payment_term_id = False
+
+        with self._opt_in():
+            original._reissue_invoice(new)
+
+        self.assertEqual(new.amount_residual, 0.0)
+        self.assertEqual(self._receivable(payment.move_id).amount_residual, -40.0)
+        self.assertFalse(self._transfers())
+
+    def test_in_an_open_period_a_payment_on_another_account_is_transferred(self):
+        """The replacement is billed on another customer account, which the
+        payment cannot be reconciled with: its money gets there through a
+        transfer entry."""
+        original = self._invoice(self.partner_a, 100.0)
+        payment = self._pay(original, 100.0)
+        new = self._replacement(original, self.partner_b)
+
+        with self._opt_in():
+            original._reissue_invoice(new)
+
+        self.assertEqual(original.payment_state, "reversed")
+        self.assertEqual(new.amount_residual, 0.0)
+        self.assertTrue(self._receivable(payment.move_id).reconciled)
+        transfer = self._transfers()
+        self.assertEqual(len(transfer), 1)
+        self.assertEqual(
+            transfer.line_ids.filtered("debit").account_id,
+            self._receivable(payment.move_id).account_id,
+        )
+        self.assertEqual(
+            transfer.line_ids.filtered("credit").account_id,
+            self._receivable(new).account_id,
+        )
+
+    def test_without_a_journal_a_payment_on_another_account_stays_open(self):
+        original = self._invoice(self.partner_a, 100.0)
+        payment = self._pay(original, 100.0)
+        new = self._replacement(original, self.partner_b)
+
+        original._reissue_invoice(new)
+
+        self.assertEqual(new.amount_residual, 100.0)
+        self.assertEqual(self._receivable(payment.move_id).amount_residual, -100.0)
+
+    # ------------------------------------------------------------------
     # keeping the reconciliation
     # ------------------------------------------------------------------
+    def test_a_payment_of_a_locked_period_keeps_the_reconciliation(self):
+        """The invoice is of an open period, the money it was paid with is
+        not: a payment of the closed month applied to an invoice of this one."""
+        original = self._invoice(self.partner_a, 100.0, date=OPEN_DATE)
+        payment = self._pay(original, 100.0, date=INVOICE_DATE)
+        self._close_period()
+        new = self._replacement(original, self.partner_a)
+
+        with self._opt_in():
+            original._reissue_invoice(new)
+
+        self.assertEqual(original.payment_state, "paid")
+        self.assertIn(original, payment.reconciled_invoice_ids)
+        self.assertEqual(new.payment_state, "paid")
+        self.assertEqual(len(self._transfers()), 1)
+
+    def test_a_down_payment_invoice_keeps_the_reconciliation(self):
+        """Its payment stays applied in the period it was issued in, open or
+        not."""
+        original = self._invoice(self.partner_a, 100.0)
+        payment = self._pay(original, 100.0)
+        new = self._replacement(original, self.partner_b)
+
+        move_class = type(self.env["account.move"])
+        with self._opt_in(), patch.object(
+            move_class, "_is_downpayment", lambda move: move == original
+        ):
+            original._reissue_invoice(new)
+
+        self.assertEqual(original.payment_state, "paid")
+        self.assertIn(original, payment.reconciled_invoice_ids)
+        self.assertEqual(len(self._transfers()), 1)
+
+    def test_an_invoice_settled_by_an_entry_keeps_the_reconciliation(self):
+        """Only payments are handed over to the replacement: anything else,
+        released, would be left open with nothing to bring it back."""
+        original = self._invoice(self.partner_a, 100.0)
+        other_journal = self.env["account.journal"].create(
+            {
+                "name": "Other entries",
+                "code": "OTHER",
+                "type": "general",
+                "company_id": self.company.id,
+            }
+        )
+        receivable = self._receivable(original)
+        entry = self.env["account.move"].create(
+            {
+                "move_type": "entry",
+                "journal_id": other_journal.id,
+                "date": INVOICE_DATE,
+                "line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "account_id": receivable.account_id.id,
+                            "partner_id": self.partner_a.id,
+                            "credit": 100.0,
+                        },
+                    ),
+                    (
+                        0,
+                        0,
+                        {
+                            "account_id": self.company_data[
+                                "default_account_revenue"
+                            ].id,
+                            "debit": 100.0,
+                        },
+                    ),
+                ],
+            }
+        )
+        entry.action_post()
+        (receivable | self._receivable(entry)).reconcile()
+        new = self._replacement(original, self.partner_a)
+
+        with self._opt_in():
+            original._reissue_invoice(new)
+
+        self.assertEqual(original.payment_state, "paid")
+        self.assertTrue(self._receivable(entry).reconciled)
+        self.assertEqual(new.payment_state, "paid")
+        self.assertEqual(len(self._transfers()), 1)
+
     def test_same_customer_keeps_the_payment_and_gets_a_transfer_entry(self):
         """Even for the same customer the money goes through a transfer entry:
         reconciled directly with the credit note, the replacement would show as
         'reversed' while it is the live invoice of the stay."""
         original = self._invoice(self.partner_a, 100.0)
         payment = self._pay(original, 100.0)
+        self._close_period()
         new = self._replacement(original, self.partner_a)
 
         with self._opt_in():
@@ -132,6 +323,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
     def test_another_customer_gets_the_balance_through_a_transfer_entry(self):
         original = self._invoice(self.partner_a, 100.0)
         payment = self._pay(original, 100.0)
+        self._close_period()
         new = self._replacement(original, self.partner_b)
 
         with self._opt_in():
@@ -158,6 +350,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         only the 60 collected reach the replacement, which owes the rest."""
         original = self._invoice(self.partner_a, 100.0)
         self._pay(original, 60.0)
+        self._close_period()
         new = self._replacement(original, self.partner_a)
 
         with self._opt_in():
@@ -172,6 +365,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         be credited to the new customer, who paid nothing."""
         original = self._invoice(self.partner_a, 100.0)
         self._pay(original, 100.0)
+        self._close_period()
         new = self.init_invoice(
             "out_invoice",
             partner=self.partner_b,
@@ -196,6 +390,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
     def test_a_rectified_invoice_cannot_be_rectified_again(self):
         original = self._invoice(self.partner_a, 100.0)
         self._pay(original, 100.0)
+        self._close_period()
         with self._opt_in():
             original._reissue_invoice(self._replacement(original, self.partner_a))
             with self.assertRaises(UserError):
@@ -256,6 +451,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
         replacement already received."""
         original = self._invoice(self.partner_a, 100.0)
         payment = self._pay(original, 100.0)
+        self._close_period()
         with self._opt_in():
             original._reissue_invoice(self._replacement(original, self.partner_b))
         with self.assertRaisesRegex(UserError, "already been rectified"):
@@ -266,6 +462,7 @@ class TestRectificationKeepsReconciliation(AccountTestInvoicingCommon):
     def test_the_bypass_lets_the_payment_of_a_rectified_invoice_be_reset(self):
         original = self._invoice(self.partner_a, 100.0)
         payment = self._pay(original, 100.0)
+        self._close_period()
         with self._opt_in():
             original._reissue_invoice(self._replacement(original, self.partner_b))
         payment.with_context(bypass_reconcile_lock_date=True).action_draft()

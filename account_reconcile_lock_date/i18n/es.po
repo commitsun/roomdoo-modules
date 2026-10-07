@@ -245,3 +245,9 @@ msgstr ""
 "Modificar el cobro haría que la factura rectificada volviera a deberlo. "
 "Registra la diferencia como un cobro o una devolución nuevos, o avisa a "
 "contabilidad."
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid "%(payment)s transferred to %(invoice)s"
+msgstr "%(payment)s traspasado a %(invoice)s"

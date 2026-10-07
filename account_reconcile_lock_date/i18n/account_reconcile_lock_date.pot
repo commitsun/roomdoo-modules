@@ -126,3 +126,9 @@ msgstr ""
 #, python-format
 msgid "• %(name)s dated %(date)s (period locked up to %(lock)s)"
 msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_move_rectification.py:0
+#, python-format
+msgid "%(payment)s transferred to %(invoice)s"
+msgstr ""

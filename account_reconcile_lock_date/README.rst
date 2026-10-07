@@ -55,7 +55,12 @@ doing what used to require breaking a reconciliation. ``_reissue_invoice()``
 rectifies a posted invoice that is being replaced without unreconciling
 anything. The credit note is issued with ``cancel=False``, the original keeps
 the payment it was settled with, and the money is moved onto the replacement
-with a balance transfer entry dated today. The pieces it is made of
+with a balance transfer entry dated today. It only takes that way where
+unreconciling does harm: when the invoice, or something reconciled with it,
+belongs to a locked period, when it is a down payment invoice, or when
+something other than a payment settles it. An invoice of an open period settled
+by payments is still reversed the core way, and its replacement takes over the
+same payments. The pieces it is made of
 (``_keeps_reconciliation_on_rectify()``, ``_rectify_for_replacement()``,
 ``_rectify_keep_reconciliation()``, ``_settle_rectification()``,
 ``_create_balance_transfer_entry()``, ``_is_rectified()``) are public, so that
