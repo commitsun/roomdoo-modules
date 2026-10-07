@@ -89,6 +89,7 @@ class PmsApiSupplierPaymentRouterHelper(models.AbstractModel):
                 line = self._resolve_directed_payment_method_line(
                     payload.paymentMethodId, "outbound"
                 )
+                self._ensure_date_not_locked(line.journal_id.company_id, payload.date)
                 partner = self._resolve_partner(payload.partnerId)
                 self._ensure_open_cash_session(line.journal_id)
                 payment = self._create_simple_payment(

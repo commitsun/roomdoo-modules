@@ -113,6 +113,7 @@ class PmsApiInternalTransferRouterHelper(models.AbstractModel):
                     self._validation_error(
                         _("Origin and destination accounts cannot be the same.")
                     )
+                self._ensure_date_not_locked(origin.company_id, payload.date)
                 self._ensure_open_cash_session(origin)
                 self._ensure_open_cash_session(destination)
                 transfer = (
@@ -175,6 +176,15 @@ class PmsApiInternalTransferRouterHelper(models.AbstractModel):
             with self.env.cr.savepoint():
                 transfer = self._resolve_payment_or_404(transfer_id)
                 self._ensure_not_bank_matched(transfer)
+                # Both legs are reset to draft: in a locked period that would
+                # change cash and bank balances that are already closed.
+                self._ensure_not_locked(
+                    transfer + transfer.paired_internal_transfer_payment_id,
+                    _(
+                        "The transfer date falls within a locked period, so "
+                        "it cannot be modified."
+                    ),
+                )
                 self._update_legs(transfer, payload)
         except PaymentProblem as problem:
             return problem.response

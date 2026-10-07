@@ -313,3 +313,31 @@ class TestInternalTransferEndpoints(CommonTestPmsApiPayment):
         # 422 literal: 422 is deprecated in
         # newer starlette and the test runner turns the warning into an error.
         self.assertEqual(response.status_code, 422, response.text)
+
+    def test_create_in_locked_period_returns_409(self):
+        """A transfer cannot be registered in a locked period."""
+        self.test_company.sudo().write({"fiscalyear_lock_date": date(2026, 1, 31)})
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/internal-transfers", json=self._transfer_body(date="2026-01-15")
+            )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
+
+    def test_update_in_locked_period_returns_409(self):
+        """Both legs would be reset to draft, changing closed balances."""
+        transfer = self._create_payment(
+            payment_type="outbound",
+            pay_date=date(2026, 1, 15),
+            is_internal_transfer=True,
+        )
+        self.test_company.sudo().write({"fiscalyear_lock_date": date(2026, 1, 31)})
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/internal-transfers/{transfer.id}", json={"amount": 50.0}
+            )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
+        self.assertEqual(transfer.amount, 100.0)

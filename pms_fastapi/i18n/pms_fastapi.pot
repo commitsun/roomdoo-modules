@@ -1530,3 +1530,17 @@ msgstr ""
 #, python-format
 msgid "wrong user/pass"
 msgstr ""
+
+#. module: pms_fastapi
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "The date falls within a period locked up to %s. Use a later date."
+msgstr ""
+
+#. module: pms_fastapi
+#: code:addons/pms_fastapi/routers/internal_transfer.py:0
+#, python-format
+msgid ""
+"The transfer date falls within a locked period, so it cannot be "
+"modified."
+msgstr ""

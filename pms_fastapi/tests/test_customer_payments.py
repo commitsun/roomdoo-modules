@@ -729,3 +729,27 @@ class TestCustomerPaymentEndpoints(CommonTestPmsApiPayment):
                 [("origin_payment_id", "=", payment.id)]
             )
         )
+
+    def test_create_in_locked_period_returns_409(self):
+        """A payment cannot be registered in a locked period."""
+        self.test_company.sudo().write({"fiscalyear_lock_date": date(2026, 1, 31)})
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.post(
+                "/customer-payments", json=self._payment_body(date="2026-01-15")
+            )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
+
+    def test_update_date_into_locked_period_returns_409(self):
+        """Nor moved into one."""
+        payment = self._create_payment(pay_date=date(2026, 2, 10))
+        self.test_company.sudo().write({"fiscalyear_lock_date": date(2026, 1, 31)})
+        with self._create_test_client(raise_server_exceptions=False) as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/customer-payments/{payment.id}", json={"date": "2026-01-15"}
+            )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/fiscal-lock-date")
+        self.assertEqual(payment.date, date(2026, 2, 10))

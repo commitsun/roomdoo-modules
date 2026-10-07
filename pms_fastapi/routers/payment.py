@@ -408,19 +408,41 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     # -- cancellation (POST /payments/{id}/cancel) --
 
-    def _ensure_not_locked(self, payments):
-        """A payment whose date falls within a locked fiscal period cannot be
-        cancelled: resetting it to draft would modify a locked entry. The
-        cancellation runs as superuser, so the effective lock date is the one
-        Odoo will enforce on the draft transition."""
+    def _get_payment_lock_date(self, company):
+        """Last date of the period closed to payments: nothing can be
+        registered, cancelled or moved on or before it. The cancellation runs as
+        superuser, so by default it is the lock date Odoo enforces on the draft
+        transition, which for the superuser is only the fiscal year close."""
+        return company._get_user_fiscal_lock_date()
+
+    def _ensure_date_not_locked(self, company, payment_date):
+        """A payment can neither be registered nor moved into a locked
+        period."""
+        lock_date = self._get_payment_lock_date(company)
+        if payment_date and payment_date <= lock_date:
+            self._problem(
+                409,
+                "/errors/fiscal-lock-date",
+                _("Fiscal lock date"),
+                _(
+                    "The date falls within a period locked up to %s. Use a "
+                    "later date."
+                )
+                % lock_date,
+            )
+
+    def _ensure_not_locked(self, payments, detail=None):
+        """A payment whose date falls within a locked period cannot be
+        cancelled: resetting it to draft would modify a locked entry."""
         for payment in payments:
-            lock_date = payment.company_id._get_user_fiscal_lock_date()
+            lock_date = self._get_payment_lock_date(payment.company_id)
             if payment.date and payment.date <= lock_date:
                 self._problem(
                     409,
                     "/errors/fiscal-lock-date",
                     _("Fiscal lock date"),
-                    _(
+                    detail
+                    or _(
                         "The payment date falls within a locked fiscal period "
                         "and cannot be cancelled."
                     ),
@@ -504,6 +526,7 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         ):
             vals["amount"] = payload.amount
         if payload.date is not None and payload.date != payment.date:
+            self._ensure_date_not_locked(payment.company_id, payload.date)
             vals["date"] = payload.date
         return vals
 

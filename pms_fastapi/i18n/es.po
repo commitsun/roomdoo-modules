@@ -1558,3 +1558,19 @@ msgid ""
 "This invoice has already been rectified, so its payments cannot be removed."
 msgstr ""
 "Esta factura ya está rectificada: no se le pueden quitar los cobros."
+
+#. module: pms_fastapi
+#: code:addons/pms_fastapi/routers/payment.py:0
+#, python-format
+msgid "The date falls within a period locked up to %s. Use a later date."
+msgstr "La fecha cae en un periodo bloqueado hasta el %s. Usa una fecha posterior."
+
+#. module: pms_fastapi
+#: code:addons/pms_fastapi/routers/internal_transfer.py:0
+#, python-format
+msgid ""
+"The transfer date falls within a locked period, so it cannot be "
+"modified."
+msgstr ""
+"La fecha de la transferencia cae en un periodo bloqueado, así que no se "
+"puede modificar."

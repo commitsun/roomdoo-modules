@@ -124,6 +124,7 @@ class PmsApiCustomerPaymentRouterHelper(models.AbstractModel):
                 line = self._resolve_directed_payment_method_line(
                     payload.paymentMethodId, "inbound"
                 )
+                self._ensure_date_not_locked(line.journal_id.company_id, payload.date)
                 partner = (
                     self._resolve_partner(payload.partnerId)
                     if payload.partnerId
@@ -267,7 +268,7 @@ class PmsApiCustomerPaymentRouterHelper(models.AbstractModel):
         """The refund posts (and, when applicable, reconciles) an entry dated
         `refund_date`; a date inside a locked fiscal period is rejected, same
         rule as cancelling a payment."""
-        lock_date = company._get_user_fiscal_lock_date()
+        lock_date = self._get_payment_lock_date(company)
         if refund_date and refund_date <= lock_date:
             self._problem(
                 409,
