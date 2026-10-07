@@ -130,3 +130,71 @@ class TestPaymentLockDate(CommonTestPmsApiPayment):
         self._assert_locked(response)
         self.assertEqual(transfer.amount, 100.0)
         self.assertEqual(transfer.state, "posted")
+
+    # -- payments of a locked period ------------------------------------
+    def test_the_amount_of_a_locked_payment_is_corrected_with_a_new_payment(self):
+        payment = self._create_payment(pay_date=CLOSED)
+        self._close_month()
+        response = self._request(
+            "patch", f"/customer-payments/{payment.id}", {"amount": 130.0}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(payment.amount, 100.0)
+        self.assertEqual(payment.state, "posted")
+        self.assertEqual(payment.amendment_ids.amount, 30.0)
+        self.assertEqual(payment.amendment_ids.payment_type, "inbound")
+
+    def _settled_payment(self, pay_date, invoice_date=None):
+        folio = self._confirmed_folio()
+        invoice = self._invoice_for_folio(folio, post=False)
+        if invoice_date:
+            invoice.invoice_date = invoice_date
+        invoice.action_post()
+        payment = self._create_payment(
+            amount=invoice.amount_total, partner=invoice.partner_id, pay_date=pay_date
+        )
+        payment.folio_ids = [Command.link(folio.id)]
+        (invoice.line_ids + payment.move_id.line_ids).filtered(
+            lambda line: line.account_id.account_type == "asset_receivable"
+            and not line.reconciled
+        ).reconcile()
+        self.assertIn(invoice, payment.reconciled_invoice_ids, "fixture not settled")
+        return payment, invoice
+
+    def test_the_customer_of_a_locked_payment_settling_an_invoice_is_kept(self):
+        payment, invoice = self._settled_payment(CLOSED)
+        self._close_month()
+        response = self._request(
+            "patch",
+            f"/customer-payments/{payment.id}",
+            {"partnerId": self.supplier.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/locked-payment-partner")
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+
+    def test_the_date_of_a_locked_payment_cannot_change(self):
+        payment = self._create_payment(pay_date=CLOSED)
+        self._close_month()
+        response = self._request(
+            "patch", f"/customer-payments/{payment.id}", {"date": OPEN.isoformat()}
+        )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/locked-payment-date")
+        self.assertEqual(payment.date, CLOSED)
+
+    def test_a_payment_settling_an_invoice_of_a_closed_month_cannot_be_cancelled(self):
+        # The invoice belongs to the closed month, the payment does not.
+        payment, invoice = self._settled_payment(OPEN, invoice_date=CLOSED)
+        self._close_month()
+        response = self._request("post", f"/payments/{payment.id}/cancel")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(payment.state, "posted")
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+
+    def test_the_bypass_group_keeps_the_core_lock_date(self):
+        self._close_month()
+        helper = self.env["pms_api_payment.payment_router.helper"].with_context(
+            bypass_reconcile_lock_date=True
+        )
+        self.assertNotEqual(helper._get_payment_lock_date(self.test_company), LOCK)

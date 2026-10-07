@@ -19,11 +19,23 @@ releases are written down on it, and the replacement takes those same payments
 over when it is validated, instead of whatever the folio autoreconciliation
 would match.
 
-The payments API posts as the superuser, for whom the core only applies the
-fiscal year close. This module makes it apply the company's monthly close as
-well (``res.company._get_reconcile_lock_date()``): no payment, refund or
-internal transfer can be registered or moved into a closed month, nor cancelled
-there, and an internal transfer of a closed month cannot be edited.
+The core only applies the fiscal year close to advisers, who are much of the
+staff registering payments. This module makes the payments API apply the
+company's monthly close to everyone but the members of the bypass group
+(``res.company._get_reconcile_lock_date()``): no payment, refund or internal
+transfer can be registered or moved into a closed month, nor cancelled there,
+and an internal transfer of a closed month cannot be edited.
+
+A payment of a closed period -- its own date, or that of something it settles
+-- is never reset to draft either (``account_reconcile_lock_date``'s
+``_amend_locked_payment``). Its reference is written in place; a change of
+amount is registered as a payment or a refund for the difference, dated today;
+its customer cannot change when it settles an invoice (409, the invoice is what
+has to change), and moves with a transfer entry otherwise; its date cannot
+change, except for a payment of an open month locked only by what it settles,
+moved in place to another open date. Cancelling it answers 409: the way out is
+a refund. In an open period, an edited payment is reconciled again with the
+invoices it settled.
 
 Odoo installs it by itself when the second of ``pms_fastapi`` and
 ``account_reconcile_lock_date`` is installed. On a database that already has

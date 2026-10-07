@@ -55,3 +55,15 @@ msgid ""
 msgstr ""
 "Apuntes de cobro que saldaban esta factura hasta que se rectificó por la "
 "vía estándar. La factura que la sustituye se los queda al validarse."
+
+#. module: pms_fastapi_reconcile_lock_date
+#: code:addons/pms_fastapi_reconcile_lock_date/routers/payment.py:0
+#, python-format
+msgid "Payment %s settles a document of a closed period, so it cannot be cancelled. Register a refund instead."
+msgstr "El cobro %s salda un documento de un periodo cerrado, así que no se puede anular. Registra una devolución."
+
+#. module: pms_fastapi_reconcile_lock_date
+#: code:addons/pms_fastapi_reconcile_lock_date/routers/payment.py:0
+#, python-format
+msgid "Payment of a closed period"
+msgstr "Cobro de un periodo cerrado"
