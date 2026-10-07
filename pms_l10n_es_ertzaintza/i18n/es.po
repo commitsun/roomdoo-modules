@@ -1,0 +1,893 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_l10n_es_ertzaintza
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-15 20:39+0000\n"
+"PO-Revision-Date: 2026-09-15 20:39+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "%s does not report to the Ertzaintza."
+msgstr "%s no comunica a la Ertzaintza."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: neither a phone number nor an email are known."
+msgstr "%s: no consta ni teléfono ni correo electrónico."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: neither the municipality code nor its name are known."
+msgstr "%s: no consta el código ni el nombre del municipio."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the address is missing."
+msgstr "%s: falta la dirección."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the birth date is missing."
+msgstr "%s: falta la fecha de nacimiento."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the country of residence is missing."
+msgstr "%s: falta el país de residencia."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the first name is missing."
+msgstr "%s: falta el nombre."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the holder name is missing."
+msgstr "%s: falta el nombre del titular."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the identity document is mandatory for adults."
+msgstr "%s: el documento de identidad es obligatorio en mayores de edad."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the nationality is missing."
+msgstr "%s: falta la nacionalidad."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the postal code is missing."
+msgstr "%s: falta el código postal."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the second surname is mandatory for Spanish guests."
+msgstr "%s: el segundo apellido es obligatorio para huéspedes de nacionalidad española."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the support number of the %s is missing."
+msgstr "%s: falta el número de soporte del %s."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "%s: the surname is missing."
+msgstr "%s: falta el primer apellido."
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "480354"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "A %s communication cannot be cancelled."
+msgstr "Una comunicación en estado %s no se puede cancelar."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "A %s communication cannot be marked as sent."
+msgstr "Una comunicación en estado %s no se puede marcar como enviada."
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "A12345678"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__cancelled
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__cancelled
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__cancelled
+msgid "Cancelled"
+msgstr "Cancelada"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_name
+msgid "Certificate in use"
+msgstr "Certificado en uso"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_id
+msgid ""
+"Certificate of the establishment owner used to sign the requests. Leave "
+"empty to use the active AEAT certificate of the company."
+msgstr "Certificado del titular del establecimiento con el que se firman las peticiones. Si se deja vacío se usa el certificado AEAT activo de la compañía."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_expiry
+msgid "Certificate valid until"
+msgstr "Certificado válido hasta"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid ""
+"Code of the establishment given by the institution. For the Ertzaintza it is"
+" the code it assigned when the establishment was registered, sent as "
+"codigoEstablecimiento."
+msgstr "Código de establecimiento facilitado por la institución. En la Ertzaintza es el que asignó al dar de alta el establecimiento, que se envía como codigoEstablecimiento."
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid ""
+"Code of the lessor given by the institution. For the Ertzaintza it is the "
+"tax identifier (CIF) of the owner of the establishment, sent as "
+"codigoArrendador."
+msgstr "Código de arrendador facilitado por la institución. En la Ertzaintza es el CIF del titular del establecimiento, que se envía como codigoArrendador."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__communication_time
+msgid "Communication Time"
+msgstr "Fecha de envío"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__contract_reference
+msgid "Contract Reference"
+msgstr "Referencia del contrato"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Creation date"
+msgstr "Fecha de creación"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_action_download_xml
+msgid "Download Ertzaintza XML"
+msgstr "Descargar XML de la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Download XML"
+msgstr "Descargar XML"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__entity
+msgid "Entity"
+msgstr "Tipo de comunicación"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__error_create
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__error_create
+msgid "Error creating"
+msgstr "Error al crear"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__error_sending
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__error_sending
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__error_sending
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Error sending"
+msgstr "Error de envío"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__errors
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Errors"
+msgstr "Errores"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_pms_reservation_form_ertzaintza
+msgid "Ertzaintza"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "Ertzaintza %s communication marked as sent manually."
+msgstr "Comunicación %s de la Ertzaintza marcada como enviada manualmente."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_property__institution__ertzaintza
+msgid "Ertzaintza (A19 Registro Hotelero)"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model,name:pms_l10n_es_ertzaintza.model_pms_ertzaintza_communication
+msgid "Ertzaintza A19 Communication"
+msgstr "Comunicación A19 de la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.autosend_incomplete_traveller_report_com_ir_actions_server
+#: model:ir.cron,cron_name:pms_l10n_es_ertzaintza.autosend_incomplete_traveller_report_com
+msgid "Ertzaintza Automatic Sending Incomplete Traveller Reports"
+msgstr "Ertzaintza: envío automático de partes de viajeros incompletos"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.autosend_pending_reservation_com_ir_actions_server
+#: model:ir.cron,cron_name:pms_l10n_es_ertzaintza.autosend_pending_reservation_com
+msgid "Ertzaintza Automatic Sending Pending Reservation Communications"
+msgstr "Ertzaintza: envío automático de comunicaciones de reserva pendientes"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.autosend_pending_traveller_report_com_ir_actions_server
+#: model:ir.cron,cron_name:pms_l10n_es_ertzaintza.autosend_pending_traveller_report_com
+msgid "Ertzaintza Automatic Sending Pending Traveller Reports"
+msgstr "Ertzaintza: envío automático de partes de viajeros pendientes"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_id
+msgid "Ertzaintza Certificate"
+msgstr "Certificado Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.act_window,name:pms_l10n_es_ertzaintza.open_pms_ertzaintza_communication_form_tree
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_reservation__ertzaintza_communication_ids
+#: model:ir.ui.menu,name:pms_l10n_es_ertzaintza.menu_open_pms_ertzaintza_communication_form_tree
+msgid "Ertzaintza Communications"
+msgstr "Comunicaciones Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_blocking_reasons
+msgid "Ertzaintza Configuration Warnings"
+msgstr "Avisos de configuración de Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_environment
+msgid "Ertzaintza Environment"
+msgstr "Entorno de la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_reservation__ertzaintza_status_reservation
+msgid "Ertzaintza Status"
+msgstr "Estado en Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_reservation__ertzaintza_status_traveller_report
+msgid "Ertzaintza Status traveller"
+msgstr "Estado del parte en Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Ertzaintza communication"
+msgstr "Comunicación Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Ertzaintza communications"
+msgstr "Comunicaciones Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "Ertzaintza connection"
+msgstr "Conexión con la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "Establishment code"
+msgstr "Código de establecimiento"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "Every communication must belong to the same property."
+msgstr "Todas las comunicaciones deben ser de la misma propiedad."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_action_force_send
+msgid "Force Send Ertzaintza Communication"
+msgstr "Forzar envío de la comunicación Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Force send"
+msgstr "Forzar envío"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Group By"
+msgstr "Agrupar por"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "Guest of %s"
+msgstr "Huésped de %s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_client.py:0
+#, python-format
+msgid "HTTP %(status)s: the answer is not XML: %(body)s"
+msgstr "HTTP %(status)s: la respuesta no es XML: %(body)s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_client.py:0
+#, python-format
+msgid "HTTP %s"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_certificate_name
+msgid ""
+"Holder of the certificate the requests are being signed with, whether it is "
+"the one selected here or the active certificate of the company."
+msgstr "Titular del certificado con el que se firman las peticiones, sea el seleccionado aquí o el certificado activo de la compañía."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__id
+msgid "ID"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__incomplete
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__incomplete
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__incomplete
+msgid "Incomplete guest data"
+msgstr "Datos de huésped incompletos"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__institution
+msgid "Institution"
+msgstr "Institución"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__institution
+msgid "Institution to send daily guest data."
+msgstr "Institución a la que se comunican los datos diarios de huéspedes."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "Lessor code"
+msgstr "Código de arrendador"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__manual_export_date
+msgid "Manual Export Date"
+msgstr "Fecha de exportación manual"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__manually_sent
+msgid "Manually Sent"
+msgstr "Enviada manualmente"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.actions.server,name:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_action_mark_manually_sent
+msgid "Mark Ertzaintza Communication as Sent Manually"
+msgstr "Marcar la comunicación Ertzaintza como enviada manualmente"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "Mark as sent manually"
+msgstr "Marcar como enviada manualmente"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__not_applicable
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__not_applicable
+msgid "Not applicable"
+msgstr "No aplica"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid ""
+"Not every guest had checked in on time. Reported to the Ertzaintza with the "
+"guests on board:<br/>%s"
+msgstr "No todos los huéspedes hicieron el check-in a tiempo. Comunicado a la Ertzaintza con los huéspedes presentes:<br/>%s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "Not every guest has checked in yet."
+msgstr "Todavía no han hecho el check-in todos los huéspedes."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_verify_tls
+msgid ""
+"Only untick in pre-production: its chain is an internal CA. Production "
+"always verifies."
+msgstr "Desmarcar solo en preproducción: su cadena es una CA interna. En producción siempre se verifica."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model,name:pms_l10n_es_ertzaintza.model_pms_checkin_partner
+msgid "Partner Checkins"
+msgstr "Registros de entrada"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Pending"
+msgstr "Pendientes"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__to_send
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__to_send
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__to_send
+msgid "Pending notification"
+msgstr "Pendiente de comunicar"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_property__ertzaintza_environment__pre
+msgid "Pre-production (tests)"
+msgstr "Preproducción (pruebas)"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__processed
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__processed
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__processed
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Processed"
+msgstr "Procesada"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__processed_time
+msgid "Processed Time"
+msgstr "Fecha de procesamiento"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_property__ertzaintza_environment__prod
+msgid "Production"
+msgstr "Producción"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model,name:pms_l10n_es_ertzaintza.model_pms_property
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__pms_property_id
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Property"
+msgstr "Propiedad"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model,name:pms_l10n_es_ertzaintza.model_pms_room
+msgid "Property Room"
+msgstr "Habitación"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__pms_property_id
+msgid "Property to which the reservation belongs"
+msgstr "Propiedad a la que pertenece la reserva"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_ready
+msgid "Ready for the Ertzaintza A19 service"
+msgstr "Preparada para el servicio A19 de la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Rejected"
+msgstr "Rechazadas"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__state__rejected
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_reservation__rejected
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_reservation__ertzaintza_status_traveller_report__rejected
+msgid "Rejected by the Ertzaintza"
+msgstr "Rechazada por la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__checkin_partner_ids
+msgid "Reported guests"
+msgstr "Huéspedes comunicados"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_reservation__is_ertzaintza
+msgid "Reports to the Ertzaintza"
+msgstr "Comunica a la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__request_uuid
+msgid "Request UUID"
+msgstr "UUID de la petición"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model,name:pms_l10n_es_ertzaintza.model_pms_reservation
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__reservation_id
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__entity__rh
+msgid "Reservation"
+msgstr "Reserva"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "Reservation %s"
+msgstr "Reserva %s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "Reservation %s: there is no guest to report."
+msgstr "Reserva %s: no hay ningún huésped que comunicar."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__reservation_id
+msgid "Reservation reported in this communication"
+msgstr "Reserva comunicada en esta comunicación"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__result_code
+msgid "Result Code"
+msgstr "Código de resultado"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__result_description
+msgid "Result Description"
+msgstr "Descripción del resultado"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Results"
+msgstr "Resultados"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_room.py:0
+#, python-format
+msgid ""
+"Rooms of an Ertzaintza property cannot have an independent SES account."
+msgstr "Las habitaciones de una propiedad de la Ertzaintza no pueden tener cuenta SES independiente."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__communication_soap
+msgid "SOAP Com."
+msgstr "SOAP enviado"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__response_soap
+msgid "SOAP Resp."
+msgstr "SOAP recibido"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "SOAP request"
+msgstr "Petición SOAP"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "SOAP response"
+msgstr "Respuesta SOAP"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid ""
+"Select communications of a single property and a single communication type."
+msgstr "Seleccione comunicaciones de una sola propiedad y de un solo tipo."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__send_attempt_count
+msgid "Send Attempt Count"
+msgstr "Intentos de envío"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__sending_result
+msgid "Sending Result"
+msgstr "Resultado del envío"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__state
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "State"
+msgstr "Estado"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.view_property_form_pms_l10n_es_ertzaintza
+msgid "Test Ertzaintza connection"
+msgstr "Probar conexión con la Ertzaintza"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "The Ertzaintza accepts at most %s communications per file."
+msgstr "La Ertzaintza admite como máximo %s comunicaciones por fichero."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "The Ertzaintza accepts at most %s communications per request."
+msgstr "La Ertzaintza admite como máximo %s comunicaciones por petición."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_client.py:0
+#, python-format
+msgid "The Ertzaintza certificate of %(property)s cannot be read: %(error)s"
+msgstr "No se puede leer el certificado Ertzaintza de %(property)s: %(error)s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid ""
+"The Ertzaintza did not accept the certificate or the lessor code of the establishment. This has to be sorted out with them, retrying will not help:\n"
+"%s"
+msgstr "La Ertzaintza no ha aceptado el certificado o el código de arrendador del establecimiento. Hay que resolverlo con ellos, reintentar no sirve:\n%s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "The Ertzaintza rejected the %(entity)s communication:<br/>%(errors)s"
+msgstr "La Ertzaintza ha rechazado la comunicación %(entity)s:<br/>%(errors)s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "The Ertzaintza service could not be reached: %s"
+msgstr "No se ha podido contactar con el servicio de la Ertzaintza: %s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "The Ertzaintza service is not available."
+msgstr "El servicio de la Ertzaintza no está disponible."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid ""
+"The certificate and the lessor code are accepted by the Ertzaintza (%s "
+"environment)."
+msgstr "La Ertzaintza acepta el certificado y el código de arrendador (entorno %s)."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "The establishment code '%s' is longer than %s characters."
+msgstr "El código de establecimiento '%s' supera los %s caracteres."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "The establishment code is not established."
+msgstr "No se ha establecido el código de establecimiento."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "The generated document is not valid XML: %s"
+msgstr "El documento generado no es XML válido: %s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "The lessor code (CIF of the owner) '%s' is longer than %s characters."
+msgstr "El código de arrendador (CIF del titular) '%s' supera los %s caracteres."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid "The lessor code (CIF of the owner) is not established."
+msgstr "No se ha establecido el código de arrendador (CIF del titular)."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "The property %s has no establishment code for the Ertzaintza."
+msgstr "La propiedad %s no tiene código de establecimiento de la Ertzaintza."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_reservation.py:0
+#, python-format
+msgid ""
+"The reservation changed after being reported to the Ertzaintza. The A19 "
+"service has no modification operation: the change was not notified."
+msgstr "La reserva ha cambiado después de comunicarla a la Ertzaintza. El servicio A19 no tiene operación de modificación: el cambio no se ha comunicado."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_reservation.py:0
+#, python-format
+msgid ""
+"The reservation was cancelled after being reported to the Ertzaintza. The "
+"A19 service has no cancellation operation: notify the Ertzaintza manually if"
+" needed."
+msgstr "La reserva se ha cancelado después de comunicarla a la Ertzaintza. El servicio A19 no tiene operación de anulación: avise a la Ertzaintza manualmente si procede."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid ""
+"The selected Ertzaintza certificate has no keys. Use 'Obtain keys' on it."
+msgstr "El certificado Ertzaintza seleccionado no tiene claves. Use 'Obtener claves' sobre él."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_ertzaintza_communication.py:0
+#, python-format
+msgid "There is nothing to export."
+msgstr "No hay nada que exportar."
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "There is nothing to report."
+msgstr "No hay nada que comunicar."
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Times"
+msgstr "Fechas"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields.selection,name:pms_l10n_es_ertzaintza.selection__pms_ertzaintza_communication__entity__pv
+msgid "Traveller report"
+msgstr "Parte de viajeros"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Type"
+msgstr "Tipo"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/pms_property.py:0
+#, python-format
+msgid ""
+"Unexpected answer from the Ertzaintza:\n"
+"%s"
+msgstr "Respuesta inesperada de la Ertzaintza:\n%s"
+
+#. module: pms_l10n_es_ertzaintza
+#. odoo-python
+#: code:addons/pms_l10n_es_ertzaintza/models/ertzaintza_xml_builder.py:0
+#, python-format
+msgid "Unknown communication type %s."
+msgstr "Tipo de comunicación desconocido: %s."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__contract_reference
+msgid ""
+"Value sent as contrato/referencia. The Ertzaintza rejects a second "
+"communication with the same reference (CTO01), so it is the key that makes a"
+" re-send idempotent."
+msgstr "Valor enviado como contrato/referencia. La Ertzaintza rechaza una segunda comunicación con la misma referencia (CTO01), por lo que es la clave que hace idempotente un reenvío."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_verify_tls
+msgid "Verify TLS certificate"
+msgstr "Verificar el certificado TLS"
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_search
+msgid "Waiting for check-ins"
+msgstr "Esperando check-ins"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_blocking_reasons
+msgid "What is missing before the Ertzaintza A19 service can be used."
+msgstr "Qué falta para poder usar el servicio A19 de la Ertzaintza."
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,help:pms_l10n_es_ertzaintza.field_pms_property__ertzaintza_ready
+msgid ""
+"Whether the property has everything the Ertzaintza A19 service needs. When "
+"it has not, the missing data is listed in the Ertzaintza configuration "
+"warnings."
+msgstr "Indica si la propiedad tiene todo lo que necesita el servicio A19 de la Ertzaintza. Si no, los datos que faltan se listan en los avisos de configuración."
+
+#. module: pms_l10n_es_ertzaintza
+#: model_terms:ir.ui.view,arch_db:pms_l10n_es_ertzaintza.pms_ertzaintza_communication_view_form
+msgid "XML"
+msgstr ""
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__communication_xml
+msgid "XML Com."
+msgstr "XML enviado"
+
+#. module: pms_l10n_es_ertzaintza
+#: model:ir.model.fields,field_description:pms_l10n_es_ertzaintza.field_pms_ertzaintza_communication__xml_filename
+msgid "Xml Filename"
+msgstr "Nombre del fichero XML"
