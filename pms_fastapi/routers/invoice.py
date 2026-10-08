@@ -804,22 +804,61 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 lines=qty_errors,
             )
 
+    @staticmethod
+    def _edit_billed_elsewhere(sale_line, current_invoice):
+        """What the live documents other than ``current_invoice`` bill of
+        ``sale_line``, with the moves that do: invoices add, credit notes take
+        back, so an invoice already rectified bills nothing any more. In
+        quantity, except for a down payment line, in amount: its own down
+        payment invoice adds it and every deduction takes it back."""
+        total = 0.0
+        moves = current_invoice.browse()
+        for line in sale_line.invoice_lines:
+            move = line.move_id
+            if move.state == "cancel" or move == current_invoice:
+                continue
+            sign = -1 if move.move_type in ("out_refund", "in_refund") else 1
+            value = line.price_subtotal if sale_line.is_downpayment else line.quantity
+            total += sign * value
+            moves |= move
+        return total, moves
+
     def _edit_check_composition(self, sale_lines, downpayment_lines, current_invoice):
         composition_errors = []
-        current_invoice_id = current_invoice.id if current_invoice else None
+        current_invoice = current_invoice or self.env["account.move"]
         for sl in sale_lines | downpayment_lines:
-            other_moves = sl.invoice_lines.move_id.filtered(
-                lambda m: m.state != "cancel" and m.id != current_invoice_id
-            )
-            if other_moves:
-                composition_errors.append(
-                    {
-                        "type": "/errors/folio-line-already-invoiced",
-                        "title": _("Folio line already invoiced"),
-                        "detail": _("Folio line %s is already included in invoice %s.")
-                        % (sl.id, other_moves[0].id),
-                    }
+            billed, moves = self._edit_billed_elsewhere(sl, current_invoice)
+            if sl.is_downpayment:
+                # Its own invoice bills it: what rules it out is having nothing
+                # left to deduct, deducted by another invoice or rectified.
+                currency = sl.currency_id or sl.company_id.currency_id
+                if currency.compare_amounts(billed, 0.0) > 0:
+                    continue
+                detail = (
+                    _(
+                        "The down payment of folio line %s has already been "
+                        "deducted or rectified."
+                    )
+                    % sl.id
                 )
+            else:
+                rounding = sl.product_uom.rounding or 0.01
+                if tools.float_compare(billed, 0.0, precision_rounding=rounding) <= 0:
+                    continue
+                invoices = moves.filtered(
+                    lambda m: m.move_type in ("out_invoice", "in_invoice")
+                )
+                detail = _("Folio line %s is already included in invoice %s.") % (
+                    sl.id,
+                    (invoices or moves)[:1].id,
+                )
+            composition_errors.append(
+                {
+                    "type": "/errors/folio-line-already-invoiced",
+                    "title": _("Folio line already invoiced"),
+                    "detail": detail,
+                }
+            )
         if composition_errors:
             self._raise_problem(
                 422,

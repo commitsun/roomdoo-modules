@@ -1574,3 +1574,10 @@ msgid ""
 msgstr ""
 "La fecha de la transferencia cae en un periodo bloqueado, así que no se "
 "puede modificar."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "The down payment of folio line %s has already been deducted or rectified."
+msgstr "El anticipo de la línea de folio %s ya se ha descontado o rectificado."

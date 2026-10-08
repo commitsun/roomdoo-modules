@@ -1569,3 +1569,10 @@ msgstr ""
 msgid ""
 "This invoice has already been rectified, so its payments cannot be removed."
 msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid "The down payment of folio line %s has already been deducted or rectified."
+msgstr ""

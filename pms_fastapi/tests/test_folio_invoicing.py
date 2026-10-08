@@ -7,6 +7,7 @@ from odoo import Command, fields
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
+from odoo.addons.pms_fastapi.routers.invoice import _ApiProblem
 from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 
@@ -643,6 +644,85 @@ class TestFolioInvoicing(CommonTestPmsApi):
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/invoice-composition-invalid")
+
+    def test_edit_an_invoice_edited_before(self):
+        # The first invoice and its credit note bill the line no more: the
+        # replacement can be edited in turn.
+        folio = self._confirmed_folio()
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            invoice_id, line = self._create_draft_invoice(test_client, folio, qty=1)
+            test_client.post(f"/invoices/{invoice_id}/validate")
+            first = test_client.put(
+                f"/invoices/{invoice_id}?confirmRefund=true",
+                json=self._edit_payload(line, quantity=1),
+            )
+            self.assertEqual(first.status_code, status.HTTP_200_OK, first.text)
+            replacement_id = first.json()["id"]
+            if first.json()["state"] != "posted":
+                test_client.post(f"/invoices/{replacement_id}/validate")
+            second = test_client.put(
+                f"/invoices/{replacement_id}?confirmRefund=true",
+                json=self._edit_payload(line, quantity=1),
+            )
+        self.assertEqual(second.status_code, status.HTTP_200_OK, second.text)
+
+    def test_edit_a_final_invoice_that_deducts_a_down_payment(self):
+        # The down payment line is billed by its own down payment invoice: that
+        # does not keep the final invoice that deducts it from being edited.
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        downpayment = self._downpayment_invoice(folio)
+        downpayment.action_post()
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["downpaymentLines"] = [downpayment.id]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            created = self._post_invoice(test_client, payload)
+            self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.text)
+            invoice_id = created.json()["id"]
+            validate = test_client.post(f"/invoices/{invoice_id}/validate")
+            self.assertEqual(validate.status_code, status.HTTP_200_OK, validate.text)
+            edit = self._edit_payload(line, quantity=line.product_uom_qty)
+            edit["downpaymentLines"] = [downpayment.id]
+            response = test_client.put(
+                f"/invoices/{invoice_id}?confirmRefund=true", json=edit
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertNotEqual(response.json()["id"], invoice_id)
+
+    def test_a_down_payment_deducted_elsewhere_cannot_be_deducted_again(self):
+        folio = self._confirmed_folio()
+        downpayment = self._downpayment_invoice(folio)
+        downpayment.action_post()
+        dp_line = downpayment.invoice_line_ids.folio_line_ids
+        # Another live invoice deducts it: nothing is left to deduct.
+        self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": self.customer.id,
+                "folio_ids": [(6, 0, folio.ids)],
+                "invoice_line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": "Down payment deduction",
+                            "product_id": self.room_type.product_id.id,
+                            "quantity": -1,
+                            "price_unit": 50.0,
+                            "folio_line_ids": [(6, 0, dp_line.ids)],
+                        },
+                    )
+                ],
+            }
+        )
+        helper = self.env["pms_api_invoice.invoice_router.helper"]
+        with self.assertRaises(_ApiProblem) as raised:
+            helper._edit_check_composition(
+                self.env["folio.sale.line"], dp_line, self.env["account.move"]
+            )
+        self.assertEqual(raised.exception.response.status_code, 422)
 
     def test_edit_invoice_partner_fails_validation(self):
         folio = self._confirmed_folio()
