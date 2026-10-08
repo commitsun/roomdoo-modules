@@ -1541,6 +1541,31 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/internal_transfer.py:0
 #, python-format
 msgid ""
-"The transfer date falls within a locked period, so it cannot be "
-"modified."
+"The transfer date falls within a locked period, so it cannot be modified."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so cancelling it again would credit"
+" it twice."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so editing it again would credit it"
+" twice."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/invoice.py:0
+#, python-format
+msgid ""
+"This invoice has already been rectified, so its payments cannot be removed."
 msgstr ""
