@@ -370,3 +370,38 @@ msgstr ""
 #, python-format
 msgid "Transfer of down payment %s"
 msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_company__downpayment_transfer_journal_id
+#: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_config_settings__downpayment_transfer_journal_id
+msgid ""
+"Journal used for the entries that move a balance from one customer onto "
+"another: a down payment invoiced to the customer of the final invoice, or an"
+" invoice rectified and re-issued without breaking its reconciliations. "
+"Without it neither is done automatically."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"Nothing left to transfer: when the transfer ran, the down payments of this "
+"folio had already been rectified."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"Nothing transferred: this invoice was rectified before the transfer ran. The"
+" invoice that replaces it, if any, takes the down payments when it is "
+"posted."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(name)s was not transferred: %(company)s has no down payment transfer "
+"journal configured."
+msgstr ""
