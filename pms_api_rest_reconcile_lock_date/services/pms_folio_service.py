@@ -3,12 +3,28 @@ from datetime import datetime
 from odoo import _
 from odoo.exceptions import UserError
 
+from odoo.addons.base_rest import restapi
+from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
 
 class PmsFolioService(Component):
     _inherit = "pms.folio.service"
 
+    # Declared again: base_rest only routes the methods the final class
+    # decorates, so an override without it takes the endpoint down.
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:folio_id>/refund",
+                ],
+                "POST",
+            )
+        ],
+        input_param=Datamodel("pms.transaction.info", is_list=False),
+        auth="jwt_api_pms",
+    )
     def create_folio_refund(self, folio_id, pms_account_payment_info):
         """A refund cannot be dated within a closed period: the core would
         silently move it to the first open day."""

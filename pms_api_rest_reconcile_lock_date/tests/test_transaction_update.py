@@ -8,6 +8,7 @@ from unittest.mock import patch
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
+from odoo.addons.base_rest.tools import ROUTING_DECORATOR_ATTR
 from odoo.addons.pms_api_rest.tests.common_invoice import InvoiceServiceCase
 
 
@@ -37,6 +38,15 @@ class TestTransactionUpdate(InvoiceServiceCase):
         info = self.env.datamodels["pms.transaction.info"](**values)
         payment_id = self._service("transactions").update_transaction(payment.id, info)
         return self.env["account.payment"].browse(payment_id)
+
+    def test_the_refund_endpoint_keeps_its_route(self):
+        # Overriding a REST method without its decorator unregisters it.
+        service = self._service("folios")
+        routing = getattr(
+            type(service).create_folio_refund, ROUTING_DECORATOR_ATTR, None
+        )
+        self.assertTrue(routing)
+        self.assertIn("/<int:folio_id>/refund", str(routing))
 
     def test_in_an_open_period_the_payment_is_reconciled_again(self):
         invoice = self._posted_invoice()
