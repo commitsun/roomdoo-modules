@@ -1,4 +1,5 @@
 import re
+import smtplib
 from typing import Annotated
 
 from fastapi import Depends, Query
@@ -10,6 +11,7 @@ from odoo.osv import expression
 from odoo.tools.misc import get_lang
 
 from odoo.addons.account.models.account_move import AccountMove
+from odoo.addons.base.models.ir_mail_server import MailDeliveryException
 from odoo.addons.extendable_fastapi.schemas import PagedCollection
 from odoo.addons.fastapi.dependencies import (
     paging,
@@ -339,7 +341,12 @@ async def get_invoice_email_template(
     responses={
         204: {"description": "Invoice email accepted by the outgoing mail server."},
         404: {"description": "Invoice not found"},
-        422: {"description": "No recipients, invalid email or unknown contact"},
+        422: {
+            "description": (
+                "No recipients, invalid email, unknown contact or contact "
+                "without email"
+            )
+        },
         502: {"description": "Outgoing mail server rejected the message"},
     },
     response_class=Response,
@@ -1504,6 +1511,18 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 _("Some recipients could not be found."),
                 missingContactIds=sorted(missing),
             )
+        # Delivery silently skips a contact with no valid email.
+        without_email = partners.filtered(
+            lambda partner: not tools.email_normalize_all(partner.email)
+        )
+        if without_email:
+            self._raise_problem(
+                422,
+                "/errors/contact-without-email",
+                _("Contact without email"),
+                _("Some recipients have no valid email address."),
+                contactIdsWithoutEmail=sorted(without_email.ids),
+            )
         return partners
 
     def _resolve_free_emails(self, addresses):
@@ -1558,7 +1577,6 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                     "model": "account.move",
                     "res_id": invoice.id,
                     "message_type": "email",
-                    "subtype_id": self.env.ref("mail.mt_comment").id,
                     "recipient_ids": [Command.set(partners.ids)],
                     "email_to": ", ".join(free_emails) or False,
                     "attachment_ids": [Command.set(attachment_ids)],
@@ -1582,31 +1600,33 @@ class PmsApiInvoiceRouterHelper(models.AbstractModel):
                 media_type="application/problem+json",
             )
         try:
-            # Savepoint so a delivery failure rolls back the mail.mail and the
-            # generated attachments instead of leaving a failed send committed.
-            with self.env.cr.savepoint():
-                partners = self._resolve_email_contacts(payload.contactIds)
-                free_emails = self._resolve_free_emails(payload.emailAddresses)
-                if not partners and not free_emails:
-                    self._raise_problem(
-                        422,
-                        "/errors/no-recipients",
-                        _("No recipients"),
-                        _("At least one recipient is required."),
-                    )
-                mail = self._build_invoice_mail(invoice, payload, partners, free_emails)
-                try:
-                    mail.send(raise_exception=True)
-                except Exception:
-                    self._raise_problem(
-                        502,
-                        "/errors/email-delivery-failed",
-                        _("Email delivery failed"),
-                        _(
-                            "The outgoing mail server rejected the message or "
-                            "could not be reached."
-                        ),
-                    )
+            partners = self._resolve_email_contacts(payload.contactIds)
+            free_emails = self._resolve_free_emails(payload.emailAddresses)
+            if not partners and not free_emails:
+                self._raise_problem(
+                    422,
+                    "/errors/no-recipients",
+                    _("No recipients"),
+                    _("At least one recipient is required."),
+                )
+            mail = self._build_invoice_mail(invoice, payload, partners, free_emails)
+            try:
+                mail.send(raise_exception=True)
+            except (MailDeliveryException, smtplib.SMTPServerDisconnected) as error:
+                # An unreachable server raises before the mail is marked
+                # failed; left outgoing, the mail queue would send it later.
+                mail.write({"state": "exception", "failure_reason": str(error)})
+            # The mail is only marked sent once the server accepted it.
+            if mail.state != "sent":
+                self._raise_problem(
+                    502,
+                    "/errors/email-delivery-failed",
+                    _("Email delivery failed"),
+                    _(
+                        "The outgoing mail server rejected the message or "
+                        "could not be reached."
+                    ),
+                )
         except _ApiProblem as problem:
             return problem.response
         return Response(status_code=204)
