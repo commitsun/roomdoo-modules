@@ -1171,6 +1171,24 @@ class PmsReservationService(Component):
         pms_api_check_access(user=self.env.user, records=checkin_partner)
         checkin_partner.unlink()
 
+    def _get_residence_state_id(self, state_id, country_id):
+        """Drop a residence state that does not belong to the residence country.
+
+        Zip and document autocompletion may suggest a state of another country
+        (a foreign zip that also exists in Spain), which the app may not even
+        show. The country is what the user chose, so the state goes. Spanish
+        residents are left alone: their state is required (INE, SES) and visible.
+        """
+        if not state_id or not country_id:
+            return state_id
+        state = self.env["res.country.state"].browse(state_id)
+        if (
+            state.country_id.id == country_id
+            or country_id == self.env.ref("base.es").id
+        ):
+            return state_id
+        return False
+
     def mapping_checkin_partner_values(
         self, pms_checkin_partner_info, partner_id=False
     ):
@@ -1189,7 +1207,10 @@ class PmsReservationService(Component):
             "nationality_id": pms_checkin_partner_info.nationality,
             "zip": pms_checkin_partner_info.zip,
             "city": pms_checkin_partner_info.residenceCity,
-            "state_id": pms_checkin_partner_info.countryState,
+            "state_id": self._get_residence_state_id(
+                pms_checkin_partner_info.countryState,
+                pms_checkin_partner_info.countryId,
+            ),
             "country_id": pms_checkin_partner_info.countryId,
             "origin_input_data": pms_checkin_partner_info.originInputData,
         }
@@ -2227,15 +2248,27 @@ class PmsReservationService(Component):
         # nationality
         if pms_checkin_partner_info.nationality:
             checkin_partner_record.nationality_id = pms_checkin_partner_info.nationality
-        # residence info
-        if pms_checkin_partner_info.countryId:
-            checkin_partner_record.country_id = pms_checkin_partner_info.countryId
+        # residence info: country and state are written together, so a state
+        # sent or stored for another country cannot reject the save
+        if pms_checkin_partner_info.countryId or pms_checkin_partner_info.countryState:
+            country_id = (
+                pms_checkin_partner_info.countryId
+                or checkin_partner_record.country_id.id
+            )
+            checkin_partner_record.write(
+                {
+                    "country_id": country_id,
+                    "state_id": self._get_residence_state_id(
+                        pms_checkin_partner_info.countryState
+                        or checkin_partner_record.state_id.id,
+                        country_id,
+                    ),
+                }
+            )
         if pms_checkin_partner_info.zip:
             checkin_partner_record.zip = pms_checkin_partner_info.zip
         if pms_checkin_partner_info.residenceCity:
             checkin_partner_record.city = pms_checkin_partner_info.residenceCity
-        if pms_checkin_partner_info.countryState:
-            checkin_partner_record.state_id = pms_checkin_partner_info.countryState
         if pms_checkin_partner_info.residenceStreet:
             checkin_partner_record.street = pms_checkin_partner_info.residenceStreet
         # contact
