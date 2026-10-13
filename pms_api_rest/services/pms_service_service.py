@@ -81,8 +81,28 @@ class PmsServiceService(Component):
         if service_data.serviceLines:
             cmds_lines = []
             date_list = []
+            # For a non per-day service the frontend defaults the line date to the
+            # reservation checkout. When the unit count of an existing single-line
+            # non per-day service is edited, matching the incoming line by date would
+            # not find it (the line is dated on its consumption day, not checkout),
+            # so the consumption-dated line would be deleted and recreated on the
+            # checkout date. Keep the existing consumption date in that case and only
+            # update its values. Mirrors the on-board rule applied on creation
+            # (OCA/pms#418).
+            reservation = service.reservation_id
+            keep_consumption_date = (
+                service.product_id
+                and not service.product_id.per_day
+                and len(service.service_line_ids) == 1
+                and len(service_data.serviceLines) == 1
+                and reservation
+                and reservation.checkout
+                and service.service_line_ids.date != reservation.checkout
+            )
             for line_data in service_data.serviceLines:
                 date_line = datetime.strptime(line_data.date, "%Y-%m-%d").date()
+                if keep_consumption_date and date_line == reservation.checkout:
+                    date_line = service.service_line_ids.date
                 date_list.append(date_line)
                 service_line = service.service_line_ids.filtered(
                     lambda l: l.date == date_line
@@ -94,7 +114,7 @@ class PmsServiceService(Component):
                 # 2- create new lines
                 else:
                     line_vals = self._get_service_lines_mapped(line_data)
-                    line_vals["date"] = line_data.date
+                    line_vals["date"] = date_line.isoformat()
                     cmds_lines.append((0, False, line_vals))
             # 3- delete old lines:
             for line in service.service_line_ids.filtered(

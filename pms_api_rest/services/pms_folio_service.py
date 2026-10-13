@@ -296,6 +296,11 @@ class PmsFolioService(Component):
             target = folio_search_param.filter
             if "@" in target:
                 parts.append([("email", "ilike", target)])
+            elif len(target.replace(" ", "")) < 3:
+                # Free-text searches of 1-2 chars explode into unanchored
+                # unaccent ILIKE scans that have taken down the production
+                # database; return no results instead (hot-patch 2026-06-15).
+                parts.append(expression.FALSE_DOMAIN)
             else:
                 spaced = "%".join(target.split(" "))
                 subdomains = [
@@ -2849,6 +2854,13 @@ class PmsFolioService(Component):
         )
         if not room_type_ids or not api_clients:
             return False
+        # Flush pending recomputes (pms.availability.real_avail and the related
+        # pms.availability.plan.rule.plan_avail) before pushing. Without this,
+        # a folio POST/PUT can export stale avail values from the same
+        # transaction that just created/modified reservation lines, and the
+        # bad value gets persisted in the stored compute field — observed
+        # cause of the Galería Coruña overbooking (ADG0006249, 25/02/2026).
+        self.env.flush_all()
         for room_type_id in room_type_ids:
             pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
             pms_api_check_access(user=self.env.user, records=pms_property)
@@ -2907,6 +2919,32 @@ class PmsFolioService(Component):
         wizard_payment_link._compute_link()
         return wizard_payment_link.link
 
+    def _guest_label_use_room(self):
+        """Whether guest-facing labels must name the room instead of its type.
+
+        Per-database switch: this filesystem is shared by every tenant, so the
+        behaviour cannot be keyed on the database name. Absent row == off.
+        """
+        param = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("roomdoo.guest_label_use_room")
+        )
+        return param in ("1", "True", "true", "yes", "on")
+
+    def _guest_room_label(self, reservation):
+        """Room label for the guest: the assigned room, not the type sold.
+
+        Read off the nights, not from reservation.rooms: preferred_room_id is
+        only refreshed when every night of the stay is present
+        (pms.reservation._compute_splitted), so it still holds the previous
+        room while a modification is half applied.
+        """
+        if not self._guest_label_use_room():
+            return reservation.room_type_id.name
+        rooms = ", ".join(reservation.reservation_line_ids.mapped("room_id.name"))
+        return rooms or reservation.room_type_id.name
+
     def _get_folio_reservations(self, folio_record):
         reservations = []
         for reservation in sorted(
@@ -2926,7 +2964,7 @@ class PmsFolioService(Component):
             reservations.append(
                 self.env.datamodels["pms.reservation.public.info"](
                     id=reservation.id,
-                    roomTypeName=reservation.room_type_id.name,
+                    roomTypeName=self._guest_room_label(reservation),
                     checkinNamesCompleted=reservation_checkin_partner_names,
                     accessToken=reservation_access_token,
                     shareUrl=precheckin_share_url(
@@ -2957,9 +2995,14 @@ class PmsFolioService(Component):
 
     def _build_room_types_description(self, folio_record):
         room_type_counts = {}
-        for name in folio_record.reservation_ids.filtered(
+        reservations = folio_record.reservation_ids.filtered(
             lambda x: x.state != "cancel"
-        ).mapped("room_type_id.name"):
+        )
+        if self._guest_label_use_room():
+            names = [self._guest_room_label(r) for r in reservations]
+        else:
+            names = reservations.mapped("room_type_id.name")
+        for name in names:
             room_type_counts[name] = room_type_counts.get(name, 0) + 1
 
         return ", ".join(f"{count} {name}" for name, count in room_type_counts.items())

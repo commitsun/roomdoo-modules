@@ -10,3 +10,4 @@ from . import test_various_partner_protection
 from . import test_current_user_service
 from . import test_error_cors
 from . import test_login_second_factor
+from . import test_portal_write_guard

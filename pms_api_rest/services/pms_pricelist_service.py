@@ -8,7 +8,10 @@ from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
-from ..pms_api_rest_utils import pms_api_check_access
+from ..pms_api_rest_utils import (
+    pms_api_check_access,
+    pms_api_check_internal_user,
+)
 
 
 class PmsPricelistService(Component):
@@ -216,6 +219,7 @@ class PmsPricelistService(Component):
         pricelists, properties and matched existing items — same
         records the loop used to check, just once.
         """
+        pms_api_check_internal_user(self.env.user)
         items_info = list(pms_pricelist_item_info.pricelistItems)
         if not items_info:
             return
