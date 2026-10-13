@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import HTTPException, Request
 
 from odoo import models
@@ -44,12 +46,29 @@ async def refresh(request: Request, env: PublicEnv):
 class PmsFastapiLoginEndpoint(models.AbstractModel):
     _inherit = "pms.fastapi.login.endpoint"
 
+    def _drop_session_cookies(self, response):
+        res = super()._drop_session_cookies(response)
+        validator = (
+            self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
+        )
+        response.delete_cookie(
+            key=validator.refresh_cookie_name,
+            path=validator.refresh_token_path or "/",
+            secure=validator.cookie_secure,
+            httponly=True,
+            samesite="None",
+        )
+        return res
+
     def _get_login_response_with_cookies(self, user_record):
         validator = (
             self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
         )
         response = super()._get_login_response_with_cookies(user_record)
-        payload = {}
+        # Without something unique of its own the token is a pure function of
+        # its expiry, so two logins within the same second produce the very
+        # same string and the second one hits the uniqueness constraint.
+        payload = {"jti": secrets.token_urlsafe(16)}
         refresh_token = validator._encode(
             payload,
             expire=validator.refresh_cookie_max_age,
@@ -63,7 +82,7 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
             path=validator.refresh_token_path or "/",
             secure=validator.cookie_secure,
             httponly=True,
-            samesite="None",
+            samesite="Lax",
         )
         return response
 

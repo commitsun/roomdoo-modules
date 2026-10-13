@@ -70,6 +70,21 @@ class TestDownpaymentTransferBlocks(AccountTestInvoicingCommon):
         invoice = self._invoice(self.partner_a, 100.0)
         self.assertEqual(invoice._downpayment_reconciled_amount(), 0.0)
 
+    def test_nothing_rectified_yet_asks_for_a_full_reversal(self):
+        """None, not the full figure: a full rectification has to be an exact
+        reversal of the original, not a scaled copy of it."""
+        invoice = self._invoice(self.partner_a, 100.0)
+        self.assertEqual(invoice._amount_open_to_rectify(), 100.0)
+        self.assertIsNone(invoice._partial_rectification_amount())
+
+    def test_a_partly_rectified_down_payment_only_offers_what_is_left(self):
+        """The regression: a down payment of 100 already rectified for 60 has
+        40 left. Rectifying it for 100 again credits the same euro twice."""
+        invoice = self._invoice(self.partner_a, 100.0)
+        invoice._rectify_downpayment(TODAY, amount=60.0)
+        self.assertEqual(invoice._amount_open_to_rectify(), 40.0)
+        self.assertEqual(invoice._partial_rectification_amount(), 40.0)
+
     def test_receivable_line_is_empty_when_there_is_more_than_one(self):
         """With instalment terms there are several customer lines and which
         balance to move stops being obvious, so the case is handed over."""

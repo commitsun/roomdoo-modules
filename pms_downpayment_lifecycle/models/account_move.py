@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 
 from markupsafe import Markup
 
@@ -221,21 +222,32 @@ class AccountMove(models.Model):
                 ),
             )
 
-        amount = downpayment._downpayment_reconciled_amount()
         rounding = self.company_id.currency_id.rounding
+        # Never more than what is left to rectify, and never more than what was
+        # collected. A down payment that was partly refunded already carries a
+        # credit note for that part and the money went back to the guest, so
+        # moving everything it ever collected would credit the new customer a
+        # balance that is no longer there.
+        amount = min(
+            downpayment._amount_open_to_rectify(),
+            downpayment._downpayment_reconciled_amount(),
+        )
         if float_is_zero(amount, precision_rounding=rounding):
             return (
                 "manual",
                 _(
-                    "%(name)s has nothing actually collected against it, so there "
-                    "is no balance to move.",
+                    "%(name)s has nothing left standing against it -- either "
+                    "nothing was collected, or what was collected has already "
+                    "been given back -- so there is no balance to move.",
                     name=downpayment.name,
                 ),
             )
 
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
-        credit_note = downpayment._rectify_downpayment(date)
+        credit_note = downpayment._rectify_downpayment(
+            date, amount=downpayment._partial_rectification_amount()
+        )
         transfer = self._create_transfer_entry(downpayment, amount, date)
 
         # A back to zero: the transfer's debit against the credit note.
@@ -283,7 +295,9 @@ class AccountMove(models.Model):
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
         credit_note = downpayment._rectify_downpayment(
-            date, ref=_("Applied to invoice %s", self.name)
+            date,
+            amount=downpayment._partial_rectification_amount(),
+            ref=_("Applied to invoice %s", self.name),
         )
         pending = (credit_note.line_ids | self.line_ids).filtered(
             lambda line: (
@@ -342,6 +356,27 @@ class AccountMove(models.Model):
         )
         return self.amount_total - rectified
 
+    def _partial_rectification_amount(self):
+        """What to pass as ``amount`` to ``_rectify_downpayment``: the part of
+        this down payment still to rectify, or None when that is all of it.
+
+        None is not the same as the full figure. It leaves the credit note an
+        exact reversal of the original, which is what a full rectification has
+        to be, while a number goes through ``_scale_credit_note`` and its
+        rounding correction. Only the partial case needs that.
+        """
+        self.ensure_one()
+        rounding = self.company_id.currency_id.rounding
+        open_to_rectify = self._amount_open_to_rectify()
+        if (
+            float_compare(
+                open_to_rectify, self.amount_total, precision_rounding=rounding
+            )
+            < 0
+        ):
+            return open_to_rectify
+        return None
+
     def _rectify_downpayment(self, date, amount=None, ref=None):
         """Credit note for the down payment, posted in an open period.
 
@@ -356,12 +391,15 @@ class AccountMove(models.Model):
         by unreconciling every line of the original, which would release the
         payment -- the one thing this whole module exists to avoid.
 
-        Nothing about the SII is passed on purpose. Its own module computes
-        ``sii_refund_type`` as 'I' for any ``out_refund``, so the value is right
-        without this module knowing that the SII exists.
+        The SII refund type goes through the context, as every other caller of
+        ``_reverse_moves`` does. ``sii_refund_type`` is a stored computed field
+        that can be edited, so the reversal copies the down payment's empty
+        value onto the credit note and the compute never runs: without the
+        context the AEAT rejects the credit note (TipoRectificativa). The
+        context key means nothing when the SII module is not installed.
         """
         self.ensure_one()
-        credit_note = self._reverse_moves(
+        credit_note = self.with_context(sii_refund_type="I")._reverse_moves(
             default_values_list=[
                 {
                     "date": date,
@@ -519,3 +557,31 @@ class AccountMove(models.Model):
         )
         transfer.action_post()
         return transfer
+
+    # ------------------------------------------------------------------
+    # pms_autoinvoice
+    # ------------------------------------------------------------------
+    def _reverse_downpayment_invoices(self):
+        """Keep the down payments of a locked period out of pms_autoinvoice's
+        reversal, and leave them to the transfer above.
+
+        pms_autoinvoice reverses the down payments that a final invoice did not
+        deduct with ``cancel=True``, which starts by unreconciling them from
+        their payment: in a locked period that rewrites the customer balances
+        of a month that is already closed. The transfer settles the same down
+        payments when the final invoice is posted, rectifying them with
+        ``cancel=False`` and moving the balance with a transfer entry.
+        """
+        locked = self.filtered(lambda move: move._is_in_locked_period())
+        return super(AccountMove, self - locked)._reverse_downpayment_invoices()
+
+    def _is_in_locked_period(self):
+        """Read from the company, not from ``_get_user_fiscal_lock_date``: the
+        cron runs as a user that only sees the fiscal year lock, and the
+        closed month is locked through ``period_lock_date``."""
+        self.ensure_one()
+        lock_date = max(
+            self.company_id.period_lock_date or date.min,
+            self.company_id.fiscalyear_lock_date or date.min,
+        )
+        return self.date <= lock_date

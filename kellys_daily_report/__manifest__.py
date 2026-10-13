@@ -21,7 +21,7 @@
 
 {
     "name": "Hotel Kellys Daily Report",
-    "version": "16.0.1.1.0",
+    "version": "16.0.1.2.0",
     "author": "Jose Luis Algara <osotranquilo@gmail.com>,"
     "Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/pms",
@@ -33,6 +33,7 @@
     "data": [
         "data/report_kellys_paperformat.xml",
         "views/kellysnames.xml",
+        "views/pms_room_views.xml",
         "wizard/kellys_daily_rooms.xml",
         "wizard/kellys_daily_pdf.xml",
         "data/menus.xml",

@@ -52,6 +52,63 @@ class TestDownpaymentTransferEndToEnd(DownpaymentCase):
             )
         )
 
+    def test_a_partly_refunded_down_payment_only_moves_what_is_left(self):
+        """A down payment collected from the anonymous customer, part of it
+        given back, and then the stay invoiced to someone else.
+
+        The refund has already rectified its part, so what the transfer may
+        rectify -- and move -- is only the remainder. Doing it for the full
+        amount left the down payment with more credit notes than it was ever
+        issued for, the down payment account off by the difference, and the new
+        customer holding a balance the guest had already been paid back.
+        """
+        folio = self._folio()
+        downpayment, _line = self._downpayment(folio, self.anonymous, 100.0)
+        self._collect(downpayment)
+
+        refund = self.env["account.payment"].create(
+            {
+                "payment_type": "outbound",
+                "partner_type": "customer",
+                "partner_id": self.anonymous.id,
+                "amount": 60.0,
+                "journal_id": self.bank_journal.id,
+                "folio_ids": [(6, 0, folio.ids)],
+            }
+        )
+        with trap_jobs() as trap:
+            refund.action_post()
+            trap.perform_enqueued_jobs()
+        self.assertEqual(refund.downpayment_refund_state, "done")
+        self.assertEqual(downpayment._amount_open_to_rectify(), 40.0)
+
+        final = self._final_invoice_via_pms(folio, self.guest)
+        with trap_jobs():
+            final.action_post()
+        final._transfer_downpayments()
+        self.assertEqual(final.downpayment_transfer_state, "done")
+
+        credit_notes = self.env["account.move"].search(
+            [("reversed_entry_id", "=", downpayment.id)]
+        )
+        self.assertEqual(len(credit_notes), 2)
+        self.assertEqual(
+            sum(credit_notes.mapped("amount_total")),
+            100.0,
+            "a down payment can never be rectified for more than it was issued for",
+        )
+        self.assertEqual(downpayment._amount_open_to_rectify(), 0.0)
+
+        transfer = self.env["account.move"].search(
+            [("move_type", "=", "entry"), ("ref", "like", downpayment.name)]
+        )
+        self.assertEqual(len(transfer), 1)
+        self.assertEqual(
+            sum(transfer.line_ids.mapped("debit")),
+            40.0,
+            "only the part that was not given back may move to the new customer",
+        )
+
     def test_same_customer_is_deducted_by_pms_and_left_alone(self):
         """The ordinary case: the down payment already existed when the invoice
         was built, so pms discounted it inside the invoice and there is nothing

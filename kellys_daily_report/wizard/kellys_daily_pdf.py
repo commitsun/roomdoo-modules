@@ -198,10 +198,22 @@ class KellysWizard(models.TransientModel):
                 )
         return self.env["kellysrooms"].search([("id", "in", listid)])
 
-    def print_rooms_report(self):
+    def _get_sorted_rooms(self):
+        """Return the rooms to clean sorted by the cleaning order of the room.
+
+        Rooms with the same cleaning order keep the alphabetical order by
+        room name, so properties that do not set it get the same listing.
+        """
         rooms = self.env["kellysrooms"].search(
             [("id", "in", self.habitaciones.ids)], order="habitacion ASC"
         )
+        room_ids = [room_id for room_id in set(rooms.mapped("habitacionid")) if room_id]
+        pms_rooms = self.env["pms.room"].browse(room_ids).exists()
+        cleaning_order = {room.id: room.cleaning_sequence for room in pms_rooms}
+        return rooms.sorted(key=lambda room: cleaning_order.get(room.habitacionid, 0))
+
+    def print_rooms_report(self):
+        rooms = self._get_sorted_rooms()
 
         return self.env.ref("kellys_daily_report.report_kellysrooms").report_action(
             rooms
@@ -256,9 +268,7 @@ class KellysWizard(models.TransientModel):
         worksheet.set_column("H:H", 8)
         worksheet.set_column("I:I", 8)
 
-        rooms = self.env["kellysrooms"].search(
-            [("id", "in", self.habitaciones.ids)], order="habitacion ASC"
-        )
+        rooms = self._get_sorted_rooms()
 
         offset = 1
         for k_room, v_room in enumerate(rooms):

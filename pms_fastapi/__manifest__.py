@@ -10,6 +10,7 @@
         "fastapi_auth_jwt",
         "extendable_fastapi",
         "auth_jwt_login",
+        "auth_totp",
         "partner_firstname",
         "phone_validation",
         "account_payment_partner",

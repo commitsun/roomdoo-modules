@@ -4,13 +4,18 @@ from fastapi import status
 
 from odoo import Command
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
+from odoo.addons.base.models.ir_mail_server import MailDeliveryException
 from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
 
 _RENDER_QWEB_PDF = (
     "odoo.addons.base.models.ir_actions_report.IrActionsReport._render_qweb_pdf"
 )
-_MAIL_SEND = "odoo.addons.mail.models.mail_mail.MailMail.send"
+_MAIL_SERVER = "odoo.addons.base.models.ir_mail_server.IrMailServer"
+_SEND_EMAIL = f"{_MAIL_SERVER}.send_email"
+_CONNECT = f"{_MAIL_SERVER}.connect"
+_MAIL_MAIL_LOGGER = "odoo.addons.mail.models.mail_mail"
 
 
 @tagged("post_install", "-at_install")
@@ -43,6 +48,13 @@ class TestInvoiceEmailsEndpoints(CommonTestPmsApi):
         cls.partner = cls.env["res.partner"].create(
             {"name": "Test Invoice Partner", "email": "customer@example.org"}
         )
+
+    def setUp(self):
+        super().setUp()
+        # Requests run in the test client's thread; like HttpCase, flag the
+        # registry so code outside the test thread knows it is under test.
+        self.registry.enter_test_mode(self.cr)
+        self.addCleanup(self.registry.leave_test_mode)
 
     def _create_invoice(self, move_type="out_invoice", amount=100.0):
         invoice = self.env["account.move"].create(
@@ -122,9 +134,7 @@ class TestInvoiceEmailsEndpoints(CommonTestPmsApi):
         """POST sends a single mail with the PDF attached to both a contact and
         a free address, and returns 204."""
         invoice = self._create_invoice()
-        with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")), patch(
-            _MAIL_SEND, return_value=True
-        ):
+        with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")):
             with self._create_test_client() as test_client:
                 self._login(test_client)
                 response = test_client.post(
@@ -142,6 +152,7 @@ class TestInvoiceEmailsEndpoints(CommonTestPmsApi):
         mails = self._invoice_mails(invoice)
         self.assertEqual(len(mails), 1)
         mail = mails
+        self.assertEqual(mail.state, "sent")
         self.assertEqual(mail.subject, "Final subject")
         self.assertIn(self.partner, mail.recipient_ids)
         self.assertIn("free@example.org", mail.email_to)
@@ -221,25 +232,77 @@ class TestInvoiceEmailsEndpoints(CommonTestPmsApi):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertEqual(response.json()["type"], "/errors/not-found")
 
-    def test_send_email_delivery_failure_rolls_back(self):
-        """A delivery failure returns 502 and leaves no mail behind."""
+    def _post_email(self, invoice, contact_ids=None):
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            return test_client.post(
+                f"/invoices/{invoice.id}/emails",
+                json={
+                    "contactIds": contact_ids or [self.partner.id],
+                    "emailAddresses": [],
+                    "subject": "S",
+                    "body": "<p>B</p>",
+                },
+            )
+
+    def test_send_email_contact_without_email(self):
+        """POST to a contact with no valid email returns 422 and sends nothing."""
+        invoice = self._create_invoice()
+        no_email = self.env["res.partner"].create({"name": "No Email"})
+        response = self._post_email(invoice, [self.partner.id, no_email.id])
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/contact-without-email")
+        self.assertEqual(response.json()["contactIdsWithoutEmail"], [no_email.id])
+        self.assertFalse(self._invoice_mails(invoice))
+
+    @mute_logger(_MAIL_MAIL_LOGGER)
+    def test_send_email_rejected_keeps_failed_mail(self):
+        """A rejection by the mail server returns 502 and keeps the failed mail."""
         invoice = self._create_invoice()
         with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")), patch(
-            _MAIL_SEND, side_effect=Exception("smtp down")
+            _SEND_EMAIL, side_effect=MailDeliveryException("Mail Delivery Failed")
         ):
-            with self._create_test_client() as test_client:
-                self._login(test_client)
-                response = test_client.post(
-                    f"/invoices/{invoice.id}/emails",
-                    json={
-                        "contactIds": [self.partner.id],
-                        "emailAddresses": [],
-                        "subject": "S",
-                        "body": "<p>B</p>",
-                    },
-                )
+            response = self._post_email(invoice)
         self.assertEqual(
             response.status_code, status.HTTP_502_BAD_GATEWAY, response.text
         )
         self.assertEqual(response.json()["type"], "/errors/email-delivery-failed")
-        self.assertFalse(self._invoice_mails(invoice))
+        self.assertEqual(self._invoice_mails(invoice).state, "exception")
+
+    def test_send_email_unreachable_server_not_queued(self):
+        """An unreachable mail server returns 502 and the mail is not left for
+        the mail queue to send later."""
+        invoice = self._create_invoice()
+        with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")), patch(
+            _CONNECT, side_effect=ConnectionRefusedError("refused")
+        ):
+            response = self._post_email(invoice)
+        self.assertEqual(
+            response.status_code, status.HTTP_502_BAD_GATEWAY, response.text
+        )
+        self.assertEqual(self._invoice_mails(invoice).state, "exception")
+
+    def test_send_email_not_accepted_without_error(self):
+        """A send that raises nothing but is not accepted by the mail server
+        still returns 502."""
+        invoice = self._create_invoice()
+        with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")), patch(
+            _SEND_EMAIL, return_value=None
+        ):
+            response = self._post_email(invoice)
+        self.assertEqual(
+            response.status_code, status.HTTP_502_BAD_GATEWAY, response.text
+        )
+        self.assertEqual(self._invoice_mails(invoice).state, "exception")
+
+    @mute_logger(_MAIL_MAIL_LOGGER)
+    def test_send_email_code_error_not_reported_as_delivery(self):
+        """An error that is not a delivery failure propagates instead of being
+        answered as a 502."""
+        invoice = self._create_invoice()
+        with patch(_RENDER_QWEB_PDF, return_value=(b"%PDF-1.4 fake", "pdf")), patch(
+            _SEND_EMAIL, side_effect=ValueError("bug")
+        ), self.assertRaises(ValueError):
+            self._post_email(invoice)
