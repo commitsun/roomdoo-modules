@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Default satisfaction survey shipped by the module.
+             noupdate="1" so customers can edit it without their changes being reverted on upgrade. -->
+        <record id="survey_pms_satisfaction_default" model="survey.survey">
+            <field name="title">Stay Satisfaction Survey</field>
+            <field name="access_mode">token</field>
+            <field name="users_login_required" eval="False" />
+            <field name="users_can_go_back" eval="True" />
+            <field name="questions_layout">one_page</field>
+            <field name="scoring_type">no_scoring</field>
+            <field name="description" type="html">
+                <p
+        >Thank you for staying with us! Please take a minute to tell us about your experience. Your feedback helps us improve.</p>
+            </field>
+            <field name="description_done" type="html">
+                <p>Thank you for your feedback. We hope to welcome you back soon!</p>
+            </field>
+        </record>
+
+        <!-- Q1: Overall rating -->
+        <record id="survey_pms_satisfaction_q_overall" model="survey.question">
+            <field name="survey_id" ref="survey_pms_satisfaction_default" />
+            <field name="sequence">1</field>
+            <field name="title">How would you rate your overall stay?</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True" />
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_overall_a1"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_overall" />
+            <field name="sequence">1</field>
+            <field name="value">Excellent</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_overall_a2"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_overall" />
+            <field name="sequence">2</field>
+            <field name="value">Good</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_overall_a3"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_overall" />
+            <field name="sequence">3</field>
+            <field name="value">Average</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_overall_a4"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_overall" />
+            <field name="sequence">4</field>
+            <field name="value">Poor</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_overall_a5"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_overall" />
+            <field name="sequence">5</field>
+            <field name="value">Very poor</field>
+        </record>
+
+        <!-- Q2: Cleanliness -->
+        <record id="survey_pms_satisfaction_q_cleanliness" model="survey.question">
+            <field name="survey_id" ref="survey_pms_satisfaction_default" />
+            <field name="sequence">2</field>
+            <field name="title">How would you rate the cleanliness of the room?</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True" />
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_cleanliness_a1"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_cleanliness" />
+            <field name="sequence">1</field>
+            <field name="value">Excellent</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_cleanliness_a2"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_cleanliness" />
+            <field name="sequence">2</field>
+            <field name="value">Good</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_cleanliness_a3"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_cleanliness" />
+            <field name="sequence">3</field>
+            <field name="value">Average</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_cleanliness_a4"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_cleanliness" />
+            <field name="sequence">4</field>
+            <field name="value">Poor</field>
+        </record>
+        <record
+      id="survey_pms_satisfaction_q_cleanliness_a5"
+      model="survey.question.answer"
+    >
+            <field name="question_id" ref="survey_pms_satisfaction_q_cleanliness" />
+            <field name="sequence">5</field>
+            <field name="value">Very poor</field>
+        </record>
+
+        <!-- Q3: Staff -->
+        <record id="survey_pms_satisfaction_q_staff" model="survey.question">
+            <field name="survey_id" ref="survey_pms_satisfaction_default" />
+            <field name="sequence">3</field>
+            <field name="title">How friendly and helpful was our staff?</field>
+            <field name="question_type">simple_choice</field>
+            <field name="constr_mandatory" eval="True" />
+        </record>
+        <record id="survey_pms_satisfaction_q_staff_a1" model="survey.question.answer">
+            <field name="question_id" ref="survey_pms_satisfaction_q_staff" />
+            <field name="sequence">1</field>
+            <field name="value">Excellent</field>
+        </record>
+        <record id="survey_pms_satisfaction_q_staff_a2" model="survey.question.answer">
+            <field name="question_id" ref="survey_pms_satisfaction_q_staff" />
+            <field name="sequence">2</field>
+            <field name="value">Good</field>
+        </record>
+        <record id="survey_pms_satisfaction_q_staff_a3" model="survey.question.answer">
+            <field name="question_id" ref="survey_pms_satisfaction_q_staff" />
+            <field name="sequence">3</field>
+            <field name="value">Average</field>
+        </record>
+        <record id="survey_pms_satisfaction_q_staff_a4" model="survey.question.answer">
+            <field name="question_id" ref="survey_pms_satisfaction_q_staff" />
+            <field name="sequence">4</field>
+            <field name="value">Poor</field>
+        </record>
+        <record id="survey_pms_satisfaction_q_staff_a5" model="survey.question.answer">
+            <field name="question_id" ref="survey_pms_satisfaction_q_staff" />
+            <field name="sequence">5</field>
+            <field name="value">Very poor</field>
+        </record>
+
+        <!-- Q4: NPS -->
+        <record id="survey_pms_satisfaction_q_nps" model="survey.question">
+            <field name="survey_id" ref="survey_pms_satisfaction_default" />
+            <field name="sequence">4</field>
+            <field
+        name="title"
+      >How likely are you to recommend us to a friend or colleague? (0 = not at all, 10 = extremely likely)</field>
+            <field name="question_type">numerical_box</field>
+            <field name="validation_required" eval="True" />
+            <field name="validation_min_float_value">0</field>
+            <field name="validation_max_float_value">10</field>
+            <field
+        name="validation_error_msg"
+      >Please enter a value between 0 and 10.</field>
+            <field name="constr_mandatory" eval="True" />
+        </record>
+
+        <!-- Q5: Comments -->
+        <record id="survey_pms_satisfaction_q_comments" model="survey.question">
+            <field name="survey_id" ref="survey_pms_satisfaction_default" />
+            <field name="sequence">5</field>
+            <field name="title">Any additional comments or suggestions?</field>
+            <field name="question_type">text_box</field>
+            <field name="constr_mandatory" eval="False" />
+        </record>
+
+    </data>
+</odoo>

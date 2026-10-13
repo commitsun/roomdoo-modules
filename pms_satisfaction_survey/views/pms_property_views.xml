@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="pms_property_view_form_satisfaction_survey" model="ir.ui.view">
+        <field name="name">pms.property.form.satisfaction.survey</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Satisfaction Survey" name="satisfaction_survey">
+                    <group>
+                        <field name="satisfaction_survey_enabled" />
+                    </group>
+                    <group
+            attrs="{'invisible': [('satisfaction_survey_enabled', '=', False)]}"
+          >
+                        <field name="satisfaction_survey_id" />
+                        <field name="satisfaction_survey_send_moment" />
+                        <field
+              name="satisfaction_survey_send_delay_hours"
+              attrs="{'invisible': [('satisfaction_survey_send_moment', '!=', 'after_checkout')], 'required': [('satisfaction_survey_send_moment', '=', 'after_checkout')]}"
+            />
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
