@@ -216,6 +216,54 @@ class TestFolioInvoicing(CommonTestPmsApi):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
         self.assertEqual(response.json()["state"], "posted")
 
+    def _post_invoice_with_default_note(self, payload, folio, note):
+        # Make the folio flow leave a default note on the invoice, as it does
+        # when it copies the folio note or the company invoice terms.
+        folio_cls = type(folio)
+        create_invoices = folio_cls._create_invoices
+
+        def _create_with_note(folios, *args, **kwargs):
+            moves = create_invoices(folios, *args, **kwargs)
+            moves.write({"narration": note})
+            return moves
+
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            with patch.object(folio_cls, "_create_invoices", _create_with_note):
+                response = self._post_invoice(test_client, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        return self.env["account.move"].browse(response.json()["id"])
+
+    def test_create_invoice_keeps_default_narration_when_omitted(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        invoice = self._post_invoice_with_default_note(
+            payload, folio, "DEFAULT_NOTE_MARKER"
+        )
+        self.assertIn("DEFAULT_NOTE_MARKER", invoice.narration or "")
+
+    def test_create_invoice_keeps_default_narration_when_empty(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["narration"] = ""
+        invoice = self._post_invoice_with_default_note(
+            payload, folio, "DEFAULT_NOTE_MARKER"
+        )
+        self.assertIn("DEFAULT_NOTE_MARKER", invoice.narration or "")
+
+    def test_create_invoice_provided_narration_replaces_default(self):
+        folio = self._confirmed_folio()
+        line = self._room_line(folio)
+        payload = self._create_payload(line, customer_id=self.customer.id)
+        payload["narration"] = "Note typed by the user"
+        invoice = self._post_invoice_with_default_note(
+            payload, folio, "DEFAULT_NOTE_MARKER"
+        )
+        self.assertIn("Note typed by the user", invoice.narration or "")
+        self.assertNotIn("DEFAULT_NOTE_MARKER", invoice.narration or "")
+
     def test_create_simplified_invoice_without_customer(self):
         folio = self._confirmed_folio()
         line = self._room_line(folio)
