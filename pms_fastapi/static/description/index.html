@@ -399,6 +399,30 @@ ul.auto-toc {
 </li>
 <li>After the creation push the sync registry button and restart the Odoo server.</li>
 </ul>
+<p>Browser access (CORS) is set in Settings &gt; Technical &gt; System Parameters. The
+legacy API of <tt class="docutils literal">pms_api_rest</tt> reads the same parameters:</p>
+<ul class="simple">
+<li><tt class="docutils literal">roomdoo_app_url</tt>: origin of the web app, e.g. <tt class="docutils literal"><span class="pre">https://app.example.com</span></tt>.
+A single origin, never a list: links to the web app are built from it too.
+Its pages may call the API with credentials (cookies). When it is empty,
+<tt class="docutils literal">*</tt> or <tt class="docutils literal">null</tt>, any origin may call the API, without credentials.</li>
+<li><tt class="docutils literal">roomdoo_app_extra_origins</tt>: further origins allowed to call the API from a
+browser, for clients served from their own host, e.g.
+<tt class="docutils literal"><span class="pre">https://other.example.com</span></tt>. Each one is trusted as much as the web app,
+credentials included, so list only hosts you trust, served over <tt class="docutils literal">https</tt>.
+Exact origins, written as the browser sends them (<tt class="docutils literal"><span class="pre">scheme://host[:port]</span></tt>,
+host in lowercase, no default port, no path, no wildcards): anything else
+never matches. Separated by commas, spaces or line breaks. Ignored when
+<tt class="docutils literal">roomdoo_app_url</tt> is empty, <tt class="docutils literal">*</tt> or <tt class="docutils literal">null</tt>.</li>
+</ul>
+<p>A change saved on that screen applies without a restart. One written straight
+into the database, or from an Odoo shell that does not call
+<tt class="docutils literal">env.registry.signal_changes()</tt> after committing, only applies after a
+restart. A worker serving several databases may also, rarely, keep the previous
+list for this API: restart when a change does not show, and after removing an
+origin that must stop working at once. Even then, browsers may reuse a
+preflight answer they already have, for up to 24 hours on the legacy API and 10
+minutes on this one.</p>
 </div>
 <div class="section" id="bug-tracker">
 <h1><a class="toc-backref" href="#toc-entry-2">Bug Tracker</a></h1>

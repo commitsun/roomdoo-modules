@@ -29,3 +29,4 @@ from . import test_reservation_offboarding
 from . import test_logout
 from . import test_login_second_factor
 from . import test_two_factor_setup
+from . import test_cors_origins

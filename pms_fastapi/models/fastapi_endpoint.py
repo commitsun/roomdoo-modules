@@ -115,15 +115,15 @@ class FastapiEndpoint(models.Model):
     def _get_app(self):
         app = super()._get_app()
         if self.app == APP_NAME:
-            app_url = (
-                self.env["ir.config_parameter"].sudo().get_param("roomdoo_app_url")
-            )
-            if app_url and app_url != "*":
-                # Cookie based authentication needs the concrete origin: browsers
-                # reject a credentialed response whose origin is "*".
+            origins = self.env["ir.http"]._pms_api_rest_allowed_origins()
+            if origins:
+                # Cookie based authentication needs concrete origins: browsers
+                # reject a credentialed response whose origin is "*". The
+                # middleware answers each request with its own origin when it
+                # is in the list, since the header holds a single one.
                 app.add_middleware(
                     CORSMiddleware,
-                    allow_origins=[app_url],
+                    allow_origins=origins,
                     allow_credentials=True,
                     allow_methods=["*"],
                     allow_headers=["*"],
