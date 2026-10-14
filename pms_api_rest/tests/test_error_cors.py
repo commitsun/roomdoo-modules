@@ -15,6 +15,9 @@ ORIGIN = "https://client.example"
 class TestErrorCors(HttpCase):
     def setUp(self):
         super().setUp()
+        # A request without a session only reaches a database when the server
+        # has a single one.
+        self.authenticate(None, None)
         self.env["ir.config_parameter"].sudo().set_param("roomdoo_app_url", ORIGIN)
 
     def _call(self, path):
