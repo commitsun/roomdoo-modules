@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_discounts_summary" model="ai.tool">
+        <field name="name">pms_discounts_summary</field>
+        <field
+      name="description"
+    >Discounts applied to the room nights of a period (at most 31 days): share of discounted nights, nights at 50% or more and at 100%, and amount discounted. Broken down by sale channel and by property, comparing each property with its 4 previous periods of the same length. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_discounts_summary</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>

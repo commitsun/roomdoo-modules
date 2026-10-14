@@ -10,6 +10,7 @@
     "data": [
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
+        "data/ai_tools.xml",
         "views/ai_tool_views.xml",
         "views/mcp_server_log_views.xml",
     ],
