@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_form_view" model="ir.ui.view">
+        <field name="model">ai.tool</field>
+        <field name="inherit_id" ref="ai_tool.ai_tool_form_view" />
+        <field name="arch" type="xml">
+            <field name="kind" position="after">
+                <field name="guard_mode" />
+                <field
+          name="allowed_user_ids"
+          widget="many2many_tags"
+          groups="base.group_system"
+        />
+                <field
+          name="write_enabled"
+          groups="base.group_system"
+          attrs="{'invisible': [('guard_mode', '!=', 'write')]}"
+        />
+            </field>
+        </field>
+    </record>
+
+    <record id="ai_tool_tree_view" model="ir.ui.view">
+        <field name="model">ai.tool</field>
+        <field name="inherit_id" ref="ai_tool.ai_tool_tree_view" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="guard_mode" />
+                <field
+          name="allowed_user_ids"
+          widget="many2many_tags"
+          groups="base.group_system"
+        />
+            </field>
+        </field>
+    </record>
+</odoo>
