@@ -138,3 +138,11 @@
   merges:
     - oca 16.0
   target: oca 16.0
+
+./deps/ai:
+  depth: 1
+  remotes:
+    oca: https://github.com/OCA/ai.git
+  merges:
+    - oca 16.0
+  target: oca 16.0
