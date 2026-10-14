@@ -6,6 +6,7 @@ from . import test_invoice_lock_display_date
 from . import test_pms_board_service_room_type
 from . import test_roomdoo_app_menu
 from . import test_ses_unaccompanied_minors
+from . import test_staff_reservation_pricelist
 from . import test_various_partner_protection
 from . import test_current_user_service
 from . import test_error_cors

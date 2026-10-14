@@ -56,7 +56,7 @@ class PmsPriceService(Component):
             if prices_search_param.isAdults and prices_search_param.isChildren:
                 raise ValidationError(
                     _(
-                        "It is not allowed to filter by adults and children simultaneously"
+                        "It is not allowed to filter by adults and children simultaneously"  # noqa: E501
                     )
                 )
             if (
@@ -148,19 +148,29 @@ class PmsPriceService(Component):
     ):
         pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
         pms_api_check_access(user=self.env.user, records=pms_property)
-        pricelist = self.env["product.pricelist"].sudo().browse(pricelist_id)
+        # Reservations without pricelist (e.g. invitations created without
+        # choosing a rate) still need prices for their services: fall back to
+        # the property default pricelist, as pms does for new reservations.
+        pricelist = (
+            self.env["product.pricelist"].sudo().browse(pricelist_id)
+            if pricelist_id
+            else pms_property.default_pricelist_id
+        )
         product = product.with_context(
             board_service_line_id=board_service_line_id,
             property=pms_property_id,
             consumption_date=consumption_date,
         )
-        price = pricelist._get_product_price(
-            product=product,
-            quantity=product_qty or 1,
-            consumption_date=consumption_date,
-            pms_property_id=pms_property_id,
-            board_service_line_id=board_service_line_id,
-        )
+        if pricelist:
+            price = pricelist._get_product_price(
+                product=product,
+                quantity=product_qty or 1,
+                consumption_date=consumption_date,
+                pms_property_id=pms_property_id,
+                board_service_line_id=board_service_line_id,
+            )
+        else:
+            price = product.lst_price
         return self.env["account.tax"]._fix_tax_included_price_company(
             price,
             product.taxes_id,
