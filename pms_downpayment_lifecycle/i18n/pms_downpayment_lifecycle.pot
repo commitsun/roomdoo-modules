@@ -405,3 +405,52 @@ msgid ""
 "%(name)s was not transferred: %(company)s has no down payment transfer "
 "journal configured."
 msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(standing)s is standing as down payments on this folio while this invoice only bills %(billed)s, so which part of it belongs here cannot be told apart."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "The folio still has %s line(s) left to invoice, so it cannot be told whether the down payment belongs to this invoice or to the next one."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment left for review"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment transfer failed"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(name)s rectified as %(refund)s and applied to this invoice."
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Applied to invoice %s"
+msgstr ""
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s"
+msgstr ""

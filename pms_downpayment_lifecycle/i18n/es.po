@@ -444,3 +444,52 @@ msgid ""
 msgstr ""
 "%(name)s no se ha traspasado: %(company)s no tiene configurado el diario de "
 "traspaso de anticipos."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(standing)s is standing as down payments on this folio while this invoice only bills %(billed)s, so which part of it belongs here cannot be told apart."
+msgstr "Este folio tiene %(standing)s en anticipos sin aplicar y esta factura es de solo %(billed)s, así que no se puede saber qué parte corresponde a esta factura."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "The folio still has %s line(s) left to invoice, so it cannot be told whether the down payment belongs to this invoice or to the next one."
+msgstr "Al folio le quedan %s línea(s) por facturar, así que no se puede saber si el anticipo corresponde a esta factura o a la siguiente."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment left for review"
+msgstr "Anticipo pendiente de revisión"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment transfer failed"
+msgstr "Ha fallado el traspaso del anticipo"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(name)s rectified as %(refund)s and applied to this invoice."
+msgstr "%(name)s rectificada como %(refund)s y aplicada a esta factura."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Applied to invoice %s"
+msgstr "Aplicado a la factura %s"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s"
+msgstr "Folio %(folio)s: anticipo %(down)s traspasado a %(invoice)s"
