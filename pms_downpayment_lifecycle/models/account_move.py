@@ -3,7 +3,7 @@ import logging
 from markupsafe import Markup
 from psycopg2 import OperationalError
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.service.model import PG_CONCURRENCY_ERRORS_TO_RETRY
 from odoo.tools import float_compare, float_is_zero
@@ -160,6 +160,74 @@ class AccountMove(models.Model):
         return False
 
     # ------------------------------------------------------------------
+    # review list: invoices left in manual review or failed
+    # ------------------------------------------------------------------
+    def action_recheck_downpayment_transfer(self):
+        """'Check again', on the review list and on the invoice."""
+        for move in self:
+            move._recheck_downpayment_transfer()
+        return True
+
+    @api.model
+    def _cron_recheck_downpayment_transfers(self):
+        moves = self.search(
+            [("downpayment_transfer_state", "in", ("manual", "failed"))]
+        )
+        for move in moves:
+            try:
+                with self.env.cr.savepoint():
+                    move._recheck_downpayment_transfer()
+            except Exception:  # noqa: BLE001 - one invoice must not stop the rest
+                _logger.exception(
+                    "Down payment transfer recheck failed for %s", move.display_name
+                )
+
+    def _recheck_downpayment_transfer(self):
+        """Looks again, with today's data, at an invoice left in manual review
+        or failed, so that the review list empties itself as the cases get
+        sorted out instead of keeping the verdict taken when it was posted: the
+        rest of the folio invoiced, the down payment rectified by hand, a lock
+        conflict long gone.
+
+        Nothing is transferred here. A case that is now clear goes back to the
+        same job posting enqueues. One that is still unclear only gets its
+        reason rewritten, without a chatter message, so that running every
+        night does not fill the invoice with copies of it.
+        """
+        self.ensure_one()
+        if self.downpayment_transfer_state not in ("manual", "failed"):
+            return
+        downpayments = self._get_downpayments_to_transfer()
+        if self._is_rectified() or not downpayments:
+            # Says why in its own words, once, and leaves the list.
+            self._run_downpayment_transfer()
+            return
+        reason = self._downpayment_association_ambiguity(downpayments)
+        if not reason:
+            same_customer = downpayments.filtered(
+                lambda d: d.partner_id == self.partner_id
+            )
+            blockers = [
+                self._downpayment_transfer_blocker(downpayment)
+                for downpayment in downpayments - same_customer
+            ]
+            if same_customer or not all(blockers):
+                self.downpayment_transfer_state = "pending"
+                self.with_delay()._transfer_downpayments()
+                return
+            reason = "\n".join(blockers)
+        if (
+            self.downpayment_transfer_state != "manual"
+            or self.downpayment_transfer_message != reason
+        ):
+            self.write(
+                {
+                    "downpayment_transfer_state": "manual",
+                    "downpayment_transfer_message": reason,
+                }
+            )
+
+    # ------------------------------------------------------------------
     # the transfer itself (queue job)
     # ------------------------------------------------------------------
     def _transfer_downpayments(self):
@@ -251,6 +319,62 @@ class AccountMove(models.Model):
         )
         return True
 
+    def _downpayment_transfer_amount(self, downpayment):
+        """Never more than what is left to rectify, and never more than what was
+        collected. A down payment that was partly refunded already carries a
+        credit note for that part and the money went back to the guest, so
+        moving everything it ever collected would credit the new customer a
+        balance that is no longer there."""
+        return min(
+            downpayment._amount_open_to_rectify(),
+            downpayment._downpayment_reconciled_amount(),
+        )
+
+    def _downpayment_transfer_blocker(self, downpayment):
+        """Why ``downpayment``, issued to another customer, cannot be moved onto
+        this invoice, or False when it can.
+
+        It only reads: the transfer job asks it before touching anything, and
+        the review recheck asks it to know whether there is anything for the
+        job to do at all."""
+        self.ensure_one()
+        anonymous = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
+        if not anonymous or downpayment.partner_id != anonymous:
+            return _(
+                "%(name)s is invoiced to %(partner)s, an identified third "
+                "party, so it is left for accounting: rectifying VAT charged "
+                "to a real customer without refunding them is not the same "
+                "operation as exchanging a simplified invoice.",
+                name=downpayment.name,
+                partner=downpayment.partner_id.display_name,
+            )
+        source = downpayment._receivable_line_for_transfer()
+        target = self._receivable_line_for_transfer()
+        if not source or not target:
+            return _(
+                "%(name)s or this invoice does not have exactly one customer "
+                "line, so which balance to move is ambiguous.",
+                name=downpayment.name,
+            )
+        if float_is_zero(
+            self._downpayment_transfer_amount(downpayment),
+            precision_rounding=self.company_id.currency_id.rounding,
+        ):
+            return _(
+                "%(name)s has nothing left standing against it -- either "
+                "nothing was collected, or what was collected has already "
+                "been given back -- so there is no balance to move.",
+                name=downpayment.name,
+            )
+        if not self.company_id._get_rectification_transfer_journal():
+            return _(
+                "%(name)s was not transferred: %(company)s has no down "
+                "payment transfer journal configured.",
+                name=downpayment.name,
+                company=self.company_id.display_name,
+            )
+        return False
+
     def _transfer_one_downpayment(self, downpayment):
         """Returns (outcome, message). Anything that needs a human returns
         'manual' instead of raising: one awkward down payment must not send the
@@ -258,63 +382,11 @@ class AccountMove(models.Model):
         self.ensure_one()
         if downpayment.partner_id == self.partner_id:
             return self._apply_one_downpayment(downpayment)
-        anonymous = self.env.ref("pms.various_pms_partner", raise_if_not_found=False)
-        if not anonymous or downpayment.partner_id != anonymous:
-            return (
-                "manual",
-                _(
-                    "%(name)s is invoiced to %(partner)s, an identified third "
-                    "party, so it is left for accounting: rectifying VAT charged "
-                    "to a real customer without refunding them is not the same "
-                    "operation as exchanging a simplified invoice.",
-                    name=downpayment.name,
-                    partner=downpayment.partner_id.display_name,
-                ),
-            )
-
-        source = downpayment._receivable_line_for_transfer()
+        blocker = self._downpayment_transfer_blocker(downpayment)
+        if blocker:
+            return ("manual", blocker)
         target = self._receivable_line_for_transfer()
-        if not source or not target:
-            return (
-                "manual",
-                _(
-                    "%(name)s or this invoice does not have exactly one customer "
-                    "line, so which balance to move is ambiguous.",
-                    name=downpayment.name,
-                ),
-            )
-
-        rounding = self.company_id.currency_id.rounding
-        # Never more than what is left to rectify, and never more than what was
-        # collected. A down payment that was partly refunded already carries a
-        # credit note for that part and the money went back to the guest, so
-        # moving everything it ever collected would credit the new customer a
-        # balance that is no longer there.
-        amount = min(
-            downpayment._amount_open_to_rectify(),
-            downpayment._downpayment_reconciled_amount(),
-        )
-        if float_is_zero(amount, precision_rounding=rounding):
-            return (
-                "manual",
-                _(
-                    "%(name)s has nothing left standing against it -- either "
-                    "nothing was collected, or what was collected has already "
-                    "been given back -- so there is no balance to move.",
-                    name=downpayment.name,
-                ),
-            )
-
-        if not self.company_id._get_rectification_transfer_journal():
-            return (
-                "manual",
-                _(
-                    "%(name)s was not transferred: %(company)s has no down "
-                    "payment transfer journal configured.",
-                    name=downpayment.name,
-                    company=self.company_id.display_name,
-                ),
-            )
+        amount = self._downpayment_transfer_amount(downpayment)
         date = fields.Date.context_today(self)
         self._check_transfer_chronology(downpayment.journal_id, date)
         credit_note = downpayment._rectify_downpayment(

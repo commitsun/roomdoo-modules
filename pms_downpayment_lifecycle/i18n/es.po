@@ -30,9 +30,7 @@ msgid ""
 "%(name)s has nothing left standing against it -- either nothing was "
 "collected, or what was collected has already been given back -- so there is "
 "no balance to move."
-msgstr ""
-"No queda nada vivo contra %(name)s -- no se cobró nada, o lo que se cobró ya "
-"se ha devuelto --, así que no hay saldo que traspasar."
+msgstr "No queda nada vivo contra %(name)s -- no se cobró nada, o lo que se cobró ya se ha devuelto --, así que no hay saldo que traspasar."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -42,10 +40,7 @@ msgid ""
 "%(name)s is invoiced to %(partner)s, an identified third party, so it is "
 "left for accounting: rectifying VAT charged to a real customer without "
 "refunding them is not the same operation as exchanging a simplified invoice."
-msgstr ""
-"%(name)s está facturada a %(partner)s, un tercero identificado, así que se "
-"deja para contabilidad: rectificar un IVA repercutido a un cliente real sin "
-"devolvérselo no es la misma operación que canjear una factura simplificada."
+msgstr "%(name)s está facturada a %(partner)s, un tercero identificado, así que se deja para contabilidad: rectificar un IVA repercutido a un cliente real sin devolvérselo no es la misma operación que canjear una factura simplificada."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -54,9 +49,14 @@ msgstr ""
 msgid ""
 "%(name)s or this invoice does not have exactly one customer line, so which "
 "balance to move is ambiguous."
-msgstr ""
-"%(name)s o esta factura no tienen exactamente una línea de cliente, así que "
-"no está claro qué saldo traspasar."
+msgstr "%(name)s o esta factura no tienen exactamente una línea de cliente, así que no está claro qué saldo traspasar."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "%(name)s rectified as %(refund)s and applied to this invoice."
+msgstr "%(name)s rectificada como %(refund)s y aplicada a esta factura."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -73,10 +73,7 @@ msgid ""
 "%(name)s rectified as %(refund)s and transferred with %(entry)s. The final "
 "invoice was already settled, so the amount is left open in favour of the "
 "customer."
-msgstr ""
-"%(name)s rectificada como %(refund)s y traspasada con %(entry)s. La factura "
-"final ya estaba saldada, así que el importe queda abierto a favor del "
-"cliente."
+msgstr "%(name)s rectificada como %(refund)s y traspasada con %(entry)s. La factura final ya estaba saldada, así que el importe queda abierto a favor del cliente."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -90,11 +87,19 @@ msgstr "%(name)s rectificada como %(refund)s por %(amount)s."
 #: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
 #, python-format
 msgid ""
-"%s cannot be partially rectified: it does not have exactly one line with an "
-"amount."
-msgstr ""
-"%s no se puede rectificar parcialmente: no tiene exactamente una línea con "
-"importe."
+"%(name)s was not transferred: %(company)s has no down payment transfer "
+"journal configured."
+msgstr "%(name)s no se ha traspasado: %(company)s no tiene configurado el diario de traspaso de anticipos."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"%(standing)s is standing as down payments on this folio while this invoice "
+"only bills %(billed)s, so which part of it belongs here cannot be told "
+"apart."
+msgstr "Este folio tiene %(standing)s en anticipos sin aplicar y esta factura es de solo %(billed)s, así que no se puede saber qué parte corresponde a esta factura."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -103,13 +108,19 @@ msgstr ""
 msgid ""
 "%s of this refund does not correspond to any down payment and was left "
 "unapplied."
-msgstr ""
-"%s de esta devolución no corresponde a ningún anticipo y queda sin aplicar."
+msgstr "%s de esta devolución no corresponde a ningún anticipo y queda sin aplicar."
 
 #. module: pms_downpayment_lifecycle
 #: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.res_config_settings_view_form
 msgid "<span class=\"o_form_label\">Down payment transfer journal</span>"
 msgstr "<span class=\"o_form_label\">Diario de traspaso de anticipos</span>"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Applied to invoice %s"
+msgstr "Aplicado a la factura %s"
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.ui.menu,name:pms_downpayment_lifecycle.menu_downpayment_cancel_pending
@@ -133,9 +144,13 @@ msgstr "Folios cancelados cuyo anticipo sigue en pie."
 msgid ""
 "Cannot build the transfer entry: %(down)s or %(invoice)s does not have "
 "exactly one customer line."
-msgstr ""
-"No se puede construir el asiento de traspaso: %(down)s o %(invoice)s no "
-"tienen exactamente una línea de cliente."
+msgstr "No se puede construir el asiento de traspaso: %(down)s o %(invoice)s no tienen exactamente una línea de cliente."
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_form_downpayment_transfer
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_tree_downpayment_transfer
+msgid "Check again"
+msgstr "Volver a comprobar"
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model,name:pms_downpayment_lifecycle.model_res_company
@@ -156,13 +171,6 @@ msgstr "Hecho"
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "Down payment %(down)s transferred to %(invoice)s"
-msgstr "Anticipo %(down)s traspasado a %(invoice)s"
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
 #: code:addons/pms_downpayment_lifecycle/models/pms_folio.py:0
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_state
 #, python-format
@@ -173,6 +181,13 @@ msgstr "Cancelación de anticipo"
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_message
 msgid "Down payment cancellation detail"
 msgstr "Detalle de la cancelación del anticipo"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment left for review"
+msgstr "Anticipo pendiente de revisión"
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -198,6 +213,7 @@ msgstr "Anticipo a reemitir a"
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_bank_statement_line__downpayment_transfer_state
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_move__downpayment_transfer_state
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_transfer_state
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
 #, python-format
 msgid "Down payment transfer"
 msgstr "Traspaso de anticipo"
@@ -208,6 +224,13 @@ msgstr "Traspaso de anticipo"
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_account_payment__downpayment_transfer_message
 msgid "Down payment transfer detail"
 msgstr "Detalle del traspaso del anticipo"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Down payment transfer failed"
+msgstr "Ha fallado el traspaso del anticipo"
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields,field_description:pms_downpayment_lifecycle.field_res_company__downpayment_transfer_journal_id
@@ -233,9 +256,16 @@ msgid "Down payments pending transfer"
 msgstr "Anticipos pendientes de traspaso"
 
 #. module: pms_downpayment_lifecycle
+#: model:ir.actions.server,name:pms_downpayment_lifecycle.ir_cron_recheck_downpayment_transfers_ir_actions_server
+#: model:ir.cron,cron_name:pms_downpayment_lifecycle.ir_cron_recheck_downpayment_transfers
+msgid "Down payments: check again the invoices left for review"
+msgstr "Anticipos: volver a comprobar las facturas pendientes de revisión"
+
+#. module: pms_downpayment_lifecycle
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__failed
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__failed
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__pms_folio__downpayment_cancel_state__failed
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
 msgid "Failed"
 msgstr "Fallido"
 
@@ -244,9 +274,14 @@ msgstr "Fallido"
 msgid ""
 "Final invoices whose down payment has not been transferred yet, or\n"
 "               needs someone to look at it."
-msgstr ""
-"Facturas finales cuyo anticipo aún no se ha traspasado, o que necesitan que "
-"alguien las revise."
+msgstr "Facturas finales cuyo anticipo aún no se ha traspasado, o que necesitan que alguien las revise."
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s"
+msgstr "Folio %(folio)s: anticipo %(down)s traspasado a %(invoice)s"
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -254,6 +289,11 @@ msgstr ""
 #, python-format
 msgid "Folio %s cancelled"
 msgstr "Folio %s cancelado"
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
+msgid "Group By"
+msgstr "Agrupar por"
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model,name:pms_downpayment_lifecycle.model_account_move
@@ -266,27 +306,22 @@ msgid ""
 "Journal for the entry that moves a down payment from the\n"
 "                            customer it was invoiced to onto the customer of the\n"
 "                            final invoice."
-msgstr ""
-"Diario del asiento que traspasa un anticipo del cliente al que se facturó al"
-" cliente de la factura final."
+msgstr "Diario del asiento que traspasa un anticipo del cliente al que se facturó al cliente de la factura final."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_company__downpayment_transfer_journal_id
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_res_config_settings__downpayment_transfer_journal_id
 msgid ""
 "Journal used for the entries that move a balance from one customer onto "
-"another: a down payment invoiced to the customer of the final invoice, or an "
-"invoice rectified and re-issued without breaking its reconciliations. Without"
-" it neither is done automatically."
-msgstr ""
-"Diario de los asientos que traspasan un saldo de un cliente a otro: un "
-"anticipo al cliente de la factura final, o una factura rectificada y emitida"
-" de nuevo sin romper sus conciliaciones. Sin él, ninguna de las dos cosas se "
-"hace automáticamente."
+"another: a down payment invoiced to the customer of the final invoice, or an"
+" invoice rectified and re-issued without breaking its reconciliations. "
+"Without it neither is done automatically."
+msgstr "Diario de los asientos que traspasan un saldo de un cliente a otro: un anticipo al cliente de la factura final, o una factura rectificada y emitida de nuevo sin romper sus conciliaciones. Sin él, ninguna de las dos cosas se hace automáticamente."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__manual
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__manual
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
 msgid "Manual review"
 msgstr "Revisión manual"
 
@@ -294,10 +329,10 @@ msgstr "Revisión manual"
 #. odoo-python
 #: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
 #, python-format
-msgid "No journal configured to post the down payment transfer of company %s."
-msgstr ""
-"No hay diario configurado para contabilizar el traspaso de anticipos de la "
-"compañía %s."
+msgid ""
+"Nothing left to transfer: when the transfer ran, the down payments of this "
+"folio had already been rectified."
+msgstr "No queda nada que traspasar: cuando se ejecutó el traspaso, los anticipos de este folio ya estaban rectificados."
 
 #. module: pms_downpayment_lifecycle
 #: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_cancel_pending
@@ -305,6 +340,16 @@ msgstr ""
 #: model_terms:ir.actions.act_window,help:pms_downpayment_lifecycle.action_downpayment_transfer_pending
 msgid "Nothing pending"
 msgstr "Nada pendiente"
+
+#. module: pms_downpayment_lifecycle
+#. odoo-python
+#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
+#, python-format
+msgid ""
+"Nothing transferred: this invoice was rectified before the transfer ran. The"
+" invoice that replaces it, if any, takes the down payments when it is "
+"posted."
+msgstr "No se ha traspasado nada: esta factura se rectificó antes de que se ejecutara el traspaso. Los anticipos los recibe la factura que la sustituye, si la hay, al validarse."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model,name:pms_downpayment_lifecycle.model_pms_folio
@@ -320,6 +365,7 @@ msgstr "Pagos"
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_move__downpayment_transfer_state__pending
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__account_payment__downpayment_refund_state__pending
 #: model:ir.model.fields.selection,name:pms_downpayment_lifecycle.selection__pms_folio__downpayment_cancel_state__pending
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
 msgid "Pending"
 msgstr "Pendiente"
 
@@ -334,6 +380,11 @@ msgid "Pending transfer"
 msgstr "Pendientes de traspaso"
 
 #. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_search_downpayment_transfer
+msgid "Property"
+msgstr "Hotel"
+
+#. module: pms_downpayment_lifecycle
 #. odoo-python
 #: code:addons/pms_downpayment_lifecycle/models/account_payment.py:0
 #, python-format
@@ -345,9 +396,7 @@ msgstr "Devuelto por el cobro %s"
 msgid ""
 "Refunds of money collected as a down payment whose rectification has\n"
 "               not been issued yet, or needs someone to look at it."
-msgstr ""
-"Devoluciones de dinero cobrado como anticipo cuya rectificativa aún no se ha"
-" emitido, o que necesitan que alguien las revise."
+msgstr "Devoluciones de dinero cobrado como anticipo cuya rectificativa aún no se ha emitido, o que necesitan que alguien las revise."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.actions.act_window,name:pms_downpayment_lifecycle.action_downpayment_refund_pending
@@ -358,9 +407,7 @@ msgstr "Devoluciones pendientes de rectificar"
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_pms_folio__downpayment_cancel_state
 msgid ""
 "Set on a cancelled folio that still had a down payment invoice standing."
-msgstr ""
-"Se marca en el folio cancelado que todavía tenía una factura de anticipo en "
-"pie."
+msgstr "Se marca en el folio cancelado que todavía tenía una factura de anticipo en pie."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_bank_statement_line__downpayment_transfer_state
@@ -370,10 +417,7 @@ msgid ""
 "Set on a final invoice that absorbed a down payment issued to a different "
 "customer. The transfer itself runs in its own job, so that a down payment "
 "that will not settle can never stop the stay from being invoiced."
-msgstr ""
-"Se marca en la factura final que absorbe un anticipo emitido a otro cliente."
-" El traspaso se ejecuta en su propio job, para que un anticipo que no se "
-"vaya a resolver nunca impida facturar la estancia."
+msgstr "Se marca en la factura final que absorbe un anticipo emitido a otro cliente. El traspaso se ejecuta en su propio job, para que un anticipo que no se vaya a resolver nunca impida facturar la estancia."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_payment__downpayment_refund_state
@@ -381,31 +425,28 @@ msgid ""
 "Set on a refund that gives back money collected as a down payment: it "
 "rectifies the down payment invoice itself instead of producing an unrelated "
 "credit note."
-msgstr ""
-"Se marca en la devolución que reintegra dinero cobrado como anticipo: "
-"rectifica la propia factura de anticipo en lugar de generar una "
-"rectificativa sin relación."
+msgstr "Se marca en la devolución que reintegra dinero cobrado como anticipo: rectifica la propia factura de anticipo en lugar de generar una rectificativa sin relación."
 
 #. module: pms_downpayment_lifecycle
 #: model:ir.model.fields,help:pms_downpayment_lifecycle.field_account_payment__downpayment_reissue_partner_id
 msgid ""
 "Set while a payment sits in draft with its down payment already rectified: "
 "the customer the replacement must be issued to once the new amount is known."
-msgstr ""
-"Se marca mientras el cobro está en borrador con su anticipo ya rectificado: "
-"el cliente al que hay que reemitirlo en cuanto se conozca el nuevo importe."
+msgstr "Se marca mientras el cobro está en borrador con su anticipo ya rectificado: el cliente al que hay que reemitirlo en cuanto se conozca el nuevo importe."
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
 #: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
 #, python-format
 msgid ""
-"The credit note cannot be posted in journal %(journal)s while these older "
-"drafts are open: %(drafts)s. Validate or cancel them first."
-msgstr ""
-"La rectificativa no se puede contabilizar en el diario %(journal)s mientras "
-"sigan abiertos estos borradores anteriores: %(drafts)s. Valídalos o anúlalos"
-" primero."
+"The folio still has %s line(s) left to invoice, so it cannot be told whether"
+" the down payment belongs to this invoice or to the next one."
+msgstr "Al folio le quedan %s línea(s) por facturar, así que no se puede saber si el anticipo corresponde a esta factura o a la siguiente."
+
+#. module: pms_downpayment_lifecycle
+#: model_terms:ir.ui.view,arch_db:pms_downpayment_lifecycle.view_move_tree_downpayment_transfer
+msgid "Total"
+msgstr "Total"
 
 #. module: pms_downpayment_lifecycle
 #. odoo-python
@@ -413,83 +454,3 @@ msgstr ""
 #, python-format
 msgid "Transfer of down payment %s"
 msgstr "Traspaso del anticipo %s"
-
-#. module: pms_downpayment_lifecycle
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid ""
-"Nothing left to transfer: when the transfer ran, the down payments of this "
-"folio had already been rectified."
-msgstr ""
-"No queda nada que traspasar: cuando se ejecutó el traspaso, los anticipos de "
-"este folio ya estaban rectificados."
-
-#. module: pms_downpayment_lifecycle
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid ""
-"Nothing transferred: this invoice was rectified before the transfer ran. The "
-"invoice that replaces it, if any, takes the down payments when it is posted."
-msgstr ""
-"No se ha traspasado nada: esta factura se rectificó antes de que se "
-"ejecutara el traspaso. Los anticipos los recibe la factura que la sustituye, "
-"si la hay, al validarse."
-
-#. module: pms_downpayment_lifecycle
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid ""
-"%(name)s was not transferred: %(company)s has no down payment transfer "
-"journal configured."
-msgstr ""
-"%(name)s no se ha traspasado: %(company)s no tiene configurado el diario de "
-"traspaso de anticipos."
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "%(standing)s is standing as down payments on this folio while this invoice only bills %(billed)s, so which part of it belongs here cannot be told apart."
-msgstr "Este folio tiene %(standing)s en anticipos sin aplicar y esta factura es de solo %(billed)s, así que no se puede saber qué parte corresponde a esta factura."
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "The folio still has %s line(s) left to invoice, so it cannot be told whether the down payment belongs to this invoice or to the next one."
-msgstr "Al folio le quedan %s línea(s) por facturar, así que no se puede saber si el anticipo corresponde a esta factura o a la siguiente."
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "Down payment left for review"
-msgstr "Anticipo pendiente de revisión"
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "Down payment transfer failed"
-msgstr "Ha fallado el traspaso del anticipo"
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "%(name)s rectified as %(refund)s and applied to this invoice."
-msgstr "%(name)s rectificada como %(refund)s y aplicada a esta factura."
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "Applied to invoice %s"
-msgstr "Aplicado a la factura %s"
-
-#. module: pms_downpayment_lifecycle
-#. odoo-python
-#: code:addons/pms_downpayment_lifecycle/models/account_move.py:0
-#, python-format
-msgid "Folio %(folio)s: down payment %(down)s transferred to %(invoice)s"
-msgstr "Folio %(folio)s: anticipo %(down)s traspasado a %(invoice)s"

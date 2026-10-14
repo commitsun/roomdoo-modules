@@ -11,8 +11,97 @@
           attrs="{'invisible': [('downpayment_transfer_state', 'in', (False, 'done'))]}"
         >
                     <field name="downpayment_transfer_message" readonly="1" />
+                    <button
+            name="action_recheck_downpayment_transfer"
+            type="object"
+            string="Check again"
+            class="btn-link"
+            attrs="{'invisible': [('downpayment_transfer_state', 'not in', ('manual', 'failed'))]}"
+          />
                 </div>
             </div>
+        </field>
+    </record>
+
+    <!-- The review list shows the reason on each line: having to open every
+         invoice to read why it is there made the list unusable. -->
+    <record id="view_move_tree_downpayment_transfer" model="ir.ui.view">
+        <field name="name">account.move.tree.downpayment.transfer</field>
+        <field name="model">account.move</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <tree
+        create="false"
+        decoration-danger="downpayment_transfer_state == 'failed'"
+        decoration-muted="downpayment_transfer_state == 'pending'"
+      >
+                <header>
+                    <button
+            name="action_recheck_downpayment_transfer"
+            type="object"
+            string="Check again"
+          />
+                </header>
+                <field name="name" />
+                <field name="invoice_date" />
+                <field name="pms_property_id" optional="show" />
+                <field
+          name="folio_ids"
+          widget="many2many_tags"
+          optional="show"
+        />
+                <field name="partner_id" />
+                <field name="amount_total" sum="Total" />
+                <field name="downpayment_transfer_state" widget="badge" />
+                <field name="downpayment_transfer_message" />
+                <field
+          name="company_id"
+          groups="base.group_multi_company"
+          optional="hide"
+        />
+                <field name="currency_id" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_move_search_downpayment_transfer" model="ir.ui.view">
+        <field name="name">account.move.search.downpayment.transfer</field>
+        <field name="model">account.move</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="folio_ids" />
+                <field name="partner_id" />
+                <field name="pms_property_id" />
+                <filter
+          name="manual"
+          string="Manual review"
+          domain="[('downpayment_transfer_state', '=', 'manual')]"
+        />
+                <filter
+          name="failed"
+          string="Failed"
+          domain="[('downpayment_transfer_state', '=', 'failed')]"
+        />
+                <filter
+          name="pending"
+          string="Pending"
+          domain="[('downpayment_transfer_state', '=', 'pending')]"
+        />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_by_state"
+            string="Down payment transfer"
+            context="{'group_by': 'downpayment_transfer_state'}"
+          />
+                    <filter
+            name="group_by_property"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                </group>
+            </search>
         </field>
     </record>
 
@@ -27,6 +116,16 @@
       name="domain"
     >[('downpayment_transfer_state', 'in', ('pending', 'manual', 'failed'))]</field>
         <field name="context">{'search_default_group_by_state': 1}</field>
+        <field
+      name="search_view_id"
+      ref="view_move_search_downpayment_transfer"
+    />
+        <field
+      name="view_ids"
+      eval="[(5, 0, 0),
+             (0, 0, {'view_mode': 'tree', 'view_id': ref('view_move_tree_downpayment_transfer')}),
+             (0, 0, {'view_mode': 'form', 'view_id': ref('account.view_move_form')})]"
+    />
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Nothing pending</p>
             <p
@@ -35,10 +134,12 @@
         </field>
     </record>
 
+    <!-- Directly under Accounting: one level deeper, under Miscellaneous, the
+         navigation bar does not show it. -->
     <menuitem
     id="menu_downpayment_lifecycle"
     name="Down payments"
-    parent="account.menu_finance_entries_accounting_miscellaneous"
+    parent="account.menu_finance_entries"
     sequence="99"
   />
 
