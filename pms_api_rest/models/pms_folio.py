@@ -116,7 +116,9 @@ class PmsFolio(models.Model):
             ):
                 vals["room_type_id"] = reservation.roomTypeId
         pricelist_id = reservation.pricelistId or pms_folio_info.pricelistId
-        if pricelist_id is not None:
+        # 0 / null means "no pricelist chosen": never store it explicitly,
+        # pms computes the pricelist of new reservations and keeps the others
+        if pricelist_id:
             if not reservation_record or self._compare_field_ids(
                 reservation_record.pricelist_id, pricelist_id
             ):
@@ -339,7 +341,9 @@ class PmsFolio(models.Model):
                     folio_vals[key] = incoming_value
 
         update("pmsPropertyId", "pms_property_id")
-        update("pricelistId", "pricelist_id")
+        # 0 / null would empty the folio pricelist (see _build_product_vals)
+        if pms_folio_info.pricelistId:
+            update("pricelistId", "pricelist_id")
         update("reservationType", "reservation_type")
         update("partnerId", "partner_id")
         update("partnerName", "partner_name")
