@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="mcp_server_log_form_view" model="ir.ui.view">
+        <field name="model">mcp.server.log</field>
+        <field name="inherit_id" ref="ai_oca_mcp.mcp_server_log_form_view" />
+        <field name="arch" type="xml">
+            <field name="server_key_id" position="after">
+                <field name="user_id" />
+                <field name="tool_name" />
+                <field name="duration_ms" />
+            </field>
+        </field>
+    </record>
+
+    <record id="mcp_server_log_tree_view" model="ir.ui.view">
+        <field name="model">mcp.server.log</field>
+        <field name="inherit_id" ref="ai_oca_mcp.mcp_server_log_tree_view" />
+        <field name="arch" type="xml">
+            <field name="server_key_id" position="after">
+                <field name="user_id" />
+                <field name="tool_name" />
+                <field name="duration_ms" />
+            </field>
+        </field>
+    </record>
+
+    <record id="mcp_server_log_search_view" model="ir.ui.view">
+        <field name="model">mcp.server.log</field>
+        <field name="inherit_id" ref="ai_oca_mcp.mcp_server_log_search_view" />
+        <field name="arch" type="xml">
+            <field name="server_key_id" position="after">
+                <field name="user_id" />
+                <field name="tool_name" />
+            </field>
+        </field>
+    </record>
+</odoo>
