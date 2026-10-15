@@ -13,6 +13,8 @@ class PmsReservationSearchParam(Datamodel):
     createDateTo = fields.String(required=False, allow_none=True)
     ids = fields.List(fields.Integer(), required=False)
     lastUpdateFrom = fields.String(required=False, allow_none=True)
+    cancelDateFrom = fields.String(required=False, allow_none=True)
+    cancelDateTo = fields.String(required=False, allow_none=True)
 
 
 class PmsReservationShortInfo(Datamodel):
@@ -79,6 +81,7 @@ class PmsReservationInfo(Datamodel):
     stateCode = fields.String(required=False, allow_none=True)
     stateDescription = fields.String(required=False, allow_none=True)
     cancelledReason = fields.String(required=False, allow_none=True)
+    cancelDate = fields.String(required=False, allow_none=True)
     children = fields.Integer(required=False, allow_none=True)
     readyForCheckin = fields.Boolean(required=False, allow_none=True)
     checkinPartnerCount = fields.Integer(required=False, allow_none=True)
