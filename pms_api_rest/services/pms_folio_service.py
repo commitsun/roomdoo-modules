@@ -3002,14 +3002,16 @@ class PmsFolioService(Component):
         folio_payment_link = self._generate_payment_link(folio_record)
         reservations = self._get_folio_reservations(folio_record)
         pms_property_name = folio_record.pms_property_id.name
-        pms_property_street = folio_record.pms_property_id.street
-        pms_property_city = folio_record.pms_property_id.city
+        # An empty field reads as False, which the String fields of the answer
+        # reject, failing the whole page
+        pms_property_street = folio_record.pms_property_id.street or ""
+        pms_property_city = folio_record.pms_property_id.city or ""
         pms_property_state = (
             folio_record.pms_property_id.state_id.name
             if folio_record.pms_property_id.state_id
             else ""
         )
-        pms_property_zip = folio_record.pms_property_id.zip
+        pms_property_zip = folio_record.pms_property_id.zip or ""
         pms_property_image = url_image_pms_api_rest(
             "pms.property",
             folio_record.pms_property_id.id,
@@ -3019,14 +3021,14 @@ class PmsFolioService(Component):
         if self._check_room_addresses(folio_record):
             reservation = self.env["pms.reservation"].sudo().browse(reservations[0].id)
             pms_property_name = reservation.preferred_room_id.name
-            pms_property_street = reservation.preferred_room_id.street
-            pms_property_city = reservation.preferred_room_id.city
+            pms_property_street = reservation.preferred_room_id.street or ""
+            pms_property_city = reservation.preferred_room_id.city or ""
             pms_property_state = (
                 reservation.preferred_room_id.state_id.name
                 if reservation.preferred_room_id.state_id
                 else ""
             )
-            pms_property_zip = reservation.preferred_room_id.zip
+            pms_property_zip = reservation.preferred_room_id.zip or ""
             if reservation.preferred_room_id.image_1920:
                 pms_room_image = url_image_pms_api_rest(
                     "pms.room",
@@ -3052,7 +3054,7 @@ class PmsFolioService(Component):
             pmsPropertyStreet=pms_property_street,
             pmsPropertyCity=pms_property_city,
             pmsPropertyState=pms_property_state,
-            pmsPropertyPhoneNumber=folio_record.pms_property_id.phone,
+            pmsPropertyPhoneNumber=folio_record.pms_property_id.phone or "",
             pmsPropertyLogo=url_image_pms_api_rest(
                 "pms.property", folio_record.pms_property_id.id, "logo"
             ),
@@ -3063,7 +3065,7 @@ class PmsFolioService(Component):
             pmsPropertyPrivacyPolicy=folio_record.pms_property_id.privacy_policy or "",
             pmsPropertyZip=pms_property_zip,
             pmsPropertyIneCategory=ine_category,
-            folioPartnerName=folio_record.partner_name,
+            folioPartnerName=folio_record.partner_name or "",
             folioReference=folio_record.name,
             folioRoomTypesDescription=folio_room_types_description_result.rstrip(", "),
             folioPendingAmount=folio_record.pending_amount,
