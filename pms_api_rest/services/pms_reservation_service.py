@@ -205,8 +205,21 @@ class PmsReservationService(Component):
                 cancelledReason=reservation.cancelled_reason
                 if reservation.cancelled_reason
                 else None,
+                cancelDate=self._get_cancel_date_local(reservation),
             )
         return res
+
+    def _get_cancel_date_local(self, reservation):
+        # cancel_datetime is not cleared when a cancelled reservation is
+        # confirmed again, so only trust it while the reservation is cancelled
+        if reservation.state != "cancel" or not reservation.cancel_datetime:
+            return None
+        property_tz = pytz.timezone(reservation.pms_property_id.tz or "UTC")
+        return (
+            pytz.UTC.localize(reservation.cancel_datetime)
+            .astimezone(property_tz)
+            .isoformat()
+        )
 
     def _create_vals_from_params(
         self, reservation_vals, reservation_data, reservation_id
@@ -937,6 +950,28 @@ class PmsReservationService(Component):
         if pms_search_param.lastUpdateFrom:
             last_update = fields.Datetime.from_string(pms_search_param.lastUpdateFrom)
             domain.append(("write_date", ">=", last_update))
+        if pms_search_param.cancelDateFrom or pms_search_param.cancelDateTo:
+            domain.append(("state", "=", "cancel"))
+        if pms_search_param.cancelDateFrom:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    ">=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateFrom, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
+        if pms_search_param.cancelDateTo:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    "<=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateTo, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
 
         reservations = self.env["pms.reservation"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=reservations)
@@ -1013,6 +1048,10 @@ class PmsReservationService(Component):
                         else None,
                         priceOnlyServices=round(reservation.price_services, 2),
                         priceOnlyRoom=round(reservation.price_total, 2),
+                        cancelledReason=reservation.cancelled_reason
+                        if reservation.cancelled_reason
+                        else None,
+                        cancelDate=self._get_cancel_date_local(reservation),
                     )
                 )
         return res_reservations
