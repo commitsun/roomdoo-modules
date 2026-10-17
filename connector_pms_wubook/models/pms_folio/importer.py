@@ -64,6 +64,8 @@ class ChannelWubookPmsFolioImporter(Component):
         elif binding.wubook_status in ("1", "2", "4") and binding.state == "cancel":
             folio.with_context(confirm_all_reservations=True).action_confirm()
 
+        self._import_channel_extras(binding, folio)
+
         # TODO: move get_all_items action_cancel here
         # binding.reservation_ids.filtered(lambda x: x['wubook_status'] == '5').action_cancel()
 
@@ -146,6 +148,16 @@ class ChannelWubookPmsFolioImporter(Component):
                 )
 
         self._refresh_availability_export(binding)
+
+    def _import_channel_extras(self, binding, folio):
+        """Add the extras sold with the booking to the folio as services.
+
+        Only for the channels and hotels that import them, and it never fails
+        the import (see ``channel.wubook.pms.folio._sync_channel_extras``).
+        It runs before the prepayment, which is capped to the folio total.
+        """
+        if binding._channel_extras_to_sync(folio):
+            binding._sync_channel_extras_safe(folio)
 
     def _refresh_availability_export(self, binding):
         """Re-publish the availability the imported folio just moved.
