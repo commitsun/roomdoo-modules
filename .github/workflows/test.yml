@@ -97,6 +97,14 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          # pydantic 2.14 removed _generate_schema.get_type_ref, which
+          # extendable_pydantic (<= 1.4.1) patches at import time, so Odoo fails
+          # to load extendable_fastapi and the registry never builds. pydantic
+          # arrives unpinned through several requirements (whatsapp_formatter,
+          # fastapi, openai...), so cap it for every pip call in this step.
+          echo "pydantic<2.14" > "$RUNNER_TEMP/pip-constraints.txt"
+          export PIP_CONSTRAINT="$RUNNER_TEMP/pip-constraints.txt"
+
           pip install --upgrade pip "setuptools<81" wheel coverage diff-cover
 
           # gevent / greenlet fixes for Python 3.10
