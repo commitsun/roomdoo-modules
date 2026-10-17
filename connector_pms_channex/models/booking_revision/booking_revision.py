@@ -29,6 +29,31 @@ def _channex_nights(room):
     return nights
 
 
+#: Everything Channex can say about a booking. A message of any other status is
+#: recorded without one: this field is not the place to keep a word we do not
+#: understand, and the reason on the row says what the word was.
+CHANNEX_STATUSES = [
+    ("new", "New"),
+    ("modified", "Modified"),
+    ("cancelled", "Cancelled"),
+]
+
+
+def _channex_cancels(payload):
+    """Whether this message takes the whole booking away.
+
+    Channex says it in ``status`` and there only: the rooms of a cancellation
+    keep ``is_cancelled`` false, with their dates and their prices, which is
+    verified against staging and not assumed. A modification whose every room
+    is cancelled says the same thing the other way round, and there is the same
+    thing to do about it.
+    """
+    if payload.get("status") == "cancelled":
+        return True
+    rooms = payload.get("rooms") or []
+    return bool(rooms) and all(room.get("is_cancelled") for room in rooms)
+
+
 class ChannelChannexBookingRevision(models.Model):
     """What Channex has sent for this property, and what became of each message.
 
@@ -91,11 +116,7 @@ class ChannelChannexBookingRevision(models.Model):
         "this payload, so it may well come in empty.",
     )
     status = fields.Selection(
-        selection=[
-            ("new", "New"),
-            ("modified", "Modified"),
-            ("cancelled", "Cancelled"),
-        ],
+        selection=CHANNEX_STATUSES,
         readonly=True,
         help="Of the message, not of the booking.",
     )
@@ -240,7 +261,9 @@ class ChannelChannexBookingRevision(models.Model):
             "ota_reservation_code": values.get("ota_reservation_code"),
             "ota_name": values.get("ota_name"),
             "channel_id": values.get("channel_id"),
-            "status": values.get("status"),
+            "status": values.get("status")
+            if values.get("status") in dict(CHANNEX_STATUSES)
+            else False,
             "arrival_date": values.get("arrival_date"),
             "departure_date": values.get("departure_date"),
             "amount": values.get("amount") or 0.0,
@@ -318,28 +341,20 @@ class ChannelChannexBookingRevision(models.Model):
 
     @api.model
     def _channex_problem(self, backend, payload):
-        """Why this message cannot become a folio, if we can tell in advance.
+        """Why this message cannot be applied, if we can tell in advance.
 
         Reported rather than raised: none of these is a fault, they are all
         things a person can settle, and losing the message is worse than any of
         them.
         """
-        if payload.get("status") not in ("new", "modified"):
-            return _("Cancellations are not taken in yet.")
+        if payload.get("status") not in dict(CHANNEX_STATUSES):
+            return _("Messages of status %s are not taken in.") % (
+                payload.get("status") or _("none")
+            )
         if not payload.get("booking_id"):
             return _("The message carries no booking id to file it under.")
-        rooms = payload.get("rooms") or []
-        if not rooms:
-            return _("The message carries no room.")
-        # A modification can cancel one room of several. Every room cancelled is
-        # a cancellation by another name, and that is not taken in yet either.
-        rooms = [room for room in rooms if not room.get("is_cancelled")]
-        if not rooms:
-            return _(
-                "Every room of the message is cancelled, and cancellations are "
-                "not taken in yet."
-            )
-        invoiced = self._channex_binding(backend, payload).odoo_id.move_ids.filtered(
+        binding = self._channex_binding(backend, payload)
+        invoiced = binding.odoo_id.move_ids.filtered(
             lambda move: move.state == "posted"
         )
         if invoiced:
@@ -347,13 +362,65 @@ class ChannelChannexBookingRevision(models.Model):
                 "The folio is invoiced by %s, which would no longer say what "
                 "was sold."
             ) % ", ".join(invoiced.mapped("name"))
+        if _channex_cancels(payload):
+            return self._channex_cancellation_problem(backend, payload, binding)
+        # A modification can cancel one room of several, and a room the message
+        # itself cancels is not a room to write.
+        rooms = [
+            room
+            for room in (payload.get("rooms") or [])
+            if not room.get("is_cancelled")
+        ]
+        if not rooms:
+            return _("The message carries no room.")
         with backend.work_on("channel.channex.pms.room.type") as work:
             binder = work.component(usage="binder")
             for room in rooms:
                 problem = self._channex_room_problem(room, binder)
                 if problem:
                     return problem
+                problem = self._channex_price_problem(room)
+                if problem:
+                    return problem
             return self._channex_dropped_problem(backend, payload, rooms, binder)
+
+    @api.model
+    def _channex_cancellation_problem(self, backend, payload, binding):
+        """Why this cancellation cannot be applied, if we can tell in advance.
+
+        Almost nothing stops one, and that is the point: a cancellation that
+        does not land is a room the hotel keeps blocked and a guest charged for
+        a stay they called off. It is never held up by a price, by a breakdown
+        that does not add up or by anything else the message says about the
+        booking, because none of that gets written.
+        """
+        if binding:
+            underway = binding.odoo_id.reservation_ids.filtered(
+                lambda r: r.state != "cancel" and not r.allowed_cancel
+            )
+            if underway:
+                return _(
+                    "The booking is cancelled at the OTA, and %s cannot be "
+                    "cancelled here: the stay is already under way."
+                ) % ", ".join(underway.mapped("name"))
+            return False
+        # The booking never reached Odoo, so this message is what puts it there.
+        # A cancellation nobody can see is a cancellation lost: we reflect what
+        # the OTA sold, we do not decide which bookings existed. That much of
+        # the message does have to be writable.
+        rooms = payload.get("rooms") or []
+        if not rooms:
+            return _(
+                "The message cancels a booking that is not in the system, and "
+                "carries no room to record it with."
+            )
+        with backend.work_on("channel.channex.pms.room.type") as work:
+            binder = work.component(usage="binder")
+            for room in rooms:
+                problem = self._channex_room_problem(room, binder)
+                if problem:
+                    return problem
+        return False
 
     @api.model
     def _channex_dropped_problem(self, backend, payload, rooms, binder):
@@ -389,14 +456,18 @@ class ChannelChannexBookingRevision(models.Model):
 
     @api.model
     def _channex_room_problem(self, room, binder):
-        """Whether one room of the message can be written as it came."""
+        """Whether one room of the message can be written at all.
+
+        What it costs is asked separately: a cancellation has to get in whatever
+        its prices look like, and this much has to hold for every message.
+        """
         if not room.get("checkin_date") or not room.get("checkout_date"):
             return _("The message does not say what nights a room is for.")
         if not room.get("room_type_id") or not binder.to_internal(room["room_type_id"]):
             return _("Room type %s is not mapped to this property.") % (
                 room.get("room_type_id") or _("none")
             )
-        return self._channex_price_problem(room)
+        return False
 
     @api.model
     def _channex_price_problem(self, room):
@@ -406,6 +477,9 @@ class ChannelChannexBookingRevision(models.Model):
         carries the price of every night of the stay and that is what gets
         written, or the message is not applied: a folio priced from our own
         pricelist would be an invoice for money nobody agreed to.
+
+        Asked of a booking coming in or being modified, and of nothing else. A
+        cancellation is not priced, it is cancelled.
         """
         days = room.get("days") or {}
         nights = _channex_nights(room)
