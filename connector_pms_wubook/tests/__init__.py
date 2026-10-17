@@ -15,6 +15,7 @@ from . import test_backend_scoping
 from . import test_binding_registry
 from . import test_call_control
 from . import test_folio_channel_notes
+from . import test_folio_channel_payments
 from . import test_listener_batching
 from . import test_master_sync
 from . import test_name_search

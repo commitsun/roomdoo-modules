@@ -1,5 +1,6 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import logging
 from collections import defaultdict
 
 from psycopg2.extensions import AsIs
@@ -10,6 +11,9 @@ from odoo.tools.misc import formatLang
 from odoo.addons.component.core import Component
 
 from ..pms_availability.listener import buffer_property_exports_for_rooms
+from .retryable import RETRYABLE_ERRORS
+
+_logger = logging.getLogger(__name__)
 
 
 class ChannelWubookPmsFolioDelayedBatchImporter(Component):
@@ -79,6 +83,10 @@ class ChannelWubookPmsFolioImporter(Component):
     def _after_import(self, binding):
         folio = binding.odoo_id
         self._price_board_services(folio)
+        # Whether this import cancels the folio (the block below changes it)
+        cancelled_now = (
+            binding.wubook_status in ("3", "5", "6") and binding.state != "cancel"
+        )
         # If Wubook status is 7 (Wubook modification) the folio state is not changed
         if binding.wubook_status in ("3", "5", "6") and binding.state != "cancel":
             # If folio has draft invoice, cancel invoices:
@@ -182,6 +190,7 @@ class ChannelWubookPmsFolioImporter(Component):
                     partner=folio.partner_id,
                 )
 
+        self._import_channel_payments(binding, folio, cancelled_now)
         self._refresh_availability_export(binding)
 
     def _deduct_included_tourist_tax(self, folio, reservations):
@@ -234,6 +243,47 @@ class ChannelWubookPmsFolioImporter(Component):
         """
         if binding._channel_extras_to_sync(folio):
             binding._sync_channel_extras_safe(folio)
+
+    def _import_channel_payments(self, binding, folio, cancelled_now):
+        """Register on the folio what the channel reports as paid online.
+
+        Opt-in per channel: nothing happens unless the OTA payment mapping of
+        the folio agency has "Register Channel Payments" set. Whatever fails
+        in the sync must not make the import of the booking fail: its work is
+        rolled back, logged and noted on the folio. Concurrency errors are
+        raised so that queue_job retries the import.
+        """
+        # cheap checks first: most bookings carry no payment information
+        if not binding._has_channel_payment_info():
+            return
+        if not binding._get_channel_payment_mapping(folio):
+            return
+        # Flush the work the import left pending (ORM writes and precommit
+        # hooks) outside of the try: the savepoint would flush it inside, and
+        # its failures would be taken for failures of the sync instead of
+        # failing the import as they always did.
+        self.env.cr.flush()
+        try:
+            with self.env.cr.savepoint():
+                binding._sync_channel_payments(folio, cancelled_now)
+        except RETRYABLE_ERRORS:
+            raise
+        except Exception as error:
+            _logger.exception(
+                "Folio %s: the payment reported by the channel could not be "
+                "registered",
+                folio.id,
+            )
+            try:
+                with self.env.cr.savepoint():
+                    binding._notify_channel_payment_error(folio, error)
+            except RETRYABLE_ERRORS:
+                raise
+            except Exception:
+                _logger.exception(
+                    "Folio %s: the channel payment error could not be noted",
+                    folio.id,
+                )
 
     def _refresh_availability_export(self, binding):
         """Re-publish the availability the imported folio just moved.

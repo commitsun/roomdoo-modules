@@ -394,17 +394,19 @@ Only for development or testing purpose, do not use in production.
 <ul class="simple">
 <li><a class="reference internal" href="#configuration" id="toc-entry-1">Configuration</a><ul>
 <li><a class="reference internal" href="#channel-extras" id="toc-entry-2">Channel extras</a></li>
+<li><a class="reference internal" href="#payments-reported-by-the-channel" id="toc-entry-3">Payments reported by the channel</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#usage" id="toc-entry-3">Usage</a><ul>
-<li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-4">Mirai lines in the folio internal notes</a></li>
+<li><a class="reference internal" href="#usage" id="toc-entry-4">Usage</a><ul>
+<li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-5">Mirai lines in the folio internal notes</a></li>
+<li><a class="reference internal" href="#how-channel-payments-are-registered" id="toc-entry-6">How channel payments are registered</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-5">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-6">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-7">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-8">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-9">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-7">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-8">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-9">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-10">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-11">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -480,9 +482,31 @@ imported and a folio note asks reception to add them by hand to the right
 folio.</li>
 </ul>
 </div>
+<div class="section" id="payments-reported-by-the-channel">
+<h2><a class="toc-backref" href="#toc-entry-3">Payments reported by the channel</a></h2>
+<p>Some channels report in the booking how much the guest already paid online
+through the channel’s own payment gateway (today only the Mirai booking
+engine). The connector can register that amount on the folio as a payment.
+It is disabled by default and enabled per hotel and channel:</p>
+<ol class="arabic simple">
+<li>Check in the backend type that the channel is mapped to the right agency.</li>
+<li>Open the Wubook backend of the hotel, tab <em>Payments</em>.</li>
+<li>In <em>OTA Payment Mapping</em>, add (or edit) the line of that agency, choose the
+journal and the incoming payment method where the channel settles the
+money, and tick <em>Register Channel Payments</em>.</li>
+</ol>
+<p>Only one mapping per agency can have it ticked, and it needs an incoming
+payment method.</p>
+<p>From the activation date, the staff must stop registering by hand the
+prepayments of that channel. A folio that already has payments registered by
+hand is never paid automatically (a note says so), but a payment registered by
+hand after the automatic one would be a duplicate.</p>
+<p>Bookings imported before the activation are processed the next time they are
+imported (a new version sent by the channel or a manual resynchronization).</p>
+</div>
 </div>
 <div class="section" id="usage">
-<h1><a class="toc-backref" href="#toc-entry-3">Usage</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-4">Usage</a></h1>
 <p>Go to connector section and create a new channel backend. Fill form and use buttons to synchronize data:</p>
 <ol class="arabic simple">
 <li>Create Backend</li>
@@ -499,7 +523,7 @@ All other records modifications are handled to be sent to server as it changes.<
 <p>All changes are pushed every 5 minutes… and request new bookings every minute.</p>
 <p>Modifications using calendars are pushed immediately when press “save” button.</p>
 <div class="section" id="mirai-lines-in-the-folio-internal-notes">
-<h2><a class="toc-backref" href="#toc-entry-4">Mirai lines in the folio internal notes</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-5">Mirai lines in the folio internal notes</a></h2>
 <p>For the bookings of the Mirai booking engine (Wubook channel 197), the import
 can keep on top of the folio internal notes (the “internal notes” shown at the
 top of the folio) a few lines for reception, each one starting with
@@ -540,9 +564,51 @@ also tells reception that its <tt class="docutils literal">[Mirai]</tt> lines ma
 is not posted again while the folio has it. Bookings of other channels never
 touch the internal notes.</p>
 </div>
+<div class="section" id="how-channel-payments-are-registered">
+<h2><a class="toc-backref" href="#toc-entry-6">How channel payments are registered</a></h2>
+<p>When the channel of a folio has <em>Register Channel Payments</em> set (see
+Configuration), every import of the booking compares the amount the channel
+reports as paid online for the whole booking with what the connector already
+registered on the folio, and registers the difference as a payment on the
+configured journal, dated on the day of the import (hotel time). Notes on the
+folio tell the staff what happened:</p>
+<ul class="simple">
+<li>Payments only go up. A booking version reporting 0 paid and 0 due carries
+no information (the channel sends it while an online payment is pending, and
+when a paid booking is modified) and changes nothing. When the channel
+reports less than what was registered, nothing is cancelled nor refunded: a
+note asks to review the payments.</li>
+<li>A payment registered automatically is never registered again, even if the
+staff cancels or edits it.</li>
+<li>Online payment pending: a note shows the deadline the channel gave the
+guest, in hotel time. When the guest pays, the channel sends a new version
+of the booking and the payment is registered then. Unpaid bookings end up
+cancelled by the channel.</li>
+<li>Cancellations keep the payments and register no refund: a note asks to
+review the cancellation penalty and the refund. Nothing is ever registered
+on a cancelled folio.</li>
+<li>A booking Wubook splits in several folios reports the paid amount of the
+whole booking in every folio: it is not registered, a note asks to register
+it by hand on the right folio.</li>
+<li>Not registered either, with a note: folios that already had payments
+registered by hand before the first automatic one, amounts in a currency
+different from the folio’s, and folios of a channel booking whose payment
+was already registered on another folio.</li>
+<li>The whole amount paid is registered even if it exceeds the folio total
+(e.g. extras not in the folio yet); a note warns about it.</li>
+<li>If the payment cannot be registered (e.g. a misconfigured journal), the
+booking is imported anyway and a note explains why.</li>
+</ul>
+<p>Only the charges made through the channel’s own payment gateway are reported.
+The charges the hotel makes with its own POS terminal on the guaranteed card
+(first night, cancellation penalties…) never reach the channel nor Wubook
+and must still be registered by hand.</p>
+<p>The amounts reported by the channel, the payment deadline and the payments
+registered are shown in the Wubook bindings of the folio (<em>Connectors</em> tab).</p>
+</div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-5">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-7">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -550,21 +616,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-6">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-8">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-7">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-9">Authors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-8">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-10">Contributors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-9">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-11">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/connector_pms_wubook">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>

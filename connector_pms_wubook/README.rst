@@ -116,6 +116,31 @@ How the extras reach the folio:
   imported and a folio note asks reception to add them by hand to the right
   folio.
 
+Payments reported by the channel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some channels report in the booking how much the guest already paid online
+through the channel's own payment gateway (today only the Mirai booking
+engine). The connector can register that amount on the folio as a payment.
+It is disabled by default and enabled per hotel and channel:
+
+#. Check in the backend type that the channel is mapped to the right agency.
+#. Open the Wubook backend of the hotel, tab *Payments*.
+#. In *OTA Payment Mapping*, add (or edit) the line of that agency, choose the
+   journal and the incoming payment method where the channel settles the
+   money, and tick *Register Channel Payments*.
+
+Only one mapping per agency can have it ticked, and it needs an incoming
+payment method.
+
+From the activation date, the staff must stop registering by hand the
+prepayments of that channel. A folio that already has payments registered by
+hand is never paid automatically (a note says so), but a payment registered by
+hand after the automatic one would be a duplicate.
+
+Bookings imported before the activation are processed the next time they are
+imported (a new version sent by the channel or a manual resynchronization).
+
 Usage
 =====
 
@@ -181,6 +206,50 @@ goes to the server log. When the folio already existed, a note in its messages
 also tells reception that its ``[Mirai]`` lines may be outdated, only once: it
 is not posted again while the folio has it. Bookings of other channels never
 touch the internal notes.
+
+How channel payments are registered
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the channel of a folio has *Register Channel Payments* set (see
+Configuration), every import of the booking compares the amount the channel
+reports as paid online for the whole booking with what the connector already
+registered on the folio, and registers the difference as a payment on the
+configured journal, dated on the day of the import (hotel time). Notes on the
+folio tell the staff what happened:
+
+* Payments only go up. A booking version reporting 0 paid and 0 due carries
+  no information (the channel sends it while an online payment is pending, and
+  when a paid booking is modified) and changes nothing. When the channel
+  reports less than what was registered, nothing is cancelled nor refunded: a
+  note asks to review the payments.
+* A payment registered automatically is never registered again, even if the
+  staff cancels or edits it.
+* Online payment pending: a note shows the deadline the channel gave the
+  guest, in hotel time. When the guest pays, the channel sends a new version
+  of the booking and the payment is registered then. Unpaid bookings end up
+  cancelled by the channel.
+* Cancellations keep the payments and register no refund: a note asks to
+  review the cancellation penalty and the refund. Nothing is ever registered
+  on a cancelled folio.
+* A booking Wubook splits in several folios reports the paid amount of the
+  whole booking in every folio: it is not registered, a note asks to register
+  it by hand on the right folio.
+* Not registered either, with a note: folios that already had payments
+  registered by hand before the first automatic one, amounts in a currency
+  different from the folio's, and folios of a channel booking whose payment
+  was already registered on another folio.
+* The whole amount paid is registered even if it exceeds the folio total
+  (e.g. extras not in the folio yet); a note warns about it.
+* If the payment cannot be registered (e.g. a misconfigured journal), the
+  booking is imported anyway and a note explains why.
+
+Only the charges made through the channel's own payment gateway are reported.
+The charges the hotel makes with its own POS terminal on the guaranteed card
+(first night, cancellation penalties...) never reach the channel nor Wubook
+and must still be registered by hand.
+
+The amounts reported by the channel, the payment deadline and the payments
+registered are shown in the Wubook bindings of the folio (*Connectors* tab).
 
 Bug Tracker
 ===========
