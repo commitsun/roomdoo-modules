@@ -5,6 +5,7 @@
 from . import adapter
 from . import binder
 from . import binding
+from . import binding_channel_extras
 from . import exporter
 from . import importer
 from . import mapper_export

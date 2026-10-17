@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Hotel managers map the extras of their own hotels only -->
+    <record id="channel_wubook_backend_extra_rule_pms_manager" model="ir.rule">
+        <field name="name">Channel extras of the user's properties</field>
+        <field name="model_id" ref="model_channel_wubook_backend_extra" />
+        <field name="groups" eval="[(4, ref('pms.group_pms_manager'))]" />
+        <field name="domain_force">
+            ['|', ('pms_property_id', '=', False),
+            ('pms_property_id', 'in', user.pms_property_ids.ids)]
+        </field>
+    </record>
+    <record
+    id="channel_wubook_backend_extra_rule_connector_manager"
+    model="ir.rule"
+  >
+        <field name="name">Channel extras of every backend</field>
+        <field name="model_id" ref="model_channel_wubook_backend_extra" />
+        <field
+      name="groups"
+      eval="[(4, ref('connector.group_connector_manager'))]"
+    />
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

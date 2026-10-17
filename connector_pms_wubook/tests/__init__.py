@@ -25,3 +25,4 @@ from . import test_reservation_mapper
 from . import test_tourist_tax_included
 from . import test_folio_mapper_lang
 from . import test_board_services
+from . import test_folio_channel_extras

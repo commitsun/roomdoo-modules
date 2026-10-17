@@ -392,21 +392,97 @@ Only for development or testing purpose, do not use in production.
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#usage" id="toc-entry-1">Usage</a><ul>
-<li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-2">Mirai lines in the folio internal notes</a></li>
+<li><a class="reference internal" href="#configuration" id="toc-entry-1">Configuration</a><ul>
+<li><a class="reference internal" href="#channel-extras" id="toc-entry-2">Channel extras</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-3">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-4">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-5">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-6">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-7">Maintainers</a></li>
+<li><a class="reference internal" href="#usage" id="toc-entry-3">Usage</a><ul>
+<li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-4">Mirai lines in the folio internal notes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-5">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-6">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-7">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-8">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-9">Maintainers</a></li>
 </ul>
 </li>
 </ul>
 </div>
+<div class="section" id="configuration">
+<h1><a class="toc-backref" href="#toc-entry-1">Configuration</a></h1>
+<div class="section" id="channel-extras">
+<h2><a class="toc-backref" href="#toc-entry-2">Channel extras</a></h2>
+<p>Some channels sell extras with the booking (parking, cot, breakfast,
+experiences…) and leave them out of the booking amount, so the folio does
+not add up to what the guest pays. The connector can add them to the folio as
+services. Nothing changes until it is enabled in two places:</p>
+<ol class="arabic simple">
+<li>In the <strong>Backend Type</strong>, <strong>Mappings</strong> tab, <strong>OTAs</strong> list, tick <strong>Import
+Extras</strong> on the channels whose booking amount does not include the extras
+(e.g. the Mirai booking engine, Wubook channel 197). Leave it off for the
+rest: Booking.com, for instance, sends the city tax as an extra, and the
+hotel already charges its own tourist tax.</li>
+<li>In the <strong>Backend</strong> of each hotel, <strong>Extras</strong> tab, set <strong>Import Extras From</strong>.
+Folios created before that moment never get channel extras: reception added
+them by hand. Tell reception to stop typing the extras of those channels in
+the bookings that arrive from then on.</li>
+</ol>
+<p>Each extra is matched by its name with a row of the <strong>Extras</strong> tab of the
+backend (also in <strong>Connectors &gt; PMS &gt; Channel Extras</strong>, and for the hotel
+managers in <strong>PMS Management &gt; Configuration &gt; Channel Extras</strong>, both showing
+the pending rows by default):</p>
+<ul class="simple">
+<li>The names a channel has never sent before are added as <strong>pending</strong> rows,
+without product. Assign them the product they are imported as. Names are
+matched without case, accents nor punctuation, but digits count (“Parking 2”
+is not “Parking”). Channels change the names over time (e.g. from Spanish to
+English): several rows can point to the same product.</li>
+<li>Set the action to <strong>Ignore</strong>, or archive the row, for the extras that must
+not reach the folio. Extras the channel lists at 0 as part of a package are
+imported at 0 unless they are ignored.</li>
+<li>The <strong>Fallback Extras Product</strong>, when set, imports the extras of the pending
+rows anyway, named after the extra, so the folio total is right. The folios
+imported that way keep the fallback product when the row gets its own one
+later (<strong>Apply to Pending Folios</strong> does not change them): only the bookings
+imported from then on use it. Without a fallback product, pending extras are
+not imported and a folio note lists them.</li>
+<li>The prices of the channel include taxes, so the products must have taxes
+included in the price; otherwise the extra is not imported and a folio note
+says so.</li>
+<li>Pending extras, and the ones that could not be imported (e.g. the daily
+limit of the product was reached), are retried on every new version of the
+booking. Once fixed, <strong>Apply to Pending Folios</strong> in the row imports them on
+the folios waiting for them, without asking Wubook.</li>
+</ul>
+<p>How the extras reach the folio:</p>
+<ul class="simple">
+<li>All the extras of a booking go to its first room (by arrival date), even in
+bookings of several rooms: channels do not tell the room of an extra, and
+their quantity may count all the rooms.</li>
+<li>The lines follow the product, as pms places them: per day products consumed
+before or after the night spread their quantity over the nights (from the
+day after the arrival when consumed after the night). The rest get a single
+line: on the arrival date when consumed on check-in, else on the departure
+date, or on the current date of the hotel when the product is not per day and
+the guests are already on board. The total is the one the channel charged.</li>
+<li>When the channel changes or removes an extra, its service is updated or
+deleted, unless reception changed it by hand (product, quantity or total) or
+it is invoiced: then a folio note asks to review it. A service deleted by
+hand is never created again. If the folio already has a service of the same
+product added by hand, the extra is not imported, to avoid charging it
+twice.</li>
+<li>When the channel moves the stay, the services move to the new room.
+Cancelled rooms do not charge their services.</li>
+<li>When the channel splits a booking in several folios (one per part of the
+stay), every folio repeats the extras of the whole booking: they are not
+imported and a folio note asks reception to add them by hand to the right
+folio.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="usage">
-<h1><a class="toc-backref" href="#toc-entry-1">Usage</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-3">Usage</a></h1>
 <p>Go to connector section and create a new channel backend. Fill form and use buttons to synchronize data:</p>
 <ol class="arabic simple">
 <li>Create Backend</li>
@@ -423,7 +499,7 @@ All other records modifications are handled to be sent to server as it changes.<
 <p>All changes are pushed every 5 minutes… and request new bookings every minute.</p>
 <p>Modifications using calendars are pushed immediately when press “save” button.</p>
 <div class="section" id="mirai-lines-in-the-folio-internal-notes">
-<h2><a class="toc-backref" href="#toc-entry-2">Mirai lines in the folio internal notes</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-4">Mirai lines in the folio internal notes</a></h2>
 <p>For the bookings of the Mirai booking engine (Wubook channel 197), the import
 can keep on top of the folio internal notes (the “internal notes” shown at the
 top of the folio) a few lines for reception, each one starting with
@@ -466,7 +542,7 @@ touch the internal notes.</p>
 </div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-3">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-5">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -474,21 +550,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-4">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-6">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-5">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-7">Authors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-6">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-8">Contributors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-7">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-9">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/connector_pms_wubook">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>

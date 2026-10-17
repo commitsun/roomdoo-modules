@@ -11,6 +11,7 @@ from odoo.addons.connector.components.mapper import mapping, only_create
 
 from ...models.pms_reservation.mapper_import import get_room_type
 from .channel_booking import MIRAI_CHANNEL_ID
+from .channel_extras import read_channel_extras
 from .channel_notes import MIRAI_NOTE_PREFIX, merge_tagged_lines
 from .retryable import RETRYABLE_ERRORS
 
@@ -47,6 +48,27 @@ class ChannelWubookPmsFolioMapperImport(Component):
         return {
             "wubook_status": record["was_modified"] and "7" or str(record["status"])
         }
+
+    @mapping
+    def channel_extras(self, record):
+        """Keep the extras sold with the booking, for the channels and hotels
+        that import them (see ``channel.wubook.pms.folio``
+        ``_sync_channel_extras``). It only fails the import on the errors
+        queue_job retries it on (database concurrency, RetryableJobError)."""
+        try:
+            binding = self.options.binding
+            if self.backend_record._channel_extras_enabled(
+                record.get("id_channel"), binding.odoo_id if binding else None
+            ):
+                return {"channel_extras": read_channel_extras(record)}
+        except RETRYABLE_ERRORS:
+            raise
+        except Exception:  # pylint: disable=broad-except
+            _logger.exception(
+                "Could not read the channel extras of booking %s",
+                record.get("reservation_code"),
+            )
+        return {}
 
     @mapping
     def payment_gateway_fee(self, record):
