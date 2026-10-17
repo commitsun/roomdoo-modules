@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!--
+        Communications are property scoped data, like the reservations they
+        report: a user only sees the ones of the properties assigned to them.
+    -->
+    <record id="pms_ertzaintza_communication_property_rule" model="ir.rule">
+        <field name="name">Ertzaintza Communication Property Rule</field>
+        <field name="model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="global" eval="True" />
+        <field name="domain_force">
+            ['|', ('pms_property_id', '=', False), ('pms_property_id', 'in',
+            user.pms_property_ids.ids)]
+        </field>
+    </record>
+
+</odoo>

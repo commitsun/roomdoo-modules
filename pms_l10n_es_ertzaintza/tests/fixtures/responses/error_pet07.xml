@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body
+  ><ns0:envioFicheroXMLResponse
+      xmlns:ns0="http://gvdi.com/a19.registroHotelero.negocio.ejbs"
+    ><return><respuesta><error><codigo>PET07</codigo><descripcion
+            >La comunicación (XML) es obligatoria.</descripcion></error><peticion
+          >7fd32f56-307d-4873-9994-270a906a5d49</peticion></respuesta></return></ns0:envioFicheroXMLResponse></S:Body></S:Envelope>
