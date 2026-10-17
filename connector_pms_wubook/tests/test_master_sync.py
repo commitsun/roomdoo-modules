@@ -81,6 +81,7 @@ def _make_backend_environment(cls):
     )
 
 
+@tagged("post_install", "-at_install")
 class TestWubookConnectMixin(TransactionComponentCase):
     """Connection state computed field + action helpers."""
 
@@ -134,6 +135,7 @@ class TestWubookConnectMixin(TransactionComponentCase):
         self.assertEqual(action["res_id"], binding.id)
 
 
+@tagged("post_install", "-at_install")
 class TestWubookConnectWizard(TransactionComponentCase):
     """Wizard end-to-end: existing/manual/new modes."""
 
@@ -274,6 +276,7 @@ class TestWubookConnectWizard(TransactionComponentCase):
         self.assertFalse(binding.external_id)
 
 
+@tagged("post_install", "-at_install")
 class TestMasterListeners(TransactionComponentCase):
     """Listeners post-binding for room types / pricelists / plans."""
 
@@ -404,6 +407,7 @@ class TestMasterListeners(TransactionComponentCase):
         trap.assert_jobs_count(0)
 
 
+@tagged("post_install", "-at_install")
 class TestPlanRuleCoalescing(TransactionComponentCase):
     """Massive rule changes collapse to one job per plan binding."""
 
@@ -477,6 +481,7 @@ class TestPlanRuleCoalescing(TransactionComponentCase):
         trap.assert_jobs_count(0)
 
 
+@tagged("post_install", "-at_install")
 class TestRegularPricelistItemListener(TransactionComponentCase):
     """Item changes on a regular (non-flatten) connected pricelist must
     enqueue ONE ``export_record`` job per affected binding via
@@ -600,6 +605,7 @@ class TestRegularPricelistItemListener(TransactionComponentCase):
         trap.assert_jobs_count(0)
 
 
+@tagged("post_install", "-at_install")
 class TestExportRecordIdentityKey(TransactionComponentCase):
     """Bursts of changes that span several transactions must collapse
     to at most one PENDING ``export_record`` job per binding via
@@ -689,6 +695,7 @@ class TestExportRecordIdentityKey(TransactionComponentCase):
         )
 
 
+@tagged("post_install", "-at_install")
 class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
     """When an item change affects a parent pricelist that is itself
     connected as a regular daily pricelist AND has a flatten descendant,
@@ -781,6 +788,7 @@ class TestParentWithFlattenDescendantBothBuffers(TransactionComponentCase):
         )
 
 
+@tagged("post_install", "-at_install")
 class TestExportDependencies(TransactionComponentCase):
     """`_export_dependencies()` walks referenced room types / parents."""
 
@@ -900,6 +908,7 @@ class TestExportDependencies(TransactionComponentCase):
         mocked_dep.assert_not_called()
 
 
+@tagged("post_install", "-at_install")
 class TestWubookDateValid(TransactionComponentCase):
     """Both bounds of ``wubook_date_valid``: max 2 days back, max ~2 years
     ahead. Items / rules outside that window must be filtered out by the
@@ -975,6 +984,7 @@ class TestWubookDateValid(TransactionComponentCase):
         self.assertTrue(rule.wubook_date_valid())
 
 
+@tagged("post_install", "-at_install")
 class TestFlattenWindowCap(TransactionComponentCase):
     """The flatten default window must never exceed Wubook's 2-year ceiling
     even if ``flatten_window_days`` on the backend is configured higher.
@@ -1028,6 +1038,7 @@ class TestFlattenWindowCap(TransactionComponentCase):
         self.assertEqual(date_to - date_from, timedelta(days=99))
 
 
+@tagged("post_install", "-at_install")
 class TestRoomTypeConnectTriggersDependents(TransactionComponentCase):
     """Connecting a room type AFTER pricelists / plans were already
     connected must re-enqueue an export for every dependent binding so
@@ -1171,6 +1182,7 @@ class TestHotfixNameUpdates(TransactionComponentCase):
         self.assertIn("rplan_rename_rplan", called_endpoints)
 
 
+@tagged("post_install", "-at_install")
 class TestNameNotResentWhenUnchanged(TransactionComponentCase):
     """The pricelist / plan mappers must skip ``name`` when the value
     matches ``wubook_last_synced_name`` so the scheduler-driven re-export
@@ -1263,6 +1275,7 @@ class TestNameNotResentWhenUnchanged(TransactionComponentCase):
         self.assertEqual(result, {"name": "Renamed Plan"})
 
 
+@tagged("post_install", "-at_install")
 class TestAvailabilityListener(TransactionComponentCase):
     """Property availability exports to Wubook. Two trigger paths:
 

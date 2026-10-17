@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from unittest import mock
 
 from odoo.exceptions import ValidationError
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import TransactionCase, tagged
 
 from odoo.addons.component.tests.common import TransactionComponentCase
 from odoo.addons.queue_job.tests.common import trap_jobs
@@ -249,6 +249,7 @@ class TestPricelistFlatten(TransactionCase):
         self.assertEqual(items, [])
 
 
+@tagged("post_install", "-at_install")
 class TestPricelistFlattenWithBackend(TransactionComponentCase):
     """Integration tests for the flatten flow that require a Wubook backend
     and bindings. Adapter XMLRPC calls are mocked.
@@ -307,9 +308,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
                 ],
             }
         )
-        payment_method_line = cls.env["account.payment.method.line"].search(
-            [], limit=1
-        )
+        payment_method_line = cls.env["account.payment.method.line"].search([], limit=1)
         cls.backend = cls.env["channel.wubook.backend"].create(
             {
                 "name": "Flatten Int Backend",
@@ -324,9 +323,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
             }
         )
         # Bind room type with a fake external id so payload lookup works.
-        cls.room_type_a_binding = cls.env[
-            "channel.wubook.pms.room.type"
-        ].create(
+        cls.room_type_a_binding = cls.env["channel.wubook.pms.room.type"].create(
             {
                 "odoo_id": cls.room_type_a.id,
                 "backend_id": cls.backend.id,
@@ -377,9 +374,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
                 ],
             }
         )
-        cls.pricelist_b_binding = cls.env[
-            "channel.wubook.product.pricelist"
-        ].create(
+        cls.pricelist_b_binding = cls.env["channel.wubook.product.pricelist"].create(
             {
                 "odoo_id": cls.pricelist_b.id,
                 "backend_id": cls.backend.id,
@@ -389,18 +384,14 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
 
     def test_get_flatten_default_window_caps_by_parent_chain(self):
         self.backend.flatten_window_days = 540
-        date_from, date_to = (
-            self.pricelist_b_binding._get_flatten_default_window()
-        )
+        date_from, date_to = self.pricelist_b_binding._get_flatten_default_window()
         self.assertEqual(date_from, date.today())
         # Capped by parent's last rule date (self.d1)
         self.assertEqual(date_to, self.d1)
 
     def test_get_flatten_default_window_zero_returns_empty(self):
         self.backend.flatten_window_days = 0
-        date_from, date_to = (
-            self.pricelist_b_binding._get_flatten_default_window()
-        )
+        date_from, date_to = self.pricelist_b_binding._get_flatten_default_window()
         self.assertIsNone(date_from)
         self.assertIsNone(date_to)
 
@@ -460,9 +451,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
             "odoo.addons.connector_pms_wubook.models.product_pricelist."
             "adapter.ChannelWubookProductPricelistAdapter.write"
         ) as mocked_write:
-            self.pricelist_b_binding.export_flattened(
-                date_from=self.d0, date_to=d_far
-            )
+            self.pricelist_b_binding.export_flattened(date_from=self.d0, date_to=d_far)
         args, _kwargs = mocked_write.call_args
         payload = args[1]
         max_date = max(item["date"] for item in payload["items"])
@@ -616,9 +605,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
         )
 
     def test_mapper_items_flatten_returns_dicts(self):
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.items_flatten(self.pricelist_b_binding)
         self.assertIsInstance(result, dict)
@@ -635,9 +622,7 @@ class TestPricelistFlattenWithBackend(TransactionComponentCase):
         # enqueues whenever the flag changes.
         with trap_jobs():
             self.pricelist_b.wubook_flatten_to_daily = False
-        with self.backend.work_on(
-            "channel.wubook.product.pricelist"
-        ) as work:
+        with self.backend.work_on("channel.wubook.product.pricelist") as work:
             mapper = work.component(usage="export.mapper")
         result = mapper.items_flatten(self.pricelist_b_binding)
         self.assertIsNone(result)
