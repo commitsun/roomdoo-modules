@@ -6,7 +6,7 @@ from odoo import fields, models
 
 class PmsRoomType(models.Model):
     _name = "pms.room.type"
-    _inherit = ["pms.room.type", "channel.wubook.connect.mixin"]
+    _inherit = "pms.room.type"
 
     channel_wubook_bind_ids = fields.One2many(
         comodel_name="channel.wubook.pms.room.type",
