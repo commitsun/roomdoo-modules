@@ -1,10 +1,14 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import logging
+
 from odoo import _
 from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
+
+_logger = logging.getLogger(__name__)
 
 
 class ChannelWubookProductPricelistMapperImport(Component):
@@ -53,6 +57,65 @@ class ChannelWubookProductPricelistChildBinderMapperImport(Component):
     _name = "channel.wubook.product.pricelist.child.binder.mapper.import"
     _inherit = "channel.wubook.child.binder.mapper.import"
     _apply_on = "channel.wubook.product.pricelist.item"
+
+    def get_all_items(self, mapper, items, parent, to_attr, options):
+        items_values = super().get_all_items(mapper, items, parent, to_attr, options)
+        if (
+            parent.source["type"] == "standard"
+            and self.env["pms.room.type"]._has_price_derivation()
+        ):
+            items_values = self._skip_price_derived_items(items_values, parent, options)
+        return items_values
+
+    def _skip_price_derived_items(self, items_values, parent, options):
+        """Leave out the new items of the room types deriving their price in
+        the pricelist (see ``pms.room.type.price_base_room_type_id``).
+
+        Wubook has a price for every room and day, the derived ones included,
+        but a new item of their own would be an override: the room type would
+        stop following the price of its base room type on its dates. The
+        items they already have, overrides, are updated as any other one
+        (see ``get_item_values``).
+        """
+        binding = options.get("binding")
+        pricelist = binding.odoo_id if binding else self.env["product.pricelist"]
+        RoomType = self.env["pms.room.type"].with_context(active_test=False)
+        derived_by_product = {}
+        kept_values = []
+        for values in items_values:
+            product_id = values.get("product_id")
+            if "id" in values or "odoo_id" in values or not product_id:
+                kept_values.append(values)
+                continue
+            if product_id not in derived_by_product:
+                room_type = RoomType.search([("product_id", "=", product_id)], limit=1)
+                derived_by_product[product_id] = bool(
+                    room_type and self._is_price_derived(room_type, pricelist)
+                )
+            if not derived_by_product[product_id]:
+                kept_values.append(values)
+        skipped = len(items_values) - len(kept_values)
+        if skipped:
+            _logger.info(
+                "Skipped %d new prices of the Wubook plan %s for room types "
+                "deriving their price in it",
+                skipped,
+                parent.source.get("name") or parent.source.get("id"),
+            )
+        return kept_values
+
+    def _is_price_derived(self, room_type, pricelist):
+        """Whether the room type derives its price in the pricelist, which
+        may be the one being created by the import."""
+        if pricelist:
+            return bool(room_type._get_price_derivation(pricelist))
+        # A new pricelist: only the room types deriving their price in all
+        # the pricelists derive it there
+        room_type = room_type.sudo()
+        return bool(
+            room_type.price_base_room_type_id
+            and not room_type.price_derivation_pricelist_ids
+        )
 
     def get_item_values(self, map_record, to_attr, options):
         values = super().get_item_values(map_record, to_attr, options)

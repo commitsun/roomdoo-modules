@@ -241,6 +241,7 @@ class ChannelWubookConnectWizard(models.TransientModel):
         each affected binding so those items are now pushed to Wubook.
         """
         self.ensure_one()
+        self._export_derived_prices_after_connect(record)
         if self.res_model != "pms.room.type":
             return
         backend = self.backend_id
@@ -274,6 +275,32 @@ class ChannelWubookConnectWizard(models.TransientModel):
         )
         for binding in plan_bindings:
             binding.with_delay().export_record(backend, binding.odoo_id)
+
+    def _export_derived_prices_after_connect(self, record):
+        """Push the derived room type prices the connection makes exportable.
+
+        Room types deriving their price have no items to export: once one is
+        connected, push its prices to the regular plans of the backend it
+        derives them in. A plan just created in Wubook only got the items
+        of the pricelist: push the prices of the room types deriving theirs
+        too. Binding an existing plan sends nothing, like for its items.
+        """
+        PricelistBinding = self.env["channel.wubook.product.pricelist"]
+        if self.res_model == "pms.room.type":
+            PricelistBinding.search(
+                [
+                    ("backend_id", "=", self.backend_id.id),
+                    ("external_id", "!=", False),
+                ]
+            )._export_derived_prices_delayed(room_type_ids=record.ids)
+        elif self.res_model == "product.pricelist" and self.mode == "new":
+            PricelistBinding.search(
+                [
+                    ("odoo_id", "=", record.id),
+                    ("backend_id", "=", self.backend_id.id),
+                    ("external_id", "!=", False),
+                ]
+            )._export_derived_prices_delayed()
 
     def _action_return_to_record(self):
         return {
