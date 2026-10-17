@@ -34,3 +34,9 @@ class ChannelWubookBackendTypeOTA(models.Model):
         domain="[('is_agency', '=', True)]",
         string="Agency",
     )
+
+    import_extras = fields.Boolean(
+        help="Bookings of this channel bring their extras (parking, cot, "
+        "breakfast...) as services of the reservation. Enable it only for "
+        "channels whose booking amount does not include the extras.",
+    )

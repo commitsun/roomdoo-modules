@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="pms_service_view_form" model="ir.ui.view">
+        <field name="name">pms.service.wubook.connector.form</field>
+        <field name="model">pms.service</field>
+        <field name="inherit_id" ref="pms.pms_service_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='default_invoice_to']" position="after">
+                <field
+          name="channel_extra_name"
+          attrs="{'invisible': [('channel_extra_name', '=', False)]}"
+        />
+            </xpath>
+        </field>
+    </record>
+</odoo>

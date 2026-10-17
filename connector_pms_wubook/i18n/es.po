@@ -15,9 +15,273 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "%(qty)s units, %(total)s"
+msgstr "%(qty)s uds., %(total)s"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#, python-format
+msgid "%(updated)s of %(total)s pending folios updated."
+msgstr "%(updated)s de %(total)s fichas pendientes actualizadas."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__action
+msgid "Action"
+msgstr "Acción"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_tree
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+msgid "Apply to Pending Folios"
+msgstr "Aplicar a fichas pendientes"
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Archived"
+msgstr "Archivados"
+
+#. module: connector_pms_wubook
+#: model_terms:ir.actions.act_window,help:connector_pms_wubook.channel_wubook_backend_extra_action
+msgid "Assign each extra sold by the channels the product it is imported as."
+msgstr ""
+"Asigne a cada extra que venden los canales el producto con el que se "
+"importa."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__backend_id
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Backend"
+msgstr "Backend"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_extras
+msgid ""
+"Bookings of this channel bring their extras (parking, cot, breakfast...) as "
+"services of the reservation. Enable it only for channels whose booking "
+"amount does not include the extras."
+msgstr ""
+"Las reservas de este canal traen sus extras (parking, cuna, desayuno...) "
+"como servicios de la reserva. Actívelo solo en los canales cuyo importe de "
+"la reserva no incluye los extras."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__channel_extra_name
+msgid "Channel Extra"
+msgstr "Extra del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__channel_extra_key
+msgid "Channel Extra Key"
+msgstr "Clave del extra del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__wubook_extra_id
+msgid "Channel Extra Mapping"
+msgstr "Mapeo del extra del canal"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#: model:ir.actions.act_window,name:connector_pms_wubook.channel_wubook_backend_extra_action
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extra_ids
+#: model:ir.ui.menu,name:connector_pms_wubook.channel_wubook_backend_extra_menu
+#: model:ir.ui.menu,name:connector_pms_wubook.channel_wubook_backend_extra_pms_menu
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+#, python-format
+msgid "Channel Extras"
+msgstr "Extras del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras
+msgid "Channel Extras Received"
+msgstr "Extras del canal recibidos"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras_state
+msgid "Channel Extras Status"
+msgstr "Estado de los extras del canal"
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
 msgid "Channel Notes"
 msgstr "Notas del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_backend_extra
+msgid "Channel Wubook Backend Extra Map"
+msgstr "Mapeo de extras del canal (Wubook)"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "Channel extra %(extra)s not imported: %(error)s"
+msgstr "Extra del canal %(extra)s no importado: %(error)s"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"Channel extra %(extra)s not imported: the folio already has %(product)s "
+"added by hand."
+msgstr ""
+"Extra del canal %(extra)s no importado: la ficha ya tiene %(product)s "
+"añadido a mano."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "Channel extras could not be imported: %(error)s"
+msgstr "No se han podido importar los extras del canal: %(error)s"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"Channel extras without product, not imported: %(extras)s. Assign them a "
+"product in the channel extras and apply it to the pending folios."
+msgstr ""
+"Extras del canal sin producto, no importados: %(extras)s. Asígneles un "
+"producto en los extras del canal y aplíquelo a las fichas pendientes."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__name
+msgid "Extra Name"
+msgstr "Nombre del extra"
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+msgid "Extras"
+msgstr "Extras"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras
+msgid "Extras the channel sent with the last version of the booking."
+msgstr "Extras que envió el canal con la última versión de la reserva."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extra_fallback_product_id
+msgid "Fallback Extras Product"
+msgstr "Producto por defecto para extras"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__extras_import_start
+msgid ""
+"Folios created before this moment never get channel extras: staff added them"
+" by hand. Leave it empty to not import channel extras in this backend."
+msgstr ""
+"Las fichas creadas antes de este momento nunca reciben extras del canal: el "
+"personal los añadía a mano. Déjelo vacío para no importar extras del canal "
+"en este backend."
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Group By"
+msgstr "Agrupar por"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__id
+msgid "ID"
+msgstr "ID"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_extra__action__ignore
+msgid "Ignore"
+msgstr "Ignorar"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__action
+msgid ""
+"Ignore the extras that must not reach the folio, e.g. those the channel "
+"lists at 0 as part of a package."
+msgstr ""
+"Ignore los extras que no deben llegar a la ficha, p. ej. los que el canal "
+"lista a 0 como parte de un paquete."
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Ignored"
+msgstr "Ignorados"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_extras
+msgid "Import Extras"
+msgstr "Importar extras"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extras_import_start
+msgid "Import Extras From"
+msgstr "Importar extras desde"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_extra__action__service
+msgid "Import as Service"
+msgstr "Importar como servicio"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__service_count
+msgid "Imported Services"
+msgstr "Servicios importados"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_pms_service__channel_extra_key
+msgid ""
+"Key of the channel extra this service was imported from. The channel import "
+"never touches the services without it, the ones added by hand."
+msgstr ""
+"Clave del extra del canal del que se importó este servicio. La importación "
+"del canal nunca toca los servicios sin ella, los añadidos a mano."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__normalized_name
+msgid ""
+"Key the bookings are matched with: the name without case, accents nor "
+"punctuation."
+msgstr ""
+"Clave con la que se casan las reservas: el nombre sin mayúsculas, acentos ni"
+" puntuación."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -25,6 +289,77 @@ msgstr "Notas del canal"
 #, python-format
 msgid "Loyalty club member"
 msgstr "Socio del club de fidelización"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_pms_service__channel_extra_name
+msgid "Name of the extra as the channel sent it."
+msgstr "Nombre del extra tal y como lo envió el canal."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__name
+msgid "Name of the extra exactly as the channel sends it."
+msgstr "Nombre del extra exactamente como lo envía el canal."
+
+#. module: connector_pms_wubook
+#: model_terms:ir.actions.act_window,help:connector_pms_wubook.channel_wubook_backend_extra_action
+msgid "No channel extras waiting for a product"
+msgstr "No hay extras del canal esperando un producto"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__normalized_name
+msgid "Normalized Name"
+msgstr "Nombre normalizado"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#, python-format
+msgid "Only connector managers can move a channel extra to another backend."
+msgstr ""
+"Solo los administradores del conector pueden mover un extra del canal a otro"
+" backend."
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Pending"
+msgstr "Pendientes"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
+msgid "Product"
+msgstr "Producto"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__extra_fallback_product_id
+msgid ""
+"Product of the channel extras that have no product of their own, so the "
+"folio total matches what the guest pays. Leave it empty to leave those "
+"extras pending and report them on the folio."
+msgstr ""
+"Producto de los extras del canal que no tienen uno propio, para que el total"
+" de la ficha coincida con lo que paga el huésped. Déjelo vacío para dejar "
+"esos extras pendientes y avisar en la ficha."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__pms_property_id
+msgid "Property"
+msgstr "Hotel"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
+msgid ""
+"Service the extra is imported as. Leave it empty to keep the extra pending: "
+"it is imported with the fallback product of the backend, if any, and "
+"reported on the folio otherwise."
+msgstr ""
+"Servicio con el que se importa el extra. Déjelo vacío para dejar el extra "
+"pendiente: se importa con el producto por defecto del backend, si lo hay, y "
+"si no, se avisa en la ficha."
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_pms_service
+msgid "Services and its charges"
+msgstr "Servicios y sus cargos"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -39,6 +374,102 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but it is "
+"managed by hand in this folio: review it."
+msgstr ""
+"El canal ha cambiado el extra %(extra)s de %(old)s a %(new)s, pero en esta "
+"ficha se gestiona a mano: revíselo."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but its "
+"service could not be updated: %(error)s"
+msgstr ""
+"El canal ha cambiado el extra %(extra)s de %(old)s a %(new)s, pero no se ha "
+"podido actualizar su servicio: %(error)s"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but its "
+"service was changed by hand or invoiced, so it was not updated: review it."
+msgstr ""
+"El canal ha cambiado el extra %(extra)s de %(old)s a %(new)s, pero su "
+"servicio se cambió a mano o está facturado, así que no se ha actualizado: "
+"revíselo."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel extras are in %(currency)s and the folio in %(folio_currency)s, "
+"so they were not imported: %(extras)s."
+msgstr ""
+"Los extras del canal están en %(currency)s y la ficha en %(folio_currency)s,"
+" así que no se han importado: %(extras)s."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel moved the stay of the extra %(extra)s, but its service is "
+"invoiced, so it stays on the cancelled room: review it."
+msgstr ""
+"El canal ha movido la estancia del extra %(extra)s, pero su servicio está "
+"facturado, así que se queda en la habitación cancelada: revíselo."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel moved the stay of the extra %(extra)s: its service is created "
+"again as the channel sends it, without the changes made by hand (%(old)s)."
+msgstr ""
+"El canal ha movido la estancia del extra %(extra)s: su servicio se crea de "
+"nuevo tal y como lo envía el canal, sin los cambios hechos a mano (%(old)s)."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel removed the extra %(extra)s, but its service was changed by hand"
+" or invoiced, so it was kept: review it."
+msgstr ""
+"El canal ha quitado el extra %(extra)s, pero su servicio se cambió a mano o "
+"está facturado, así que se ha mantenido: revíselo."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel split this booking into %(count)s folios and each one repeats "
+"the extras of the whole booking, so they were not imported: %(extras)s. Add "
+"them by hand to the folio they belong to."
+msgstr ""
+"El canal ha dividido esta reserva en %(count)s fichas y cada una repite los "
+"extras de toda la reserva, así que no se han importado: %(extras)s. Añádalos"
+" a mano a la ficha que corresponda."
+
+#. module: connector_pms_wubook
+#: model:ir.model.constraint,message:connector_pms_wubook.constraint_channel_wubook_backend_extra_backend_normalized_name_uniq
+msgid "This extra is already mapped in this backend."
+msgstr "Este extra ya está mapeado en este backend."
+
+#. module: connector_pms_wubook
+#. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
 #, python-format
 msgid ""
@@ -46,6 +477,11 @@ msgid ""
 "hotel)"
 msgstr ""
 "Upselling aplicado: %(amount)s (según Mirai, lo paga el huésped en el hotel)"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras_state
+msgid "What the import did with each channel extra of the folio."
+msgstr "Lo que hizo la importación con cada extra del canal de la ficha."
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
@@ -57,3 +493,17 @@ msgstr ""
 "Escribir en las notas internas de la ficha lo que el canal transmite para "
 "recepción. De momento solo Mirai envía algo: la pertenencia al club de "
 "fidelización y el upselling que el huésped paga en el hotel."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "its price is negative"
+msgstr "su precio es negativo"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "the taxes of %(product)s are not included in its price"
+msgstr "los impuestos de %(product)s no están incluidos en su precio"

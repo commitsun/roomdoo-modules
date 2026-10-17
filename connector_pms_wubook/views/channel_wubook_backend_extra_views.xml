@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_wubook_backend_extra_view_tree" model="ir.ui.view">
+        <field name="name">channel.wubook.backend.extra.tree</field>
+        <field name="model">channel.wubook.backend.extra</field>
+        <field name="arch" type="xml">
+            <tree
+        editable="bottom"
+        decoration-warning="action == 'service' and not product_id"
+        decoration-muted="action == 'ignore' or not active"
+      >
+                <field
+          name="backend_id"
+          attrs="{'readonly': [('id', '!=', False)]}"
+          options="{'no_open': True, 'no_create': True}"
+        />
+                <field name="pms_property_id" optional="hide" />
+                <field name="name" />
+                <field name="product_id" />
+                <field name="action" />
+                <field name="service_count" />
+                <field name="active" widget="boolean_toggle" />
+                <button
+          name="action_apply_to_pending_folios"
+          type="object"
+          string="Apply to Pending Folios"
+          icon="fa-refresh"
+        />
+            </tree>
+        </field>
+    </record>
+
+    <record id="channel_wubook_backend_extra_view_search" model="ir.ui.view">
+        <field name="name">channel.wubook.backend.extra.search</field>
+        <field name="model">channel.wubook.backend.extra</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="product_id" />
+                <field
+          name="backend_id"
+          groups="connector.group_connector_manager"
+        />
+                <filter
+          name="pending"
+          string="Pending"
+          domain="[('action', '=', 'service'), ('product_id', '=', False)]"
+        />
+                <filter
+          name="ignored"
+          string="Ignored"
+          domain="[('action', '=', 'ignore')]"
+        />
+                <separator />
+                <filter
+          name="archived"
+          string="Archived"
+          domain="[('active', '=', False)]"
+        />
+                <group name="group_by" string="Group By">
+                    <filter
+            name="group_by_backend"
+            string="Backend"
+            context="{'group_by': 'backend_id'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record
+    id="channel_wubook_backend_extra_action"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Channel Extras</field>
+        <field name="res_model">channel.wubook.backend.extra</field>
+        <field name="view_mode">tree</field>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No channel extras waiting for a product
+            </p>
+            <p>
+                Assign each extra sold by the channels the product it is imported as.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+    id="channel_wubook_backend_extra_menu"
+    name="Channel Extras"
+    sequence="15"
+    parent="connector_pms.channel_menu"
+    action="channel_wubook_backend_extra_action"
+  />
+
+    <!-- Hotel managers map the extras of their hotels from the PMS -->
+    <menuitem
+    id="channel_wubook_backend_extra_pms_menu"
+    name="Channel Extras"
+    sequence="50"
+    parent="pms.pms_configuration_menu"
+    action="channel_wubook_backend_extra_action"
+    groups="pms.group_pms_manager"
+  />
+
+    <record id="channel_wubook_backend_view_form_extras" model="ir.ui.view">
+        <field name="name">channel.wubook.backend.form.extras</field>
+        <field name="model">channel.wubook.backend</field>
+        <field name="inherit_id" ref="channel_wubook_backend_view_form" />
+        <field name="arch" type="xml">
+            <xpath
+        expr="//page[field[@name='backend_journal_ota_ids']]"
+        position="after"
+      >
+                <page name="extras" string="Extras">
+                    <group>
+                        <group>
+                            <field name="extras_import_start" />
+                            <field name="extra_fallback_product_id" />
+                        </group>
+                    </group>
+                    <separator string="Channel Extras" />
+                    <field
+            name="extra_ids"
+            nolabel="1"
+            context="{'default_backend_id': active_id}"
+          >
+                        <tree
+              editable="bottom"
+              decoration-warning="action == 'service' and not product_id"
+              decoration-muted="action == 'ignore' or not active"
+            >
+                            <field name="name" />
+                            <field name="product_id" />
+                            <field name="action" />
+                            <field name="service_count" />
+                            <field name="active" widget="boolean_toggle" />
+                            <field name="backend_id" invisible="1" />
+                            <field name="pms_property_id" invisible="1" />
+                            <button
+                name="action_apply_to_pending_folios"
+                type="object"
+                string="Apply to Pending Folios"
+                icon="fa-refresh"
+              />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -45,6 +45,7 @@
                                         name="agency_id"
                                         attrs="{'required': [('wubook_ota', '!=', False)]}"
                                     />
+                                    <field name="import_extras" />
                                 </tree>
                             </field>
                         </page>
