@@ -16,6 +16,91 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s now reports %(amount)s paid online, less than the %(registered)s"
+" registered automatically. Refunds are not registered automatically: review "
+"the payments."
+msgstr ""
+"%(channel)s comunica ahora %(amount)s pagados online, menos que los "
+"%(registered)s registrados automáticamente. Las devoluciones no se registran"
+" automáticamente: revise los pagos."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online for the whole booking, already "
+"registered on another folio of the same booking (%(folios)s). It has not "
+"been registered again."
+msgstr ""
+"%(channel)s comunica %(amount)s pagados online para toda la reserva, ya "
+"registrados en otra ficha de la misma reserva (%(folios)s). No se ha vuelto "
+"a registrar."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online for the whole booking, which "
+"Wubook split in %(parts)s folios. It has not been registered automatically: "
+"register it by hand on the right folio."
+msgstr ""
+"%(channel)s comunica %(amount)s pagados online para toda la reserva, que "
+"Wubook dividió en %(parts)s fichas. No se ha registrado automáticamente: "
+"regístrelo a mano en la ficha que corresponda."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online, but the folio is in "
+"%(folio_currency)s. It has not been registered automatically."
+msgstr ""
+"%(channel)s comunica %(amount)s pagados online, pero la ficha está en "
+"%(folio_currency)s. No se ha registrado automáticamente."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online. The folio already has payments "
+"registered by hand, so it has not been registered automatically to avoid a "
+"duplicate."
+msgstr ""
+"%(channel)s comunica %(amount)s pagados online. La ficha ya tiene pagos "
+"registrados a mano, así que no se ha registrado automáticamente para no "
+"duplicarlo."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(paid)s paid online: payment of %(amount)s registered "
+"automatically."
+msgstr ""
+"%(channel)s comunica %(paid)s pagados online: pago de %(amount)s registrado "
+"automáticamente."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s: online payment pending until %(deadline)s. If the guest does "
+"not pay, the channel will cancel the booking."
+msgstr ""
+"%(channel)s: pago online pendiente hasta el %(deadline)s. Si el huésped no "
+"paga, el canal cancelará la reserva."
+
+#. module: connector_pms_wubook
+#. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
 #, python-format
 msgid "%(qty)s units, %(total)s"
@@ -37,6 +122,24 @@ msgstr "Acción"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
 msgid "Active"
 msgstr "Activo"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
+msgid ""
+"Amount the channel reports as paid online for the whole booking (last known "
+"value)."
+msgstr ""
+"Importe que el canal comunica como pagado online para toda la reserva "
+"(último valor conocido)."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_due_amount
+msgid ""
+"Amount the channel reports as still due for the whole booking (last known "
+"value)."
+msgstr ""
+"Importe que el canal comunica como pendiente de pago para toda la reserva "
+"(último valor conocido)."
 
 #. module: connector_pms_wubook
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_tree
@@ -61,6 +164,32 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
 msgid "Backend"
 msgstr "Backend"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"Booking cancelled in %(channel)s with %(amount)s paid online. The folio is "
+"cancelled, so the payment has not been registered automatically: review the "
+"cancellation penalty and the refund."
+msgstr ""
+"Reserva cancelada en %(channel)s con %(amount)s pagados online. La ficha "
+"está cancelada, así que el pago no se ha registrado automáticamente: revise "
+"la penalización por cancelación y la devolución."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"Booking cancelled in %(channel)s with %(amount)s paid online. The payment "
+"registered automatically is kept and no refund has been registered: review "
+"the cancellation penalty and the refund."
+msgstr ""
+"Reserva cancelada en %(channel)s con %(amount)s pagados online. Se mantiene "
+"el pago registrado automáticamente y no se ha registrado ninguna devolución:"
+" revise la penalización por cancelación y la devolución."
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_extras
@@ -116,6 +245,31 @@ msgid "Channel Notes"
 msgstr "Notas del canal"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_currency
+msgid "Channel Payment Currency"
+msgstr "Moneda del pago en el canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_deadline
+msgid "Channel Payment Deadline"
+msgstr "Plazo de pago en el canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_notes
+msgid "Channel Payment Notes"
+msgstr "Notas de pagos del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_split
+msgid "Channel Payment Split"
+msgstr "Parte de la reserva dividida"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_ids
+msgid "Channel Payments"
+msgstr "Pagos del canal"
+
+#. module: connector_pms_wubook
 #: model:ir.model,name:connector_pms_wubook.model_channel_wubook_backend_extra
 msgid "Channel Wubook Backend Extra Map"
 msgstr "Mapeo de extras del canal (Wubook)"
@@ -167,9 +321,28 @@ msgid "Created on"
 msgstr "Creado el"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_currency
+msgid "Currency (ISO code) of the amounts reported by the channel."
+msgstr "Moneda (código ISO) de los importes que comunica el canal."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_deadline
+msgid ""
+"Deadline the channel gave the guest to pay the booking online. It is emptied"
+" when the channel reports the payment."
+msgstr ""
+"Plazo que el canal dio al huésped para pagar la reserva online. Se vacía "
+"cuando el canal comunica el pago."
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_due_amount
+msgid "Due at Channel"
+msgstr "Pendiente según el canal"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__name
@@ -320,6 +493,40 @@ msgstr ""
 " backend."
 
 #. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/wubook_backend_journal_ota.py:0
+#, python-format
+msgid ""
+"Only one payment mapping per OTA can register the channel payments: %(ota)s "
+"already has one."
+msgstr ""
+"Solo una asignación de pagos por OTA puede registrar los pagos del canal: "
+"%(ota)s ya tiene una."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
+msgid "Paid at Channel"
+msgstr "Pagado en el canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_split
+msgid ""
+"Part of the channel booking held by this folio (part/total) when Wubook "
+"split the booking in several folios."
+msgstr ""
+"Parte de la reserva del canal que contiene esta ficha (parte/total) cuando "
+"Wubook dividió la reserva en varias fichas."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_ids
+msgid ""
+"Payments registered automatically from what the channel reports as paid "
+"online."
+msgstr ""
+"Pagos registrados automáticamente a partir de lo que el canal comunica como "
+"pagado online."
+
+#. module: connector_pms_wubook
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
 msgid "Pending"
 msgstr "Pendientes"
@@ -346,6 +553,25 @@ msgid "Property"
 msgstr "Hotel"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__register_channel_payments
+msgid "Register Channel Payments"
+msgstr "Registrar pagos del canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_wubook_backend_journal_ota__register_channel_payments
+msgid ""
+"Register automatically, on this journal, the amount the channel reports as "
+"paid online."
+msgstr ""
+"Registrar automáticamente, en este diario, el importe que el canal comunica "
+"como pagado online."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_registered
+msgid "Registered from Channel"
+msgstr "Registrado desde el canal"
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
 msgid ""
 "Service the extra is imported as. Leave it empty to keep the extra pending: "
@@ -362,6 +588,15 @@ msgid "Services and its charges"
 msgstr "Servicios y sus cargos"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_notes
+msgid ""
+"Technical field: last value of every kind of channel payment note posted on "
+"the folio, so that re-imports do not repeat them."
+msgstr ""
+"Campo técnico: último valor de cada tipo de nota de pagos del canal "
+"publicada en la ficha, para que las reimportaciones no las repitan."
+
+#. module: connector_pms_wubook
 #. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
 #, python-format
@@ -371,6 +606,28 @@ msgid ""
 msgstr ""
 "No se han podido actualizar las líneas [Mirai] de las notas internas. Los "
 "detalles están en el registro del servidor."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"The amount %(channel)s reports as paid online could not be registered "
+"automatically (%(error)s). Review the payments of the folio."
+msgstr ""
+"No se ha podido registrar automáticamente el importe que %(channel)s "
+"comunica como pagado online (%(error)s). Revise los pagos de la ficha."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"The amount paid online (%(amount)s) exceeds the folio total (%(total)s): it "
+"probably includes extras that are not in the folio."
+msgstr ""
+"El importe pagado online (%(amount)s) supera el total de la ficha "
+"(%(total)s): probablemente incluye extras que no están en la ficha."
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -467,6 +724,28 @@ msgstr ""
 #: model:ir.model.constraint,message:connector_pms_wubook.constraint_channel_wubook_backend_extra_backend_normalized_name_uniq
 msgid "This extra is already mapped in this backend."
 msgstr "Este extra ya está mapeado en este backend."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/wubook_backend_journal_ota.py:0
+#, python-format
+msgid ""
+"To register channel payments, the OTA payment mapping needs an OTA and an "
+"incoming payment method."
+msgstr ""
+"Para registrar los pagos del canal, la asignación de pagos de la OTA "
+"necesita una OTA y un método de pago entrante."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_registered
+msgid ""
+"Total amount registered automatically on this folio from what the channel "
+"reports as paid online. It never decreases, so payments cancelled or edited "
+"by the staff are never registered again."
+msgstr ""
+"Importe total registrado automáticamente en esta ficha a partir de lo que el "
+"canal comunica como pagado online. Nunca disminuye, así que los pagos que el "
+"personal cancela o modifica no se vuelven a registrar."
 
 #. module: connector_pms_wubook
 #. odoo-python

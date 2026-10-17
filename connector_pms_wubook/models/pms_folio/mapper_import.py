@@ -13,6 +13,7 @@ from ...models.pms_reservation.mapper_import import get_room_type
 from .channel_booking import MIRAI_CHANNEL_ID
 from .channel_extras import read_channel_extras
 from .channel_notes import MIRAI_NOTE_PREFIX, merge_tagged_lines
+from .channel_payments import channel_payment_values
 from .retryable import RETRYABLE_ERRORS
 
 _logger = logging.getLogger(__name__)
@@ -89,6 +90,25 @@ class ChannelWubookPmsFolioMapperImport(Component):
                 return {"payment_gateway_fee": record["amount"]}
         # Not online pre payment
         return {"payment_gateway_fee": 0}
+
+    @mapping
+    def channel_payment(self, record):
+        """What the channel reports as paid online for the whole booking.
+
+        Only stored on the binding: the folio importer registers it as a
+        payment when the channel enables it (see
+        ``channel.wubook.pms.folio._sync_channel_payments``). Never makes the
+        import fail.
+        """
+        tz_name = self.backend_record.pms_property_id.tz
+        try:
+            return channel_payment_values(record, tz_name)
+        except Exception:
+            _logger.exception(
+                "Booking %s: unreadable payment reported by the channel",
+                record.get("reservation_code"),
+            )
+            return {}
 
     @only_create
     @mapping
