@@ -2023,9 +2023,11 @@ class PmsReservationService(Component):
                 + ")"
             )
         pms_property_name = reservation_record.pms_property_id.name
-        pms_property_street = reservation_record.pms_property_id.street
-        pms_property_city = reservation_record.pms_property_id.city
-        pms_property_zip = reservation_record.pms_property_id.zip
+        # An empty field reads as False, which the String fields of the answer
+        # reject, failing the whole page
+        pms_property_street = reservation_record.pms_property_id.street or ""
+        pms_property_city = reservation_record.pms_property_id.city or ""
+        pms_property_zip = reservation_record.pms_property_id.zip or ""
         pms_property_state = (
             reservation_record.pms_property_id.state_id.name
             if reservation_record.pms_property_id.state_id
@@ -2038,10 +2040,12 @@ class PmsReservationService(Component):
         )
         if reservation_record.preferred_room_id.address_is_independent:
             pms_property_name = reservation_record.preferred_room_id.name
-            pms_property_street = reservation_record.preferred_room_id.street
-            pms_property_city = reservation_record.preferred_room_id.city
-            pms_property_zip = reservation_record.preferred_room_id.zip
-            pms_property_state = reservation_record.preferred_room_id.state_id.name
+            pms_property_street = reservation_record.preferred_room_id.street or ""
+            pms_property_city = reservation_record.preferred_room_id.city or ""
+            pms_property_zip = reservation_record.preferred_room_id.zip or ""
+            pms_property_state = (
+                reservation_record.preferred_room_id.state_id.name or ""
+            )
             pms_room_image = url_image_pms_api_rest(
                 "pms.room",
                 reservation_record.preferred_room_id.id,
@@ -2056,7 +2060,7 @@ class PmsReservationService(Component):
             pmsPropertyCity=pms_property_city,
             pmsPropertyZip=pms_property_zip,
             pmsPropertyState=pms_property_state,
-            pmsPropertyPhoneNumber=reservation_record.pms_property_id.phone,
+            pmsPropertyPhoneNumber=reservation_record.pms_property_id.phone or "",
             pmsPropertyLogo=url_image_pms_api_rest(
                 "pms.property",
                 reservation_record.pms_property_id.id,
@@ -2074,7 +2078,7 @@ class PmsReservationService(Component):
             else "",
             pmsCompanyName=reservation_record.pms_property_id.company_id.name,
             pmsPropertyId=reservation_record.pms_property_id.id,
-            folioPartnerName=reservation_record.folio_id.partner_name,
+            folioPartnerName=reservation_record.folio_id.partner_name or "",
             reservations=reservations,
             shareUrl=reservation_share_url,
             cardexWarning=reservation_record.pms_property_id.cardex_warning
