@@ -40,6 +40,7 @@
                             <field name="ota_ids" nolabel="1">
                                 <tree editable="bottom">
                                     <field name="wubook_ota" />
+                                    <field name="import_channel_notes" />
                                     <field
                                         name="agency_id"
                                         attrs="{'required': [('wubook_ota', '!=', False)]}"

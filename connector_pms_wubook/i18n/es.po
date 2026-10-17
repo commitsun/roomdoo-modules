@@ -6710,3 +6710,47 @@ msgstr "El régimen ya está configurado para esta habitación"
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
 msgid "The board service the price of the room type includes on Wubook"
 msgstr "Régimen que incluye el precio de la habitación en Wubook"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
+msgid "Channel Notes"
+msgstr "Notas del canal"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid "Loyalty club member"
+msgstr "Socio del club de fidelización"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid ""
+"The [Mirai] lines of the internal notes could not be updated. The details "
+"are in the server log."
+msgstr ""
+"No se han podido actualizar las líneas [Mirai] de las notas internas. Los "
+"detalles están en el registro del servidor."
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid ""
+"Upselling applied: %(amount)s (according to Mirai, the guest pays it at the "
+"hotel)"
+msgstr ""
+"Upselling aplicado: %(amount)s (según Mirai, lo paga el huésped en el hotel)"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
+msgid ""
+"Write in the folio internal notes what the channel passes through for "
+"reception. Only Mirai passes any for now: the loyalty club membership and "
+"the upselling the guest pays at the hotel."
+msgstr ""
+"Escribir en las notas internas de la ficha lo que el canal transmite para "
+"recepción. De momento solo Mirai envía algo: la pertenencia al club de "
+"fidelización y el upselling que el huésped paga en el hotel."
