@@ -189,7 +189,8 @@ class PmsCalendarService(Component):
                             r_rt_rtc.room_type_class_id,
                             r_rt_rtc.sequence
                      FROM (SELECT (CURRENT_DATE + date ) date
-                        FROM generate_series(date %s- CURRENT_DATE, date %s - CURRENT_DATE) date
+                        FROM generate_series(date %s- CURRENT_DATE,
+                                             date %s - CURRENT_DATE) date
                      ) dates,
                     (SELECT r.id room_id, r.capacity, rt.id room_type_id,
                         rtc.id room_type_class_id, r.sequence
@@ -208,8 +209,9 @@ class PmsCalendarService(Component):
                                 AND l.reservation_id = r.id
                                 AND r.overbooking = false
                     ) l ON l.room_id = dr.room_id AND l.date = dr.date
-                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay, min_stay_arrival,
-                            max_stay, max_stay_arrival, closed, closed_departure, closed_arrival
+                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay,
+                            min_stay_arrival, max_stay, max_stay_arrival,
+                            closed, closed_departure, closed_arrival
                         FROM pms_availability_plan_rule
                         WHERE availability_plan_id = %s and pms_property_id = %s
                     ) ru ON ru.date = dr.date AND ru.room_type_id = dr.room_type_id
@@ -326,8 +328,8 @@ class PmsCalendarService(Component):
                 dr.date date,
                 it.id pricelist_item_id,
                 av.id availability_plan_rule_id,
-                COALESCE(av.max_avail, dr.default_max_avail) max_avail,
-                COALESCE(av.quota, dr.default_quota) quota,
+                COALESCE(inv.max_avail, dr.default_max_avail) max_avail,
+                COALESCE(inv.quota, dr.default_quota) quota,
                 COALESCE(av.closed, FALSE) closed,
                 COALESCE(av.closed_arrival, FALSE) closed_arrival,
                 COALESCE(av.closed_Departure, FALSE) closed_departure,
@@ -361,7 +363,8 @@ class PmsCalendarService(Component):
                     FROM
                     (
                         SELECT (CURRENT_DATE + date) date
-                        FROM generate_series(date %s- CURRENT_DATE, date %s - CURRENT_DATE) date
+                        FROM generate_series(date %s- CURRENT_DATE,
+                                             date %s - CURRENT_DATE) date
                     ) dates,
                     (
                         SELECT  rt.id room_type_id,
@@ -382,7 +385,26 @@ class PmsCalendarService(Component):
                     AND av.room_type_id = dr.room_type_id
                     AND av.pms_property_id = %s
                     AND av.availability_plan_id = %s
-                LEFT OUTER JOIN product_pricelist_item it ON it.date_start_consumption = dr.date
+                -- The commercial inventory left the plan rules. This mirrors
+                -- what pms.inventory.rule resolves at the general scope: the
+                -- rule written last wins the overlap, and with no rule at all
+                -- the room type defaults apply (the COALESCE above). The
+                -- declared value is what the calendar edits, so the quota is
+                -- NOT reduced here by what the scope already sold.
+                LEFT JOIN LATERAL (
+                    SELECT ir.quota, ir.max_avail
+                    FROM pms_inventory_rule ir
+                    WHERE ir.pms_property_id = %s
+                        AND ir.room_type_id = dr.room_type_id
+                        AND ir.sale_channel_id IS NULL
+                        AND ir.agency_id IS NULL
+                        AND ir.active
+                        AND dr.date BETWEEN ir.date_from AND ir.date_to
+                    ORDER BY ir.write_date DESC, ir.id DESC
+                    LIMIT 1
+                ) inv ON TRUE
+                LEFT OUTER JOIN product_pricelist_item it
+                    ON it.date_start_consumption = dr.date
                     AND it.date_end_consumption = dr.date
                     AND it.product_id = dr.product_id
                     AND it.active = true
@@ -400,6 +422,7 @@ class PmsCalendarService(Component):
                 calendar_search_param.pmsPropertyId,
                 calendar_search_param.pmsPropertyId,
                 calendar_search_param.availabilityPlanId,
+                calendar_search_param.pmsPropertyId,
                 calendar_search_param.pricelistId,
                 calendar_search_param.pmsPropertyId,
             ),
@@ -705,7 +728,8 @@ class PmsCalendarService(Component):
 
         self.env.cr.execute(
             """
-            SELECT  night.date AS date, room.room_type_id AS room_type, COUNT(night.id) AS count
+            SELECT  night.date AS date, room.room_type_id AS room_type,
+                    COUNT(night.id) AS count
             FROM    pms_reservation_line  night
                     LEFT JOIN pms_room room
                         ON night.room_id = room.id
