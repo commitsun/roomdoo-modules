@@ -392,12 +392,15 @@ Only for development or testing purpose, do not use in production.
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#usage" id="toc-entry-1">Usage</a></li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-2">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-3">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-4">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-5">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-6">Maintainers</a></li>
+<li><a class="reference internal" href="#usage" id="toc-entry-1">Usage</a><ul>
+<li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-2">Mirai lines in the folio internal notes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-3">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-4">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-5">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-6">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-7">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -419,9 +422,51 @@ Only for development or testing purpose, do not use in production.
 All other records modifications are handled to be sent to server as it changes.</p>
 <p>All changes are pushed every 5 minutes… and request new bookings every minute.</p>
 <p>Modifications using calendars are pushed immediately when press “save” button.</p>
+<div class="section" id="mirai-lines-in-the-folio-internal-notes">
+<h2><a class="toc-backref" href="#toc-entry-2">Mirai lines in the folio internal notes</a></h2>
+<p>For the bookings of the Mirai booking engine (Wubook channel 197), the import
+can keep on top of the folio internal notes (the “internal notes” shown at the
+top of the folio) a few lines for reception, each one starting with
+<tt class="docutils literal">[Mirai]</tt>. It is disabled by default: enable <em>Channel Notes</em> in the row of
+the Mirai channel (<em>Wubook OTA ID</em> 197) of the <em>OTAs</em> list, in the <em>Mappings</em>
+tab of the backend type. A folio gets its lines with the next import of its
+booking. Only Mirai passes such lines for now, so enabling it for other
+channels has no effect. The lines are:</p>
+<ul class="simple">
+<li><tt class="docutils literal">[Mirai] Loyalty club member</tt>: Mirai flags the guest as a member of the
+hotel loyalty club. Mirai does not tell reliably whether the guest has just
+joined, so the line only states the membership, and the member id is never
+shown.</li>
+<li><tt class="docutils literal">[Mirai] Upselling applied: &lt;amount&gt; (according to Mirai, the guest pays it
+at the hotel)</tt>: Mirai applied an upselling. Its amount is already in the
+price of the booking, it is money to collect at the desk. When Wubook splits
+the booking in several folios, the line only goes on the first one.</li>
+</ul>
+<p>The lines are written in the language of the hotel and they are rebuilt from
+the booking on every import of it: creation, modification, cancellation and
+re-import, also when <em>Import Folios</em> is run by arrival dates from the backend,
+which rewrites them for every Mirai folio of the range. Nothing is written
+when they did not change, and the rest of the note is kept untouched and in
+its order. As every line starting with <tt class="docutils literal">[Mirai]</tt> belongs to the import:</p>
+<ul class="simple">
+<li>staff notes must go on their own lines, never inside a <tt class="docutils literal">[Mirai]</tt> line nor
+at the start of a line as <tt class="docutils literal">[Mirai]</tt>: the next import of the booking
+replaces or removes such a line;</li>
+<li>saving the note from a folio opened before a modification of the booking
+was imported can bring back the previous <tt class="docutils literal">[Mirai]</tt> lines, which then stay
+until the next import of that booking.</li>
+</ul>
+<p>Disabling <em>Channel Notes</em> stops updating the lines: those already written stay
+in the notes until staff removes them.</p>
+<p>If the lines cannot be computed, the booking is imported anyway and the error
+goes to the server log. When the folio already existed, a note in its messages
+also tells reception that its <tt class="docutils literal">[Mirai]</tt> lines may be outdated, only once: it
+is not posted again while the folio has it. Bookings of other channels never
+touch the internal notes.</p>
+</div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-2">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-3">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -429,21 +474,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-3">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-4">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-4">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-5">Authors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-5">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-6">Contributors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-6">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-7">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/connector_pms_wubook">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>
