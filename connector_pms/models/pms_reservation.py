@@ -15,14 +15,24 @@ class PmsReservation(models.Model):
         string="OTA Reservation Code",
         readonly=True,
     )
+    children_ages = fields.Json(
+        help="Age of each child of the reservation, as the channel declares "
+        "them, such as [5, 13]. The price is derived from the declared number "
+        "of guests, never from this, so filling it in changes nothing by "
+        "itself",
+    )
+
+    def _occupancy_price_fields(self):
+        """Children are charged too, so changing how many there are reprices."""
+        return super()._occupancy_price_fields() + ["children"]
 
     # pylint: disable=W8110
     @api.depends("ota_reservation_code")
     def _compute_external_reference(self):
-        super(PmsReservation, self)._compute_external_reference()
+        super()._compute_external_reference()
 
     def _get_reservation_external_reference(self):
-        reference = super(PmsReservation, self)._get_reservation_external_reference()
+        reference = super()._get_reservation_external_reference()
         if self.ota_reservation_code:
             reference = self.ota_reservation_code
         return reference
