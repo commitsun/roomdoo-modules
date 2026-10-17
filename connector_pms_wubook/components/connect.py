@@ -21,6 +21,12 @@ class ChannelWubookConnectHooks(Component):
             return None
         backend = self.backend_record
 
+        # A room type deriving its price has no items to export: push its
+        # derived prices to the regular plans of the backend
+        self.env["channel.wubook.product.pricelist"].search(
+            [("backend_id", "=", backend.id), ("external_id", "!=", False)]
+        )._export_derived_prices_delayed(room_type_ids=record.ids)
+
         # product.room_type_id is computed and not stored, so it cannot be used
         # in a search domain: resolve the products first and filter pricelists
         # by the products their items reference.
