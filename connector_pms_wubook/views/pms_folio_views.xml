@@ -31,6 +31,15 @@
                         />
                         <field name="synced_export" />
                         <field name="sync_date_export" />
+                        <field name="channel_paid_amount" optional="show" />
+                        <field name="channel_due_amount" optional="show" />
+                        <field name="channel_payment_deadline" optional="show" />
+                        <field name="channel_paid_registered" optional="hide" />
+                        <field
+                            name="channel_payment_ids"
+                            widget="many2many_tags"
+                            optional="show"
+                        />
                     </tree>
                 </field>
             </xpath>

@@ -322,6 +322,7 @@
                                     <field name="agency_id" />
                                     <field name="journal_id" />
                                     <field name="payment_method_line_id" />
+                                    <field name="register_channel_payments" />
                                     <field name="backend_id" invisible="1" />
                                     <field name="pms_property_id" invisible="1" />
                                     <field name="allowed_agency_ids" invisible="1" />

@@ -2,7 +2,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import logging
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -44,10 +45,44 @@ class WubookBackendJournalOTA(models.Model):
         check_pms_properties=True,
     )
 
+    register_channel_payments = fields.Boolean(
+        help="Register automatically, on this journal, the amount the channel "
+        "reports as paid online.",
+    )
+
     @api.onchange("journal_id")
     def _onchange_journal_id(self):
         if self.payment_method_line_id.journal_id != self.journal_id:
             self.payment_method_line_id = False
+
+    @api.constrains("register_channel_payments", "agency_id", "payment_method_line_id")
+    def _check_register_channel_payments(self):
+        for record in self.filtered("register_channel_payments"):
+            if (
+                not record.agency_id
+                or record.payment_method_line_id.payment_type != "inbound"
+            ):
+                raise ValidationError(
+                    _(
+                        "To register channel payments, the OTA payment mapping "
+                        "needs an OTA and an incoming payment method."
+                    )
+                )
+            if self.sudo().search_count(
+                [
+                    ("id", "!=", record.id),
+                    ("backend_id", "=", record.backend_id.id),
+                    ("agency_id", "=", record.agency_id.id),
+                    ("register_channel_payments", "=", True),
+                ]
+            ):
+                raise ValidationError(
+                    _(
+                        "Only one payment mapping per OTA can register the "
+                        "channel payments: %(ota)s already has one.",
+                        ota=record.agency_id.display_name,
+                    )
+                )
 
     allowed_agency_ids = fields.Many2many(
         string="Allowed Agencies",
