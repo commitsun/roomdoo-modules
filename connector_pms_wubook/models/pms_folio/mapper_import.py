@@ -166,6 +166,10 @@ class ChannelWubookPmsFolioChildMapperImport(Component):
                 if reservation:
                     item_values["id"] = reservation[0].id
                     del item_values["reservation_line_ids"]
+                    # Keep the reference of an existing reservation, which may
+                    # have been set before the channel sent a locator or edited
+                    # by hand.
+                    item_values.pop("external_reference", None)
                     reservations -= reservation[0]
                 mapped.append(item_values)
 
