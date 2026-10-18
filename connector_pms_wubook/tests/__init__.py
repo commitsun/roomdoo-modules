@@ -20,6 +20,7 @@ from . import test_listener_batching
 from . import test_master_sync
 from . import test_name_search
 from . import test_ota_locator
+from . import test_mirai_booking_data
 from . import test_pricelist_flatten
 from . import test_queue_job_property
 from . import test_reservation_mapper
