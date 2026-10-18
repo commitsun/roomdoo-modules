@@ -259,6 +259,12 @@ class ChannelWubookPmsFolioAdapter(Component):
                 channel_data.get("vat_included", True) if id_channel != 2 else True
             )
             customer_notes = value.pop("customer_notes")
+            # Some channels (e.g. bed banks) identify the booking with a locator
+            # of their own besides the reservation code, and expect to find it
+            # on the invoice.
+            ancillary = value.get("ancillary")
+            locator = ancillary.get("Locator") if isinstance(ancillary, dict) else None
+            ota_locator = str(locator).strip() if locator else False
             reservations = []
 
             for room in value.pop("booked_rooms"):
@@ -339,6 +345,7 @@ class ChannelWubookPmsFolioAdapter(Component):
                         "room_id": room_id,
                         "arrival_hour": value["arrival_hour"],
                         "ota_reservation_code": value["channel_reservation_code"],
+                        "ota_locator": ota_locator,
                         "board": board,
                         "occupancy": occupancy or 1,
                         "children": children or 0,
