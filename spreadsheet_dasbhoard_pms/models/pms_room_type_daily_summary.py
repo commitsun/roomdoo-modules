@@ -67,17 +67,26 @@ class HotelRoomTypeDailySummary(models.Model):
         sold_reservations AS (
             -- Only normal reservations are sold rooms: out of service and
             -- staff reservations occupy a room but are not sales.
-            -- untaxed_ratio turns price_day_total (which carries the tax when
+            -- revenue_ratio turns price_day_total (which carries the tax when
             -- the room tax is price-included) into revenue without taxes,
-            -- reusing the subtotal already computed on the reservation.
+            -- reusing the subtotal already computed on the reservation. The
+            -- system parameter spreadsheet_dasbhoard_pms.revenue_with_taxes
+            -- keeps the taxes included in the price instead; it is read on
+            -- every query, so switching it needs no module update.
             SELECT
                 res.id AS reservation_id,
                 CASE
+                    WHEN (
+                        SELECT value
+                        FROM ir_config_parameter
+                        WHERE key = 'spreadsheet_dasbhoard_pms.revenue_with_taxes'
+                    ) IN ('True', 'true', '1')
+                    THEN 1
                     WHEN SUM(rl.price) - COALESCE(res.discount, 0) <> 0
                     THEN COALESCE(res.price_subtotal, 0)
                         / (SUM(rl.price) - COALESCE(res.discount, 0))
                     ELSE 0
-                END AS untaxed_ratio
+                END AS revenue_ratio
             FROM pms_reservation res
             JOIN pms_reservation_line rl
             ON rl.reservation_id = res.id
@@ -92,7 +101,7 @@ class HotelRoomTypeDailySummary(models.Model):
                 res.pms_property_id,
                 res.room_type_id AS type_id,
                 COUNT(*) AS rooms_sold,
-                SUM(rl.price_day_total * sr.untaxed_ratio) AS total_revenue,
+                SUM(rl.price_day_total * sr.revenue_ratio) AS total_revenue,
                 rl.sale_channel_id
             FROM pms_reservation_line rl
             JOIN pms_reservation res
