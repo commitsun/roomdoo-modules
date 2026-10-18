@@ -12,5 +12,6 @@ from . import test_auth
 # from . import test_folio
 from . import test_listener_batching
 from . import test_master_sync
+from . import test_ota_locator
 from . import test_pricelist_flatten
 from . import test_reservation_mapper
