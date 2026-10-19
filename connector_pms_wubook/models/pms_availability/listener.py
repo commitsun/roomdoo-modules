@@ -4,10 +4,10 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-# Per-transaction buffer for property-availability exports. Shared with
-# ``ChannelWubookPmsAvailabilityPlanRuleListener`` (which fires on
-# ``plan_avail`` changes) so that simultaneous triggers collapse to a
-# single ``export_record`` per (backend × property) pair.
+# Per-transaction buffer for property-availability exports. Shared with the
+# reservation, room and ``pms.inventory.rule`` listeners so that simultaneous
+# triggers collapse to a single ``export_record`` per (backend × property)
+# pair.
 _AVAILABILITY_BUFFER_KEY = "connector_pms_wubook.availability_buffer"
 
 
@@ -102,12 +102,12 @@ class ChannelWubookPmsAvailabilityListener(Component):
     is also bound.
 
     ``on_record_write`` is intentionally NOT handled here. ``real_avail``
-    flips on every reservation line change, but only ``plan_avail``
-    (= min(real_avail, quota, max_avail)) is what actually gets shipped
-    to Wubook; a real_avail change that the cap absorbs is a no-op.
-    The ``plan_avail`` recompute lands on ``pms.availability.plan.rule``
-    so ``ChannelWubookPmsAvailabilityPlanRuleListener`` is the one that
-    triggers the property availability push when needed.
+    flips on every reservation line change, but what gets shipped to
+    Wubook is ``sale_avail`` = min(real_avail, declared inventory), so a
+    ``real_avail`` change the cap absorbs is a no-op. The pushes are
+    scheduled by whoever moved the value: the reservation and line
+    listeners for ``real_avail``, and
+    ``ChannelWubookPmsInventoryRuleListener`` for the inventory.
 
     Coalescence: same transactional buffer pattern as plan rules. A
     burst of changes across one transaction collapses to one job per
