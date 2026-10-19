@@ -11,9 +11,7 @@ from odoo.addons.component.tests.common import TransactionComponentCase
 from .test_master_sync import _make_backend_environment
 
 WUBOOK_BOUND_MODELS = (
-    "pms.availability",
     "pms.availability.plan",
-    "pms.availability.plan.rule",
     "pms.board.service",
     "pms.folio",
     "pms.property",
@@ -50,15 +48,8 @@ class TestBindingRegistry(TransactionComponentCase):
         binding One2many and would list itself without the guard."""
         self.assertIn(
             "channel_wubook_bind_ids",
-            self.env["channel.wubook.pms.availability"]._fields,
+            self.env["channel.wubook.pms.availability.plan"]._fields,
         )
-        self.assertEqual(self._fields_of("channel.wubook.pms.availability"), ())
-
-    def test_binding_with_a_child_binding_one2many_is_empty(self):
-        """The plan binding has both the delegated ``channel_wubook_bind_ids``
-        and its own ``channel_wubook_rule_ids`` pointing at another binding."""
-        plan_binding_fields = self.env["channel.wubook.pms.availability.plan"]._fields
-        self.assertIn("channel_wubook_rule_ids", plan_binding_fields)
         self.assertEqual(self._fields_of("channel.wubook.pms.availability.plan"), ())
 
     def test_binding_model_resolved_per_channel_manager(self):

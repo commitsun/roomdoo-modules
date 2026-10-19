@@ -28,18 +28,18 @@ _INVENTORY_RELEVANT_FIELDS = {
 class ChannelWubookPmsInventoryRuleListener(Component):
     """Listener for ``pms.inventory.rule``.
 
-    ``channel.wubook.pms.availability.sale_avail`` is a stored compute that
-    reads the resolved inventory, but the inventory lives in a model with no
-    relation to ``pms.availability``, so there is no ``@api.depends`` path
-    that could refresh it. This listener is that path.
+    What Wubook is told is the availability capped by the declared
+    inventory, and the inventory lives in a model with no relation to
+    anything the availability export watches, so this listener is what tells
+    it that a cap moved.
 
     Only rules at the GENERAL scope matter: what the connector ships is the
     availability of the property.
 
     The fan-out is bounded on purpose. A rule can span a year and several room
     types, but the export buffer keys on the property binding, so the flush
-    enqueues ONE job per property and backend, and the recompute stops at
-    today: a past night is not for sale.
+    enqueues ONE job per property and backend, and the window it carries
+    starts at today: a past night is not for sale.
     """
 
     _name = "channel.wubook.pms.inventory.rule.listener"
@@ -57,20 +57,9 @@ class ChannelWubookPmsInventoryRuleListener(Component):
         if date_from > record.date_to:
             # Rule entirely in the past: nothing left to sell on it.
             return
-        bindings = self.env["channel.wubook.pms.availability"].search(
-            [
-                ("pms_property_id", "=", pms_property.id),
-                ("room_type_id", "=", room_type.id),
-                ("date", ">=", date_from),
-                ("date", "<=", record.date_to),
-            ]
+        buffer_property_exports_for_rooms(
+            self.env, pms_property, room_type, date_from, record.date_to
         )
-        if bindings:
-            self.env.add_to_compute(
-                bindings._fields["sale_avail"],
-                bindings,
-            )
-        buffer_property_exports_for_rooms(self.env, pms_property, room_type)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
