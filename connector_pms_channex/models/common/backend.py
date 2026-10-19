@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
+import urllib.parse
 import uuid
 
 from odoo import _, api, fields, models
@@ -9,8 +10,13 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-STAGING_URL = "https://staging.channex.io/api/v1"
-PRODUCTION_URL = "https://channex.io/api/v1"
+API_PATH = "/api/v1"
+STAGING_URL = "https://staging.channex.io" + API_PATH
+PRODUCTION_URL = "https://channex.io" + API_PATH
+
+# Languages the embedded Channex UI ships. Anything else falls back to English,
+# which is what Channex does anyway, only without leaving a wrong hint in the URL.
+UI_LANGUAGES = ("de", "el", "en", "es", "hu", "it", "pt", "ru", "th")
 
 
 class ChannelChannexBackend(models.Model):
@@ -68,6 +74,16 @@ class ChannelChannexBackend(models.Model):
         "Channex account, and the account is the one the API key belongs to.",
     )
     group_title = fields.Char(string="Channex group name", readonly=True)
+    channel_ids = fields.One2many(
+        comodel_name="channel.channex.channel",
+        inverse_name="backend_id",
+        string="Channels",
+    )
+    unmapped_channel_count = fields.Integer(
+        compute="_compute_unmapped_channel_count",
+        help="Channels with no agency. Their bookings would come in with no "
+        "partner to attribute them to.",
+    )
 
     @api.depends("environment")
     def _compute_url(self):
@@ -176,6 +192,154 @@ class ChannelChannexBackend(models.Model):
             raise UserError(_("Channex did not return a group ID."))
         self.write({"group_id": data["id"], "group_title": title})
         return self._notify(_("Channex group %s created.") % title)
+
+    # -- embedded Channex UI -----------------------------------------------
+
+    def _channex_web_url(self):
+        """``url`` addresses the API; the embedded UI hangs off the web root."""
+        self.ensure_one()
+        root = (self.url or "").rstrip("/")
+        if root.endswith(API_PATH):
+            root = root[: -len(API_PATH)]
+        return root
+
+    def _channex_property_external_id(self):
+        """Channex scopes the embedded session to one of its properties, so the
+        property has to be there before anything can be shown inside it."""
+        self.ensure_one()
+        binding = (
+            self.env["channel.channex.pms.property"]
+            .with_context(active_test=False)
+            .search([("backend_id", "=", self.id)], limit=1)
+        )
+        if not binding.external_id:
+            raise UserError(
+                _("Export %s to Channex before opening its Channex screens.")
+                % self.pms_property_id.display_name
+            )
+        return binding.external_id
+
+    def _channex_one_time_token(self, property_id, group_id):
+        """Mint a token for one load of the embedded UI.
+
+        It is never stored: Channex drops it on first use and after 15 minutes,
+        while the session it opens does not expire once the frame has loaded.
+        """
+        self.ensure_one()
+        body = self._channex_request(
+            "POST",
+            "auth/one_time_token",
+            payload={
+                "one_time_token": {
+                    "property_id": property_id,
+                    "group_id": group_id,
+                    "username": self.env.user.name,
+                }
+            },
+        )
+        if body is None:
+            raise UserError(
+                _(
+                    "Exports are disabled on this backend, so Channex would not "
+                    "authorise the session."
+                )
+            )
+        token = ((body or {}).get("data") or {}).get("token")
+        if not token:
+            raise UserError(_("Channex did not return an access token."))
+        return token
+
+    def channex_iframe_url(self, page="/channels"):
+        """URL of a Channex screen, embeddable in Odoo.
+
+        Called by the client action on every mount rather than handed over once
+        in the action, because the token only survives a single load and an
+        action lives on in the breadcrumb.
+        """
+        self.ensure_one()
+        property_id = self._channex_property_external_id()
+        group_id = self._channex_group_id()
+        lang = (self.env.user.lang or "en").split("_")[0]
+        query = urllib.parse.urlencode(
+            {
+                "oauth_session_key": self._channex_one_time_token(
+                    property_id, group_id
+                ),
+                # Hides the Channex chrome, so what is left is the screen itself.
+                "app_mode": "headless",
+                "redirect_to": page,
+                "property_id": property_id,
+                "group_id": group_id,
+                "lng": lang if lang in UI_LANGUAGES else "en",
+            }
+        )
+        return f"{self._channex_web_url()}/auth/exchange?{query}"
+
+    # -- channels ----------------------------------------------------------
+
+    @api.depends("channel_ids.agency_id", "channel_ids.active")
+    def _compute_unmapped_channel_count(self):
+        for rec in self:
+            # ``active`` is filtered here and not left to ``active_test``: a
+            # channel deactivated during the sync is still in the one2many that
+            # was read before it, and a channel that no longer exists on Channex
+            # is nothing to warn about.
+            rec.unmapped_channel_count = len(
+                rec.channel_ids.filtered(
+                    lambda channel: channel.active and not channel.agency_id
+                )
+            )
+
+    def _channex_fetch_channels(self):
+        """The channels of this backend's property, as Channex reports them.
+
+        An account holds the channels of all its properties, so the property
+        filter is the scoping, not an optimisation.
+        """
+        self.ensure_one()
+        property_id = self._channex_property_external_id()
+        with self.work_on("channel.channex.channel") as work:
+            adapter = work.component(usage="backend.adapter")
+            return adapter.search_read([("property_id", "=", property_id)])
+
+    def channex_sync_channels(self):
+        """Bring in the channels the hotel connected on Channex.
+
+        Nothing is created on Channex from here, and no partner is invented
+        either: an unmapped channel is reported, never guessed.
+
+        There is no button for this. The screen that guides the hotel through
+        connecting channels runs it on its own, because a step called
+        "synchronise" is a step that means nothing to a hotelier.
+        """
+        self.ensure_one()
+        channels = self.env["channel.channex.channel"]
+        seen = channels
+        for values in self._channex_fetch_channels():
+            seen |= channels._channex_upsert(self, values)
+        gone = self.channel_ids - seen
+        gone.write({"active": False})
+        return {"total": len(seen), "unmapped": self.unmapped_channel_count}
+
+    def action_open_channex_channels(self):
+        """The whole channel flow, in one screen.
+
+        Meant to be opened from anywhere -- today a button on this form, later a
+        hotel facing dashboard -- so everything it needs is the backend and the
+        step to land on. It starts on the mapping step once there is something
+        to map, which is what makes it a screen a hotel can come back to rather
+        than a one-shot wizard.
+        """
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "channex_channels",
+            "name": _("Channels"),
+            "params": {
+                "backend_id": self.id,
+                "step": "map" if self.channel_ids else "connect",
+            },
+        }
 
     def _notify(self, message):
         return {
