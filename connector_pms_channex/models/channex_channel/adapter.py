@@ -5,7 +5,11 @@ from odoo.addons.component.core import Component
 
 
 class ChannelChannexChannelAdapter(Component):
-    """Read only in practice: channels are created in the Channex UI.
+    """Channels are created in the Channex UI, never from here.
+
+    Writes are limited to reaching into an existing mapping to set the rate
+    logic; the mapping itself, and the room and rate codes in it, stay the
+    hotel's.
 
     Not a binding of any PMS model, so it works on the Channex-side model
     directly.

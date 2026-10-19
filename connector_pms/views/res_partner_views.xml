@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="res_partner_view_form" model="ir.ui.view">
+        <field name="name">res.partner.connector.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="pms.res_partner_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='agency']/group" position="inside">
+                <field name="ota_price_modifier_type" />
+                <field
+          name="ota_price_modifier_value"
+          attrs="{'required': [('ota_price_modifier_type', '!=', False)], 'invisible': [('ota_price_modifier_type', '=', False)]}"
+        />
+            </xpath>
+        </field>
+    </record>
+</odoo>
