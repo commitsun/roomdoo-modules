@@ -1,0 +1,470 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* connector_pms
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_type_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_view_form
+msgid "<span class=\"o_stat_text\">Configuration</span>"
+msgstr "<span class=\"o_stat_text\">Configuración</span>"
+
+#. module: connector_pms
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_binding_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_binding_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_rule_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_board_service_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_folio_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_property_availability_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_line_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_board_service_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_class_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_item_channel_external_uniq
+msgid "A binding already exists with the same External (Channel) ID."
+msgstr "Ya existe un vínculo con el mismo ID externo (del canal)."
+
+#. module: connector_pms
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_binding_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_binding_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_rule_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_board_service_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_folio_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_property_availability_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_line_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_board_service_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_class_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_item_channel_internal_uniq
+msgid "A binding already exists with the same Internal (Odoo) ID."
+msgstr "Ya existe un vínculo con el mismo ID interno (de Odoo)."
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__arguments
+msgid "Arguments"
+msgstr "Argumentos"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__backend_id
+msgid "Backend"
+msgstr "Backend"
+
+#. module: connector_pms
+#: model:ir.ui.menu,name:connector_pms.channel_backend_log_menu
+msgid "Backend Log"
+msgstr "Registro del backend"
+
+#. module: connector_pms
+#: model:ir.ui.menu,name:connector_pms.channel_backend_method_menu
+msgid "Backend Methods"
+msgstr "Métodos del backend"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__backend_type_id
+msgid "Backend Type"
+msgstr "Tipo de backend"
+
+#. module: connector_pms
+#: model:ir.ui.menu,name:connector_pms.channel_backend_type_menu
+msgid "Backend Types"
+msgstr "Tipos de backend"
+
+#. module: connector_pms
+#: model:ir.ui.menu,name:connector_pms.channel_backend_menu
+msgid "Backends"
+msgstr "Backends"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_backend
+msgid "Channel PMS Backend"
+msgstr "Backend de canal del PMS"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_backend_log
+msgid "Channel PMS Backend API Log"
+msgstr "Registro de la API del backend de canal del PMS"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_backend_method
+msgid "Channel PMS Backend Method"
+msgstr "Método del backend de canal del PMS"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_backend_type
+msgid "Channel PMS Backend Type"
+msgstr "Tipo de backend de canal del PMS"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_channel_binding
+msgid "Channel PMS Binding (abstract)"
+msgstr "Vínculo de canal del PMS (abstracto)"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.availability_plan_rule_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_board_service_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_folio_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_property_views_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_class_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_item_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
+msgid "Connectors"
+msgstr "Conectores"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__create_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__create_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__create_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__create_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__create_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__create_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__display_name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__display_name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__display_name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__export_disabled
+msgid "Export Disabled"
+msgstr "Exportación desactivada"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__external_id
+msgid "External ID"
+msgstr "ID externo"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/binder.py:0
+#, python-format
+msgid "External alternative id '%s' not found in export mapper"
+msgstr ""
+"No se ha encontrado el ID externo alternativo '%s' en el mapeador de "
+"exportación"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/mapper.py:0
+#: code:addons/connector_pms/components_custom/mapper.py:0
+#, python-format
+msgid "Field '%s' mapping defined twice"
+msgstr "El mapeo del campo '%s' está definido dos veces"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__id
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__id
+msgid "ID"
+msgstr "ID"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/common/backend.py:0
+#: code:addons/connector_pms/models/common/backend_type.py:0
+#, python-format
+msgid ""
+"Inconsistency detected. More than one backend's child found for the same "
+"parent"
+msgstr ""
+"Inconsistencia detectada: hay más de un backend hijo para el mismo padre"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
+#, python-format
+msgid "Key %s does not exist"
+msgstr "La clave %s no existe"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend____last_update
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log____last_update
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method____last_update
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__sync_date_export
+msgid "Last Sync (export)"
+msgstr "Última sincronización (exportación)"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__sync_date
+msgid "Last Sync (import)"
+msgstr "Última sincronización (importación)"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__write_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__write_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__write_uid
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__write_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__write_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__write_date
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__actual_write_date
+msgid "Last Updated on (actual)"
+msgstr "Última actualización (real)"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__max_calls
+msgid "Max Calls"
+msgstr "Máximo de llamadas"
+
+#. module: connector_pms
+#: model:ir.model.fields,help:connector_pms.field_channel_binding__actual_write_date
+msgid "Max write date between binding and actual record"
+msgstr "Fecha de escritura más reciente entre el vínculo y el registro real"
+
+#. module: connector_pms
+#: model:ir.model.fields,help:connector_pms.field_channel_backend_method__max_calls
+msgid "Maximum number of calls to this method in the defined time window"
+msgstr ""
+"Número máximo de llamadas a este método dentro de la ventana de tiempo "
+"definida"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__method_id
+msgid "Method"
+msgstr "Método"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__name
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__no_export
+msgid "No Export"
+msgstr "Sin exportación"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/importer.py:0
+#, python-format
+msgid "No Id field (_id) defined on backend"
+msgstr "El backend no tiene definido el campo de ID (_id)"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#, python-format
+msgid "Nothing to export"
+msgstr "Nada que exportar"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_pms_reservation__ota_reservation_code
+msgid "OTA Reservation Code"
+msgstr "Código de reserva de la OTA"
+
+#. module: connector_pms
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_backend_method_method_backend_type
+msgid "Only one method with the same name is allowed per Backend Type"
+msgstr "Solo se permite un método con el mismo nombre por tipo de backend"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
+#, python-format
+msgid "Operator %s not supported"
+msgstr "Operador %s no soportado"
+
+#. module: connector_pms
+#: model:ir.ui.menu,name:connector_pms.channel_menu
+msgid "PMS"
+msgstr "PMS"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_view_form
+msgid "PMS Backend"
+msgstr "Backend del PMS"
+
+#. module: connector_pms
+#: model:ir.actions.act_window,name:connector_pms.channel_backend_log_action
+msgid "PMS Backend Log"
+msgstr "Registro del backend del PMS"
+
+#. module: connector_pms
+#: model:ir.actions.act_window,name:connector_pms.channel_backend_method_action
+msgid "PMS Backend Method"
+msgstr "Método del backend del PMS"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_type_view_form
+msgid "PMS Backend Type"
+msgstr "Tipo de backend del PMS"
+
+#. module: connector_pms
+#: model:ir.actions.act_window,name:connector_pms.channel_backend_type_action
+msgid "PMS Backend Types"
+msgstr "Tipos de backend del PMS"
+
+#. module: connector_pms
+#: model:ir.actions.act_window,name:connector_pms.channel_backend_action
+msgid "PMS Backends"
+msgstr "Backends del PMS"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_log_view_form
+msgid "PMS Channel Backend Log"
+msgstr "Registro del backend de canal del PMS"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.channel_backend_method_view_form
+msgid "PMS Channel Backend Method"
+msgstr "Método del backend de canal del PMS"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__pms_property_id
+#: model:ir.model.fields,field_description:connector_pms.field_queue_job__pms_property_id
+#: model_terms:ir.ui.view,arch_db:connector_pms.view_queue_job_search
+msgid "Property"
+msgstr "Hotel"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_queue_job
+msgid "Queue Job"
+msgstr "Cola de trabajos"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#, python-format
+msgid "Record exported with ID %s on Backend."
+msgstr "Registro exportado con ID %s en el backend."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/importer.py:0
+#, python-format
+msgid "Record with external_id '%s' does not exist in Backend"
+msgstr "El registro con external_id '%s' no existe en el backend"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_type__model_type_id
+msgid "Referenced Model Type"
+msgstr "Tipo de modelo referenciado"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_pms_reservation
+msgid "Reservation"
+msgstr "Reserva"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__response
+msgid "Response"
+msgstr "Respuesta"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__response_code
+msgid "Response Code"
+msgstr "Código de respuesta"
+
+#. module: connector_pms
+#: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+msgid "Rules"
+msgstr "Reglas"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_binding__synced_export
+msgid "Synced (export)"
+msgstr "Sincronizado (exportación)"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/binder.py:0
+#, python-format
+msgid ""
+"The object '%s' is already wrapped, it's already a binding object. You can "
+"only wrap Odoo objects"
+msgstr ""
+"El objeto '%s' ya está envuelto: ya es un objeto de vínculo. Solo se pueden "
+"envolver objetos de Odoo"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
+#: code:addons/connector_pms/components/adapter.py:0
+#, python-format
+msgid "The value %s should be a list or tuple"
+msgstr "El valor %s debería ser una lista o una tupla"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__time_window
+msgid "Time Window (seconds)"
+msgstr "Ventana de tiempo (segundos)"
+
+#. module: connector_pms
+#: model:ir.model.fields,help:connector_pms.field_channel_backend_method__time_window
+msgid "Time window in seconds"
+msgstr "Ventana de tiempo en segundos"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__timestamp
+msgid "Timestamp"
+msgstr "Marca de tiempo"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__backend_type_id
+msgid "Type"
+msgstr "Tipo"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_channel_backend__user_id
+msgid "User"
+msgstr "Usuario"
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/binder.py:0
+#, python-format
+msgid ""
+"Wrong domain value type '%(type)s' on value '%(value)s' of field '%(field)s'"
+msgstr ""
+"Tipo de valor de dominio incorrecto '%(type)s' en el valor '%(value)s' del "
+"campo '%(field)s'"
