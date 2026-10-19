@@ -290,6 +290,65 @@ class TestPmsSalespersonTools(TransactionCase):
         self.assertEqual(sp_b["active_companies"], 1)
         self.assertEqual(sp_b["overdue_amount"], 500.0)
 
+    def test_invoices_of_other_properties_are_left_out(self):
+        other = self.env["pms.property"].create(
+            {
+                "name": "AI property out of scope",
+                "company_id": self.env.company.id,
+                "default_pricelist_id": self.prop.default_pricelist_id.id,
+            }
+        )
+        invoice = self._invoice(self.c3, 5000)
+        self.env.cr.execute(
+            "UPDATE account_move SET pms_property_id = %s WHERE id = %s",
+            [other.id, invoice.id],
+        )
+        top = self._by_salesperson(
+            self._run(
+                "pms_salesperson_top_customers",
+                date_from="2026-09-21",
+                date_to="2026-09-27",
+            )
+        )[self.sp_a.id]
+        self.assertEqual(top["invoiced_untaxed"], 3900.0)
+        portfolio = self._by_salesperson(
+            self._run("pms_salesperson_portfolio", date_to="2026-09-27")
+        )[self.sp_a.id]
+        self.assertEqual(portfolio["overdue_invoices"], 3)
+
+    def test_folio_payment_counts_once(self):
+        # A second overdue invoice of the same folio and a payment of the
+        # guest on that folio must not inflate what was paid and not applied.
+        second = self._invoice(self.c1, 1000)
+        self.env.cr.execute(
+            """INSERT INTO account_move_folio_ids_rel (account_move_id, folio_ids_id)
+               VALUES (%s, %s) ON CONFLICT DO NOTHING""",
+            [second.id, self.f1.id],
+        )
+        journal = self.env["account.journal"].search(
+            [("type", "=", "bank"), ("company_id", "=", self.env.company.id)],
+            limit=1,
+        )
+        guest_payment = self.env["account.payment"].create(
+            {
+                "payment_type": "inbound",
+                "partner_type": "customer",
+                "partner_id": self.guest.id,
+                "amount": 50,
+                "journal_id": journal.id,
+                "date": "2026-09-23",
+                "folio_ids": [(6, 0, self.f1.ids)],
+            }
+        )
+        guest_payment.action_post()
+        self.env.invalidate_all()
+        sp_a = self._by_salesperson(
+            self._run("pms_salesperson_portfolio", date_to="2026-09-27")
+        )[self.sp_a.id]
+        self.assertEqual(sp_a["overdue_invoices"], 4)
+        self.assertEqual(sp_a["overdue_paid_on_folio_invoices"], 1)
+        self.assertEqual(sp_a["overdue_paid_on_folio_amount"], 300.0)
+
     def test_cooling_customers(self):
         response = self._run("pms_salesperson_cooling_customers", date_to="2026-09-27")
         rows = self._by_salesperson(response)

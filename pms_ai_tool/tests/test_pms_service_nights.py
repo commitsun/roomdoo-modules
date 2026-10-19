@@ -146,6 +146,25 @@ class TestPmsServiceNights(TransactionCase):
         self.assertEqual(totals["outside_stay"], 0)
         self.assertEqual(totals["one_night_stays"], 1)
 
+    def test_a_night_loaded_twice_counts_once(self):
+        with freeze_time("2026-09-01"):
+            reservation = self._stay(5, 10, self.after, [7])
+            self.env["pms.service"].create(
+                {
+                    "reservation_id": reservation.id,
+                    "product_id": self.after.id,
+                    "no_auto_add_lines": True,
+                    "service_line_ids": [
+                        (0, 0, {"date": date(2026, 9, 7), "day_qty": 1})
+                    ],
+                }
+            )
+        response = self._run(
+            date_from="2026-09-05", date_to="2026-09-10", product_ids=[self.after.id]
+        )
+        self.assertEqual(response["result"]["totals"]["nights"], 1)
+        self.assertIn("repeat a night", " ".join(response["warnings"]))
+
     def test_configured_products(self):
         params = self.env["ir.config_parameter"].sudo()
         params.set_param(PARAM_PRODUCTS, str(self.before.id))

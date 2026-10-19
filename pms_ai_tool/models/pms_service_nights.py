@@ -23,6 +23,7 @@ SELECT sl.pms_property_id AS property_id,
             THEN sl.date = r.checkout
             ELSE sl.date = r.checkout - 1
        END AS last_night,
+       count(DISTINCT (sl.reservation_id, sl.date)) AS room_nights,
        count(*) AS lines
   FROM pms_service_line sl
   JOIN pms_reservation r ON r.id = sl.reservation_id
@@ -127,10 +128,12 @@ class PmsAiTools(models.AbstractModel):
         )
         totals = dict.fromkeys(BUCKETS, 0)
         by_property = defaultdict(lambda: dict.fromkeys(BUCKETS, 0))
+        repeated = 0
         for row in rows:
             bucket = _bucket(row)
-            totals[bucket] += row["lines"]
-            by_property[row["property_id"]][bucket] += row["lines"]
+            totals[bucket] += row["room_nights"]
+            by_property[row["property_id"]][bucket] += row["room_nights"]
+            repeated += row["lines"] - row["room_nights"]
         names = {
             prop.id: prop.name
             for prop in self.env["pms.property"].browse(list(by_property))
@@ -144,6 +147,14 @@ class PmsAiTools(models.AbstractModel):
                     "counted. Review them with the hotel."
                 )
                 % totals["outside_stay"]
+            )
+        if repeated:
+            warnings.append(
+                _(
+                    "%s service lines repeat a night that already has the service "
+                    "(loaded twice): each night is counted once."
+                )
+                % repeated
             )
         odd_products = products.filtered(
             lambda p: (p.consumed_on or "before") not in ("before", "after")
@@ -173,9 +184,9 @@ class PmsAiTools(models.AbstractModel):
             "period": period,
             "definitions": [
                 _(
-                    "Night: a service line of the products, dated in the period, "
-                    "with a quantity above 0 (one per room and night, whatever the "
-                    "quantity)."
+                    "Night: a room and night (reservation and date) with a service "
+                    "line of the products dated in the period with a quantity above "
+                    "0; counted once whatever the quantity or the number of lines."
                 ),
                 _(
                     "Left out: reservations of one night, the line of the last "

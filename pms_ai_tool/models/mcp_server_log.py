@@ -28,3 +28,4 @@ class McpServerLog(models.Model):
         )
         limit = fields.Datetime.now() - timedelta(days=days)
         self.sudo().search([("date", "<", limit)]).unlink()
+        self.env["pms.ai.confirmation"]._purge()
