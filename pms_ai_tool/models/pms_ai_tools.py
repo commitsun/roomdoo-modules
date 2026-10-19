@@ -1,3 +1,7 @@
+from datetime import datetime, time, timedelta
+
+import pytz
+
 from odoo import _, api, models
 from odoo.exceptions import AccessError, UserError
 
@@ -70,3 +74,22 @@ class PmsAiTools(models.AbstractModel):
         """Run a parameterised query and return its rows as dicts."""
         self.env.cr.execute(query, params)
         return self.env.cr.dictfetchall()
+
+    @api.model
+    def _ai_timezone(self):
+        return self.env.context.get("tz") or self.env.user.tz or "UTC"
+
+    @api.model
+    def _ai_utc_bounds(self, date_from, date_to):
+        """UTC datetimes of local midnight on date_from and after date_to.
+
+        Compare datetime columns with these instead of casting them to a date:
+        the cast takes the UTC day and keeps Postgres from using the index.
+        """
+        tz = pytz.timezone(self._ai_timezone())
+
+        def utc(day):
+            local = tz.localize(datetime.combine(day, time.min))
+            return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+        return utc(date_from), utc(date_to + timedelta(days=1))

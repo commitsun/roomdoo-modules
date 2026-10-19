@@ -100,6 +100,7 @@ SELECT cp.user_id AS uid, cp.id AS partner_id, cp.name, cp.vat,
    AND m.state = 'posted'
    AND m.invoice_date BETWEEN %(date_from)s AND %(date_to)s
    AND m.company_id = ANY(%(company_ids)s)
+   AND (m.pms_property_id IS NULL OR m.pms_property_id = ANY(%(property_ids)s))
    AND cp.user_id = ANY(%(salespeople)s)
 GROUP BY cp.user_id, cp.id, cp.name, cp.vat
 """
@@ -118,18 +119,21 @@ active AS (
      WHERE cp.user_id = ANY(%(salespeople)s)
        AND f.state <> 'cancel'
        AND f.pms_property_id = ANY(%(property_ids)s)
-       AND f.date_order::date BETWEEN %(active_from)s AND %(date_to)s
+       AND f.date_order >= %(active_start)s
+       AND f.date_order < %(period_end)s
 ),
 created AS (
     SELECT create_uid AS uid, count(*) AS new_companies
       FROM res_partner
      WHERE is_company
        AND create_uid = ANY(%(salespeople)s)
-       AND create_date::date BETWEEN %(date_from)s AND %(date_to)s
+       AND create_date >= %(period_start)s
+       AND create_date < %(period_end)s
   GROUP BY create_uid
 ),
 overdue AS (
-    SELECT m.id, cp.user_id AS uid, m.amount_residual_signed AS residual
+    SELECT m.id, cp.user_id AS uid, m.commercial_partner_id,
+           m.invoice_date_due, m.amount_residual_signed AS residual
       FROM account_move m
       JOIN res_partner cp ON cp.id = m.commercial_partner_id
      WHERE m.move_type = 'out_invoice'
@@ -138,26 +142,32 @@ overdue AS (
        AND m.invoice_date_due <= %(date_to)s
        AND m.invoice_date >= %(overdue_from)s
        AND m.company_id = ANY(%(company_ids)s)
+       AND (m.pms_property_id IS NULL
+            OR m.pms_property_id = ANY(%(property_ids)s))
        AND cp.user_id = ANY(%(salespeople)s)
 ),
 unapplied AS (
-    -- Payments registered on the folios of an overdue invoice and still open
-    -- on the receivable account: the customer paid, the payment was not applied.
-    SELECT pay.invoice_id, -sum(pay.amount_residual) AS amount
-      FROM (
-          SELECT DISTINCT o.id AS invoice_id, pl.id, pl.amount_residual
-            FROM overdue o
-            JOIN account_move_folio_ids_rel mf ON mf.account_move_id = o.id
-            JOIN account_payment_folio_rel pf ON pf.folio_id = mf.folio_ids_id
-            JOIN account_payment p ON p.id = pf.payment_id
-            JOIN account_move_line pl ON pl.move_id = p.move_id
-            JOIN account_account acc ON acc.id = pl.account_id
-           WHERE acc.account_type = 'asset_receivable'
-             AND pl.parent_state = 'posted'
-             AND NOT pl.reconciled
-             AND pl.amount_residual < 0
-      ) pay
-  GROUP BY pay.invoice_id
+    -- Payments of the same customer registered on the folios of an overdue
+    -- invoice and still open on the receivable account: the money arrived but
+    -- was not applied. Each payment counts once, for the invoice due first.
+    SELECT DISTINCT ON (pl.id) pl.id, o.id AS invoice_id,
+           -pl.amount_residual AS amount
+      FROM overdue o
+      JOIN account_move_folio_ids_rel mf ON mf.account_move_id = o.id
+      JOIN account_payment_folio_rel pf ON pf.folio_id = mf.folio_ids_id
+      JOIN account_payment p ON p.id = pf.payment_id
+      JOIN account_move_line pl ON pl.move_id = p.move_id
+      JOIN account_account acc ON acc.id = pl.account_id
+      JOIN res_partner pp ON pp.id = pl.partner_id
+     WHERE acc.account_type = 'asset_receivable'
+       AND pl.parent_state = 'posted'
+       AND NOT pl.reconciled
+       AND pl.amount_residual < 0
+       AND pp.commercial_partner_id = o.commercial_partner_id
+  ORDER BY pl.id, o.invoice_date_due, o.id
+),
+per_invoice AS (
+    SELECT invoice_id, sum(amount) AS amount FROM unapplied GROUP BY invoice_id
 )
 SELECT u.uid,
        (SELECT count(*) FROM assigned a WHERE a.uid = u.uid) AS assigned,
@@ -172,10 +182,10 @@ SELECT u.uid,
        (SELECT count(*) FROM overdue o WHERE o.uid = u.uid) AS overdue_invoices,
        coalesce((SELECT sum(residual) FROM overdue o WHERE o.uid = u.uid), 0)
            AS overdue_amount,
-       (SELECT count(*) FROM overdue o JOIN unapplied un ON un.invoice_id = o.id
+       (SELECT count(*) FROM overdue o JOIN per_invoice pi ON pi.invoice_id = o.id
          WHERE o.uid = u.uid) AS overdue_paid_on_folio_invoices,
-       coalesce((SELECT sum(least(un.amount, o.residual))
-                   FROM overdue o JOIN unapplied un ON un.invoice_id = o.id
+       coalesce((SELECT sum(least(pi.amount, o.residual))
+                   FROM overdue o JOIN per_invoice pi ON pi.invoice_id = o.id
                   WHERE o.uid = u.uid), 0) AS overdue_paid_on_folio_amount
   FROM unnest(%(salespeople)s::int[]) AS u(uid)
 """
@@ -183,7 +193,7 @@ SELECT u.uid,
 COOLING_QUERY = """
 WITH folios AS (
     SELECT DISTINCT cp.id AS partner_id, f.id AS folio_id,
-           f.date_order::date AS day
+           (f.date_order AT TIME ZONE 'UTC' AT TIME ZONE %(tz)s)::date AS day
       FROM pms_folio f
       JOIN res_partner x ON x.id IN (f.partner_id, f.agency_id)
       JOIN res_partner cp ON cp.id = x.commercial_partner_id
@@ -191,7 +201,8 @@ WITH folios AS (
        AND cp.user_id = ANY(%(salespeople)s)
        AND f.state <> 'cancel'
        AND f.pms_property_id = ANY(%(property_ids)s)
-       AND f.date_order::date BETWEEN %(before_from)s AND %(date_to)s
+       AND f.date_order >= %(before_start)s
+       AND f.date_order < %(period_end)s
 ),
 agg AS (
     SELECT partner_id,
@@ -390,6 +401,7 @@ class PmsAiTools(models.AbstractModel):
             {
                 "salespeople": users.ids,
                 "company_ids": self._ai_scope_company_ids(),
+                "property_ids": self._ai_scope_property_ids(),
                 "date_from": date_from,
                 "date_to": date_to,
             },
@@ -492,16 +504,20 @@ class PmsAiTools(models.AbstractModel):
         period = self._ai_check_period(date_from, date_to, MAX_DAYS)
         users = self._ai_salesperson_ids(salesperson_ids)
         active_from = date_to - timedelta(weeks=active_weeks) + timedelta(days=1)
+        period_start, period_end = self._ai_utc_bounds(date_from, date_to)
+        active_start = self._ai_utc_bounds(active_from, date_to)[0]
         rows = self._ai_fetch(
             PORTFOLIO_QUERY,
             {
                 "salespeople": users.ids,
                 "property_ids": self._ai_scope_property_ids(),
                 "company_ids": self._ai_scope_company_ids(),
-                "date_from": date_from,
                 "date_to": date_to,
-                "active_from": active_from,
-                "overdue_from": date_to - timedelta(days=365),
+                "period_start": period_start,
+                "period_end": period_end,
+                "active_start": active_start,
+                # 365 days including date_to, as in the original report.
+                "overdue_from": date_to - timedelta(days=364),
             },
         )
         by_user = {row["uid"]: row for row in rows}
@@ -552,9 +568,13 @@ class PmsAiTools(models.AbstractModel):
                 ),
                 _(
                     "Overdue paid on the folio: overdue invoices whose folios hold a "
-                    "payment still open on the receivable account, up to the "
-                    "invoice residual: the money arrived but was not applied."
+                    "payment of the same customer still open on the receivable "
+                    "account, up to the invoice residual; each payment counts once, "
+                    "for the invoice due first. The money arrived but was not "
+                    "applied."
                 ),
+                _("Dates of folios and companies are taken in the time zone %s.")
+                % self._ai_timezone(),
             ],
             "warnings": [],
             "result": {"salespeople": salespeople},
@@ -596,14 +616,16 @@ class PmsAiTools(models.AbstractModel):
         before_from = recent_from - timedelta(days=365)
         last_year_from = recent_from - timedelta(days=365)
         last_year_to = date_to - timedelta(days=365)
+        before_start, period_end = self._ai_utc_bounds(before_from, date_to)
         rows = self._ai_fetch(
             COOLING_QUERY,
             {
                 "salespeople": users.ids,
                 "property_ids": self._ai_scope_property_ids(),
-                "date_to": date_to,
+                "tz": self._ai_timezone(),
+                "before_start": before_start,
+                "period_end": period_end,
                 "recent_from": recent_from,
-                "before_from": before_from,
                 "last_year_from": last_year_from,
                 "last_year_to": last_year_to,
                 "min_folios": min_folios,

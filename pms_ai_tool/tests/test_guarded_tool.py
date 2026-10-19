@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest import mock
 
 from freezegun import freeze_time
 
@@ -176,6 +177,29 @@ class TestGuardedTool(PmsAiToolTestMixin, TransactionCase):
         with self.assertRaisesRegex(UserError, "does not match"):
             self._confirm(token)
         self.assertEqual(self._db_ref(), "moved")
+
+    def test_confirmation_is_used_once(self):
+        token = self._preview_token()
+        self._confirm(token)
+        self.assertEqual(self._db_ref(), "new")
+        # Same data again, so the preview would sign the same thing.
+        self.partner.ref = "orig"
+        self.env.flush_all()
+        with self.assertRaisesRegex(UserError, "already used"):
+            self._confirm(token)
+        self.assertEqual(self._db_ref(), "orig")
+
+    def test_confirmation_is_bound_to_the_environment(self):
+        token = self._preview_token()
+        params = self.env["ir.config_parameter"].sudo()
+        params.set_param("web.base.url", "https://copy.example.com")
+        with self.assertRaisesRegex(UserError, "does not match"):
+            self._confirm(token)
+        token = self._preview_token()
+        with mock.patch.dict("os.environ", {"DOODBA_ENVIRONMENT": "another"}):
+            with self.assertRaisesRegex(UserError, "does not match"):
+                self._confirm(token)
+        self.assertEqual(self._db_ref(), "orig")
 
     def test_confirmation_needs_a_valid_token(self):
         for token in (None, "", "garbage", "123.abc"):
