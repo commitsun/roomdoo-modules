@@ -36,11 +36,11 @@ class TestBindingRegistry(TransactionComponentCase):
         return self.Backend._channel_binding_field_names(model_name)
 
     def test_every_bound_pms_model_is_discovered(self):
+        # Containment, not equality: another connector installed alongside adds
+        # its own binding field to the very same models.
         for model_name in WUBOOK_BOUND_MODELS:
             with self.subTest(model=model_name):
-                self.assertEqual(
-                    self._fields_of(model_name), ("channel_wubook_bind_ids",)
-                )
+                self.assertIn("channel_wubook_bind_ids", self._fields_of(model_name))
 
     def test_model_without_binding_is_empty(self):
         self.assertEqual(self._fields_of("res.partner"), ())
