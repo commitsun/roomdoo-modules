@@ -64,6 +64,27 @@ class HotelRoomTypeDailySummary(models.Model):
             FROM latest_type
             GROUP BY day, pms_property_id, type_id
         ),
+        sold_reservations AS (
+            -- Only normal reservations are sold rooms: out of service and
+            -- staff reservations occupy a room but are not sales.
+            -- untaxed_ratio turns price_day_total (which carries the tax when
+            -- the room tax is price-included) into revenue without taxes,
+            -- reusing the subtotal already computed on the reservation.
+            SELECT
+                res.id AS reservation_id,
+                CASE
+                    WHEN SUM(rl.price) - COALESCE(res.discount, 0) <> 0
+                    THEN COALESCE(res.price_subtotal, 0)
+                        / (SUM(rl.price) - COALESCE(res.discount, 0))
+                    ELSE 0
+                END AS untaxed_ratio
+            FROM pms_reservation res
+            JOIN pms_reservation_line rl
+            ON rl.reservation_id = res.id
+            WHERE res.state NOT IN ('cancel', 'draft')
+            AND res.reservation_type = 'normal'
+            GROUP BY res.id
+        ),
         rooms_sold AS (
             SELECT
                 rl.date AS day,
@@ -71,12 +92,14 @@ class HotelRoomTypeDailySummary(models.Model):
                 res.pms_property_id,
                 res.room_type_id AS type_id,
                 COUNT(*) AS rooms_sold,
-                SUM(rl.price_day_total) AS total_revenue,
+                SUM(rl.price_day_total * sr.untaxed_ratio) AS total_revenue,
                 rl.sale_channel_id
             FROM pms_reservation_line rl
             JOIN pms_reservation res
             ON rl.reservation_id = res.id
-            WHERE res.state NOT IN ('cancel', 'draft') and rl.is_reselling is not TRUE
+            JOIN sold_reservations sr
+            ON sr.reservation_id = res.id
+            WHERE rl.is_reselling is not TRUE
             GROUP BY rl.date, res.pms_property_id, res.room_type_id, rl.currency_id, rl.sale_channel_id
         )
         SELECT

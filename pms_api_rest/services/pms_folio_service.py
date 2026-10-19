@@ -869,30 +869,27 @@ class PmsFolioService(Component):
             raise MissingError(_("Folio not found"))
         pms_api_check_access(user=self.env.user, records=folio_record)
         for reservation in folio_info.reservations:
-            self.env["pms.reservation"].sudo().create(
-                {
-                    "folio_id": folio_record.id,
-                    "pricelist_id": folio_info.pricelistId,
-                    "pms_property_id": folio_record.pms_property_id.id,
-                    "checkin": datetime.strptime(
-                        reservation.checkin, "%Y-%m-%d"
-                    ).date(),
-                    "checkout": datetime.strptime(
-                        reservation.checkout, "%Y-%m-%d"
-                    ).date(),
-                    "room_type_id": reservation.roomTypeId,
-                    "adults": reservation.adults,
-                    "children": reservation.children or 0,
-                    "board_service_room_id": reservation.boardServiceId,
-                    "preferred_room_id": reservation.preferredRoomId
-                    if reservation.preferredRoomId
-                    else None,
-                    "splitted": reservation.isSplitted
-                    if reservation.isSplitted
-                    else False,
-                    "reservation_type": reservation.reservationType or "normal",
-                }
-            )
+            vals = {
+                "folio_id": folio_record.id,
+                "pms_property_id": folio_record.pms_property_id.id,
+                "checkin": datetime.strptime(reservation.checkin, "%Y-%m-%d").date(),
+                "checkout": datetime.strptime(reservation.checkout, "%Y-%m-%d").date(),
+                "room_type_id": reservation.roomTypeId,
+                "adults": reservation.adults,
+                "children": reservation.children or 0,
+                "board_service_room_id": reservation.boardServiceId,
+                "preferred_room_id": reservation.preferredRoomId
+                if reservation.preferredRoomId
+                else None,
+                "splitted": reservation.isSplitted if reservation.isSplitted else False,
+                "reservation_type": reservation.reservationType or "normal",
+            }
+            # Same as in create_folio: without a pricelist, let pms compute it
+            # (agency, partner, folio, then property default) instead of
+            # storing an empty one.
+            if folio_info.pricelistId:
+                vals["pricelist_id"] = folio_info.pricelistId
+            self.env["pms.reservation"].sudo().create(vals)
 
     @restapi.method(
         [
@@ -1010,7 +1007,6 @@ class PmsFolioService(Component):
                     "folio_id": folio.id,
                     "room_type_id": reservation.roomTypeId,
                     "pms_property_id": pms_folio_info.pmsPropertyId,
-                    "pricelist_id": pms_folio_info.pricelistId,
                     "external_reference": pms_folio_info.externalReference,
                     "board_service_room_id": self.get_board_service_room_type_id(
                         room_type_id=reservation.roomTypeId,
@@ -1025,6 +1021,13 @@ class PmsFolioService(Component):
                     "blocked": True if external_app else False,
                     "partner_requests": reservation.partnerRequests or "",
                 }
+                # Invitations can be created without choosing a pricelist
+                # (pricelistId 0 or null). An explicit empty value would win
+                # over the pms compute (agency, partner, folio, then property
+                # default), and every later price request of the reservation
+                # (e.g. adding a service) would fail.
+                if pms_folio_info.pricelistId:
+                    vals["pricelist_id"] = pms_folio_info.pricelistId
                 # The guest of each reservation can differ from the folio
                 # holder (e.g. company folios with the occupant name sent
                 # per reservation)
@@ -3147,14 +3150,16 @@ class PmsFolioService(Component):
         folio_payment_link = self._generate_payment_link(folio_record)
         reservations = self._get_folio_reservations(folio_record)
         pms_property_name = folio_record.pms_property_id.name
-        pms_property_street = folio_record.pms_property_id.street
-        pms_property_city = folio_record.pms_property_id.city
+        # An empty field reads as False, which the String fields of the answer
+        # reject, failing the whole page
+        pms_property_street = folio_record.pms_property_id.street or ""
+        pms_property_city = folio_record.pms_property_id.city or ""
         pms_property_state = (
             folio_record.pms_property_id.state_id.name
             if folio_record.pms_property_id.state_id
             else ""
         )
-        pms_property_zip = folio_record.pms_property_id.zip
+        pms_property_zip = folio_record.pms_property_id.zip or ""
         pms_property_image = url_image_pms_api_rest(
             "pms.property",
             folio_record.pms_property_id.id,
@@ -3164,14 +3169,14 @@ class PmsFolioService(Component):
         if self._check_room_addresses(folio_record):
             reservation = self.env["pms.reservation"].sudo().browse(reservations[0].id)
             pms_property_name = reservation.preferred_room_id.name
-            pms_property_street = reservation.preferred_room_id.street
-            pms_property_city = reservation.preferred_room_id.city
+            pms_property_street = reservation.preferred_room_id.street or ""
+            pms_property_city = reservation.preferred_room_id.city or ""
             pms_property_state = (
                 reservation.preferred_room_id.state_id.name
                 if reservation.preferred_room_id.state_id
                 else ""
             )
-            pms_property_zip = reservation.preferred_room_id.zip
+            pms_property_zip = reservation.preferred_room_id.zip or ""
             if reservation.preferred_room_id.image_1920:
                 pms_room_image = url_image_pms_api_rest(
                     "pms.room",
@@ -3197,7 +3202,7 @@ class PmsFolioService(Component):
             pmsPropertyStreet=pms_property_street,
             pmsPropertyCity=pms_property_city,
             pmsPropertyState=pms_property_state,
-            pmsPropertyPhoneNumber=folio_record.pms_property_id.phone,
+            pmsPropertyPhoneNumber=folio_record.pms_property_id.phone or "",
             pmsPropertyLogo=url_image_pms_api_rest(
                 "pms.property", folio_record.pms_property_id.id, "logo"
             ),
@@ -3208,7 +3213,7 @@ class PmsFolioService(Component):
             pmsPropertyPrivacyPolicy=folio_record.pms_property_id.privacy_policy or "",
             pmsPropertyZip=pms_property_zip,
             pmsPropertyIneCategory=ine_category,
-            folioPartnerName=folio_record.partner_name,
+            folioPartnerName=folio_record.partner_name or "",
             folioReference=folio_record.name,
             folioRoomTypesDescription=folio_room_types_description_result.rstrip(", "),
             folioPendingAmount=folio_record.pending_amount,

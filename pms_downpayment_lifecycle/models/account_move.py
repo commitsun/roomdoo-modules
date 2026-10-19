@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 
 from markupsafe import Markup
 
@@ -390,12 +391,15 @@ class AccountMove(models.Model):
         by unreconciling every line of the original, which would release the
         payment -- the one thing this whole module exists to avoid.
 
-        Nothing about the SII is passed on purpose. Its own module computes
-        ``sii_refund_type`` as 'I' for any ``out_refund``, so the value is right
-        without this module knowing that the SII exists.
+        The SII refund type goes through the context, as every other caller of
+        ``_reverse_moves`` does. ``sii_refund_type`` is a stored computed field
+        that can be edited, so the reversal copies the down payment's empty
+        value onto the credit note and the compute never runs: without the
+        context the AEAT rejects the credit note (TipoRectificativa). The
+        context key means nothing when the SII module is not installed.
         """
         self.ensure_one()
-        credit_note = self._reverse_moves(
+        credit_note = self.with_context(sii_refund_type="I")._reverse_moves(
             default_values_list=[
                 {
                     "date": date,
@@ -553,3 +557,31 @@ class AccountMove(models.Model):
         )
         transfer.action_post()
         return transfer
+
+    # ------------------------------------------------------------------
+    # pms_autoinvoice
+    # ------------------------------------------------------------------
+    def _reverse_downpayment_invoices(self):
+        """Keep the down payments of a locked period out of pms_autoinvoice's
+        reversal, and leave them to the transfer above.
+
+        pms_autoinvoice reverses the down payments that a final invoice did not
+        deduct with ``cancel=True``, which starts by unreconciling them from
+        their payment: in a locked period that rewrites the customer balances
+        of a month that is already closed. The transfer settles the same down
+        payments when the final invoice is posted, rectifying them with
+        ``cancel=False`` and moving the balance with a transfer entry.
+        """
+        locked = self.filtered(lambda move: move._is_in_locked_period())
+        return super(AccountMove, self - locked)._reverse_downpayment_invoices()
+
+    def _is_in_locked_period(self):
+        """Read from the company, not from ``_get_user_fiscal_lock_date``: the
+        cron runs as a user that only sees the fiscal year lock, and the
+        closed month is locked through ``period_lock_date``."""
+        self.ensure_one()
+        lock_date = max(
+            self.company_id.period_lock_date or date.min,
+            self.company_id.fiscalyear_lock_date or date.min,
+        )
+        return self.date <= lock_date

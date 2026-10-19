@@ -284,8 +284,21 @@ class PmsReservationService(Component):
                 cancelledReason=reservation.cancelled_reason
                 if reservation.cancelled_reason
                 else None,
+                cancelDate=self._get_cancel_date_local(reservation),
             )
         return res
+
+    def _get_cancel_date_local(self, reservation):
+        # cancel_datetime is not cleared when a cancelled reservation is
+        # confirmed again, so only trust it while the reservation is cancelled
+        if reservation.state != "cancel" or not reservation.cancel_datetime:
+            return None
+        property_tz = pytz.timezone(reservation.pms_property_id.tz or "UTC")
+        return (
+            pytz.UTC.localize(reservation.cancel_datetime)
+            .astimezone(property_tz)
+            .isoformat()
+        )
 
     def _create_vals_from_params(
         self, reservation_vals, reservation_data, reservation_id
@@ -1113,6 +1126,28 @@ class PmsReservationService(Component):
         if pms_search_param.lastUpdateFrom:
             last_update = fields.Datetime.from_string(pms_search_param.lastUpdateFrom)
             domain.append(("write_date", ">=", last_update))
+        if pms_search_param.cancelDateFrom or pms_search_param.cancelDateTo:
+            domain.append(("state", "=", "cancel"))
+        if pms_search_param.cancelDateFrom:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    ">=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateFrom, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
+        if pms_search_param.cancelDateTo:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    "<=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateTo, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
 
         reservations = self.env["pms.reservation"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=reservations)
@@ -1244,6 +1279,10 @@ class PmsReservationService(Component):
                         else None,
                         priceOnlyServices=round(price_services, 2),
                         priceOnlyRoom=round(price_total, 2),
+                        cancelledReason=reservation.cancelled_reason
+                        if reservation.cancelled_reason
+                        else None,
+                        cancelDate=self._get_cancel_date_local(reservation),
                     )
                 )
         return res_reservations
@@ -1402,6 +1441,24 @@ class PmsReservationService(Component):
         pms_api_check_access(user=self.env.user, records=checkin_partner)
         checkin_partner.unlink()
 
+    def _get_residence_state_id(self, state_id, country_id):
+        """Drop a residence state that does not belong to the residence country.
+
+        Zip and document autocompletion may suggest a state of another country
+        (a foreign zip that also exists in Spain), which the app may not even
+        show. The country is what the user chose, so the state goes. Spanish
+        residents are left alone: their state is required (INE, SES) and visible.
+        """
+        if not state_id or not country_id:
+            return state_id
+        state = self.env["res.country.state"].browse(state_id)
+        if (
+            state.country_id.id == country_id
+            or country_id == self.env.ref("base.es").id
+        ):
+            return state_id
+        return False
+
     def mapping_checkin_partner_values(
         self, pms_checkin_partner_info, partner_id=False
     ):
@@ -1420,7 +1477,10 @@ class PmsReservationService(Component):
             "nationality_id": pms_checkin_partner_info.nationality,
             "zip": pms_checkin_partner_info.zip,
             "city": pms_checkin_partner_info.residenceCity,
-            "state_id": pms_checkin_partner_info.countryState,
+            "state_id": self._get_residence_state_id(
+                pms_checkin_partner_info.countryState,
+                pms_checkin_partner_info.countryId,
+            ),
             "country_id": pms_checkin_partner_info.countryId,
             "origin_input_data": pms_checkin_partner_info.originInputData,
         }
@@ -2205,9 +2265,11 @@ class PmsReservationService(Component):
                 + ")"
             )
         pms_property_name = reservation_record.pms_property_id.name
-        pms_property_street = reservation_record.pms_property_id.street
-        pms_property_city = reservation_record.pms_property_id.city
-        pms_property_zip = reservation_record.pms_property_id.zip
+        # An empty field reads as False, which the String fields of the answer
+        # reject, failing the whole page
+        pms_property_street = reservation_record.pms_property_id.street or ""
+        pms_property_city = reservation_record.pms_property_id.city or ""
+        pms_property_zip = reservation_record.pms_property_id.zip or ""
         pms_property_state = (
             reservation_record.pms_property_id.state_id.name
             if reservation_record.pms_property_id.state_id
@@ -2220,10 +2282,12 @@ class PmsReservationService(Component):
         )
         if reservation_record.preferred_room_id.address_is_independent:
             pms_property_name = reservation_record.preferred_room_id.name
-            pms_property_street = reservation_record.preferred_room_id.street
-            pms_property_city = reservation_record.preferred_room_id.city
-            pms_property_zip = reservation_record.preferred_room_id.zip
-            pms_property_state = reservation_record.preferred_room_id.state_id.name
+            pms_property_street = reservation_record.preferred_room_id.street or ""
+            pms_property_city = reservation_record.preferred_room_id.city or ""
+            pms_property_zip = reservation_record.preferred_room_id.zip or ""
+            pms_property_state = (
+                reservation_record.preferred_room_id.state_id.name or ""
+            )
             pms_room_image = url_image_pms_api_rest(
                 "pms.room",
                 reservation_record.preferred_room_id.id,
@@ -2238,7 +2302,7 @@ class PmsReservationService(Component):
             pmsPropertyCity=pms_property_city,
             pmsPropertyZip=pms_property_zip,
             pmsPropertyState=pms_property_state,
-            pmsPropertyPhoneNumber=reservation_record.pms_property_id.phone,
+            pmsPropertyPhoneNumber=reservation_record.pms_property_id.phone or "",
             pmsPropertyLogo=url_image_pms_api_rest(
                 "pms.property",
                 reservation_record.pms_property_id.id,
@@ -2256,7 +2320,7 @@ class PmsReservationService(Component):
             else "",
             pmsCompanyName=reservation_record.pms_property_id.company_id.name,
             pmsPropertyId=reservation_record.pms_property_id.id,
-            folioPartnerName=reservation_record.folio_id.partner_name,
+            folioPartnerName=reservation_record.folio_id.partner_name or "",
             reservations=reservations,
             shareUrl=reservation_share_url,
             cardexWarning=reservation_record.pms_property_id.cardex_warning
@@ -2458,15 +2522,27 @@ class PmsReservationService(Component):
         # nationality
         if pms_checkin_partner_info.nationality:
             checkin_partner_record.nationality_id = pms_checkin_partner_info.nationality
-        # residence info
-        if pms_checkin_partner_info.countryId:
-            checkin_partner_record.country_id = pms_checkin_partner_info.countryId
+        # residence info: country and state are written together, so a state
+        # sent or stored for another country cannot reject the save
+        if pms_checkin_partner_info.countryId or pms_checkin_partner_info.countryState:
+            country_id = (
+                pms_checkin_partner_info.countryId
+                or checkin_partner_record.country_id.id
+            )
+            checkin_partner_record.write(
+                {
+                    "country_id": country_id,
+                    "state_id": self._get_residence_state_id(
+                        pms_checkin_partner_info.countryState
+                        or checkin_partner_record.state_id.id,
+                        country_id,
+                    ),
+                }
+            )
         if pms_checkin_partner_info.zip:
             checkin_partner_record.zip = pms_checkin_partner_info.zip
         if pms_checkin_partner_info.residenceCity:
             checkin_partner_record.city = pms_checkin_partner_info.residenceCity
-        if pms_checkin_partner_info.countryState:
-            checkin_partner_record.state_id = pms_checkin_partner_info.countryState
         if pms_checkin_partner_info.residenceStreet:
             checkin_partner_record.street = pms_checkin_partner_info.residenceStreet
         # contact
