@@ -310,6 +310,9 @@ def _run_guarded(model, func, guard, kwargs):
             raise UserError(_("Changes are disabled for the tool %s.") % label)
         _verify_confirmation(env, token, signature)
         with _guarded_transaction(env, False, timeout_ms):
+            # Spent with the change itself: if the change fails, the token
+            # can be used again; once it succeeds, a replay is refused.
+            env["pms.ai.confirmation"]._consume(token, label)
             applied = getattr(model, guard["apply"])(plan, **arguments)
         return _envelope(env, label, applied, OUTPUT_KEYS)
     except UserError:
@@ -343,6 +346,12 @@ def _guarded_transaction(env, read_only, timeout_ms):
     timeout. Write blocks are released, so the timeout is reset by hand.
     """
     cr = env.cr
+    # Leave nothing pending for the read-only block: flushing some fields can
+    # queue the recomputation of others, so flush until nothing is left.
+    for _attempt in range(10):
+        env.flush_all()
+        if not env.fields_to_compute() and not env.cache.get_dirty_fields():
+            break
     cr.execute("SHOW statement_timeout")
     previous_timeout = cr.fetchone()[0]
     savepoint = cr.savepoint()
@@ -420,6 +429,10 @@ def _signature_payload(env, model, func, arguments, binding):
             "tool": f"{model._name}.{func.__name__}",
             "arguments": arguments,
             "binding": binding,
+            # A copy of the database (staging) shares database.secret and the
+            # data: bind the token to what the copy does not carry.
+            "environment": os.environ.get("DOODBA_ENVIRONMENT", ""),
+            "base_url": env["ir.config_parameter"].sudo().get_param("web.base.url"),
         }
     )
 
