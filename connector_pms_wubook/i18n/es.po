@@ -101,6 +101,17 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid ""
+"%(count)s prices not above %(min_price)s, which Wubook rejects, were left "
+"out"
+msgstr ""
+"Se han omitido %(count)s precios no superiores a %(min_price)s, que Wubook "
+"rechaza"
+
+#. module: connector_pms_wubook
+#. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
 #, python-format
 msgid "%(qty)s units, %(total)s"
@@ -122,6 +133,15 @@ msgstr "Acción"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
 msgid "Active"
 msgstr "Activo"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_value
+msgid ""
+"Added to the price of the base room type, as an amount in the currency of "
+"the pricelist or as a percentage of that price. Negative values lower it"
+msgstr ""
+"Se suma al precio del tipo de habitación base, como importe en la moneda de "
+"la tarifa o como porcentaje de ese precio. Los valores negativos lo reducen"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
@@ -335,6 +355,27 @@ msgstr ""
 "cuando el canal comunica el pago."
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_pricelist_ids
+msgid "Derive in Pricelists"
+msgstr "Derivar en las tarifas"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derived_room_type_ids
+msgid "Derived Room Types"
+msgstr "Tipos de habitación derivados"
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid ""
+"Derived room type prices exported: %(date_from)s..%(date_to)s (%(count)s "
+"prices)"
+msgstr ""
+"Precios de tipologías derivadas exportados: %(date_from)s..%(date_to)s "
+"(%(count)s precios)"
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
@@ -373,6 +414,25 @@ msgstr ""
 "Las fichas creadas antes de este momento nunca reciben extras del canal: el "
 "personal los añadía a mano. Déjelo vacío para no importar extras del canal "
 "en este backend."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__flatten_window_days
+msgid ""
+"Forward window (in days from today) used when exporting a pricelist marked "
+"as 'Flatten to Daily on Wubook' triggered by a change on its own rules. The "
+"actual end date is capped by the latest dated rule found on the parent "
+"chain. It is also the window of the prices of the room types derived from "
+"another room type pushed to the other pricelists when the derivation changes"
+" or the pricelists are exported, capped by the latest dated rule of the "
+"pricelist."
+msgstr ""
+"Ventana hacia delante (en días desde hoy) que se usa al exportar una tarifa "
+"marcada como 'Flatten to Daily on Wubook' cuando cambian sus propias reglas."
+" La fecha final se limita a la última regla con fecha de la cadena de "
+"tarifas de las que deriva. También es la ventana de los precios de las "
+"tipologías derivadas de otra tipología que se envían a las demás tarifas "
+"cuando cambia la derivación o se exportan las tarifas, limitada a la última "
+"regla con fecha de la tarifa."
 
 #. module: connector_pms_wubook
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
@@ -479,6 +539,14 @@ msgid "No channel extras waiting for a product"
 msgstr "No hay extras del canal esperando un producto"
 
 #. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid "No derived room type prices to export"
+msgstr "No hay precios de tipologías derivadas que exportar"
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__normalized_name
 msgid "Normalized Name"
 msgstr "Nombre normalizado"
@@ -532,6 +600,35 @@ msgid "Pending"
 msgstr "Pendientes"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_base_room_type_id
+msgid "Price Derived From"
+msgstr "Precio derivado de"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_rounding
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__price_round
+msgid "Price Rounding"
+msgstr "Redondeo del precio"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_value
+msgid "Price Variation"
+msgstr "Variación del precio"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_type
+msgid "Price Variation Type"
+msgstr "Tipo de variación del precio"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_pricelist_ids
+msgid ""
+"Pricelists where the price is derived. Leave it empty to derive it in all of"
+" them"
+msgstr ""
+"Tarifas en las que se deriva el precio. Déjelo vacío para derivarlo en todas"
+
+#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
 msgid "Product"
 msgstr "Producto"
@@ -570,6 +667,29 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_registered
 msgid "Registered from Channel"
 msgstr "Registrado desde el canal"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_base_room_type_id
+msgid ""
+"Room type whose price is the base of this one in the pricelists without a "
+"rule of their own for it"
+msgstr ""
+"Tipo de habitación cuyo precio sirve de base al de este en las tarifas que "
+"no tienen una regla propia para él"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derived_room_type_ids
+msgid "Room types whose price is derived from this one"
+msgstr "Tipos de habitación cuyo precio se deriva de este"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_rounding
+msgid ""
+"Round the prices derived by a percentage to a multiple of this value, e.g. 1"
+" for whole amounts. Zero rounds them to the currency"
+msgstr ""
+"Redondea los precios derivados con un porcentaje a un múltiplo de este "
+"valor, p. ej. 1 para importes enteros. Con cero se redondean a la moneda"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
@@ -761,6 +881,15 @@ msgstr ""
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras_state
 msgid "What the import did with each channel extra of the folio."
 msgstr "Lo que hizo la importación con cada extra del canal de la ficha."
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_type
+msgid ""
+"Whether the variation is a fixed amount or a percentage of the price of the "
+"base room type"
+msgstr ""
+"Si la variación es un importe fijo o un porcentaje del precio del tipo de "
+"habitación base"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes

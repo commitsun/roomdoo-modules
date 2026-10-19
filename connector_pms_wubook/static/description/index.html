@@ -400,13 +400,14 @@ Only for development or testing purpose, do not use in production.
 <li><a class="reference internal" href="#usage" id="toc-entry-4">Usage</a><ul>
 <li><a class="reference internal" href="#mirai-lines-in-the-folio-internal-notes" id="toc-entry-5">Mirai lines in the folio internal notes</a></li>
 <li><a class="reference internal" href="#how-channel-payments-are-registered" id="toc-entry-6">How channel payments are registered</a></li>
+<li><a class="reference internal" href="#room-types-deriving-their-price-from-another-one" id="toc-entry-7">Room types deriving their price from another one</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-7">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-8">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-9">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-10">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-11">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-8">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-9">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-10">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-11">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-12">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -606,9 +607,44 @@ and must still be registered by hand.</p>
 <p>The amounts reported by the channel, the payment deadline and the payments
 registered are shown in the Wubook bindings of the folio (<em>Connectors</em> tab).</p>
 </div>
+<div class="section" id="room-types-deriving-their-price-from-another-one">
+<h2><a class="toc-backref" href="#toc-entry-7">Room types deriving their price from another one</a></h2>
+<p>A room type can take its price from another room type (“Price Derived From”,
+in the <tt class="docutils literal">pms</tt> module): on the days a pricelist has no rule for it, its price
+follows the price of its base room type. It has no items on those days, so the
+export of the items of the pricelist does not send those prices to Wubook. The
+connector pushes them to the standard plans of the regular pricelists with the
+<tt class="docutils literal">export_derived_prices</tt> job (<tt class="docutils literal">prices</tt> channel):</p>
+<ul class="simple">
+<li>Only for the room types connected to the backend. Connections marked as “No
+Export” (e.g. rooms anchored to another room in Wubook) are left out.</li>
+<li>Only on the days the room type derives its price from a rule of the
+pricelist, never from the list price of a room type, so prices maintained in
+Wubook are not overwritten with list prices. An item of the room type is an
+override: it is exported as any other item, and no derived price is pushed
+on its day, even if the pricing engine does not apply it (e.g. past its sale
+end date).</li>
+<li>With the default board service added, as for the items, rounded to the cent.</li>
+<li>Prices not above 0.01, which Wubook rejects, are left out and logged.</li>
+</ul>
+<p>The push is enqueued when an item the derived prices depend on changes (on the
+dates of the item and, when it is moved to other dates, room types, properties
+or pricelist, on the ones it leaves; removing or moving an override pushes the
+derived price back), when the price derivation of a room type changes, when a
+room type deriving its price is connected or a plan is created in Wubook, and
+on “Export Pricelists” in the backend. Only the backends with some room type
+deriving its price connected get it. Without dates, it covers the “Flatten
+Forward Window” of the backend, up to the last dated item of the pricelist.
+Flatten pricelists already compute every price, the derived ones included.</p>
+<p>Importing prices from Wubook does not create items for the room types deriving
+their price in the pricelist, which would become overrides; the items they
+already have are updated as usual. Removing the derivation of a room type
+pushes nothing for it (only for the room types still deriving their price from
+it): Wubook keeps its last prices until the room type gets items of its own.</p>
+</div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-7">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-8">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -616,21 +652,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-8">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-9">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-9">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-10">Authors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-10">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-11">Contributors</a></h2>
 <ul class="simple">
 <li>Eric Antones &lt;<a class="reference external" href="mailto:eantones&#64;nuobit.com">eantones&#64;nuobit.com</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-11">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-12">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/connector_pms_wubook">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>

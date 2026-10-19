@@ -10,6 +10,7 @@ from . import test_auth
 # from . import test_product_pricelist
 # from . import test_availability_plan
 # from . import test_folio
+from . import test_derived_room_type_export
 from . import test_folio_channel_notes
 from . import test_folio_channel_payments
 from . import test_listener_batching
