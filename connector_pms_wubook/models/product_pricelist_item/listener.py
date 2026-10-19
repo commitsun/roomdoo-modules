@@ -3,9 +3,18 @@
 
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
+from odoo.addons.queue_job.job import identity_exact
 
 # Sentinel key for the flatten-export buffer.
 _FLATTEN_BUFFER_KEY = "connector_pms_wubook.flatten_buffer"
+
+# Sentinel key for the derived room type prices buffer. A room type deriving
+# its price from another one has no items of its own on the days it derives
+# it, so the regular export never sends those prices: when an item they
+# derive from changes, a regular pricelist binding also needs an
+# ``export_derived_prices`` job, buffered per binding with the merged date
+# window and room types — same coalescence pattern as the flatten buffer.
+_DERIVED_BUFFER_KEY = "connector_pms_wubook.derived_prices_buffer"
 
 # Sentinel key for the regular-pricelist export buffer. A *regular* (non
 # flatten) pricelist whose item just changed needs a full ``export_record``
@@ -106,6 +115,34 @@ def _flush_regular_pricelist_buffer(env):
         ).export_record(binding.backend_id, binding.odoo_id)
 
 
+def _flush_derived_buffer(env):
+    """Precommit callback: enqueue **one** ``export_derived_prices`` job
+    per regular pricelist binding with the merged window and room types.
+
+    Unlike ``export_record``, the job pushes the window and room types it
+    is given, so its ``identity_key`` only collapses identical jobs: a
+    coarse one would drop the window of a later change while a job is
+    still pending.
+    """
+    data = env.cr.precommit.data.pop(_DERIVED_BUFFER_KEY, None)
+    if not data:
+        return
+    for _binding_id, info in data.items():
+        binding = info["binding"].exists()
+        if not binding:
+            continue
+        kwargs = {}
+        ranges = info["ranges"]
+        # A ``None`` bound means "default window"
+        if all(date_from and date_to for date_from, date_to in ranges):
+            kwargs["date_from"] = min(date_from for date_from, _dto in ranges)
+            kwargs["date_to"] = max(date_to for _dfrom, date_to in ranges)
+        room_type_ids = info["room_type_ids"]
+        if _ALL_ROOM_TYPES not in room_type_ids:
+            kwargs["room_type_ids"] = sorted(room_type_ids)
+        binding.with_delay(identity_key=identity_exact).export_derived_prices(**kwargs)
+
+
 def _flush_pending_pricelist_items(env):
     """Precommit callback: resolve bindings and flatten descendants
     **once per pricelist** and forward to the per-binding flatten /
@@ -129,8 +166,9 @@ def _flush_pending_pricelist_items(env):
 
 def _dispatch_pricelist_exports(env, pricelist, entry):
     """Forward an aggregated buffer entry to the per-binding flatten /
-    regular buffers. Iterates ``pricelist.channel_wubook_bind_ids`` and
-    ``pricelist._get_flatten_descendant_pricelists()`` exactly once.
+    regular / derived prices buffers. Resolves
+    ``pricelist.channel_wubook_bind_ids`` and
+    ``pricelist._get_flatten_descendant_pricelists()`` once per pricelist.
     """
     is_global = entry["global"]
     property_ids = entry["property_ids"]
@@ -140,6 +178,7 @@ def _dispatch_pricelist_exports(env, pricelist, entry):
 
     _dispatch_own_bindings(env, pricelist, _in_scope)
     _dispatch_flatten_descendants(env, pricelist, entry, _in_scope)
+    _dispatch_derived_prices(env, pricelist, entry, _in_scope)
 
 
 def _dispatch_own_bindings(env, pricelist, in_scope):
@@ -166,9 +205,17 @@ def _dispatch_flatten_descendants(env, pricelist, entry, in_scope):
         return
     date_from = entry["date_from"]
     date_to = entry["date_to"]
+    if entry["open_dates"]:
+        # An item with no consumption dates moves prices on any day: default
+        # window, also when other items of the transaction have dates
+        date_from = date_to = None
     room_type_ids = entry["room_type_ids"]
     has_all_rt = _ALL_ROOM_TYPES in room_type_ids
     specific_rt_ids = [rid for rid in room_type_ids if rid is not _ALL_ROOM_TYPES]
+    if not has_all_rt:
+        # The prices of the room types deriving their price from the changed
+        # ones follow them in the descendants too
+        specific_rt_ids += _get_price_derivation_descendant_ids(env, specific_rt_ids)
     for descendant in descendants:
         for binding in descendant.channel_wubook_bind_ids:
             if not binding.external_id:
@@ -217,10 +264,128 @@ def _buffer_regular_export_at(env, binding):
     data[_REGULAR_PRICELIST_BUFFER_KEY].setdefault(binding.id, binding)
 
 
+def _dispatch_derived_prices(env, pricelist, entry, in_scope):
+    """Forward to the derived prices buffer, for the regular standard
+    bindings of the pricelist, the room types whose derived prices the
+    changed items may have moved, on the window of those items.
+
+    Those are the room types deriving their price in the pricelist from the
+    ones of the changed items, at any level, and the latter themselves when
+    they derive it: removing one of their own items, an override, makes them
+    derive it again on its dates. An item for no room type in particular (a
+    global or a category rule) may move any of them. Only the bindings of the
+    backends some of them are bound to get the job. Flatten pricelists
+    already re-export every room type of their own bindings.
+    """
+    if pricelist.wubook_flatten_to_daily or pricelist.wubook_plan_type != "standard":
+        return
+    bindings = pricelist.channel_wubook_bind_ids.filtered(
+        lambda binding: binding.external_id and in_scope(binding)
+    )
+    if not bindings:
+        return
+    room_types, all_room_types = _get_derived_room_types(
+        env, pricelist, entry["room_type_ids"]
+    )
+    if not room_types:
+        return
+    # The other backends have no derived price of the pricelist to push
+    exported_room_types = env["channel.wubook.pms.room.type"].search(
+        [
+            ("odoo_id", "in", room_types.ids),
+            ("backend_id", "in", bindings.backend_id.ids),
+            ("no_export", "=", False),
+            ("external_id", "!=", False),
+        ]
+    )
+    bindings = bindings.filtered(
+        lambda binding: binding.backend_id in exported_room_types.backend_id
+    )
+    room_type_ids = {_ALL_ROOM_TYPES} if all_room_types else set(room_types.ids)
+    date_from, date_to = entry["date_from"], entry["date_to"]
+    if entry["open_dates"]:
+        # An item with no consumption dates moves prices on any day
+        date_from = date_to = None
+    for binding in bindings:
+        _buffer_derived_export_at(env, binding, date_from, date_to, room_type_ids)
+
+
+def _get_derived_room_types(env, pricelist, room_type_ids):
+    """Return the room types deriving their price in the pricelist that a
+    change of items of ``room_type_ids`` may move, and whether those are all
+    the room types deriving their price in it (``_ALL_ROOM_TYPES`` in
+    ``room_type_ids``).
+
+    The derivation is configuration: read it whatever the user changing the
+    items can access.
+    """
+    RoomType = env["pms.room.type"].sudo()
+    if not RoomType._has_price_derivation():
+        return RoomType, False
+    if _ALL_ROOM_TYPES in room_type_ids:
+        room_types = RoomType.search([("price_base_room_type_id", "!=", False)])
+        return room_types._get_price_derivation(pricelist), True
+    room_types = RoomType.browse(list(room_type_ids)).exists()
+    room_types |= room_types._get_price_derivation_descendants()
+    return room_types._get_price_derivation(pricelist), False
+
+
+def _get_price_derivation_descendant_ids(env, room_type_ids):
+    """Return the ids of the room types deriving their price from the given
+    ones, at any level."""
+    RoomType = env["pms.room.type"].sudo()
+    if not RoomType._has_price_derivation():
+        return []
+    room_types = RoomType.browse(list(room_type_ids)).exists()
+    return room_types._get_price_derivation_descendants().ids
+
+
+def _buffer_derived_export_at(env, binding, date_from, date_to, room_type_ids):
+    """Stage an ``export_derived_prices`` of ``room_type_ids`` on the
+    binding, merged at precommit with the other ones of the transaction.
+    ``(None, None)`` dates stand for the default window and
+    ``_ALL_ROOM_TYPES`` for all the room types deriving their price.
+    """
+    cr = env.cr
+    data = cr.precommit.data
+    if _DERIVED_BUFFER_KEY not in data:
+        data[_DERIVED_BUFFER_KEY] = {}
+        env_captured = env
+        cr.precommit.add(lambda env=env_captured: _flush_derived_buffer(env))
+    entry = data[_DERIVED_BUFFER_KEY].setdefault(
+        binding.id,
+        {"binding": binding, "ranges": [], "room_type_ids": set()},
+    )
+    entry["ranges"].append((date_from, date_to))
+    entry["room_type_ids"].update(room_type_ids)
+
+
+def buffer_room_type_prices_export(env, binding, room_types):
+    """Stage a re-export of the prices of ``room_types`` on a pricelist
+    binding, on the default window, for a change that moves their prices
+    but no item (e.g. the derivation of their price from another room type).
+
+    A flatten plan recomputes their prices. A regular standard plan pushes
+    the prices of the ones deriving their price in the pricelist: the prices
+    of the others come from items, exported as such.
+    """
+    pricelist = binding.odoo_id
+    if pricelist.wubook_flatten_to_daily:
+        for room_type in room_types:
+            _buffer_flatten_export_at(env, binding, None, None, room_type.id)
+        return
+    if pricelist.wubook_plan_type != "standard":
+        return
+    derived = room_types._get_price_derivation(pricelist)
+    if derived:
+        _buffer_derived_export_at(env, binding, None, None, derived.ids)
+
+
 class ChannelWubookProductPricelistItemListener(Component):
     """Cascade listener for every ``product.pricelist.item`` change.
 
-    On every write / create / unlink, the listener appends a lightweight
+    On every write / create / unlink (and before a write moving an item,
+    see ``on_pricelist_item_move``), the listener appends a lightweight
     fingerprint to a per-pricelist staging buffer in ``cr.precommit.data``
     and lets a single precommit callback resolve bindings and flatten
     descendants once per pricelist. The actual job-emitting buffers
@@ -234,11 +399,14 @@ class ChannelWubookProductPricelistItemListener(Component):
        this listener. One entry per pricelist with the union of
        ``pms_property_ids`` (or a ``global`` flag if any pending item
        has no property restriction), the min/max ``date_start_consumption``
-       / ``date_end_consumption`` and the union of affected room types.
-       Flushed first.
-    2. ``_FLATTEN_BUFFER_KEY`` and ``_REGULAR_PRICELIST_BUFFER_KEY`` —
-       populated by the precommit flush above. One entry per Wubook
-       binding. Flushed last, emit a single queue job per binding.
+       / ``date_end_consumption`` (and an ``open_dates`` flag if any
+       pending item lacks one of them) and the union of affected room
+       types. Flushed first.
+    2. ``_FLATTEN_BUFFER_KEY``, ``_REGULAR_PRICELIST_BUFFER_KEY`` and
+       ``_DERIVED_BUFFER_KEY`` — populated by the precommit flush above.
+       One entry per Wubook binding. Flushed last, emit a single queue job
+       per binding (the derived prices one only for regular pricelists with
+       room types deriving their price from the changed ones).
 
     Bindings without ``external_id`` are skipped (the wizard's connect
     flow is still in progress).
@@ -276,6 +444,7 @@ class ChannelWubookProductPricelistItemListener(Component):
                 "property_ids": set(),
                 "date_from": None,
                 "date_to": None,
+                "open_dates": False,
                 "room_type_ids": set(),
             },
         )
@@ -283,13 +452,18 @@ class ChannelWubookProductPricelistItemListener(Component):
             entry["global"] = True
         else:
             entry["property_ids"].update(item_property_ids)
-        if item_date_from is not None:
+        # An empty date field reads ``False``, not ``None``: an item without
+        # one of its consumption dates opens the window and must not reach
+        # min() / max() with the dates of the other items
+        if not item_date_from or not item_date_to:
+            entry["open_dates"] = True
+        if item_date_from:
             entry["date_from"] = (
                 item_date_from
                 if entry["date_from"] is None
                 else min(entry["date_from"], item_date_from)
             )
-        if item_date_to is not None:
+        if item_date_to:
             entry["date_to"] = (
                 item_date_to
                 if entry["date_to"] is None
@@ -319,6 +493,17 @@ class ChannelWubookProductPricelistItemListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
+        self._stage_from_record(record)
+
+    @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
+    def on_pricelist_item_move(self, record, fields=None):
+        """Notified before a write moves the item to other days, room types,
+        properties or pricelist (see ``product.pricelist.item.write``).
+
+        Stage the item where it still is: the prices it leaves change as
+        well (e.g. a room type derives its price again on the days an
+        override leaves), while ``on_record_write`` stages it where it lands.
+        """
         self._stage_from_record(record)
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))

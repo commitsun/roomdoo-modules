@@ -8,6 +8,16 @@ AUTO_EXPORT_FIELDS = [
     "fixed_price",
 ]
 
+# Fields placing an item on some days, room types, properties and pricelist:
+# writing them moves the item, which changes the prices it leaves as well
+SCOPE_FIELDS = {
+    "pricelist_id",
+    "product_id",
+    "pms_property_ids",
+    "date_start_consumption",
+    "date_end_consumption",
+}
+
 
 class ProductPricelistItem(models.Model):
     _inherit = "product.pricelist.item"
@@ -49,6 +59,15 @@ class ProductPricelistItem(models.Model):
         # so the mapper's ``skip_item`` filters them out instead of letting
         # the XMLRPC call fail.
         return -730 <= age <= 2
+
+    def write(self, vals):
+        if SCOPE_FIELDS.intersection(vals):
+            # ``on_record_write`` only sees where the items land: let the
+            # listeners know where they are before they move
+            event = self._event("on_pricelist_item_move")
+            for record in self:
+                event.notify(record, fields=list(vals))
+        return super().write(vals)
 
     def _write(self, vals):
         cr = self._cr
