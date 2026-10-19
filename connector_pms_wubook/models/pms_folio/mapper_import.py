@@ -1,6 +1,7 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import datetime
+import logging
 
 from odoo import _
 from odoo.exceptions import ValidationError
@@ -9,6 +10,13 @@ from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 
 from ...models.pms_reservation.mapper_import import get_room_type
+from .channel_booking import MIRAI_CHANNEL_ID
+from .channel_extras import read_channel_extras
+from .channel_notes import MIRAI_NOTE_PREFIX, merge_tagged_lines
+from .channel_payments import channel_payment_values
+from .retryable import RETRYABLE_ERRORS
+
+_logger = logging.getLogger(__name__)
 
 
 class ChannelWubookPmsFolioMapperImport(Component):
@@ -43,6 +51,27 @@ class ChannelWubookPmsFolioMapperImport(Component):
         }
 
     @mapping
+    def channel_extras(self, record):
+        """Keep the extras sold with the booking, for the channels and hotels
+        that import them (see ``channel.wubook.pms.folio``
+        ``_sync_channel_extras``). It only fails the import on the errors
+        queue_job retries it on (database concurrency, RetryableJobError)."""
+        try:
+            binding = self.options.binding
+            if self.backend_record._channel_extras_enabled(
+                record.get("id_channel"), binding.odoo_id if binding else None
+            ):
+                return {"channel_extras": read_channel_extras(record)}
+        except RETRYABLE_ERRORS:
+            raise
+        except Exception:  # pylint: disable=broad-except
+            _logger.exception(
+                "Could not read the channel extras of booking %s",
+                record.get("reservation_code"),
+            )
+        return {}
+
+    @mapping
     def payment_gateway_fee(self, record):
         # Wubook payments gateway
         if record["id_channel"] == 0 and record["payment_gateway_fee"]:
@@ -61,6 +90,25 @@ class ChannelWubookPmsFolioMapperImport(Component):
                 return {"payment_gateway_fee": record["amount"]}
         # Not online pre payment
         return {"payment_gateway_fee": 0}
+
+    @mapping
+    def channel_payment(self, record):
+        """What the channel reports as paid online for the whole booking.
+
+        Only stored on the binding: the folio importer registers it as a
+        payment when the channel enables it (see
+        ``channel.wubook.pms.folio._sync_channel_payments``). Never makes the
+        import fail.
+        """
+        tz_name = self.backend_record.pms_property_id.tz
+        try:
+            return channel_payment_values(record, tz_name)
+        except Exception:
+            _logger.exception(
+                "Booking %s: unreadable payment reported by the channel",
+                record.get("reservation_code"),
+            )
+            return {}
 
     @only_create
     @mapping
@@ -123,6 +171,76 @@ class ChannelWubookPmsFolioMapperImport(Component):
         if lang:
             return {"lang": lang.code}
         return {}
+
+    @mapping
+    def internal_comment(self, record):
+        """Keep on top of the folio internal notes the lines for reception
+        that Mirai passes (loyalty club, upselling to collect), when its OTA
+        mapping enables them.
+
+        They are rebuilt on every import of the booking (creation,
+        modification, cancellation, re-import) and merged with the current
+        text, read from the binding when the folio already exists: the staff
+        text is kept and nothing is written when the lines did not change.
+        """
+        binding = self.options.binding
+        if binding is None:
+            # The binder maps the booking without options, only to look for
+            # the folio of a modified booking: the importer maps it again
+            # with the binding (an empty recordset on creation).
+            return {}
+        if not self._channel_notes_enabled(record.get("id_channel")):
+            return {}
+        pms_property = self.backend_record.pms_property_id
+        lang = (
+            pms_property.lang
+            or pms_property.company_id.partner_id.lang
+            or self.env.lang
+        )
+        folios = self.env["channel.wubook.pms.folio"].with_context(lang=lang)
+        try:
+            # Read only work: a flushing savepoint would run the precommit
+            # hooks of the import here (e.g. the availability export buffer).
+            with self.env.cr.savepoint(flush=False):
+                lines = folios._get_channel_note_lines(record)
+                current = (binding.internal_comment if binding else False) or ""
+                merged = merge_tagged_lines(current, MIRAI_NOTE_PREFIX, lines)
+        except RETRYABLE_ERRORS:
+            raise
+        except Exception:
+            # Notes for reception must never make a booking import fail
+            _logger.exception(
+                "Could not compute the [Mirai] lines of the internal notes of"
+                " the Wubook booking %s",
+                record.get("reservation_code"),
+            )
+            if binding:
+                folios._notify_channel_notes_failure(binding.odoo_id)
+            return {}
+        if merged == current:
+            return {}
+        return {"internal_comment": merged or False}
+
+    def _channel_notes_enabled(self, id_channel):
+        """Whether the folio internal notes get the lines of ``id_channel``:
+        only Mirai passes any, and its row of the OTA mappings of the backend
+        type must enable them. It runs on every import, so it only reads that
+        mapping, and a mapping that cannot be read leaves the notes alone."""
+        if id_channel != MIRAI_CHANNEL_ID:
+            return False
+        try:
+            otas = self.backend_record.backend_type_id.child_id.ota_ids
+            return any(
+                ota.import_channel_notes for ota in otas if ota.wubook_ota == id_channel
+            )
+        except RETRYABLE_ERRORS:
+            raise
+        except Exception:
+            _logger.exception(
+                "Could not read whether the Wubook channel %s writes folio notes",
+                id_channel,
+            )
+            return False
 
 
 class ChannelWubookPmsFolioChildMapperImport(Component):
