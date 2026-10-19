@@ -22,8 +22,21 @@ class ChannelWubookBackendTypeOTA(models.Model):
         required=True,
     )
 
+    import_channel_notes = fields.Boolean(
+        string="Channel Notes",
+        help="Write in the folio internal notes what the channel passes "
+        "through for reception. Only Mirai passes any for now: the loyalty "
+        "club membership and the upselling the guest pays at the hotel.",
+    )
+
     agency_id = fields.Many2one(
         comodel_name="res.partner",
         domain="[('is_agency', '=', True)]",
         string="Agency",
+    )
+
+    import_extras = fields.Boolean(
+        help="Bookings of this channel bring their extras (parking, cot, "
+        "breakfast...) as services of the reservation. Enable it only for "
+        "channels whose booking amount does not include the extras.",
     )

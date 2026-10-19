@@ -44,6 +44,103 @@ Features:
 .. contents::
    :local:
 
+Configuration
+=============
+
+Channel extras
+~~~~~~~~~~~~~~
+
+Some channels sell extras with the booking (parking, cot, breakfast,
+experiences...) and leave them out of the booking amount, so the folio does
+not add up to what the guest pays. The connector can add them to the folio as
+services. Nothing changes until it is enabled in two places:
+
+#. In the **Backend Type**, **Mappings** tab, **OTAs** list, tick **Import
+   Extras** on the channels whose booking amount does not include the extras
+   (e.g. the Mirai booking engine, Wubook channel 197). Leave it off for the
+   rest: Booking.com, for instance, sends the city tax as an extra, and the
+   hotel already charges its own tourist tax.
+#. In the **Backend** of each hotel, **Extras** tab, set **Import Extras From**.
+   Folios created before that moment never get channel extras: reception added
+   them by hand. Tell reception to stop typing the extras of those channels in
+   the bookings that arrive from then on.
+
+Each extra is matched by its name with a row of the **Extras** tab of the
+backend (also in **Connectors > PMS > Channel Extras**, and for the hotel
+managers in **PMS Management > Configuration > Channel Extras**, both showing
+the pending rows by default):
+
+* The names a channel has never sent before are added as **pending** rows,
+  without product. Assign them the product they are imported as. Names are
+  matched without case, accents nor punctuation, but digits count ("Parking 2"
+  is not "Parking"). Channels change the names over time (e.g. from Spanish to
+  English): several rows can point to the same product.
+* Set the action to **Ignore**, or archive the row, for the extras that must
+  not reach the folio. Extras the channel lists at 0 as part of a package are
+  imported at 0 unless they are ignored.
+* The **Fallback Extras Product**, when set, imports the extras of the pending
+  rows anyway, named after the extra, so the folio total is right. The folios
+  imported that way keep the fallback product when the row gets its own one
+  later (**Apply to Pending Folios** does not change them): only the bookings
+  imported from then on use it. Without a fallback product, pending extras are
+  not imported and a folio note lists them.
+* The prices of the channel include taxes, so the products must have taxes
+  included in the price; otherwise the extra is not imported and a folio note
+  says so.
+* Pending extras, and the ones that could not be imported (e.g. the daily
+  limit of the product was reached), are retried on every new version of the
+  booking. Once fixed, **Apply to Pending Folios** in the row imports them on
+  the folios waiting for them, without asking Wubook.
+
+How the extras reach the folio:
+
+* All the extras of a booking go to its first room (by arrival date), even in
+  bookings of several rooms: channels do not tell the room of an extra, and
+  their quantity may count all the rooms.
+* The lines follow the product, as pms places them: per day products consumed
+  before or after the night spread their quantity over the nights (from the
+  day after the arrival when consumed after the night). The rest get a single
+  line: on the arrival date when consumed on check-in, else on the departure
+  date, or on the current date of the hotel when the product is not per day and
+  the guests are already on board. The total is the one the channel charged.
+* When the channel changes or removes an extra, its service is updated or
+  deleted, unless reception changed it by hand (product, quantity or total) or
+  it is invoiced: then a folio note asks to review it. A service deleted by
+  hand is never created again. If the folio already has a service of the same
+  product added by hand, the extra is not imported, to avoid charging it
+  twice.
+* When the channel moves the stay, the services move to the new room.
+  Cancelled rooms do not charge their services.
+* When the channel splits a booking in several folios (one per part of the
+  stay), every folio repeats the extras of the whole booking: they are not
+  imported and a folio note asks reception to add them by hand to the right
+  folio.
+
+Payments reported by the channel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some channels report in the booking how much the guest already paid online
+through the channel's own payment gateway (today only the Mirai booking
+engine). The connector can register that amount on the folio as a payment.
+It is disabled by default and enabled per hotel and channel:
+
+#. Check in the backend type that the channel is mapped to the right agency.
+#. Open the Wubook backend of the hotel, tab *Payments*.
+#. In *OTA Payment Mapping*, add (or edit) the line of that agency, choose the
+   journal and the incoming payment method where the channel settles the
+   money, and tick *Register Channel Payments*.
+
+Only one mapping per agency can have it ticked, and it needs an incoming
+payment method.
+
+From the activation date, the staff must stop registering by hand the
+prepayments of that channel. A folio that already has payments registered by
+hand is never paid automatically (a note says so), but a payment registered by
+hand after the automatic one would be a duplicate.
+
+Bookings imported before the activation are processed the next time they are
+imported (a new version sent by the channel or a manual resynchronization).
+
 Usage
 =====
 
@@ -65,6 +162,94 @@ All other records modifications are handled to be sent to server as it changes.
 All changes are pushed every 5 minutes... and request new bookings every minute.
 
 Modifications using calendars are pushed immediately when press "save" button.
+
+Mirai lines in the folio internal notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For the bookings of the Mirai booking engine (Wubook channel 197), the import
+can keep on top of the folio internal notes (the "internal notes" shown at the
+top of the folio) a few lines for reception, each one starting with
+``[Mirai]``. It is disabled by default: enable *Channel Notes* in the row of
+the Mirai channel (*Wubook OTA ID* 197) of the *OTAs* list, in the *Mappings*
+tab of the backend type. A folio gets its lines with the next import of its
+booking. Only Mirai passes such lines for now, so enabling it for other
+channels has no effect. The lines are:
+
+* ``[Mirai] Loyalty club member``: Mirai flags the guest as a member of the
+  hotel loyalty club. Mirai does not tell reliably whether the guest has just
+  joined, so the line only states the membership, and the member id is never
+  shown.
+* ``[Mirai] Upselling applied: <amount> (according to Mirai, the guest pays it
+  at the hotel)``: Mirai applied an upselling. Its amount is already in the
+  price of the booking, it is money to collect at the desk. When Wubook splits
+  the booking in several folios, the line only goes on the first one.
+
+The lines are written in the language of the hotel and they are rebuilt from
+the booking on every import of it: creation, modification, cancellation and
+re-import, also when *Import Folios* is run by arrival dates from the backend,
+which rewrites them for every Mirai folio of the range. Nothing is written
+when they did not change, and the rest of the note is kept untouched and in
+its order. As every line starting with ``[Mirai]`` belongs to the import:
+
+* staff notes must go on their own lines, never inside a ``[Mirai]`` line nor
+  at the start of a line as ``[Mirai]``: the next import of the booking
+  replaces or removes such a line;
+* saving the note from a folio opened before a modification of the booking
+  was imported can bring back the previous ``[Mirai]`` lines, which then stay
+  until the next import of that booking.
+
+Disabling *Channel Notes* stops updating the lines: those already written stay
+in the notes until staff removes them.
+
+If the lines cannot be computed, the booking is imported anyway and the error
+goes to the server log. When the folio already existed, a note in its messages
+also tells reception that its ``[Mirai]`` lines may be outdated, only once: it
+is not posted again while the folio has it. Bookings of other channels never
+touch the internal notes.
+
+How channel payments are registered
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the channel of a folio has *Register Channel Payments* set (see
+Configuration), every import of the booking compares the amount the channel
+reports as paid online for the whole booking with what the connector already
+registered on the folio, and registers the difference as a payment on the
+configured journal, dated on the day of the import (hotel time). Notes on the
+folio tell the staff what happened:
+
+* Payments only go up. A booking version reporting 0 paid and 0 due carries
+  no information (the channel sends it while an online payment is pending, and
+  when a paid booking is modified) and changes nothing. When the channel
+  reports less than what was registered, nothing is cancelled nor refunded: a
+  note asks to review the payments.
+* A payment registered automatically is never registered again, even if the
+  staff cancels or edits it.
+* Online payment pending: a note shows the deadline the channel gave the
+  guest, in hotel time. When the guest pays, the channel sends a new version
+  of the booking and the payment is registered then. Unpaid bookings end up
+  cancelled by the channel.
+* Cancellations keep the payments and register no refund: a note asks to
+  review the cancellation penalty and the refund. Nothing is ever registered
+  on a cancelled folio.
+* A booking Wubook splits in several folios reports the paid amount of the
+  whole booking in every folio: it is not registered, a note asks to register
+  it by hand on the right folio.
+* Not registered either, with a note: folios that already had payments
+  registered by hand before the first automatic one, amounts in a currency
+  different from the folio's, and folios of a channel booking whose payment
+  was already registered on another folio.
+* The whole amount paid is registered even if it exceeds the folio total
+  (e.g. extras not in the folio yet); a note warns about it.
+* If the payment cannot be registered (e.g. a misconfigured journal), the
+  booking is imported anyway and a note explains why.
+
+Only the charges made through the channel's own payment gateway are reported.
+The charges the hotel makes with its own POS terminal on the guaranteed card
+(first night, cancellation penalties...) never reach the channel nor Wubook
+and must still be registered by hand.
+
+The amounts reported by the channel, the payment deadline and the payments
+registered are shown in the Wubook bindings of the folio (*Connectors* tab).
 
 Bug Tracker
 ===========

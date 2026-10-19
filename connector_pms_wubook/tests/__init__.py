@@ -10,7 +10,11 @@ from . import test_auth
 # from . import test_product_pricelist
 # from . import test_availability_plan
 # from . import test_folio
+from . import test_folio_channel_notes
+from . import test_folio_channel_payments
 from . import test_listener_batching
 from . import test_master_sync
+from . import test_mirai_booking_data
 from . import test_pricelist_flatten
 from . import test_reservation_mapper
+from . import test_folio_channel_extras
