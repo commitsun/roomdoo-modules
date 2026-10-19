@@ -83,15 +83,6 @@ msgstr ""
 "factura/factura rectificativa del cliente."
 
 #. module: connector_pms_wubook
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_connect_wizard_form
-msgid ""
-"A new Wubook record will be created using the data of\n"
-"                                this Odoo record. The binding is created automatically."
-msgstr ""
-"Se creará un registro nuevo en Wubook con los datos de este registro de "
-"Odoo. El vínculo se crea automáticamente."
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__detailed_type
 msgid ""
 "A storable product is a product for which you manage stock. The Inventory app has to be installed.\n"
@@ -608,11 +599,6 @@ msgid "Billing addresses"
 msgstr "Direcciones de facturación"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__binding_model
-msgid "Binding Model"
-msgstr "Modelo de vínculo"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__birthdate_date
 msgid "Birthdate"
 msgstr "Fecha de nacimiento"
@@ -777,16 +763,18 @@ msgid "Can be Sold"
 msgstr "Puede ser vendido"
 
 #. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__channel_can_connect
+msgid "Can be connected to a channel"
+msgstr "Se puede conectar a un canal"
+
+#. module: connector_pms_wubook
 #. odoo-python
 #: code:addons/connector_pms_wubook/controllers/main.py:0
 #, python-format
 msgid "Can't found a backend!"
 msgstr "¡No se ha encontrado ningún backend!"
-
-#. module: connector_pms_wubook
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_connect_wizard_form
-msgid "Cancel"
-msgstr "Cancelar"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__cancel_datetime
@@ -824,11 +812,6 @@ msgid "Cancelled"
 msgstr "Cancelado"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__candidate_ids
-msgid "Candidate"
-msgstr "Candidato"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__statement_line_ids
 msgid "Cash Payments"
 msgstr "Pagos de Efectivo"
@@ -848,6 +831,13 @@ msgstr "Causa de estar Fuera de Servicio"
 #: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_type_room_type_class__wubook_room_type__8
 msgid "Chalet"
 msgstr "Chalé"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__channel_connection_state
+msgid "Channel"
+msgstr "Canal"
 
 #. module: connector_pms_wubook
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_folio_view_search
@@ -1173,33 +1163,11 @@ msgid "Confirmed"
 msgstr "Confirmado"
 
 #. module: connector_pms_wubook
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_connect_wizard_form
-msgid "Connect"
-msgstr "Conectar"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/models/common/wubook_connect_mixin.py:0
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.availability_view_form
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_connect_wizard_form
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
-#, python-format
-msgid "Connect to Wubook"
-msgstr "Conectar con Wubook"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_connect_wizard__mode__existing
-msgid "Connect to an existing Wubook record"
-msgstr "Conectar con un registro existente de Wubook"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_connect_mixin__wubook_connection_state__connected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__pms_availability_plan__wubook_connection_state__connected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__pms_room_type__wubook_connection_state__connected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__product_pricelist__wubook_connection_state__connected
-msgid "Connected"
-msgstr "Conectado"
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__channel_backend_ids
+msgid "Connected channels"
+msgstr "Canales conectados"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__consumed_on
@@ -1223,13 +1191,6 @@ msgstr "Coste"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__cost_currency_id
 msgid "Cost Currency"
 msgstr "Moneda del coste"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Could not fetch Wubook candidates: %s"
-msgstr "No se han podido obtener los candidatos de Wubook: %s"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__count_alternative_free_rooms
@@ -1256,11 +1217,6 @@ msgstr "Código de país"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__country_group_ids
 msgid "Country Groups"
 msgstr "Grupos de países"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_connect_wizard__mode__new
-msgid "Create new in Wubook"
-msgstr "Crear uno nuevo en Wubook"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -1299,8 +1255,6 @@ msgstr "Crear reservas no está soportado por ahora"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__create_uid
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__create_uid
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__create_uid
@@ -1324,8 +1278,6 @@ msgstr "Creado por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__create_date
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__create_date
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__create_date
@@ -1649,8 +1601,6 @@ msgstr "Descuento del precio total en la reserva"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__display_name
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__display_name
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__display_name
@@ -1878,13 +1828,7 @@ msgid "Export in Background"
 msgstr "Exportar en segundo plano"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__external_id
-msgid "External"
-msgstr "Externo"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_binding__external_id
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__manual_external_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__external_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__external_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__external_id
@@ -2329,8 +2273,6 @@ msgstr "Tiene asientos no conciliados"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__id
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__id
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__id
@@ -3054,8 +2996,6 @@ msgstr "Última salida de la ficha"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class____last_update
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard____last_update
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule____last_update
@@ -3115,8 +3055,6 @@ msgstr "Última sincronización (importación)"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__write_uid
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__write_uid
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__write_uid
@@ -3140,8 +3078,6 @@ msgstr "Última actualización por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_board_service__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_room_type_class__write_date
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__write_date
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__write_date
@@ -3236,11 +3172,6 @@ msgstr "Adjuntos principales"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__manager_user_id
 msgid "Main Manager"
 msgstr "Director General"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_connect_wizard__mode__manual
-msgid "Manual external ID"
-msgstr "ID externo manual"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__service_type
@@ -3439,11 +3370,6 @@ msgid "Mobile"
 msgstr "Móvil"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__mode
-msgid "Mode"
-msgstr "Modo"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__property_modified_template
 msgid "Modification Email"
 msgstr "Correo de modificación"
@@ -3476,7 +3402,6 @@ msgstr "Fecha límite de mi actividad"
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type__name
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__name
@@ -3582,17 +3507,6 @@ msgstr "No se ha encontrado ninguna clase de tipo de habitación con id '%s'"
 
 #. module: connector_pms_wubook
 #. odoo-python
-#: code:addons/connector_pms_wubook/models/common/wubook_connect_mixin.py:0
-#, python-format
-msgid ""
-"No Wubook backend is configured for the properties of this record. Create "
-"one first."
-msgstr ""
-"No hay ningún backend de Wubook configurado para los hoteles de este "
-"registro. Crea uno antes."
-
-#. module: connector_pms_wubook
-#. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_room_type/adapter.py:0
 #, python-format
 msgid "No room type found with id '%s'"
@@ -3607,14 +3521,6 @@ msgstr "Diario de Facturas Normal"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__email_normalized
 msgid "Normalized Email"
 msgstr "Correo electrónico normalizado"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_connect_mixin__wubook_connection_state__disconnected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__pms_availability_plan__wubook_connection_state__disconnected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__pms_room_type__wubook_connection_state__disconnected
-#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__product_pricelist__wubook_connection_state__disconnected
-msgid "Not connected"
-msgstr "No conectado"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -3811,11 +3717,6 @@ msgstr "Odoo"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__odoo_id
 msgid "Odoo ID"
 msgstr "ID de Odoo"
-
-#. module: connector_pms_wubook
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_connect_wizard_form
-msgid "Odoo record"
-msgstr "Registro de Odoo"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -4122,13 +4023,6 @@ msgstr "Token permanente"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__phone
 msgid "Phone"
 msgstr "Teléfono"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Pick a Wubook record from the list."
-msgstr "Elige un registro de Wubook de la lista."
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__pkey
@@ -4509,13 +4403,6 @@ msgid "Proportion of guest pending checkin"
 msgstr "Proporción de clientes pendientes de check in"
 
 #. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Provide a Wubook external ID."
-msgstr "Indica un ID externo de Wubook."
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__description_purchase
 msgid "Purchase Description"
 msgstr "Descripción de compra"
@@ -4630,11 +4517,6 @@ msgid "Reception Manager"
 msgstr "Jefe de Recepción"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__record_display_name
-msgid "Record Display Name"
-msgstr "Nombre del registro"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_property_availability__ref
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__code
 msgid "Reference"
@@ -4655,16 +4537,6 @@ msgstr "Tipo de modelo referenciado"
 #: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_pms_folio__wubook_status__3
 msgid "Refused (only wubook reservations)"
 msgstr "Rechazada (solo reservas de Wubook)"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__res_id
-msgid "Res"
-msgstr "Res"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__res_model
-msgid "Res Model"
-msgstr "Modelo del recurso"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__is_reselling
@@ -5311,13 +5183,6 @@ msgid ""
 msgstr ""
 "No se han encontrado algunos de los recursos (ids) en el backend al ejecutar"
 " %(function)s(%(arguments)s). Probablemente se hayan borrado del backend"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Source record does not exist."
-msgstr "El registro de origen no existe."
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_product_pricelist_item__board_service_room_type_id
@@ -6059,20 +5924,6 @@ msgstr ""
 "contacto actual"
 
 #. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/models/common/wubook_connect_mixin.py:0
-#, python-format
-msgid "This record has no Wubook connection yet."
-msgstr "Este registro todavía no tiene conexión con Wubook."
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "This record is already connected to the selected backend."
-msgstr "Este registro ya está conectado al backend seleccionado."
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_reservation_line__occupies_availability
 msgid "This record is taken into account to calculate availability"
 msgstr "Este registro se tiene en cuenta para calcular la disponibilidad"
@@ -6314,13 +6165,6 @@ msgstr "Nombre de unidad de medida"
 
 #. module: connector_pms_wubook
 #. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Unknown mode."
-msgstr "Modo desconocido."
-
-#. module: connector_pms_wubook
-#. odoo-python
 #: code:addons/connector_pms_wubook/models/product_pricelist_item/mapper_import.py:0
 #, python-format
 msgid "Unknown variation type %s"
@@ -6336,13 +6180,6 @@ msgid ""
 msgstr ""
 "Combinación de 'Descuento' y 'Precio' no soportada. Debe definirse "
 "'Descuento' o 'Precio', pero no los dos."
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/wizards/wizard_connect.py:0
-#, python-format
-msgid "Unsupported model: %s"
-msgstr "Modelo no soportado: %s"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__amount_untaxed
@@ -6533,11 +6370,6 @@ msgstr ""
 "aunque haya cantidades pedidas pendientes de facturar."
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard_candidate__wizard_id
-msgid "Wizard"
-msgstr "Asistente"
-
-#. module: connector_pms_wubook
 #. odoo-python
 #: code:addons/connector_pms_wubook/models/pms_board_service/adapter.py:0
 #, python-format
@@ -6571,13 +6403,6 @@ msgid "Wrong domain clause format %(domain)s"
 msgstr "Formato de cláusula de dominio incorrecto %(domain)s"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_mixin__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_availability_plan__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_room_type__wubook_connection_state
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_product_pricelist__wubook_connection_state
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.availability_plan_rule_wubook_connector_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.availability_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_board_service_form
@@ -6601,7 +6426,6 @@ msgstr "Reglas de disponibilidad de Wubook"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_binding__backend_id
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__backend_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability__backend_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan__backend_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_availability_plan_rule__backend_id
@@ -6629,33 +6453,6 @@ msgid "Wubook Board Service Shortname"
 msgstr "Nombre corto del régimen en Wubook"
 
 #. module: connector_pms_wubook
-#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_connect_wizard
-msgid "Wubook Connect Wizard"
-msgstr "Asistente de conexión con Wubook"
-
-#. module: connector_pms_wubook
-#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_connect_wizard_candidate
-msgid "Wubook Connect Wizard Candidate"
-msgstr "Candidato del asistente de conexión con Wubook"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/models/common/wubook_connect_mixin.py:0
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.availability_view_form
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
-#, python-format
-msgid "Wubook Connection"
-msgstr "Conexión con Wubook"
-
-#. module: connector_pms_wubook
-#. odoo-python
-#: code:addons/connector_pms_wubook/models/common/wubook_connect_mixin.py:0
-#, python-format
-msgid "Wubook Connections"
-msgstr "Conexiones con Wubook"
-
-#. module: connector_pms_wubook
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
 msgid "Wubook Connector"
 msgstr "Conector de Wubook"
@@ -6670,11 +6467,6 @@ msgstr "Canal directo del motor de Wubook"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_product_pricelist_item__wubook_item_type
 msgid "Wubook Item Type"
 msgstr "Tipo de regla de Wubook"
-
-#. module: connector_pms_wubook
-#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_connect_mixin
-msgid "Wubook Manual Connect Mixin"
-msgstr "Mixin de conexión manual con Wubook"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__wubook_ota
@@ -6726,11 +6518,6 @@ msgstr "Tipo de habitación de Wubook"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__wubook_status
 msgid "Wubook Status"
 msgstr "Estado en Wubook"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_connect_wizard__selected_candidate_id
-msgid "Wubook record"
-msgstr "Registro de Wubook"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_product_pricelist_item__percent_price

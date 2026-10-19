@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_connect_wizard_form" model="ir.ui.view">
+        <field name="name">channel.connect.wizard.form</field>
+        <field name="model">channel.connect.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Connect to a channel manager">
+                <sheet>
+                    <group>
+                        <field name="res_model" invisible="1" />
+                        <field name="res_id" invisible="1" />
+                        <field name="binding_model" invisible="1" />
+                        <field name="available_backend_ids" invisible="1" />
+                        <field
+              name="record_display_name"
+              readonly="1"
+              string="Odoo record"
+            />
+                        <field
+              name="backend_id"
+              options="{'no_create': True}"
+            />
+                        <field name="mode" widget="radio" />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'existing')]}">
+                        <!-- Not required in the view: the reload button saves the
+                             wizard first, and right after switching the backend
+                             nothing is selected. action_connect requires it. -->
+                        <field
+              name="selected_candidate_id"
+              options="{'no_create': True, 'no_open': True}"
+              domain="[('wizard_id', '=', id), ('backend_id', '=', backend_id)]"
+            />
+                        <field name="candidate_ids" invisible="1" />
+                        <button
+              name="action_reload_candidates"
+              type="object"
+              string="Load records from the channel manager"
+              icon="fa-refresh"
+              class="btn-link"
+              colspan="2"
+            />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'manual')]}">
+                        <field
+              name="manual_external_id"
+              attrs="{'required': [('mode', '=', 'manual')]}"
+            />
+                    </group>
+                    <group attrs="{'invisible': [('mode', '!=', 'new')]}">
+                        <div>
+                            <p>
+                                A new record will be created on the channel manager
+                                using the data of this Odoo record. The connection is
+                                created automatically.
+                            </p>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button
+            name="action_connect"
+            type="object"
+            string="Connect"
+            class="btn-primary"
+          />
+                    <button
+            string="Cancel"
+            special="cancel"
+            class="btn-secondary"
+          />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

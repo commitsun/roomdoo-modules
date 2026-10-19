@@ -31,7 +31,6 @@
         "views/pms_availability_plan_views.xml",
         "views/pms_availability_plan_rule_views.xml",
         "views/pms_reservation_views.xml",
-        "wizards/wizard_connect.xml",
     ],
     "demo": [],
 }
