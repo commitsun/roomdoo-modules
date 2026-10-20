@@ -132,8 +132,8 @@ class PmsReservationService(Component):
                 folioSequence=reservation.folio_sequence,
                 partnerId=reservation.partner_id.id if reservation.partner_id else None,
                 partnerName=reservation.partner_name or None,
-                boardServiceId=reservation.board_service_room_id.id
-                if reservation.board_service_room_id
+                boardServiceId=reservation.board_service_id.id
+                if reservation.board_service_id
                 else None,
                 saleChannelId=reservation.sale_channel_origin_id.id
                 if reservation.sale_channel_origin_id
@@ -221,10 +221,10 @@ class PmsReservationService(Component):
             )
         if (
             reservation_data.boardServiceId is not None
-            and reservation_data.boardServiceId != reservation.board_service_room_id.id
+            and reservation_data.boardServiceId != reservation.board_service_id.id
         ):
             reservation_vals.update(
-                {"board_service_room_id": reservation_data.boardServiceId or False}
+                {"board_service_id": reservation_data.boardServiceId or False}
             )
         if (
             reservation_data.pricelistId
@@ -398,6 +398,9 @@ class PmsReservationService(Component):
                         {
                             "product_id": bs.productId,
                             "is_board_service": True,
+                            **self.env["pms.folio"]._board_guest_type_vals(
+                                bs.productId, True
+                            ),
                             "reservation_id": reservation_id,
                             "service_line_ids": service_line_cmds,
                         },
@@ -642,8 +645,8 @@ class PmsReservationService(Component):
                     isBoardService=service.is_board_service,
                     serviceLines=service_lines,
                     isCancelPenalty=service.is_cancel_penalty,
-                    boardServiceLineId=service.board_service_line_id.id
-                    if service.board_service_line_id
+                    boardServiceLineId=service.product_id.id
+                    if service.board_guest_type
                     else None,
                 )
             )
@@ -670,6 +673,9 @@ class PmsReservationService(Component):
             "product_id": service_info.productId,
             "reservation_id": reservation.id,
             "is_board_service": service_info.isBoardService or False,
+            **self.env["pms.folio"]._board_guest_type_vals(
+                service_info.productId, service_info.isBoardService
+            ),
         }
         skip_compute_service_line_ids = False
         if service_info.serviceLines:
@@ -959,8 +965,8 @@ class PmsReservationService(Component):
                         if reservation.partner_id
                         else None,
                         partnerName=reservation.partner_name or None,
-                        boardServiceId=reservation.board_service_room_id.id
-                        if reservation.board_service_room_id
+                        boardServiceId=reservation.board_service_id.id
+                        if reservation.board_service_id
                         else None,
                         saleChannelId=reservation.sale_channel_origin_id.id
                         if reservation.sale_channel_origin_id

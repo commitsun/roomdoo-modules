@@ -30,7 +30,7 @@ class PmsPriceService(Component):
         auth="jwt_api_pms",
     )
     def get_prices(self, prices_search_param):
-        product = room_type = board_service_room_type = False
+        product = room_type = board_service = False
         if prices_search_param.roomTypeId:
             room_type = (
                 self.env["pms.room.type"]
@@ -73,12 +73,17 @@ class PmsPriceService(Component):
                     """
                     )
                 )
-            board_service_room_type = (
-                self.env["pms.board.service.room.type"]
+            board_service = (
+                self.env["product.template"]
                 .sudo()
-                .search([("id", "=", prices_search_param.boardServiceId)])
+                .search(
+                    [
+                        ("id", "=", prices_search_param.boardServiceId),
+                        ("is_board_service", "=", True),
+                    ]
+                )
             )
-            pms_api_check_access(user=self.env.user, records=board_service_room_type)
+            pms_api_check_access(user=self.env.user, records=board_service)
         else:
             raise MissingError(_("Wrong input param"))
 
@@ -91,7 +96,7 @@ class PmsPriceService(Component):
             for x in range(0, (date_to - date_from).days + 1)
         ]
         for price_date in dates:
-            if board_service_room_type:
+            if board_service:
                 result_prices.append(
                     PmsPriceInfo(
                         date=datetime.combine(
@@ -99,7 +104,7 @@ class PmsPriceService(Component):
                         ).isoformat(),
                         price=round(
                             self._get_board_service_price(
-                                board_service=board_service_room_type,
+                                board_service=board_service,
                                 board_type="adults"
                                 if prices_search_param.isAdults
                                 else "children",
@@ -144,14 +149,11 @@ class PmsPriceService(Component):
         partner_id=False,
         product_qty=False,
         consumption_date=False,
-        board_service_id=False,
-        board_service_line_id=False,
     ):
         pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
         pms_api_check_access(user=self.env.user, records=pms_property)
         pricelist = self.env["product.pricelist"].sudo().browse(pricelist_id)
         product = product.with_context(
-            board_service_line_id=board_service_line_id,
             property=pms_property_id,
             consumption_date=consumption_date,
         )
@@ -160,7 +162,6 @@ class PmsPriceService(Component):
             quantity=product_qty or 1,
             consumption_date=consumption_date,
             pms_property_id=pms_property_id,
-            board_service_line_id=board_service_line_id,
         )
         return self.env["account.tax"]._fix_tax_included_price_company(
             price,
@@ -183,25 +184,22 @@ class PmsPriceService(Component):
         pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
         pms_api_check_access(user=self.env.user, records=pms_property)
         price = 0
+        # The lines of a board service are its variants
         if board_service_line_id:
-            lines = (
-                self.env["pms.board.service.room.type.line"]
-                .sudo()
-                .browse(board_service_line_id)
+            products = board_service.product_variant_ids.filtered(
+                lambda product: product.id == board_service_line_id
             )
         else:
-            lines = board_service.board_service_line_ids.filtered(
-                lambda line: line.adults if board_type == "adults" else line.children
+            products = board_service.product_variant_ids.filtered(
+                lambda product: product.board_guest_type in (board_type, "all")
             )
-        for line in lines:
+        for product in products:
             price += self._get_product_price(
-                product=line.product_id,
+                product=product,
                 pms_property_id=pms_property_id,
                 pricelist_id=pricelist_id,
                 partner_id=partner_id,
                 product_qty=product_qty or 1,
                 consumption_date=consumption_date,
-                board_service_id=board_service.id,
-                board_service_line_id=line.id,
             )
         return price

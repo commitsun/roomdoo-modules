@@ -123,9 +123,9 @@ class PmsFolio(models.Model):
                 vals["pricelist_id"] = pricelist_id
         if reservation.boardServiceId is not None:
             if not reservation_record or self._compare_field_ids(
-                reservation_record.board_service_room_id, reservation.boardServiceId
+                reservation_record.board_service_id, reservation.boardServiceId
             ):
-                vals["board_service_room_id"] = (
+                vals["board_service_id"] = (
                     reservation.boardServiceId
                     if reservation.boardServiceId != 0
                     else False
@@ -193,6 +193,15 @@ class PmsFolio(models.Model):
 
         return cmds
 
+    def _board_guest_type_vals(self, product_id, is_board_service):
+        """The guests a board service sent through the API is counted by, so
+        that the reservation keeps it as one of its own board services instead
+        of adding another one for the same variant"""
+        product = self.env["product.product"].sudo().browse(product_id)
+        if is_board_service and product.is_board_service:
+            return {"board_guest_type": product.board_guest_type}
+        return {"board_guest_type": False}
+
     def build_creation_update_services_cmds(self, services):
         cmds = []
         existing_service_ids = []
@@ -227,6 +236,15 @@ class PmsFolio(models.Model):
                     or service.isBoardService != service_record.is_board_service
                 ):
                     service_vals.update({"is_board_service": service.isBoardService})
+            if "product_id" in service_vals or "is_board_service" in service_vals:
+                service_vals.update(
+                    self._board_guest_type_vals(
+                        service_vals.get("product_id", service_record.product_id.id),
+                        service_vals.get(
+                            "is_board_service", service_record.is_board_service
+                        ),
+                    )
+                )
 
             # serviceLines
             if service.serviceLines is not None:

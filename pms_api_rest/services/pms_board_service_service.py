@@ -14,6 +14,34 @@ class PmsBoardServiceService(Component):
     _usage = "board-services"
     _collection = "pms.services"
 
+    def _board_service_info(self, board_service, room_type_id=None, default=None):
+        PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
+        return PmsBoardServiceInfo(
+            id=board_service.id,
+            name=board_service.name,
+            roomTypeId=room_type_id,
+            amount=round(board_service.list_price, 2),
+            boardServiceId=board_service.id,
+            productIds=board_service.product_variant_ids.ids,
+            boardServiceLineIds=board_service.product_variant_ids.ids,
+            isDefaultBoardService=board_service == default,
+            pricelistIds=self.env["product.pricelist"]
+            .sudo()
+            .search([("board_service_ids", "in", board_service.id)])
+            .ids,
+        )
+
+    def _get_board_service(self, board_service_id):
+        board_service = (
+            self.env["product.template"]
+            .sudo()
+            .search([("id", "=", board_service_id), ("is_board_service", "=", True)])
+        )
+        if not board_service:
+            raise MissingError(_("Board Service not found"))
+        pms_api_check_access(user=self.env.user, records=board_service)
+        return board_service
+
     @restapi.method(
         [
             (
@@ -29,51 +57,47 @@ class PmsBoardServiceService(Component):
     )
     def get_board_services(self, board_services_search_param):
         external_app = self.env.user.pms_api_client
-        domain = []
+        room_only = self.env["product.template"]._room_only_board_service()
+        domain = [("is_board_service", "=", True), ("id", "!=", room_only.id)]
         if board_services_search_param.name:
             domain.append(("name", "like", board_services_search_param.name))
-        if board_services_search_param.roomTypeId:
-            domain.append(
-                ("pms_room_type_id", "=", board_services_search_param.roomTypeId)
-            )
+        pms_property = self.env["pms.property"]
         if board_services_search_param.pmsPropertyId:
+            pms_property = pms_property.sudo().browse(
+                board_services_search_param.pmsPropertyId
+            )
             domain.extend(
                 [
                     "|",
-                    ("pms_property_id", "=", board_services_search_param.pmsPropertyId),
-                    ("pms_property_id", "=", False),
+                    ("pms_property_ids", "=", False),
+                    ("pms_property_ids", "in", pms_property.id),
                 ]
             )
 
-        result_board_services = []
-        PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
-        board_services = self.env["pms.board.service.room.type"].sudo().search(domain)
+        board_services = self.env["product.template"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=board_services)
-        for board_service in board_services:
-            result_board_services.append(
-                PmsBoardServiceInfo(
-                    id=board_service.id,
-                    name=board_service.pms_board_service_id.display_name,
-                    roomTypeId=board_service.pms_room_type_id.id,
-                    amount=round(board_service.amount, 2),
-                    boardServiceId=board_service.pms_board_service_id,
-                    boardServiceLineIds=board_service.board_service_line_ids.ids,
-                    isDefaultBoardService=board_service.by_default,
-                    pricelistIds=board_service.pricelist_ids,
-                )
-            )
+        # Board services are no longer bound to room types: they are listed
+        # once for each room type asked for, or for each one of the property
+        room_type_ids = (
+            [board_services_search_param.roomTypeId]
+            if board_services_search_param.roomTypeId
+            else self.env["pms.room"]
+            .sudo()
+            .search([("pms_property_id", "=", pms_property.id)])
+            .mapped("room_type_id.id")
+        )
+        default = pms_property.default_pricelist_id.default_board_service_id
+        result_board_services = [
+            self._board_service_info(board_service, room_type_id, default)
+            for room_type_id in room_type_ids
+            for board_service in board_services
+        ]
         if external_app:
-            room_type_ids = board_services_search_param.roomTypeId or self.env[
-                "pms.room"
-            ].sudo().search(
-                [("pms_property_id", "=", board_services_search_param.pmsPropertyId)]
-            ).mapped(
-                "room_type_id.id"
-            )
             pms_api_check_access(
                 user=self.env.user,
                 records=self.env["pms.room.type"].sudo().browse(room_type_ids),
             )
+            PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
             for room_type_id in room_type_ids:
                 result_board_services.append(
                     PmsBoardServiceInfo(
@@ -100,25 +124,7 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_board_service(self, board_service_id):
-        board_service = (
-            self.env["pms.board.service.room.type"]
-            .sudo()
-            .search([("id", "=", board_service_id)])
-        )
-        if board_service:
-            pms_api_check_access(user=self.env.user, records=board_service)
-            PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
-            return PmsBoardServiceInfo(
-                id=board_service.id,
-                name=board_service.pms_board_service_id.display_name,
-                roomTypeId=board_service.pms_room_type_id.id,
-                amount=round(board_service.amount),
-                boardServiceLineIds=board_service.board_service_line_ids.ids,
-                isDefaultBoardService=board_service.by_default,
-                pricelistIds=board_service.pricelist_ids,
-            )
-        else:
-            raise MissingError(_("Board Service not found"))
+        return self._board_service_info(self._get_board_service(board_service_id))
 
     @restapi.method(
         [
@@ -134,31 +140,26 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_board_service_lines(self, board_service_id, pms_search_param):
-        domain = list()
-        domain.append(("pms_board_service_room_type_id", "=", board_service_id))
-        if pms_search_param.pmsPropertyId:
-            domain.extend(
-                [
-                    ("pms_property_id", "=", pms_search_param.pmsPropertyId),
-                ]
-            )
-        result_board_service_lines = []
+        board_service = self._get_board_service(board_service_id)
+        if (
+            pms_search_param.pmsPropertyId
+            and board_service.pms_property_ids
+            and pms_search_param.pmsPropertyId not in board_service.pms_property_ids.ids
+        ):
+            return []
         PmsBoardServiceLineInfo = self.env.datamodels["pms.board.service.line.info"]
-        lines = self.env["pms.board.service.room.type.line"].sudo().search(domain)
-        pms_api_check_access(user=self.env.user, records=lines)
-        for line in lines:
-            result_board_service_lines.append(
-                PmsBoardServiceLineInfo(
-                    id=line.id,
-                    name=line.pms_board_service_room_type_id.display_name,
-                    boardServiceId=line.pms_board_service_room_type_id.id,
-                    productId=line.product_id.id,
-                    amount=round(line.amount, 2),
-                    isAdults=line.adults,
-                    isChildren=line.children,
-                )
+        return [
+            PmsBoardServiceLineInfo(
+                id=product.id,
+                name=board_service.name,
+                boardServiceId=board_service.id,
+                productId=product.id,
+                amount=round(product.lst_price, 2),
+                isAdults=product.board_guest_type in ("adults", "all"),
+                isChildren=product.board_guest_type in ("children", "all"),
             )
-        return result_board_service_lines
+            for product in board_service.product_variant_ids
+        ]
 
     @restapi.method(
         [
@@ -173,19 +174,17 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_restricted_board_service(self, board_service_id):
-        board_service_record = (
-            self.env["pms.board.service.room.type"].sudo().browse(board_service_id)
+        board_service = (
+            self.env["product.template"]
+            .sudo()
+            .search([("id", "=", board_service_id), ("is_board_service", "=", True)])
         )
-        if board_service_record.exists():
-            PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
-            return PmsBoardServiceInfo(
-                id=board_service_record.id,
-                name=board_service_record.pms_board_service_id.display_name,
-                roomTypeId=board_service_record.pms_room_type_id.id,
-                amount=round(board_service_record.amount),
-                productIds=board_service_record.board_service_line_ids.mapped(
-                    "product_id.id"
-                ),
-            )
-        else:
+        if not board_service:
             raise MissingError(_("Board Service not found"))
+        PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
+        return PmsBoardServiceInfo(
+            id=board_service.id,
+            name=board_service.name,
+            amount=round(board_service.list_price),
+            productIds=board_service.product_variant_ids.ids,
+        )
