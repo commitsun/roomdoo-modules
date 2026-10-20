@@ -19,13 +19,4 @@ async def get_services(
         .sudo()
         .search([("is_pms_available", "=", True)], order="name")
     )
-    board_product_ids = set()
-    for model in ("pms.board.service.line", "pms.board.service.room.type.line"):
-        groups = env[model].sudo().read_group([], ["product_id"], ["product_id"])
-        board_product_ids |= {g["product_id"][0] for g in groups if g["product_id"]}
-    return [
-        ServiceProduct.from_product_product(
-            product, is_board_service=product.id in board_product_ids
-        )
-        for product in products
-    ]
+    return [ServiceProduct.from_product_product(product) for product in products]
