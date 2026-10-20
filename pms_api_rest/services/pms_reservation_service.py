@@ -77,9 +77,9 @@ class PmsReservationService(Component):
     _usage = "reservations"
     _collection = "pms.services"
 
-    # ------------------------------------------------------------------------------------
-    # HEAD RESERVATION--------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
+    # HEAD RESERVATION------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
 
     @restapi.method(
         [
@@ -117,7 +117,7 @@ class PmsReservationService(Component):
             #         {
             #             "author": message.author_id.name,
             #             "date": str(message.date),
-            #             # print(self.env["ir.fields.converter"].text_from_html(message.body))
+            #   # print(self.env["ir.fields.converter"].text_from_html(message.body))
             #             "body": re.sub(text, "", message.body),
             #         }
             #     )
@@ -347,7 +347,7 @@ class PmsReservationService(Component):
                     reservation_lines_vals.append((0, False, line_vals))
             # 3- delete old lines:
             for line in reservation.reservation_line_ids.filtered(
-                lambda l: l.date not in date_list
+                lambda rline: rline.date not in date_list
             ):
                 reservation_lines_vals.append((2, line.id))
             if reservation_lines_vals:
@@ -451,9 +451,9 @@ class PmsReservationService(Component):
             line_vals["room_id"] = origin_data.roomId
         return line_vals
 
-    # ------------------------------------------------------------------------------------
-    # RESERVATION LINES-------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
+    # RESERVATION LINES-----------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
 
     @restapi.method(
         [
@@ -549,7 +549,7 @@ class PmsReservationService(Component):
             raise MissingError(_("Reservation not found"))
         pms_api_check_access(user=self.env.user, records=reservation)
         line = reservation.reservation_line_ids.filtered(
-            lambda l: l.id == reservation_line_id
+            lambda rline: rline.id == reservation_line_id
         )
         if line and (
             line.date == min(reservation.reservation_line_ids.mapped("date"))
@@ -589,9 +589,9 @@ class PmsReservationService(Component):
                 raise MissingError(_("Room not found in the property"))
             reservation_line_id.room_id = reservation_line_param.roomId
 
-    # ------------------------------------------------------------------------------------
-    # RESERVATION SERVICES----------------------------------------------------------------
-    # ------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
+    # RESERVATION SERVICES--------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
 
     @restapi.method(
         [
@@ -696,9 +696,9 @@ class PmsReservationService(Component):
 
         return service.id
 
-    # ------------------------------------------------------------------------------------
-    # RESERVATION CHECKINS----------------------------------------------------------------
-    # ------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
+    # RESERVATION CHECKINS--------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
 
     @restapi.method(
         [
@@ -1237,7 +1237,9 @@ class PmsReservationService(Component):
         if pms_checkin_partner_info.responsibleCheckinPartnerId:
             vals.update(
                 {
-                    "ses_related_checkin_partner_id": pms_checkin_partner_info.responsibleCheckinPartnerId
+                    "ses_related_checkin_partner_id": (
+                        pms_checkin_partner_info.responsibleCheckinPartnerId
+                    )
                 }
             )
         return vals
@@ -1615,22 +1617,26 @@ class PmsReservationService(Component):
         if alt_rooms == 1:
             splitted_with_text = (
                 _(
-                    "It looks like %s has had to sleep in different rooms, but you can move them to 1 available room."
+                    "It looks like %s has had to sleep in different rooms, but you can "
+                    "move them to 1 available room."
                 )
                 % partner_name
             )
         else:
             splitted_with_text = _(
-                "It looks like %(name)s has had to sleep in different rooms, but you can move them to %(count)s available rooms."
+                "It looks like %(name)s has had to sleep in different rooms, but you "
+                "can move them to %(count)s available rooms."
             ) % {"name": partner_name, "count": alt_rooms}
         if pending_checkin == 1:
             checkin_partial_text = _(
-                "1 guest still needs to register their details. You can open the check-in assistant to complete the data."
+                "1 guest still needs to register their details. You can open the "
+                "check-in assistant to complete the data."
             )
         else:
             checkin_partial_text = (
                 _(
-                    "%s guests still need to register their details. You can open the check-in assistant to complete the data."
+                    "%s guests still need to register their details. You can open the "
+                    "check-in assistant to complete the data."
                 )
                 % pending_checkin
             )
@@ -1662,7 +1668,9 @@ class PmsReservationService(Component):
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
                 "text": _(
-                    "It looks like a reservation came in without availability for %s. Unfortunately, there does not seem to be any room available with enough capacity for this reservation."
+                    "It looks like a reservation came in without availability for %s. "
+                    "Unfortunately, there does not seem to be any room available with "
+                    "enough capacity for this reservation."
                 )
                 % room_type_name,
                 "priority": 150,
@@ -1677,7 +1685,9 @@ class PmsReservationService(Component):
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
                 "text": _(
-                    "It looks like %s has had to sleep in different rooms, but there is no room available to assign. You can try moving other reservations to give them a single room."
+                    "It looks like %s has had to sleep in different rooms, but there "
+                    "is no room available to assign. You can try moving other "
+                    "reservations to give them a single room."
                 )
                 % partner_name,
                 "priority": 200,
@@ -1703,7 +1713,8 @@ class PmsReservationService(Component):
                 f"('checkin', '>=', '{today}'),"
                 "]",
                 "text": _(
-                    "%(name)s's reservation has been assigned to room %(room)s. You can confirm the room or change it to another one from here."
+                    "%(name)s's reservation has been assigned to room %(room)s. You "
+                    "can confirm the room or change it to another one from here."
                 )
                 % {"name": partner_name, "room": room_name},
                 "priority": 300,
@@ -1716,7 +1727,8 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 "]",
                 "text": _(
-                    "%s's reservation is pending confirmation. You can confirm it from here."
+                    "%s's reservation is pending confirmation. You can confirm it from "
+                    "here."
                 )
                 % partner_name,
                 "priority": 400,
@@ -1730,7 +1742,8 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "text": _(
-                    "All guests in this reservation have their details registered. You can check them in directly from here."
+                    "All guests in this reservation have their details registered. You "
+                    "can check them in directly from here."
                 ),
                 "priority": 500,
             },
@@ -1754,7 +1767,8 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '>', 0),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "filtered": "lambda r: all([c.state in ('draft','dummy') for c in r.checkin_partner_ids]) ",
+                "filtered": "lambda r: all([c.state in ('draft','dummy') "
+                "for c in r.checkin_partner_ids]) ",
                 "text": _("Register the guests' details from the check-in assistant."),
                 "priority": 580,
             },
@@ -1768,7 +1782,8 @@ class PmsReservationService(Component):
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
                 "text": _(
-                    "This reservation is pending payment and the guests still need to register their details: you can send them a reminder from here."
+                    "This reservation is pending payment and the guests still need to "
+                    "register their details: you can send them a reminder from here."
                 ),
                 "priority": 600,
             },
@@ -1782,7 +1797,8 @@ class PmsReservationService(Component):
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
                 "text": _(
-                    "This reservation is pending payment. You can send a reminder from here."
+                    "This reservation is pending payment. You can send a reminder from "
+                    "here."
                 ),
                 "priority": 630,
             },
@@ -1793,10 +1809,12 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>', '{today}'),"
                 "('pending_checkin_data', '>', 0),"
-                "('folio_payment_state', 'in', ['paid', 'overpayment','nothing_to_pay'])"
+                "('folio_payment_state', 'in', ['paid', "
+                "'overpayment','nothing_to_pay'])"
                 "]",
                 "text": _(
-                    "This reservation does not have the guests' details registered. You can send them a reminder from here."
+                    "This reservation does not have the guests' details registered. "
+                    "You can send them a reminder from here."
                 ),
                 "priority": 660,
             },
@@ -1807,9 +1825,12 @@ class PmsReservationService(Component):
                 "('cancelled_reason', 'in',['late','noshow']),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial']),"
                 "]",
-                "filtered": "lambda r: r.service_ids.filtered(lambda s: s.is_cancel_penalty and s.price_total > 0)",
+                "filtered": "lambda r: r.service_ids.filtered("
+                "lambda s: s.is_cancel_penalty and s.price_total > 0)",
                 "text": _(
-                    "%(name)s's reservation has been cancelled with a penalty of %(amount).2f€. You can remove the penalty if it is not going to be charged."
+                    "%(name)s's reservation has been cancelled with a penalty of "
+                    "%(amount).2f€. You can remove the penalty if it is not going to "
+                    "be charged."
                 )
                 % {"name": partner_name, "amount": penalty_amount},
                 "priority": 700,
@@ -1821,7 +1842,8 @@ class PmsReservationService(Component):
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
                 "text": _(
-                    "This reservation has a pending payment of %.2f. You can register the payment from here."
+                    "This reservation has a pending payment of %.2f. You can register "
+                    "the payment from here."
                 )
                 % pending_amount,
                 "priority": 800,
@@ -1833,7 +1855,8 @@ class PmsReservationService(Component):
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
                 "text": _(
-                    "This reservation has a pending charge of %.2f€. When you handle the payment you can register it from here."
+                    "This reservation has a pending charge of %.2f€. When you handle "
+                    "the payment you can register it from here."
                 )
                 % pending_amount,
                 "priority": 900,
@@ -1845,7 +1868,8 @@ class PmsReservationService(Component):
                 f"('checkout', '=', '{today}'),"
                 "]",
                 "text": _(
-                    "Reservation ready for checkout. You can check out directly from here."
+                    "Reservation ready for checkout. You can check out directly from "
+                    "here."
                 ),
                 "priority": 1000,
             },
@@ -2286,7 +2310,9 @@ class PmsReservationService(Component):
             if record_checkin_partner_legal_representative:
                 checkin_partner_record.write(
                     {
-                        "ses_related_checkin_partner_id": record_checkin_partner_legal_representative.id,
+                        "ses_related_checkin_partner_id": (
+                            record_checkin_partner_legal_representative.id
+                        ),
                         "ses_partners_relationship": find_opposite_relationship(
                             pms_checkin_partner_info.relationship
                         ),
@@ -2294,7 +2320,9 @@ class PmsReservationService(Component):
                 )
                 record_checkin_partner_legal_representative.write(
                     {
-                        "ses_partners_relationship": pms_checkin_partner_info.relationship,
+                        "ses_partners_relationship": (
+                            pms_checkin_partner_info.relationship
+                        ),
                     }
                 )
 

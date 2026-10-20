@@ -56,7 +56,8 @@ class PmsPriceService(Component):
             if prices_search_param.isAdults and prices_search_param.isChildren:
                 raise ValidationError(
                     _(
-                        "It is not allowed to filter by adults and children simultaneously"
+                        "It is not allowed to filter by adults and children "
+                        "simultaneously"
                     )
                 )
             if (
