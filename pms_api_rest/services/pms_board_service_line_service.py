@@ -14,6 +14,19 @@ class PmsBoardServiceService(Component):
     _usage = "board-service-lines"
     _collection = "pms.services"
 
+    # The lines of a board service are its variants: one for each kind of
+    # guest, or a single one for every guest
+
+    def _board_service_line_info(self, product):
+        PmsBoardServiceLineInfo = self.env.datamodels["pms.board.service.line.info"]
+        return PmsBoardServiceLineInfo(
+            id=product.id,
+            name=product.product_tmpl_id.name,
+            boardServiceId=product.product_tmpl_id.id,
+            productId=product.id,
+            amount=round(product.lst_price, 2),
+        )
+
     @restapi.method(
         [
             (
@@ -28,31 +41,22 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_board_service_lines(self, board_service_lines_search_param):
-        domain = []
+        room_only = self.env["product.template"]._room_only_board_service()
+        domain = [
+            ("is_board_service", "=", True),
+            ("product_tmpl_id", "!=", room_only.id),
+        ]
         if board_service_lines_search_param.boardServiceId:
             domain.append(
                 (
-                    "pms_board_service_room_type_id",
+                    "product_tmpl_id",
                     "=",
                     board_service_lines_search_param.boardServiceId,
                 )
             )
-
-        result_board_service_lines = []
-        PmsBoardServiceInfo = self.env.datamodels["pms.board.service.line.info"]
-        lines = self.env["pms.board.service.room.type.line"].sudo().search(domain)
-        pms_api_check_access(user=self.env.user, records=lines)
-        for line in lines:
-            result_board_service_lines.append(
-                PmsBoardServiceInfo(
-                    id=line.id,
-                    name=line.pms_board_service_room_type_id.display_name,
-                    boardServiceId=line.pms_board_service_room_type_id.id,
-                    productId=line.product_id.id,
-                    amount=round(line.amount, 2),
-                )
-            )
-        return result_board_service_lines
+        products = self.env["product.product"].sudo().search(domain)
+        pms_api_check_access(user=self.env.user, records=products.product_tmpl_id)
+        return [self._board_service_line_info(product) for product in products]
 
     @restapi.method(
         [
@@ -67,20 +71,14 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_board_service_line(self, board_service_line_id):
-        board_service_line = (
-            self.env["pms.board.service.room.type.line"]
+        product = (
+            self.env["product.product"]
             .sudo()
-            .search([("id", "=", board_service_line_id)])
-        )
-        if board_service_line:
-            pms_api_check_access(user=self.env.user, records=board_service_line)
-            PmsBoardServiceInfo = self.env.datamodels["pms.board.service.line.info"]
-            return PmsBoardServiceInfo(
-                id=board_service_line.id,
-                name=board_service_line.pms_board_service_room_type_id.display_name,
-                boardServiceId=board_service_line.pms_board_service_room_type_id.id,
-                productId=board_service_line.product_id.id,
-                amount=round(board_service_line.amount, 2),
+            .search(
+                [("id", "=", board_service_line_id), ("is_board_service", "=", True)]
             )
-        else:
+        )
+        if not product:
             raise MissingError(_("Board service line not found"))
+        pms_api_check_access(user=self.env.user, records=product.product_tmpl_id)
+        return self._board_service_line_info(product)

@@ -872,7 +872,7 @@ class PmsCalendarService(Component):
                 )
             if reservation_lines_changes.boardServiceId is not None:
                 reservation_vals.update(
-                    {"board_service_room_id": reservation_lines_changes.boardServiceId}
+                    {"board_service_id": reservation_lines_changes.boardServiceId}
                 )
             if reservation_lines_changes.pricelistId:
                 reservation_vals.update(
