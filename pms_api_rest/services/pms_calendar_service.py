@@ -189,7 +189,9 @@ class PmsCalendarService(Component):
                             r_rt_rtc.room_type_class_id,
                             r_rt_rtc.sequence
                      FROM (SELECT (CURRENT_DATE + date ) date
-                        FROM generate_series(date %s- CURRENT_DATE, date %s - CURRENT_DATE) date
+                        FROM generate_series(
+                            date %s- CURRENT_DATE, date %s - CURRENT_DATE
+                        ) date
                      ) dates,
                     (SELECT r.id room_id, r.capacity, rt.id room_type_id,
                         rtc.id room_type_class_id, r.sequence
@@ -208,8 +210,9 @@ class PmsCalendarService(Component):
                                 AND l.reservation_id = r.id
                                 AND r.overbooking = false
                     ) l ON l.room_id = dr.room_id AND l.date = dr.date
-                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay, min_stay_arrival,
-                            max_stay, max_stay_arrival, closed, closed_departure, closed_arrival
+                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay,
+                            min_stay_arrival, max_stay, max_stay_arrival, closed,
+                            closed_departure, closed_arrival
                         FROM pms_availability_plan_rule
                         WHERE availability_plan_id = %s and pms_property_id = %s
                     ) ru ON ru.date = dr.date AND ru.room_type_id = dr.room_type_id
@@ -361,7 +364,9 @@ class PmsCalendarService(Component):
                     FROM
                     (
                         SELECT (CURRENT_DATE + date) date
-                        FROM generate_series(date %s- CURRENT_DATE, date %s - CURRENT_DATE) date
+                        FROM generate_series(
+                            date %s- CURRENT_DATE, date %s - CURRENT_DATE
+                        ) date
                     ) dates,
                     (
                         SELECT  rt.id room_type_id,
@@ -382,7 +387,8 @@ class PmsCalendarService(Component):
                     AND av.room_type_id = dr.room_type_id
                     AND av.pms_property_id = %s
                     AND av.availability_plan_id = %s
-                LEFT OUTER JOIN product_pricelist_item it ON it.date_start_consumption = dr.date
+                LEFT OUTER JOIN product_pricelist_item it
+                    ON it.date_start_consumption = dr.date
                     AND it.date_end_consumption = dr.date
                     AND it.product_id = dr.product_id
                     AND it.active = true
@@ -705,7 +711,8 @@ class PmsCalendarService(Component):
 
         self.env.cr.execute(
             """
-            SELECT  night.date AS date, room.room_type_id AS room_type, COUNT(night.id) AS count
+            SELECT  night.date AS date, room.room_type_id AS room_type,
+                    COUNT(night.id) AS count
             FROM    pms_reservation_line  night
                     LEFT JOIN pms_room room
                         ON night.room_id = room.id
