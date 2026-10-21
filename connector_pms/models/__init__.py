@@ -2,5 +2,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from . import common
+from . import pms_property
+from . import pms_pricelist_occupancy
 from . import pms_reservation
+from . import pms_reservation_line
+from . import product_pricelist_item
 from . import queue_job
