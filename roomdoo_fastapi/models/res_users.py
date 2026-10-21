@@ -3,6 +3,9 @@ from datetime import timedelta
 from odoo import api, fields, models
 from odoo.exceptions import AccessDenied
 
+# Seconds a refresh token stays usable once it has been exchanged.
+REFRESH_TOKEN_REUSE_INTERVAL = 60
+
 
 class ResUsers(models.Model):
     _inherit = "res.users"
@@ -29,6 +32,17 @@ class ResUsers(models.Model):
         self.env["fastapi.user.refresh.token"].sudo().search(
             [("token", "=", token)], limit=1
         ).unlink()
+
+    @api.model
+    def retire_refresh_token(self, token):
+        # Every tab of the client shares the cookie and renews it on its own, so
+        # two of them can present the same token at once. Dropping it on first
+        # use logs out all but the fastest one: it lives on for a short while
+        # instead, never longer than it already had.
+        limit = fields.Datetime.now() + timedelta(seconds=REFRESH_TOKEN_REUSE_INTERVAL)
+        self.env["fastapi.user.refresh.token"].sudo().search(
+            [("token", "=", token), ("expire", ">", limit)], limit=1
+        ).write({"expire": limit})
 
     def invalidate_all_refresh_tokens(self):
         self.ensure_one()
