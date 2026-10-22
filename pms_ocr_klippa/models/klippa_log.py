@@ -74,10 +74,11 @@ class KlippaLog(models.Model):
         help="Error",
     )
     nominatim_status = fields.Char(
-        help="Nominatim Status",
+        help="Zip lookup of Spanish addresses in CartoCiudad: "
+        "success, not_found or error",
     )
     nominatim_response = fields.Text(
-        help="Nominatim Response",
+        help="Answer of CartoCiudad to the zip lookup",
     )
 
     def clean_log_data(self, offset=60):
