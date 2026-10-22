@@ -1,5 +1,7 @@
 import logging
+import re
 import traceback
+import unicodedata
 from datetime import date, datetime
 
 import requests
@@ -12,6 +14,10 @@ from odoo.exceptions import ValidationError
 _logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+# Articles and joining words, which do not tell places apart
+PLACE_STOPWORDS = set(
+    "a as d de del dels el els es i l la las les lo los o os sa ses y".split()
+)
 
 CHECKIN_FIELDS = {
     "nationality": "partner_id.nationality_id.id",
@@ -31,6 +37,22 @@ CHECKIN_FIELDS = {
     "document_country_id": "country_id.id",
     "zip": "partner_id.residence_partner_id.zip",
 }
+
+
+def _place_names(name):
+    """Each name of a place ("Alacant/Alicante", "Bizkaia (Vizcaya)") as the
+    set of its words, without accents, case, articles or joining words."""
+    text = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode()
+    names = (
+        set(re.findall(r"[a-z0-9]+", part)) - PLACE_STOPWORDS
+        for part in re.split(r"[/()]", text.lower())
+    )
+    return [words for words in names if words]
+
+
+def _same_place(name, other):
+    """Whether two place names share one of their names."""
+    return any(words in _place_names(other) for words in _place_names(name))
 
 
 class PmsProperty(models.Model):
@@ -171,7 +193,13 @@ class PmsProperty(models.Model):
                 continue
             # Residence Address --------------------------------------------------
             if key == "address" and value:
-                mapped_data = self._complete_residence_address(value, mapped_data)
+                mapped_data = self._complete_residence_address(
+                    value,
+                    mapped_data,
+                    document_country_id=self._get_country_id(
+                        (document_data.get("issuing_country") or {}).get("value")
+                    ),
+                )
 
             # Document Data --------------------------------------------------
             elif key == "issuing_country" and value:
@@ -352,6 +380,27 @@ class PmsProperty(models.Model):
             .id
         )
 
+    def _get_state(self, name, country_id):
+        """The state with that name, in the country when we know it: by its
+        words first, as close names can score the same ("VALENCIA" against
+        València and León), then the best fuzzy match if it is the only one.
+        None when several states fit ("Córdoba")."""
+        if not name:
+            return self.env["res.country.state"]
+        states = self.env["res.country.state"].search(
+            [("country_id", "=", country_id)] if country_id else []
+        )
+        found = states.filtered(lambda state: _same_place(name, state.name))
+        if not found:
+            matches = process.extract(name, {s.id: s.name for s in states}, limit=2)
+            if (
+                matches
+                and matches[0][1] >= 90
+                and (len(matches) == 1 or matches[0][1] > matches[1][1])
+            ):
+                found = states.browse(matches[0][2])
+        return found if len(found) == 1 else states.browse()
+
     def _get_surnames(self, origin_surname):
         # If origin surname has two or more surnames
         # Get the last word like lastname2 and the rest like lastname
@@ -360,7 +409,9 @@ class PmsProperty(models.Model):
             return (" ".join(surnames[:-1]), surnames[-1])
         return (origin_surname, False)
 
-    def _complete_residence_address(self, value, mapped_data):
+    def _complete_residence_address(
+        self, value, mapped_data, document_country_id=False
+    ):
         """
         This method tries to complete the residence address with the given data,
         first we use the thefuzz library looking for acceptable matches
@@ -376,27 +427,16 @@ class PmsProperty(models.Model):
             street_name = value["street_name"]
         if "city" in value:
             mapped_data["residence_city"] = value["city"]
+        # Without a country, the address of an ID card is one of the country
+        # that issues it
+        country_id = self._get_country_id(value.get("country")) or document_country_id
+        if country_id:
+            mapped_data["country_id"] = country_id
         if "province" in value:
-            country_record = self._get_country_id(value.get("country", False))
-            domain = []
-            if country_record:
-                domain.append(("country_id", "=", country_record))
-            candidates = process.extractOne(
-                value["province"],
-                self.env["res.country.state"].search(domain).mapped("name"),
-            )
-            if candidates[1] >= 90:
-                country_state = self.env["res.country.state"].search(
-                    domain + [("name", "=", candidates[0])], limit=1
-                )
-                mapped_data["country_state"] = country_state.id
-                if not country_record and country_state:
-                    mapped_data["country_id"] = country_state.country_id.id
-            else:
-                mapped_data["country_state"] = False
-        if "country" in value and not mapped_data.get("country_id", False):
-            country_record = self._get_country_id(value["country"])
-            mapped_data["country_id"] = country_record
+            country_state = self._get_state(value["province"], country_id)
+            mapped_data["country_state"] = country_state.id
+            if country_state and not country_id:
+                mapped_data["country_id"] = country_state.country_id.id
         if "postcode" in value:
             mapped_data["zip"] = value["postcode"]
             zip_code = self.env["res.city.zip"].search(
