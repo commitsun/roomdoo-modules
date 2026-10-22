@@ -38,7 +38,7 @@
                         <page string="Service Response">
                             <field name="service_response" />
                         </page>
-                        <page string="Nominatim Response">
+                        <page string="Zip Lookup">
                             <field name="nominatim_status" />
                             <field name="nominatim_response" />
                         </page>
