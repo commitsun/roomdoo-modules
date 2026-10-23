@@ -190,8 +190,14 @@ class TestAvailability(BookingEngineCase):
         kids_menu = self.env["product.product"].create(
             {"name": "Kids menu", "taxes_id": [(6, 0, [])]}
         )
+        # Children get a breakfast of their own price too: listed once
         self.double_breakfast.board_service_line_ids = [
-            (0, 0, {"product_id": kids_menu.id, "children": True})
+            (0, 0, {"product_id": kids_menu.id, "children": True}),
+            (
+                0,
+                0,
+                {"product_id": self.breakfast.id, "amount": 4.0, "children": True},
+            ),
         ]
         board_offer = self._offer_id(
             self.pricelist_flexible, self.double, self.double_breakfast
@@ -230,7 +236,8 @@ class TestAvailability(BookingEngineCase):
         double = self._room_type(response, self.double)
         self.assertEqual({offer["unitsLeft"] for offer in double["offers"]}, {2})
 
-        for number in (3, 4):
+        # Up to three units left carry the warning; from four on, none
+        for number, units_left in ((3, 3), (4, None)):
             self.env["pms.room"].create(
                 {
                     "name": f"Double {number}",
@@ -239,11 +246,11 @@ class TestAvailability(BookingEngineCase):
                     "capacity": 2,
                 }
             )
-        response = self._get_availability()
+            response = self._get_availability()
 
-        double = self._room_type(response, self.double)
-        self.assertEqual({offer["maxQuantity"] for offer in double["offers"]}, {4})
-        self.assertEqual({offer["unitsLeft"] for offer in double["offers"]}, {None})
+            offers = self._room_type(response, self.double)["offers"]
+            self.assertEqual({offer["maxQuantity"] for offer in offers}, {number})
+            self.assertEqual({offer["unitsLeft"] for offer in offers}, {units_left})
 
     def test_unit_priced_up_to_its_capacity(self):
         response = self._get_availability(adults=2, children=1)

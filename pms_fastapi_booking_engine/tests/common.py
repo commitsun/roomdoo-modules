@@ -22,6 +22,9 @@ class BookingEngineCase(FastAPITransactionCase):
         cls.default_fastapi_running_user = cls.env.ref(
             "pms_fastapi_booking_engine.pms_booking_engine_user"
         )
+        # The endpoint answers in the language of its user, whatever the
+        # default language of the database is.
+        cls.default_fastapi_running_user.lang = "en_US"
         cls.env["product.product"].search([("is_tourist_tax", "=", True)]).write(
             {"active": False}
         )
