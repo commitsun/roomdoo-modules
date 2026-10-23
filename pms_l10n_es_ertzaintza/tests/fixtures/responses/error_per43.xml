@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body
+  ><ns0:envioFicheroXMLResponse
+      xmlns:ns0="http://gvdi.com/a19.registroHotelero.negocio.ejbs"
+    ><return><respuesta><error><codigo>C_1|1_PER43_TI</codigo><descripcion
+            >Comunicación 1, Persona 1: Se debe informar al menos un teléfono o correo electrónico. # Rol (TI)</descripcion></error><error
+          ><codigo>C_1|2_PER05_VI</codigo><descripcion
+            >Comunicación 1, Persona 2: El segundo apellido es obligatorio para la nacionalidad española. # Rol (VI)</descripcion></error><peticion
+          >11111111-2222-3333-4444-555555555555</peticion></respuesta></return></ns0:envioFicheroXMLResponse></S:Body></S:Envelope>

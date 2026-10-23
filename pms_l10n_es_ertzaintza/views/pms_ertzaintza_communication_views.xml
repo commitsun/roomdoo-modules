@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record model="ir.ui.view" id="pms_ertzaintza_communication_view_tree">
+        <field name="name">pms.ertzaintza.communication.tree</field>
+        <field name="model">pms.ertzaintza.communication</field>
+        <field name="arch" type="xml">
+            <tree
+        create="false"
+        decoration-danger="state in ('error_sending', 'rejected')"
+        decoration-muted="state in ('processed', 'cancelled')"
+        decoration-info="state == 'incomplete'"
+      >
+                <field name="pms_property_id" />
+                <field name="reservation_id" />
+                <field name="entity" />
+                <field name="contract_reference" />
+                <field name="create_date" />
+                <field name="communication_time" />
+                <field name="state" />
+                <field name="result_code" />
+                <field name="request_uuid" optional="hide" />
+                <field name="send_attempt_count" optional="hide" />
+                <field name="manually_sent" optional="hide" />
+                <field name="errors" optional="hide" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="pms_ertzaintza_communication_view_form">
+        <field name="name">pms.ertzaintza.communication.form</field>
+        <field name="model">pms.ertzaintza.communication</field>
+        <field name="arch" type="xml">
+            <form string="Ertzaintza communication">
+                <header>
+                    <button
+            name="action_force_send"
+            type="object"
+            string="Force send"
+            class="btn-primary"
+            attrs="{'invisible': [('state', 'in', ('processed', 'cancelled'))]}"
+          />
+                    <button
+            name="action_download_xml"
+            type="object"
+            string="Download XML"
+            class="btn-secondary"
+          />
+                    <button
+            name="action_mark_manually_sent"
+            type="object"
+            string="Mark as sent manually"
+            attrs="{'invisible': [('state', 'in', ('processed', 'cancelled'))]}"
+          />
+                    <button
+            name="action_cancel"
+            type="object"
+            string="Cancel"
+            attrs="{'invisible': [('state', 'in', ('processed', 'cancelled'))]}"
+          />
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group>
+                        <group name="communication">
+                            <field name="reservation_id" />
+                            <field name="pms_property_id" />
+                            <field name="entity" />
+                            <field name="contract_reference" />
+                            <field name="checkin_partner_ids" widget="many2many_tags" />
+                        </group>
+                        <group name="result">
+                            <field name="create_date" />
+                            <field name="communication_time" />
+                            <field name="processed_time" />
+                            <field name="send_attempt_count" />
+                            <field name="request_uuid" />
+                            <field name="result_code" />
+                            <field name="result_description" />
+                            <field name="manual_export_date" />
+                            <field name="manually_sent" />
+                        </group>
+                    </group>
+                    <group name="problems" string="Errors">
+                        <field name="errors" nolabel="1" />
+                        <field name="sending_result" nolabel="1" />
+                    </group>
+                    <notebook>
+                        <page name="xml" string="XML">
+                            <field
+                name="communication_xml"
+                widget="CopyClipboardChar"
+              />
+                        </page>
+                        <page name="request" string="SOAP request">
+                            <field
+                name="communication_soap"
+                widget="CopyClipboardChar"
+              />
+                        </page>
+                        <page name="response" string="SOAP response">
+                            <field name="response_soap" widget="CopyClipboardChar" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="pms_ertzaintza_communication_view_search">
+        <field name="name">pms.ertzaintza.communication.search</field>
+        <field name="model">pms.ertzaintza.communication</field>
+        <field name="arch" type="xml">
+            <search string="Ertzaintza communications">
+                <field name="pms_property_id" />
+                <field name="reservation_id" />
+                <field name="contract_reference" />
+                <field name="request_uuid" />
+                <separator string="Results" colspan="4" />
+                <filter
+          string="Pending"
+          name="to_send"
+          domain="[('state', '=', 'to_send')]"
+        />
+                <filter
+          string="Waiting for check-ins"
+          name="incomplete"
+          domain="[('state', '=', 'incomplete')]"
+        />
+                <filter
+          string="Error sending"
+          name="error_sending"
+          domain="[('state', '=', 'error_sending')]"
+        />
+                <filter
+          string="Rejected"
+          name="rejected"
+          domain="[('state', '=', 'rejected')]"
+        />
+                <filter
+          string="Processed"
+          name="processed"
+          domain="[('state', '=', 'processed')]"
+        />
+                <separator string="Times" colspan="4" />
+                <filter
+          string="Creation date"
+          name="filter_create_date"
+          date="create_date"
+        />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_by_pms_property_id"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                    <filter
+            name="group_by_entity"
+            string="Type"
+            context="{'group_by': 'entity'}"
+          />
+                    <filter
+            name="group_by_state"
+            string="State"
+            context="{'group_by': 'state'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record
+    model="ir.actions.server"
+    id="pms_ertzaintza_communication_action_force_send"
+  >
+        <field name="name">Force Send Ertzaintza Communication</field>
+        <field name="model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="state">code</field>
+        <field name="code">records.action_force_send()</field>
+        <field name="binding_model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+    <record
+    model="ir.actions.server"
+    id="pms_ertzaintza_communication_action_download_xml"
+  >
+        <field name="name">Download Ertzaintza XML</field>
+        <field name="model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="state">code</field>
+        <field name="code">action = records.action_download_xml()</field>
+        <field name="binding_model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+    <record
+    model="ir.actions.server"
+    id="pms_ertzaintza_communication_action_mark_manually_sent"
+  >
+        <field name="name">Mark Ertzaintza Communication as Sent Manually</field>
+        <field name="model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="state">code</field>
+        <field name="code">records.action_mark_manually_sent()</field>
+        <field name="binding_model_id" ref="model_pms_ertzaintza_communication" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+    <record
+    model="ir.actions.act_window"
+    id="open_pms_ertzaintza_communication_form_tree"
+  >
+        <field name="name">Ertzaintza Communications</field>
+        <field name="res_model">pms.ertzaintza.communication</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    name="Ertzaintza Communications"
+    id="menu_open_pms_ertzaintza_communication_form_tree"
+    action="open_pms_ertzaintza_communication_form_tree"
+    parent="pms.menu_reservations"
+    sequence="30"
+  />
+
+</odoo>
