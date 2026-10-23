@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import base64
 import io
+import json
 from datetime import date, datetime, time, timedelta
 from unittest.mock import patch
 
@@ -88,7 +89,7 @@ class TestAvailability(BookingEngineCase):
         self.assertEqual(offer["ratePlanId"], str(flexible.id))
         self.assertEqual(offer["boardCode"], "RO")
         self.assertEqual(offer["maxQuantity"], 2)
-        self.assertIsNone(offer["unitsLeft"])
+        self.assertEqual(offer["unitsLeft"], 2)
         self.assertEqual(offer["includedServices"], [])
         self.assertEqual(
             offer["price"],
@@ -101,6 +102,148 @@ class TestAvailability(BookingEngineCase):
             },
         )
         self.assertEqual(double["offers"][3]["boardCode"], "AD")
+
+    def test_discount_on_the_dearest_rate_with_the_same_board(self):
+        response = self._get_availability()
+
+        prices = {
+            offer["id"]: offer["price"]
+            for offer in self._room_type(response, self.double)["offers"]
+        }
+        flexible, non_refundable = (
+            self.pricelist_flexible,
+            self.pricelist_non_refundable,
+        )
+        board = self.double_breakfast
+        # Each non refundable offer is a saving on the flexible one with the
+        # same board, which carries no discount.
+        self.assertEqual(
+            prices[self._offer_id(non_refundable, self.double)],
+            {
+                "total": 186.0,
+                "original": 206.0,
+                "perNight": 93.0,
+                "currency": flexible.currency_id.name,
+                "discount": {"label": "Saving on Flexible", "percent": 9.7},
+            },
+        )
+        with_board = prices[self._offer_id(non_refundable, self.double, board)]
+        self.assertEqual(with_board["original"], 238.0)
+        self.assertEqual(
+            with_board["discount"], {"label": "Saving on Flexible", "percent": 8.4}
+        )
+        for offer_id in (
+            self._offer_id(flexible, self.double),
+            self._offer_id(flexible, self.double, board),
+        ):
+            self.assertIsNone(prices[offer_id]["original"])
+            self.assertIsNone(prices[offer_id]["discount"])
+
+    def test_original_price_rounded_for_json(self):
+        helper = self.env["pms_booking_engine.availability_router.helper"].new()
+        search = AvailabilitySearch(
+            pms_property=self.pms_property,
+            check_in=self.check_in,
+            check_out=self.check_out,
+            adults=2,
+            children=0,
+            rooms=1,
+            today=date.today(),
+        )
+        currency = self.pricelist_flexible.currency_id
+
+        # What currency.round() can return for 100.57
+        price = helper._to_price(search, currency, 90.51, 10057 * 0.01)
+
+        self.assertEqual(json.dumps(price.model_dump()["original"]), "100.57")
+
+    def test_discount_compares_the_same_board_service(self):
+        # Each rate sells the breakfast through a board of its own
+        self.double_breakfast.pricelist_ids = self.pricelist_flexible
+        non_refundable_breakfast = self.env["pms.board.service.room.type"].create(
+            {
+                "pms_board_service_id": self.board_breakfast.id,
+                "pms_room_type_id": self.double.id,
+                "pms_property_id": self.pms_property.id,
+                "pricelist_ids": [(6, 0, self.pricelist_non_refundable.ids)],
+            }
+        )
+
+        response = self._get_availability()
+
+        prices = {
+            offer["id"]: offer["price"]
+            for offer in self._room_type(response, self.double)["offers"]
+        }
+        price = prices[
+            self._offer_id(
+                self.pricelist_non_refundable, self.double, non_refundable_breakfast
+            )
+        ]
+        self.assertEqual(price["original"], 238.0)
+        self.assertEqual(
+            price["discount"], {"label": "Saving on Flexible", "percent": 8.4}
+        )
+
+    def test_included_services_from_the_board(self):
+        self.breakfast.default_code = "BRK"
+        kids_menu = self.env["product.product"].create(
+            {"name": "Kids menu", "taxes_id": [(6, 0, [])]}
+        )
+        self.double_breakfast.board_service_line_ids = [
+            (0, 0, {"product_id": kids_menu.id, "children": True})
+        ]
+        board_offer = self._offer_id(
+            self.pricelist_flexible, self.double, self.double_breakfast
+        )
+
+        response = self._get_availability()
+
+        services = {
+            offer["id"]: offer["includedServices"]
+            for offer in self._room_type(response, self.double)["offers"]
+        }
+        # No child sleeps in a double for two adults
+        self.assertEqual(services[board_offer], [{"code": "BRK", "label": "Breakfast"}])
+        self.assertEqual(
+            services[self._offer_id(self.pricelist_flexible, self.double)], []
+        )
+
+        response = self._get_availability(adults=1, children=1)
+
+        services = {
+            offer["id"]: offer["includedServices"]
+            for offer in self._room_type(response, self.double)["offers"]
+        }
+        # A product without internal reference goes by its id
+        self.assertEqual(
+            services[board_offer],
+            [
+                {"code": "BRK", "label": "Breakfast"},
+                {"code": str(kids_menu.id), "label": "Kids menu"},
+            ],
+        )
+
+    def test_units_left_only_when_few(self):
+        response = self._get_availability()
+
+        double = self._room_type(response, self.double)
+        self.assertEqual({offer["unitsLeft"] for offer in double["offers"]}, {2})
+
+        for number in (3, 4):
+            self.env["pms.room"].create(
+                {
+                    "name": f"Double {number}",
+                    "pms_property_id": self.pms_property.id,
+                    "room_type_id": self.double.id,
+                    "capacity": 2,
+                }
+            )
+        response = self._get_availability()
+
+        double = self._room_type(response, self.double)
+        self.assertEqual({offer["maxQuantity"] for offer in double["offers"]}, {4})
+        self.assertEqual({offer["unitsLeft"] for offer in double["offers"]}, {None})
 
     def test_unit_priced_up_to_its_capacity(self):
         response = self._get_availability(adults=2, children=1)

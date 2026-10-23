@@ -15,6 +15,7 @@ from fastapi import Query
 from fastapi.responses import JSONResponse
 
 from odoo import _, models
+from odoo.tools.float_utils import json_float_round
 
 from odoo.addons.pms_fastapi.dependencies import PublicEnv
 from odoo.addons.pms_fastapi_booking_engine.models.fastapi_endpoint import (
@@ -24,6 +25,8 @@ from odoo.addons.pms_fastapi_booking_engine.schemas.availability import (
     AvailabilityResponse,
     Cancellation,
     CancellationType,
+    Discount,
+    IncludedService,
     Offer,
     Price,
     Problem,
@@ -49,6 +52,8 @@ MAX_RECOMMENDATION_COMBINATIONS = 20000
 # Pricelists based on other pricelists are followed up to this depth.
 MAX_PRICELIST_CHAIN = 5
 ROOM_ONLY_CODE = "RO"
+# Offers with this many units left or fewer carry a scarcity warning.
+SCARCITY_UNITS = 3
 
 
 @booking_engine_router.get(
@@ -1030,12 +1035,25 @@ class PmsBookingEngineAvailabilityRouterHelper(models.AbstractModel):
     def _to_room_type(self, search, option):
         room_type = option.room_type
         adults, children = self._get_unit_occupancy(search, option.capacity)
-        offers = [
-            self._to_offer(
-                search, offer, self._get_unit_amount(search, offer, adults, children)
-            )
+        amounts = {
+            offer.id: self._get_unit_amount(search, offer, adults, children)
             for offer in option.offers
-        ]
+        }
+        references = self._get_reference_offers(option.offers, amounts)
+        offers = []
+        for offer in option.offers:
+            reference = references[self._get_reference_key(offer)]
+            offers.append(
+                self._to_offer(
+                    search,
+                    offer,
+                    amounts[offer.id],
+                    reference,
+                    amounts[reference.id],
+                    adults,
+                    children,
+                )
+            )
         return RoomType(
             id=str(room_type.id),
             name=self._get_room_type_name(room_type),
@@ -1048,22 +1066,92 @@ class PmsBookingEngineAvailabilityRouterHelper(models.AbstractModel):
             offers=sorted(offers, key=lambda offer: offer.price.total),
         )
 
-    def _to_offer(self, search, offer, amount):
+    def _to_offer(
+        self, search, offer, amount, reference, reference_amount, adults, children
+    ):
+        original, discount = self._get_discount(
+            offer, amount, reference, reference_amount
+        )
         return Offer(
             id=offer.id,
             ratePlanId=str(offer.pricelist.id),
             boardCode=self._get_board_code(offer.board),
-            price=self._to_price(search, offer.pricelist.currency_id, amount),
+            includedServices=self._get_included_services(offer, adults, children),
+            price=self._to_price(
+                search, offer.pricelist.currency_id, amount, original, discount
+            ),
             maxQuantity=offer.max_quantity,
+            unitsLeft=self._get_units_left(offer),
         )
 
-    def _to_price(self, search, currency, total):
+    def _to_price(self, search, currency, total, original=None, discount=None):
+        if original is not None:
+            # Nullable, so not a CurrencyAmount: rounded for JSON as one is
+            original = json_float_round(original, currency.decimal_places)
         return Price(
             total=total,
+            original=original,
             perNight=currency.round(total / len(search.nights)),
             currency=currency.name,
+            discount=discount,
             _decimal_places=currency.decimal_places,
         )
+
+    def _get_reference_key(self, offer):
+        """Offers compared with each other: same board, in the same currency."""
+        return (
+            offer.board.pms_board_service_id.id,
+            offer.pricelist.currency_id.id,
+        )
+
+    def _get_reference_offers(self, offers, amounts):
+        """The dearest offer of each reference key: the price the other rate
+        plans with that board are a saving on."""
+        references = {}
+        for offer in offers:
+            key = self._get_reference_key(offer)
+            reference = references.get(key)
+            if reference is None or amounts[offer.id] > amounts[reference.id]:
+                references[key] = offer
+        return references
+
+    def _get_discount(self, offer, amount, reference, reference_amount):
+        """Original price and discount of an offer cheaper than the reference
+        one; (None, None) for the reference and any as dear as it."""
+        if offer is reference or amount >= reference_amount:
+            return None, None
+        percent = round((reference_amount - amount) / reference_amount * 100, 1)
+        if not percent:
+            return None, None
+        return reference_amount, Discount(
+            label=_("Saving on %s") % self._get_rate_plan_name(reference.pricelist),
+            percent=percent,
+        )
+
+    def _get_included_services(self, offer, adults, children):
+        """What the board of the offer serves to the guests of one unit, as
+        its lines are priced."""
+        services = []
+        products = self.env["product.product"]
+        for line in offer.board.board_service_line_ids:
+            product = line.product_id
+            if product in products or not (
+                (adults and line.adults) or (children and line.children)
+            ):
+                continue
+            products |= product
+            services.append(
+                IncludedService(
+                    code=product.default_code or str(product.id), label=product.name
+                )
+            )
+        return services
+
+    def _get_units_left(self, offer):
+        """Scarcity warning: the units left when they are few."""
+        if offer.max_quantity <= SCARCITY_UNITS:
+            return offer.max_quantity
+        return None
 
     # Hooks for the content of the property
 

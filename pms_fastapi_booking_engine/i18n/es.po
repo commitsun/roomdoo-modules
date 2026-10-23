@@ -126,6 +126,13 @@ msgstr "Canal de venta del motor de reservas web. Si está informado, la propied
 #. odoo-python
 #: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
 #, python-format
+msgid "Saving on %s"
+msgstr "Ahorro sobre %s"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
 msgid "Stay too long"
 msgstr "Estancia demasiado larga"
 

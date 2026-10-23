@@ -127,6 +127,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
 #, python-format
+msgid "Saving on %s"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
 msgid "Stay too long"
 msgstr ""
 
