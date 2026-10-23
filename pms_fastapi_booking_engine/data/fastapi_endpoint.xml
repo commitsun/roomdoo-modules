@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <record id="fastapi_endpoint_booking_engine" model="fastapi.endpoint">
+        <field name="name">PMS Booking Engine API</field>
+        <field name="description">Public API of the web booking engine.</field>
+        <field name="app">pms_booking_engine</field>
+        <field name="root_path">/booking-engine/v1</field>
+        <field name="user_id" ref="pms_booking_engine_user" />
+        <field name="save_http_session" eval="False" />
+    </record>
+    <!-- Routes of an endpoint are served once its registry is synced -->
+    <function model="fastapi.endpoint" name="action_sync_registry">
+        <value eval="[ref('fastapi_endpoint_booking_engine')]" />
+    </function>
+</odoo>

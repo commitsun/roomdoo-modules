@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record
+    id="pms_booking_engine_user"
+    model="res.users"
+    context="{'no_reset_password': True}"
+  >
+        <field name="name">PMS Booking Engine</field>
+        <field name="login">pms_booking_engine</field>
+        <field name="groups_id" eval="[(6, 0, [ref('group_pms_booking_engine')])]" />
+    </record>
+</odoo>

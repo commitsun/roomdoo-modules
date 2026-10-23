@@ -1,0 +1,170 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_fastapi_booking_engine
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "%(field)s must be between %(min)s and %(max)s."
+msgstr "%(field)s debe estar entre %(min)s y %(max)s."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "A stay can last up to %s nights."
+msgstr "Una estancia puede durar como máximo %s noches."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_fastapi_endpoint__app
+msgid "App"
+msgstr "Aplicación"
+
+#. module: pms_fastapi_booking_engine
+#: model_terms:ir.ui.view,arch_db:pms_fastapi_booking_engine.pms_property_views_form
+msgid "Booking Engine"
+msgstr "Motor de reservas"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_sale_channel_id
+msgid "Booking Engine Sale Channel"
+msgstr "Canal de venta del motor de reservas"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Check-in in the past"
+msgstr "Entrada en el pasado"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Date out of window"
+msgstr "Fecha fuera de plazo"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Every room needs at least one adult."
+msgstr "Cada habitación necesita al menos un adulto."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model,name:pms_fastapi_booking_engine.model_fastapi_endpoint
+msgid "FastAPI Endpoint"
+msgstr "Endpoint FastAPI"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Invalid date range"
+msgstr "Rango de fechas no válido"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Occupancy out of range"
+msgstr "Ocupación fuera de rango"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__fastapi_endpoint__app__pms_booking_engine
+msgid "PMS Booking Engine API"
+msgstr "API del motor de reservas PMS"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model,name:pms_fastapi_booking_engine.model_pms_booking_engine_availability_router_helper
+msgid "PMS Booking Engine Availability Router Helper"
+msgstr "Ayudante de disponibilidad del motor de reservas PMS"
+
+#. module: pms_fastapi_booking_engine
+#: model:res.groups,name:pms_fastapi_booking_engine.group_pms_booking_engine
+msgid "PMS Booking Engine endpoint"
+msgstr "Endpoint del motor de reservas PMS"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model,name:pms_fastapi_booking_engine.model_pms_property
+msgid "Property"
+msgstr "Propiedad"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Property not found"
+msgstr "Propiedad no encontrada"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_show_recommended
+msgid "Recommend Rooms in the Booking Engine"
+msgstr "Recomendar habitaciones en el motor de reservas"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_sale_channel_id
+msgid ""
+"Sale channel of the web booking engine. When set, the property is bookable "
+"online with the pricelists of this channel available for it."
+msgstr "Canal de venta del motor de reservas web. Si está informado, la propiedad se puede reservar online con las tarifas de este canal disponibles para ella."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "Stay too long"
+msgstr "Estancia demasiado larga"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_show_recommended
+msgid "Suggest the combination of rooms that best fits the guests searched."
+msgstr "Sugiere la combinación de habitaciones que mejor se ajusta a los huéspedes buscados."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "The check-in date can be up to %s days from today."
+msgstr "La fecha de entrada puede ser como máximo dentro de %s días."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "The check-in date is earlier than today at the property."
+msgstr "La fecha de entrada es anterior a hoy en la propiedad."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "The check-out date must be later than the check-in date."
+msgstr "La fecha de salida debe ser posterior a la de entrada."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_property.py:0
+#, python-format
+msgid "The sale channel %(channel)s is not available for %(property)s."
+msgstr "El canal de venta %(channel)s no está disponible para %(property)s."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/availability.py:0
+#, python-format
+msgid "There is no property bookable online with id %s."
+msgstr "No hay ninguna propiedad reservable online con el id %s."

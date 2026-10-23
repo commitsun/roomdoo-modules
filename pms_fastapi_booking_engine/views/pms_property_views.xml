@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="pms_property_views_form" model="ir.ui.view">
+        <field name="name">pms.property.form - booking engine</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <page name="property_settings" position="after">
+                <page string="Booking Engine" name="booking_engine">
+                    <group>
+                        <field name="booking_engine_sale_channel_id" />
+                        <field name="booking_engine_show_recommended" />
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>
