@@ -107,6 +107,34 @@ Whatever Channex refuses out of a send is listed on the backend, under
 *Availability, rates and restrictions*, and is not sent again until something
 changes on it.
 
+Rate plans
+~~~~~~~~~~
+
+A pricelist is sold through Channex once it is connected: *Connect to a
+channel*, on the *Connectors* tab of the pricelist. Channex has nothing that is
+a pricelist, so connecting one creates its rate plans there: one for each board
+service the pricelist sells in the property and each room type on Channex,
+titled after the pricelist and the board service in the language of the hotel.
+They are priced per guest, for each number of adults the room type holds, and
+the occupancy marked as primary is the one the room type is priced for in pms.
+That one cannot be changed afterwards, as Channex does not allow it.
+
+What each board service includes to eat is told to Channex through its *Meal
+plan on Channex*, on the board service. Room Only comes set; a board service
+left without one tells nothing.
+
+The rate plans follow the pricelist on their own: renaming it, changing what it
+sells, or adding a room type to Channex. A rate plan the hotel already made by
+hand on Channex under the same name and room type is taken over, together with
+the channels mapped to it; the rest of the hotel's own rate plans are never
+touched.
+
+A rate plan no longer sold -- a board service taken out of the pricelist, the
+pricelist archived or no longer connected -- is taken down on Channex, each on
+its own job. Channex refuses to remove one that a channel is mapped to, and it
+is not forced: the job is left failed, saying so, and running it again once the
+rate plan is unmapped on Channex takes it down.
+
 Bug Tracker
 ===========
 

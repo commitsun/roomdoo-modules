@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="product_template_view_form" model="ir.ui.view">
+        <field name="name">product.template.connector.channex.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="pms.product_template_view_form" />
+        <field name="arch" type="xml">
+            <field name="board_show_detail_report" position="after">
+                <field
+          name="channex_meal_type"
+          groups="connector.group_connector_manager"
+          attrs="{'invisible': [('is_board_service', '=', False)]}"
+        />
+            </field>
+        </field>
+    </record>
+</odoo>
