@@ -55,7 +55,9 @@ class FakeChannexServer:
             "occ_adults",
             "default_occupancy",
         ),
+        "channel_availability_rules": ("property_id", "title", "type", "start_date"),
     }
+    RULE_TYPES = ("close_out", "availability_offset", "max_availability")
 
     def __init__(self):
         self.store = {}
@@ -280,6 +282,7 @@ class FakeChannexServer:
             "room_types": "room_type",
             "channels": "channel",
             "webhooks": "webhook",
+            "channel_availability_rules": "channel_availability_rule",
         }.get(resource, resource)
 
     def _wrap(self, resource, record):
@@ -342,6 +345,10 @@ class FakeChannexServer:
                     "code": "validation",
                     "title": "default_occupancy cannot exceed occ_adults",
                 }
+        if resource == "channel_availability_rules":
+            error = self._rule_problem(values)
+            if error:
+                return error
         title = values.get("title")
         if title and any(r.get("title") == title for r in self.store.get(resource, [])):
             return {
@@ -394,6 +401,27 @@ class FakeChannexServer:
                     }
         return None
 
+    def _rule_problem(self, values):
+        """Channex drops a channel it does not know without a word, and then
+        finds the rule has none."""
+        known = {str(channel["id"]) for channel in self.store.get("channels", [])}
+        details = {}
+        if not [c for c in values.get("affected_channels") or () if str(c) in known]:
+            details["affected_channels"] = ["can't be blank"]
+        if not values.get("affected_room_types"):
+            details["affected_room_types"] = ["can't be blank"]
+        if values.get("type") not in self.RULE_TYPES:
+            details["type"] = ["is invalid"]
+        elif values["type"] != "close_out" and values.get("value") is None:
+            details["value"] = ["can't be blank"]
+        if details:
+            return {
+                "code": "validation_error",
+                "title": "Validation Error",
+                "details": details,
+            }
+        return None
+
     def _update(self, resource, external_id, body):
         values = (body or {}).get(self._payload_root(resource)) or {}
         if resource == "channels":
@@ -402,6 +430,10 @@ class FakeChannexServer:
                 return FakeResponse(422, {"errors": error})
         for record in self.store.get(resource, []):
             if str(record["id"]) == str(external_id):
+                if resource == "channel_availability_rules":
+                    error = self._rule_problem({**record, **values})
+                    if error:
+                        return FakeResponse(422, {"errors": error})
                 record.update(values)
                 return FakeResponse(200, {"data": self._wrap(resource, record)})
         return FakeResponse(

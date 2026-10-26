@@ -27,9 +27,11 @@ from odoo import api, fields, models
 #: What can be published, and the binding model whose rows carry each one.
 ARI_KINDS = [
     ("availability", "Availability"),
+    ("channel_caps", "Caps of the agencies"),
 ]
 ARI_BINDING_MODELS = {
     "availability": "channel.channex.pms.room.type",
+    "channel_caps": "channel.channex.inventory.cap",
 }
 
 #: Seconds a send waits before it runs, so a burst of changes -- a reservation

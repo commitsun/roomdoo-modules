@@ -8,6 +8,10 @@ from odoo import models
 #: through ``_write()``, where no event is raised, so it is caught here.
 ROOM_FIELDS = {"preferred_room_id", "room_type_id"}
 
+#: Fields of a reservation that decide whose quota its nights spend: the agency
+#: it came through, and the room type it sold.
+QUOTA_FIELDS = {"agency_id", "room_type_id"}
+
 
 class PmsReservation(models.Model):
     _inherit = "pms.reservation"
@@ -32,12 +36,20 @@ class PmsReservation(models.Model):
             reservation.state == "cancel" for reservation in self
         )
 
+    def _channex_stage_channel_caps(self):
+        """Publish again what agencies have set aside on the nights of these
+        reservations."""
+        self.reservation_line_ids._channex_stage_channel_caps()
+
     def write(self, vals):
-        if not self.env.context.get(
-            "connector_no_export"
-        ) and self._channex_moves_availability(vals):
+        if not self.env.context.get("connector_no_export"):
             # Where the nights are before the write: the rooms they leave, and
             # for a cancellation the very nights that are freed. Where they end
             # up is published by the listener.
-            self._channex_stage_availability()
+            if self._channex_moves_availability(vals):
+                self._channex_stage_availability()
+            # And the quota they spent until now, which this write may give back
+            # to one agency or room type and spend on another.
+            if QUOTA_FIELDS & set(vals):
+                self._channex_stage_channel_caps()
         return super().write(vals)
