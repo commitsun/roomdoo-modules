@@ -480,7 +480,7 @@ class PmsFolioService(Component):
                         else None,
                         "folioSequence": reservation.folio_sequence,
                         "adults": reservation.adults,
-                        "priceTotal": reservation.price_total,
+                        "priceTotal": round(reservation.price_room_services_set, 2),
                         "pricelistId": reservation.pricelist_id.id
                         if reservation.pricelist_id
                         else None,
