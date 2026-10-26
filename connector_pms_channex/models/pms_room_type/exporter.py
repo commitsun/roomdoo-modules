@@ -3,6 +3,8 @@
 
 from odoo.addons.component.core import Component
 
+from ..common.ari import stage_ari
+
 
 class ChannelChannexPmsRoomTypeExporter(Component):
     _name = "channel.channex.pms.room.type.exporter"
@@ -25,3 +27,15 @@ class ChannelChannexPmsRoomTypeExporter(Component):
             "channel.channex.pms.property",
         )
         return super()._export_dependencies()
+
+    def _after_export(self):
+        """A room type that has just reached Channex has no availability there
+        yet, and one whose rooms changed has a different one: either way, the
+        whole window of it is published again."""
+        if self.binding.external_id:
+            stage_ari(
+                self.env,
+                "availability",
+                (self.backend_record.pms_property_id.id, self.binding.odoo_id.id),
+            )
+        return super()._after_export()

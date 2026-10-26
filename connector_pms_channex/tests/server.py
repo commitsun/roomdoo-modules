@@ -12,6 +12,7 @@ No new dependency: ``responses`` or ``vcr`` would only replay, and neither
 counts calls nor validates a payload the way Channex does.
 """
 
+import datetime
 import json
 import uuid
 from unittest import mock
@@ -63,6 +64,9 @@ class FakeChannexServer:
         self._counter = 0
         self._ignored_filters = set()
         self._aged_out = set()
+        #: what Channex holds as availability, by (room type id, night)
+        self.availability = {}
+        self._refused_room_types = set()
 
     # -- test helpers ------------------------------------------------------
 
@@ -78,6 +82,12 @@ class FakeChannexServer:
         """Answer a filter on this field with everything, which is what Channex
         does with a filter it does not know."""
         self._ignored_filters.add(field)
+
+    def refuse_room_type(self, external_id):
+        """Throw away every ARI value of this room type, the way Channex
+        throws away the values it finds invalid: in ``warnings``, inside an
+        answer that is otherwise a success."""
+        self._refused_room_types.add(str(external_id))
 
     def fail_next(self, status_code, payload=None, headers=None):
         self._next_failures.append((status_code, payload, headers))
@@ -118,6 +128,8 @@ class FakeChannexServer:
                 headers,
             )
 
+        if method == "POST" and path == "availability":
+            return self._availability(json)
         if method == "POST" and path == "auth/one_time_token":
             return self._one_time_token(json)
         if method == "POST" and path.startswith("booking_revisions/"):
@@ -154,6 +166,81 @@ class FakeChannexServer:
             )
         self._counter += 1
         return FakeResponse(200, {"data": {"token": _uuid(self._counter)}})
+
+    # -- ARI -----------------------------------------------------------------
+
+    @staticmethod
+    def _nights(value):
+        """The nights a value covers, from ``date`` or ``date_from``/``date_to``."""
+        if value.get("date"):
+            return [datetime.date.fromisoformat(value["date"])]
+        first = datetime.date.fromisoformat(value["date_from"])
+        last = datetime.date.fromisoformat(value["date_to"])
+        return [
+            first + datetime.timedelta(days=offset)
+            for offset in range((last - first).days + 1)
+        ]
+
+    @staticmethod
+    def _date_problems(value):
+        if value.get("date"):
+            return {}
+        if not value.get("date_from") or not value.get("date_to"):
+            return {"date": ["can't be blank"]}
+        if value["date_from"] > value["date_to"]:
+            return {"date_to": ["must be on or after date_from"]}
+        return {}
+
+    def _availability_problems(self, value):
+        problems = {
+            field: ["Should be a non null value or not existed field"]
+            for field, item in value.items()
+            if item is None
+        }
+        for field in ("property_id", "room_type_id"):
+            if not value.get(field):
+                problems.setdefault(field, ["can't be blank"])
+        available = value.get("availability")
+        if not isinstance(available, int) or isinstance(available, bool):
+            problems.setdefault("availability", ["is invalid"])
+        elif available < 0:
+            problems["availability"] = ["must be greater than or equal to 0"]
+        if str(value.get("room_type_id")) in self._refused_room_types:
+            problems.setdefault("room_type_id", ["is invalid"])
+        problems.update(self._date_problems(value))
+        return problems
+
+    def _availability(self, body):
+        """Applies what is valid and lists what is not, answering 200 either
+        way, which is what Channex does with an ARI call."""
+        values = (body or {}).get("values")
+        if not isinstance(values, list) or not values:
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation_error",
+                        "title": "Validation Error",
+                        "details": {"values": ["can't be blank"]},
+                    }
+                },
+            )
+        warnings, applied = [], 0
+        for value in values:
+            problems = self._availability_problems(value)
+            if problems:
+                warnings.append({**value, "warning": problems})
+                continue
+            for night in self._nights(value):
+                self.availability[(str(value["room_type_id"]), night)] = value[
+                    "availability"
+                ]
+            applied += 1
+        self._counter += 1
+        data = [{"id": _uuid(self._counter), "type": "task"}] if applied else []
+        return FakeResponse(
+            200, {"data": data, "meta": {"message": "Success", "warnings": warnings}}
+        )
 
     def _ack(self, external_id):
         """Acknowledging marks the revision, it does not delete it.

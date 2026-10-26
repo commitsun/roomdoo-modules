@@ -74,6 +74,30 @@ the whole installation, so it is mapped once.
 A channel removed from Channex is deactivated rather than deleted, so bookings
 already attributed to it still resolve to their agency.
 
+Availability
+~~~~~~~~~~~~
+
+The availability of every room type on Channex is published on its own as it
+changes: a reservation made, moved or cancelled, a room added or archived, an
+inventory rule of the property, or a booking imported from Channex itself. What
+is published is what pms says the property can sell of each room type through
+any channel, night by night: its free rooms, capped by the inventory declared
+for the property as a whole.
+
+Changes are not sent one by one. They are gathered for a few seconds and sent
+together, in one call per property, which is how Channex wants to be told and
+what keeps the property within its limit of calls.
+
+*Publish all availability*, on the backend, sends every room type for every
+night Channex publishes. Channex calls it a full sync: it is meant for setting a
+property going or putting it right, and allowed once a day at most, so it is
+not something to schedule. Every day the nights that have just entered the
+window are published on their own.
+
+Whatever Channex refuses out of a send is listed on the backend, under
+*Availability, rates and restrictions*, and is not sent again until something
+changes on it.
+
 Bug Tracker
 ===========
 
