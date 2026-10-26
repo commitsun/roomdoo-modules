@@ -3,6 +3,8 @@
 
 from odoo import api, fields, models
 
+from ..common.ari import stage_ari
+
 # Odoo names the four rate logics plainly; Channex prefixes them with "by".
 CHANNEX_RATE_LOGIC = {
     "increase_amount": "increase_by_amount",
@@ -139,6 +141,48 @@ class ChannelChannexChannel(models.Model):
                 .id,
             }
         )
+
+    # -- what agencies have set aside ---------------------------------------
+
+    def _channex_stage_channel_caps(self, agency=None):
+        """The caps of an agency are published on its channels, so a channel
+        that appears, goes or changes agency changes which rules it gets.
+
+        :param agency: the agency to publish for, when it is not the one the
+            channel has now -- the one it is leaving.
+        """
+        for channel in self:
+            channel_agency = agency or channel.agency_id
+            if channel_agency:
+                stage_ari(
+                    self.env,
+                    "channel_caps",
+                    (channel.backend_id.pms_property_id.id, channel_agency.id, None),
+                )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        channels = super().create(vals_list)
+        channels._channex_stage_channel_caps()
+        return channels
+
+    def write(self, vals):
+        # Every sync writes ``active``, so only an actual change counts.
+        moves = (
+            "ota_id" in vals
+            or "agency_id" in vals
+            or (
+                "active" in vals
+                and any(channel.active != vals["active"] for channel in self)
+            )
+        )
+        if moves:
+            # The agency it leaves, which loses this channel from its rules.
+            self._channex_stage_channel_caps()
+        result = super().write(vals)
+        if moves:
+            self._channex_stage_channel_caps()
+        return result
 
     # -- price modifier ----------------------------------------------------
 

@@ -71,8 +71,11 @@ class ChannelChannexPmsFolioImporter(Component):
         # nights it took or freed. Every reservation of the folio is published,
         # whatever its state: the cancelled ones are the nights given back.
         # Channex already took the booking off its availability, and sending it
-        # the number pms has is what keeps the two from drifting apart.
-        binding.odoo_id.reservation_ids._channex_stage_availability()
+        # the number pms has is what keeps the two from drifting apart. And a
+        # booking from an OTA spends the quota of that very agency.
+        reservations = binding.odoo_id.reservation_ids
+        reservations._channex_stage_availability()
+        reservations._channex_stage_channel_caps()
         return result
 
     def _channex_cancel_booking(self, binding):

@@ -4,11 +4,12 @@
 from odoo.addons.component.core import Component
 from odoo.addons.component_event.components.event import skip_if
 
-from .pms_reservation_line import AVAILABILITY_FIELDS
+from .pms_reservation_line import AVAILABILITY_FIELDS, QUOTA_FIELDS
 
 
 class ChannelChannexPmsReservationLineListener(Component):
-    """A night created, moved or removed changes what is left to sell.
+    """A night created, moved or removed changes what is left to sell, and
+    what is left of the quota it spends.
 
     Creating covers new reservations and longer stays, removing covers shorter
     ones; a night moved to another room or date is published where it lands
@@ -22,13 +23,17 @@ class ChannelChannexPmsReservationLineListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
         record._channex_stage_availability()
+        record._channex_stage_channel_caps()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if fields and set(fields) & AVAILABILITY_FIELDS:
             record._channex_stage_availability()
+        if fields and set(fields) & QUOTA_FIELDS:
+            record._channex_stage_channel_caps()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_unlink(self, record, fields=None):
         # Fired before the delete, the only moment the night can still be read.
         record._channex_stage_availability()
+        record._channex_stage_channel_caps()
