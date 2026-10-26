@@ -388,13 +388,14 @@ Only for development or testing purpose, do not use in production.
 <li><a class="reference internal" href="#usage" id="toc-entry-1">Usage</a><ul>
 <li><a class="reference internal" href="#channels" id="toc-entry-2">Channels</a></li>
 <li><a class="reference internal" href="#availability" id="toc-entry-3">Availability</a></li>
+<li><a class="reference internal" href="#rate-plans" id="toc-entry-4">Rate plans</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-4">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-5">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-6">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-7">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-8">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-5">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-6">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-7">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-8">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-9">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -454,9 +455,33 @@ window are published on their own.</p>
 <em>Availability, rates and restrictions</em>, and is not sent again until something
 changes on it.</p>
 </div>
+<div class="section" id="rate-plans">
+<h2><a class="toc-backref" href="#toc-entry-4">Rate plans</a></h2>
+<p>A pricelist is sold through Channex once it is connected: <em>Connect to a
+channel</em>, on the <em>Connectors</em> tab of the pricelist. Channex has nothing that is
+a pricelist, so connecting one creates its rate plans there: one for each board
+service the pricelist sells in the property and each room type on Channex,
+titled after the pricelist and the board service in the language of the hotel.
+They are priced per guest, for each number of adults the room type holds, and
+the occupancy marked as primary is the one the room type is priced for in pms.
+That one cannot be changed afterwards, as Channex does not allow it.</p>
+<p>What each board service includes to eat is told to Channex through its <em>Meal
+plan on Channex</em>, on the board service. Room Only comes set; a board service
+left without one tells nothing.</p>
+<p>The rate plans follow the pricelist on their own: renaming it, changing what it
+sells, or adding a room type to Channex. A rate plan the hotel already made by
+hand on Channex under the same name and room type is taken over, together with
+the channels mapped to it; the rest of the hotel’s own rate plans are never
+touched.</p>
+<p>A rate plan no longer sold – a board service taken out of the pricelist, the
+pricelist archived or no longer connected – is taken down on Channex, each on
+its own job. Channex refuses to remove one that a channel is mapped to, and it
+is not forced: the job is left failed, saying so, and running it again once the
+rate plan is unmapped on Channex takes it down.</p>
+</div>
 </div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-4">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-5">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -464,21 +489,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-5">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-6">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-6">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-7">Authors</a></h2>
 <ul class="simple">
 <li>Roomdoo</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-7">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-8">Contributors</a></h2>
 <ul class="simple">
 <li>Roomdoo</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-8">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-9">Maintainers</a></h2>
 <p>This module is part of the <a class="reference external" href="https://github.com/commitsun/roomdoo-modules/tree/16.0/connector_pms_channex">commitsun/roomdoo-modules</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>

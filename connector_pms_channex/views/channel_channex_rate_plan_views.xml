@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_channex_rate_plan_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.rate.plan.tree</field>
+        <field name="model">channel.channex.rate.plan</field>
+        <field name="arch" type="xml">
+            <tree create="0" edit="0" delete="0" decoration-muted="channex_to_remove">
+                <field name="backend_id" optional="hide" />
+                <field name="pricelist_id" />
+                <field name="board_service_id" />
+                <field name="room_type_binding_id" />
+                <field name="external_id" />
+                <field name="channex_to_remove" />
+            </tree>
+        </field>
+    </record>
+</odoo>
