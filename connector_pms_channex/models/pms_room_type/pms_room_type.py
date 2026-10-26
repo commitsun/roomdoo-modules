@@ -63,6 +63,12 @@ class PmsRoomType(models.Model):
         for record in self:
             stage_ari(self.env, "availability", (None, record.id))
 
+    def _channex_stage_channel_caps(self):
+        """Publish again what agencies have set aside of these room types, in
+        every property and for the whole window."""
+        for record in self:
+            stage_ari(self.env, "channel_caps", (None, None, record.id))
+
     def _channex_schedule_sync(self):
         """Queue the reconciliation of this room type."""
         for record in self:
