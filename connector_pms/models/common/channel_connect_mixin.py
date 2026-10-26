@@ -153,6 +153,7 @@ class ChannelConnectMixin(models.AbstractModel):
                 "mode": "existing",
             }
         )
+        wizard._sync_mode()
         # Best effort: if the channel manager is unreachable the wizard still
         # opens, so the user can fall back to a manual external id.
         try:

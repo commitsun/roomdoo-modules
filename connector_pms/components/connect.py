@@ -16,6 +16,11 @@ class ChannelConnectCandidates(Component):
     _inherit = "base.channel.connector"
     _usage = "connect.candidates"
 
+    #: Whether the channel manager holds records this one can be connected to.
+    #: A record that is several of them on the other side has nothing to pick
+    #: from, and can only be created there.
+    _connects_to_existing = True
+
     def fetch(self):
         """Return the raw external records, each a dict with at least ``id``."""
         adapter = self.component(usage="backend.adapter")
