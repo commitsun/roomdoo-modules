@@ -5,6 +5,8 @@ from odoo import fields, models
 
 from odoo.addons.queue_job.job import identity_exact
 
+from ..common.ari import stage_ari
+
 BINDING_MODEL = "channel.channex.pms.room.type"
 
 
@@ -54,6 +56,12 @@ class PmsRoomType(models.Model):
             .with_context(active_test=False)
             .search([("odoo_id", "=", self.id)])
         )
+
+    def _channex_stage_availability(self):
+        """Publish the availability of these room types again, in every
+        property and for the whole window."""
+        for record in self:
+            stage_ari(self.env, "availability", (None, record.id))
 
     def _channex_schedule_sync(self):
         """Queue the reconciliation of this room type."""
