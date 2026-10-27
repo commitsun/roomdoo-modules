@@ -34,7 +34,11 @@ class ChannelChannexAriSender(AbstractComponent):
         if not bindings:
             return 0
         first, last = self.backend_record._channex_ari_horizon()
-        result = self._ari_publish(bindings, first, last)
+        # Searched with the archived ones, whose window has to be cleared too,
+        # but worked out without: anything read through these records would
+        # count archived records as well -- a board service's old variant, a
+        # channel gone from Channex.
+        result = self._ari_publish(bindings.with_env(self.env), first, last)
         # Cleared last and in one go: anything noted while the values were being
         # worked out wrote to these same rows, and this write clashing with it
         # is what makes the send start again instead of losing it.
