@@ -240,6 +240,15 @@ class TestChannexChannelCaps(ChannexCapsCase):
         self._publish_caps()
         self.assertFalse(self._rules())
 
+    def test_a_channel_gone_from_channex_takes_its_rules_down(self):
+        """A channel removed from Channex is archived, not deleted, and an
+        archived channel sells nothing."""
+        self._agency_rule(self.night, self._days(2), max_avail=1)
+        self._publish_caps()
+        self.channel.active = False
+        self._publish_caps()
+        self.assertFalse(self._rules())
+
     def test_the_channels_of_one_agency_share_its_rules(self):
         """A hotel can connect the same OTA twice; both sell the same cap."""
         self._map_channel("chn-2", "BookingCom", self.agency)
