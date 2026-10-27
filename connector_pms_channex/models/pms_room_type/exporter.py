@@ -40,4 +40,10 @@ class ChannelChannexPmsRoomTypeExporter(Component):
                 (self.backend_record.pms_property_id.id, self.binding.odoo_id.id),
             )
             self.backend_record._channex_schedule_rate_plans()
+            # Its rooms may hold a different number of adults now: a price for
+            # each of them, and the occupancy its price is given for, which
+            # follows the smallest room.
+            self.binding.odoo_id._channex_stage_restrictions(
+                self.backend_record.pms_property_id.id
+            )
         return super()._after_export()

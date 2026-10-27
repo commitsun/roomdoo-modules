@@ -84,6 +84,9 @@ class ChannelChannexRatePlanSync(Component):
                 continue
             if outcome:
                 result[outcome] += 1
+            if outcome in ("created", "adopted"):
+                # Nothing it holds on Channex is known to be right yet.
+                rate_plan._channex_stage_restrictions()
         if problems:
             # What was recorded here is undone, but not what Channex took:
             # the next time it is taken over, never made twice.

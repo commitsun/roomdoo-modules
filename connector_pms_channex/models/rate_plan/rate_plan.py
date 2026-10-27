@@ -1,12 +1,13 @@
 # Copyright 2026 Roomdoo
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from odoo.addons.connector.exception import IDMissingInBackend
 
 from ...components.adapter import ChannexAPIError
+from ..common.ari import stage_ari, union_window
 
 
 class ChannelChannexRatePlan(models.Model):
@@ -20,6 +21,7 @@ class ChannelChannexRatePlan(models.Model):
     """
 
     _name = "channel.channex.rate.plan"
+    _inherit = "channel.channex.ari.mixin"
     _description = "Channel Channex rate plan"
     _order = "pricelist_id, board_service_id, room_type_binding_id"
 
@@ -76,6 +78,42 @@ class ChannelChannexRatePlan(models.Model):
             )
             for record in self
         ]
+
+    @api.model
+    def _channex_ari_resolve(self, entries):
+        """Rates and restrictions are noted per ``(property_id, pricelist_id,
+        room_type_id, board_service_id)``, any of them ``None`` to mean every
+        one. Only rate plans on Channex and still sold count: one made later
+        publishes its whole window as it is made."""
+        resolved = {}
+        for key, window in entries.items():
+            property_id, pricelist_id, room_type_id, board_service_id = key
+            domain = [("external_id", "!=", False), ("channex_to_remove", "=", False)]
+            if property_id:
+                domain.append(("backend_id.pms_property_id", "=", property_id))
+            if pricelist_id:
+                domain.append(("pricelist_id", "=", pricelist_id))
+            if room_type_id:
+                domain.append(("room_type_binding_id.odoo_id", "=", room_type_id))
+            if board_service_id:
+                domain.append(("board_service_id", "=", board_service_id))
+            for rate_plan in self.search(domain):
+                resolved[rate_plan] = union_window(resolved.get(rate_plan), window)
+        return resolved
+
+    def _channex_stage_restrictions(self):
+        """Publish the whole window of these rate plans."""
+        for record in self:
+            stage_ari(
+                self.env,
+                "restrictions",
+                (
+                    record.backend_id.pms_property_id.id,
+                    record.pricelist_id.id,
+                    record.room_type_binding_id.odoo_id.id,
+                    record.board_service_id.id,
+                ),
+            )
 
     def _channex_title(self):
         """In the language of the hotel, and not of whoever triggered the send:
