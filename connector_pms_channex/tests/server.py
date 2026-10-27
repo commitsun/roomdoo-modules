@@ -103,6 +103,9 @@ class FakeChannexServer:
         self._aged_out = set()
         #: what Channex holds as availability, by (room type id, night)
         self.availability = {}
+        #: what Channex holds as rates and restrictions, by (rate plan id,
+        #: night): the restrictions by name, and ``rates`` by occupancy
+        self.restrictions = {}
         self._refused_room_types = set()
         self._mapped_rate_plans = set()
         self._refused_rate_plans = set()
@@ -184,6 +187,8 @@ class FakeChannexServer:
 
         if method == "POST" and path == "availability":
             return self._availability(json)
+        if method == "POST" and path == "restrictions":
+            return self._restrictions(json)
         if method == "POST" and path == "auth/one_time_token":
             return self._one_time_token(json)
         if method == "POST" and path.startswith("booking_revisions/"):
@@ -289,6 +294,127 @@ class FakeChannexServer:
                 self.availability[(str(value["room_type_id"]), night)] = value[
                     "availability"
                 ]
+            applied += 1
+        self._counter += 1
+        data = [{"id": _uuid(self._counter), "type": "task"}] if applied else []
+        return FakeResponse(
+            200, {"data": data, "meta": {"message": "Success", "warnings": warnings}}
+        )
+
+    #: what a value of ``POST /restrictions`` can set, and what each takes
+    RESTRICTION_KINDS = {
+        "min_stay_arrival": "positive",
+        "min_stay_through": "positive",
+        "max_stay": "non_negative",
+        "closed_to_arrival": "boolean",
+        "closed_to_departure": "boolean",
+        "stop_sell": "boolean",
+    }
+
+    @staticmethod
+    def _rate_problem(rate):
+        """A rate is a decimal string, or an integer in cents, above 0."""
+        if isinstance(rate, bool):
+            return ["is invalid"]
+        if isinstance(rate, int):
+            amount = rate / 100
+        elif isinstance(rate, str):
+            try:
+                amount = float(rate)
+            except ValueError:
+                return ["is invalid"]
+        else:
+            return ["is invalid"]
+        return [] if amount > 0 else ["must be greater than 0"]
+
+    def _restriction_problems(self, value):
+        problems = {
+            field: ["Should be a non null value or not existed field"]
+            for field, item in value.items()
+            if item is None
+        }
+        for field in ("property_id", "rate_plan_id"):
+            if not value.get(field):
+                problems.setdefault(field, ["can't be blank"])
+        plan = next(
+            (
+                plan
+                for plan in self.store.get("rate_plans", [])
+                if str(plan["id"]) == str(value.get("rate_plan_id"))
+            ),
+            None,
+        )
+        if value.get("rate_plan_id") and plan is None:
+            problems.setdefault("rate_plan_id", ["is invalid"])
+        problems.update(self._restriction_field_problems(value))
+        problems.update(self._rate_problems(value, plan))
+        if not set(value) & {"rate", "rates", *self.RESTRICTION_KINDS}:
+            problems["base"] = ["at least one restriction should be present"]
+        problems.update(self._date_problems(value))
+        return problems
+
+    def _restriction_field_problems(self, value):
+        problems = {}
+        for field, kind in self.RESTRICTION_KINDS.items():
+            if field not in value or value[field] is None:
+                continue
+            item = value[field]
+            if kind == "boolean":
+                if item not in (True, False, 0, 1):
+                    problems[field] = ["is invalid"]
+            elif not isinstance(item, int) or isinstance(item, bool):
+                problems[field] = ["is invalid"]
+            elif kind == "positive" and item < 1:
+                problems[field] = ["must be greater than or equal to 1"]
+            elif kind == "non_negative" and item < 0:
+                problems[field] = ["must be greater than or equal to 0"]
+        return problems
+
+    def _rate_problems(self, value, plan):
+        problems = {}
+        if value.get("rate") is not None:
+            problem = self._rate_problem(value["rate"])
+            if problem:
+                problems["rate"] = problem
+        occupancies = {o["occupancy"] for o in (plan or {}).get("options") or ()}
+        for rate in value.get("rates") or ():
+            problem = self._rate_problem(rate.get("rate"))
+            if problem:
+                problems["rates"] = problem
+            elif plan is not None and rate.get("occupancy") not in occupancies:
+                problems["rates"] = ["occupancy is invalid"]
+        return problems
+
+    def _restrictions(self, body):
+        """Applies what is valid and lists what is not, answering 200 either
+        way, which is what Channex does with an ARI call."""
+        values = (body or {}).get("values")
+        if not isinstance(values, list) or not values:
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation_error",
+                        "title": "Validation Error",
+                        "details": {"values": ["can't be blank"]},
+                    }
+                },
+            )
+        warnings, applied = [], 0
+        for value in values:
+            problems = self._restriction_problems(value)
+            if problems:
+                warnings.append({**value, "warning": problems})
+                continue
+            for night in self._nights(value):
+                held = self.restrictions.setdefault(
+                    (str(value["rate_plan_id"]), night), {"rates": {}}
+                )
+                for field in self.RESTRICTION_KINDS:
+                    if field in value:
+                        held[field] = value[field]
+                for rate in value.get("rates") or ():
+                    held["rates"][rate["occupancy"]] = rate["rate"]
             applied += 1
         self._counter += 1
         data = [{"id": _uuid(self._counter), "type": "task"}] if applied else []
