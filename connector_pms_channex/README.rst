@@ -97,11 +97,12 @@ says it. What is left of a quota is what gets published, so a sale through the
 agency changes the rule of that night. Rules the hotel makes by hand on Channex
 are never touched: ours carry a marker at the end of their title.
 
-*Publish all availability*, on the backend, sends every room type for every
-night Channex publishes. Channex calls it a full sync: it is meant for setting a
-property going or putting it right, and allowed once a day at most, so it is
-not something to schedule. Every day the nights that have just entered the
-window are published on their own.
+*Publish everything*, on the backend, sends every room type, and the rates and
+restrictions of every rate plan, for every night Channex publishes. Channex
+calls it a full sync: it is meant for setting a property going or putting it
+right, and allowed once a day at most, so it is not something to schedule.
+Every day the nights that have just entered the window are published on their
+own.
 
 Whatever Channex refuses out of a send is listed on the backend, under
 *Availability, rates and restrictions*, and is not sent again until something
@@ -134,6 +135,30 @@ pricelist archived or no longer connected -- is taken down on Channex, each on
 its own job. Channex refuses to remove one that a channel is mapped to, and it
 is not forced: the job is left failed, saying so, and running it again once the
 rate plan is unmapped on Channex takes it down.
+
+Rates and restrictions
+~~~~~~~~~~~~~~~~~~~~~~
+
+Every rate plan is published night by night as pms prices and restricts it, on
+its own as anything changes: a pricelist item, of the pricelist or of the one
+it is priced from; the occupancy rules; the occupancy a room type is priced
+for; the rules of the availability plan or of the plans it inherits from; a
+board service closed. Like availability, changes are gathered for a few seconds
+and sent in one call per property.
+
+Each night gets a price for every number of adults the room type holds: the
+room for that many adults under the pricelist, plus the board service for each
+of them, tax included as pms prices it. A night that comes out at no price is
+closed, since Channex takes no price of 0.
+
+The restrictions are the ones of the pricelist's availability plan: minimum
+stay on arrival and through the stay, closed to arrival or departure, and
+closed altogether, as is a night the plan closes the board service on. Channex
+has a single maximum stay, so the stricter of the two pms has is published. A
+night with no rule is published unrestricted.
+
+Children are charged with the rate plan's children fee, which is the one of
+the pricelist's occupancy rule for the room type.
 
 Bug Tracker
 ===========
