@@ -132,10 +132,10 @@ class TestInvoiceRectification(InvoiceServiceCase):
         self.assertEqual(new.state, "posted")
         self.assertFalse(self._transfers())
 
-    def test_the_payment_of_the_rectified_invoice_registers_the_difference(self):
+    def test_the_payment_of_the_rectified_invoice_keeps_its_amount(self):
         """Reset to draft, the payment would leave the rectified invoice owing
-        what the new one already received. In a closed period it is never reset:
-        the difference is registered as a refund dated today."""
+        what the new one already received. Its amount is left to accounting,
+        and nothing is registered beside it."""
         original = self._posted_invoice()
         payment = self._pay(original)
         self._close_period()
@@ -143,11 +143,11 @@ class TestInvoiceRectification(InvoiceServiceCase):
         amount = payment.amount
         info = self.env.datamodels["pms.transaction.info"](amount=amount - 10.0)
 
-        self._service("transactions").update_transaction(payment.id, info)
+        with self.assertRaisesRegex(UserError, "Ask accounting"):
+            self._service("transactions").update_transaction(payment.id, info)
 
         self.assertEqual(payment.amount, amount)
         self.assertEqual(payment.state, "posted")
         self.assertEqual(original.payment_state, "paid")
         self.assertIn(original, payment.reconciled_invoice_ids)
-        self.assertEqual(payment.amendment_ids.payment_type, "outbound")
-        self.assertEqual(payment.amendment_ids.amount, 10.0)
+        self.assertFalse(payment.amendment_ids)

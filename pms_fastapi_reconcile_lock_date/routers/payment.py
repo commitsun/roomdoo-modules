@@ -39,17 +39,15 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
 
     def _apply_partner_payment_update(self, payment, vals):
         """A payment of a locked period (its own date, or that of something it
-        settles) is never reset to draft: the change is registered with the
-        date of the day instead, or refused with a 409."""
+        settles) goes through account_reconcile_lock_date: one of an open period
+        that settles a document of a closed one is changed and reconciled again,
+        one of a closed period is refused with a 409."""
         if payment._reconcile_lock_bypassed() or not payment._is_reconcile_locked():
             return super()._apply_partner_payment_update(payment, vals)
         if "amount" in vals:
             self._ensure_open_cash_session(payment.journal_id)
         try:
-            payment._amend_locked_payment(
-                vals,
-                correction_vals={"folio_ids": [(6, 0, payment.folio_ids.ids)]},
-            )
+            payment._amend_locked_payment(vals)
         except LockedPaymentError as error:
             self._problem(
                 409,

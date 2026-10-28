@@ -9,10 +9,11 @@ class PmsTransactionService(Component):
 
     def _apply_transaction_update(self, transaction, vals):
         """A payment of a locked period (its own date, or that of something it
-        settles) is never reset to draft: account_reconcile_lock_date registers
-        the change with the date of the day instead, or refuses it. Nor can a
-        payment be moved into a locked period: the core would silently move it
-        to the first open day instead."""
+        settles) goes through account_reconcile_lock_date: one of an open period
+        that settles a document of a closed one is changed and reconciled again,
+        one of a closed period is refused. Nor can a payment be moved into a
+        locked period: the core would silently move it to the first open day
+        instead."""
         if not vals or transaction._reconcile_lock_bypassed():
             return super()._apply_transaction_update(transaction, vals)
         locked = transaction._is_reconcile_locked()
@@ -31,9 +32,7 @@ class PmsTransactionService(Component):
             return super()._apply_transaction_update(transaction, vals)
         if "amount" in vals:
             self._ensure_open_cash_session_for(transaction.journal_id)
-        transaction._amend_locked_payment(
-            vals, correction_vals=self._locked_correction_vals(transaction)
-        )
+        transaction._amend_locked_payment(vals)
         return transaction
 
     def _ensure_open_cash_session_for(self, journal):
@@ -49,9 +48,3 @@ class PmsTransactionService(Component):
                 journal_id=journal.id,
                 force=False,
             )
-
-    @staticmethod
-    def _locked_correction_vals(payment):
-        """The links to the folio that a correction of ``payment`` keeps: they
-        are what the folio counts as paid, and what C1 looks at."""
-        return {"folio_ids": [(6, 0, payment.folio_ids.ids)]}

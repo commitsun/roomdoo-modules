@@ -234,38 +234,8 @@ msgid ""
 msgstr ""
 
 #. module: account_reconcile_lock_date
-#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
-#, python-format
-msgid ""
-"Journal %(journal)s has no payment method to register the difference of "
-"%(payment)s. Ask accounting."
-msgstr ""
-
-#. module: account_reconcile_lock_date
-#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
-#, python-format
-msgid "Correction of %s"
-msgstr ""
-
-#. module: account_reconcile_lock_date
-#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
-#, python-format
-msgid ""
-"The payment belongs to a closed period, so its amount was not changed: "
-"%(correction)s registers the difference of %(amount)s."
-msgstr ""
-
-#. module: account_reconcile_lock_date
 #: model:ir.model.fields,field_description:account_reconcile_lock_date.field_account_payment__amended_payment_id
 msgid "Corrected payment"
-msgstr ""
-
-#. module: account_reconcile_lock_date
-#: model:ir.model.fields,help:account_reconcile_lock_date.field_account_payment__amended_payment_id
-msgid ""
-"The payment of a locked period this one corrects. That payment is never "
-"modified itself: the difference, or the refund, is registered with the date "
-"of the day and linked to it."
 msgstr ""
 
 #. module: account_reconcile_lock_date
@@ -355,4 +325,39 @@ msgid ""
 "already been rectified and replaced by a new invoice that received its "
 "money. Changing the payment would make the rectified invoice owe it again. "
 "Register the difference as a new payment or refund, or ask accounting."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s is dated within a closed period (locked up to %(lock)s): its amount cannot be changed. Ask accounting to correct it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s cannot take an amount of %(amount)s. Register a refund instead."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %s is reconciled with a bank statement: its amount cannot be changed. Ask accounting to correct it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Payment %(payment)s settles the down payment %(down)s: its amount cannot be changed this way. Ask accounting to correct it."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: code:addons/account_reconcile_lock_date/models/account_payment.py:0
+#, python-format
+msgid "Amount changed from %(old)s to %(new)s. The payment settles %(documents)s, of a closed period: it was unreconciled and reconciled again with them in the open period."
+msgstr ""
+
+#. module: account_reconcile_lock_date
+#: model:ir.model.fields,help:account_reconcile_lock_date.field_account_payment__amended_payment_id
+msgid "The payment of a locked period this one corrected. Corrections are no longer registered: a payment of an open period that settles a document of a closed one is changed itself, and one of a closed period is left to accounting. The ones registered before still count in the amount of the payment they correct."
 msgstr ""

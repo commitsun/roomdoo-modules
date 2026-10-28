@@ -2,6 +2,7 @@ import datetime
 from unittest.mock import patch
 
 from odoo import fields
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -16,8 +17,9 @@ OPEN = datetime.date(2026, 10, 2)
 
 @tagged("post_install", "-at_install")
 class TestLockedPayment(AccountTestInvoicingCommon):
-    """A payment of a locked period is never reset to draft: what changes is
-    registered with the date of the day, or refused."""
+    """A payment of a locked period is changed itself when it belongs to an
+    open period, or refused when it belongs to a closed one. Nothing is ever
+    registered beside it."""
 
     @classmethod
     def setUpClass(cls, chart_template_ref=None):
@@ -109,87 +111,150 @@ class TestLockedPayment(AccountTestInvoicingCommon):
     # ------------------------------------------------------------------
     # amount
     # ------------------------------------------------------------------
-    def test_a_higher_amount_registers_a_payment_for_the_difference(self):
+    def _correction(self, payment, amount, payment_type):
+        """A correction as they were registered before 28-10-2026."""
+        correction = self.env["account.payment"].create(
+            {
+                "payment_type": payment_type,
+                "partner_type": "customer",
+                "partner_id": self.partner_a.id,
+                "amount": amount,
+                "date": OPEN,
+                "journal_id": self.bank.id,
+                "amended_payment_id": payment.id,
+            }
+        )
+        correction.action_post()
+        return correction
+
+    def _corrections_of(self, payment):
+        return self.env["account.payment"].search(
+            [("amended_payment_id", "=", payment.id)]
+        )
+
+    def test_the_amount_of_a_payment_of_a_closed_month_cannot_change(self):
         payment = self._payment(100.0, CLOSED)
         self._close()
-
-        correction = payment._amend_locked_payment({"amount": 130.0})
-
+        with self.assertRaises(LockedPaymentError) as error:
+            payment._amend_locked_payment({"amount": 130.0})
+        self.assertEqual(error.exception.code, "amount")
         self.assertEqual(payment.amount, 100.0)
         self.assertEqual(payment.state, "posted")
-        self.assertEqual(payment.date, CLOSED)
-        self.assertEqual(len(correction), 1)
-        self.assertEqual(correction.state, "posted")
-        self.assertEqual(correction.payment_type, "inbound")
-        self.assertEqual(correction.amount, 30.0)
-        self.assertEqual(correction.date, fields.Date.context_today(payment))
-        self.assertEqual(correction.partner_id, self.partner_a)
-        self.assertEqual(correction.amended_payment_id, payment)
-        self.assertEqual(payment._amended_amount(), 130.0)
+        self.assertFalse(self._corrections_of(payment))
 
-    def test_a_lower_amount_registers_a_refund_for_the_difference(self):
+    def test_the_same_amount_is_no_change(self):
         payment = self._payment(100.0, CLOSED)
         self._close()
-
-        refund = payment._amend_locked_payment({"amount": 70.0})
-
+        payment._amend_locked_payment({"amount": 100.0})
         self.assertEqual(payment.amount, 100.0)
-        self.assertEqual(refund.payment_type, "outbound")
-        self.assertEqual(refund.amount, 30.0)
-        self.assertEqual(payment._amended_amount(), 70.0)
+        self.assertEqual(payment.state, "posted")
 
-    def test_the_difference_counts_the_earlier_corrections(self):
-        payment = self._payment(100.0, CLOSED)
+    def test_a_payment_settling_an_invoice_of_a_closed_month_changes_itself(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
         self._close()
+        name = payment.name
+
+        payment._amend_locked_payment({"amount": 70.0})
+
+        self.assertEqual(payment.amount, 70.0)
+        self.assertEqual(payment.state, "posted")
+        self.assertEqual(payment.name, name)
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+        self.assertEqual(invoice.amount_residual, 30.0)
+        self.assertFalse(self._corrections_of(payment))
+
+    def test_the_new_amount_settles_the_oldest_invoice_first(self):
+        older = self._invoice(60.0, datetime.date(2026, 9, 10))
+        newer = self._invoice(40.0, datetime.date(2026, 9, 25))
+        payment = self._payment(100.0, OPEN)
+        (
+            self._receivable(older)
+            | self._receivable(newer)
+            | self._receivable(payment.move_id)
+        ).reconcile()
+        self._close()
+
+        payment._amend_locked_payment({"amount": 80.0})
+
+        self.assertEqual(older.amount_residual, 0.0)
+        self.assertEqual(newer.amount_residual, 20.0)
+
+    def test_a_higher_amount_stays_open_on_the_payment(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
+        self._close()
+
         payment._amend_locked_payment({"amount": 130.0})
 
-        second = payment._amend_locked_payment({"amount": 120.0})
+        self.assertTrue(invoice.currency_id.is_zero(invoice.amount_residual))
+        self.assertEqual(self._receivable(payment.move_id).amount_residual, -30.0)
 
-        self.assertEqual(second.payment_type, "outbound")
-        self.assertEqual(second.amount, 10.0)
-        self.assertFalse(payment._amend_locked_payment({"amount": 120.0}))
-        self.assertEqual(len(payment.amendment_ids), 2)
+    def test_the_earlier_corrections_still_count(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
+        self._correction(payment, 20.0, "inbound")
+        self._close()
+        self.assertEqual(payment._amended_amount(), 120.0)
+
+        payment._amend_locked_payment({"amount": 110.0})
+
+        self.assertEqual(payment.amount, 90.0)
+        self.assertEqual(payment._amended_amount(), 110.0)
+        self.assertEqual(invoice.amount_residual, 10.0)
 
     def test_the_amount_with_its_corrections_is_rounded(self):
         payment = self._payment(0.1, CLOSED)
-        self._close()
-        payment._amend_locked_payment({"amount": 0.3})
+        self._correction(payment, 0.2, "inbound")
         self.assertEqual(payment._amended_amount(), 0.3)
 
-    def test_a_correction_goes_to_the_account_of_the_payment(self):
-        receivable = [
-            ("company_id", "=", self.company.id),
-            ("account_type", "=", "asset_receivable"),
-            ("deprecated", "=", False),
-        ]
-        first = self.env["account.account"].search(receivable, limit=1)
-        account = self.env["account.account"].create(
-            {
-                "code": "998877",
-                "name": "Other receivable",
-                "account_type": "asset_receivable",
-                "reconcile": True,
-                "company_id": self.company.id,
-            }
-        )
-        self.assertNotEqual(first, account)
-        payment = self.env["account.payment"].create(
-            {
-                "payment_type": "inbound",
-                "partner_type": "customer",
-                "amount": 100.0,
-                "date": CLOSED,
-                "journal_id": self.bank.id,
-                "destination_account_id": account.id,
-            }
-        )
-        payment.action_post()
+    def test_a_payment_reconciled_with_the_bank_cannot_change(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
+        self._close()
+        payment.is_matched = True
+
+        with self.assertRaises(LockedPaymentError) as error:
+            payment._amend_locked_payment({"amount": 70.0})
+
+        self.assertEqual(error.exception.code, "bank")
+        self.assertEqual(payment.amount, 100.0)
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+
+    def test_a_payment_settling_a_down_payment_cannot_change(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
         self._close()
 
-        refund = payment._amend_locked_payment({"amount": 80.0})
+        with patch.object(
+            type(self.env["account.move"]),
+            "_is_downpayment",
+            lambda move: move == invoice,
+        ):
+            with self.assertRaises(LockedPaymentError) as error:
+                payment._amend_locked_payment({"amount": 70.0})
 
-        self.assertFalse(refund.partner_id)
-        self.assertEqual(refund.destination_account_id, account)
+        self.assertEqual(error.exception.code, "downpayment")
+        self.assertEqual(payment.amount, 100.0)
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+
+    def test_a_payment_settling_a_rectified_invoice_cannot_change(self):
+        invoice = self._invoice(100.0, CLOSED)
+        payment = self._payment(100.0, OPEN)
+        self._reconcile(invoice, payment)
+        self._close()
+        invoice._rectify_keep_reconciliation(OPEN)
+
+        with self.assertRaisesRegex(UserError, "rectified"):
+            payment._amend_locked_payment({"amount": 70.0})
+
+        self.assertEqual(payment.amount, 100.0)
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
 
     # ------------------------------------------------------------------
     # reference and journal
@@ -309,13 +374,19 @@ class TestLockedPayment(AccountTestInvoicingCommon):
             transfer = payment._transfer_locked_payment_partner(self.partner_b)
         self.assertIn("carried by the hook", transfer.narration)
 
-    def test_a_customer_change_and_a_new_amount_go_together(self):
+    def test_a_customer_change_with_a_new_amount_is_refused_whole(self):
         payment = self._payment(100.0, CLOSED)
         self._close()
 
-        correction = payment._amend_locked_payment(
-            {"partner_id": self.partner_b.id, "amount": 110.0}
-        )
+        with self.assertRaises(LockedPaymentError) as error:
+            payment._amend_locked_payment(
+                {"partner_id": self.partner_b.id, "amount": 110.0}
+            )
 
-        self.assertEqual(correction.partner_id, self.partner_b)
-        self.assertEqual(correction.amount, 10.0)
+        self.assertEqual(error.exception.code, "amount")
+        self.assertEqual(payment.partner_id, self.partner_a)
+        self.assertFalse(
+            self.env["account.move"].search(
+                [("journal_id", "=", self.transfer_journal.id)]
+            )
+        )

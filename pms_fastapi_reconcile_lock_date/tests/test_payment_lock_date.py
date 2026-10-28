@@ -132,17 +132,17 @@ class TestPaymentLockDate(CommonTestPmsApiPayment):
         self.assertEqual(transfer.state, "posted")
 
     # -- payments of a locked period ------------------------------------
-    def test_the_amount_of_a_locked_payment_is_corrected_with_a_new_payment(self):
+    def test_the_amount_of_a_payment_of_a_closed_month_cannot_change(self):
         payment = self._create_payment(pay_date=CLOSED)
         self._close_month()
         response = self._request(
             "patch", f"/customer-payments/{payment.id}", {"amount": 130.0}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+        self.assertEqual(response.json()["type"], "/errors/locked-payment-amount")
         self.assertEqual(payment.amount, 100.0)
         self.assertEqual(payment.state, "posted")
-        self.assertEqual(payment.amendment_ids.amount, 30.0)
-        self.assertEqual(payment.amendment_ids.payment_type, "inbound")
+        self.assertFalse(payment.amendment_ids)
 
     def _settled_payment(self, pay_date, invoice_date=None):
         folio = self._confirmed_folio()
@@ -198,3 +198,18 @@ class TestPaymentLockDate(CommonTestPmsApiPayment):
             bypass_reconcile_lock_date=True
         )
         self.assertNotEqual(helper._get_payment_lock_date(self.test_company), LOCK)
+
+    def test_a_payment_settling_an_invoice_of_a_closed_month_takes_a_new_amount(self):
+        # The invoice belongs to the closed month, the payment does not.
+        payment, invoice = self._settled_payment(OPEN, invoice_date=CLOSED)
+        self._close_month()
+        new_amount = invoice.amount_total - 10.0
+        response = self._request(
+            "patch", f"/customer-payments/{payment.id}", {"amount": new_amount}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(payment.amount, new_amount)
+        self.assertEqual(payment.state, "posted")
+        self.assertIn(invoice, payment.reconciled_invoice_ids)
+        self.assertEqual(invoice.amount_residual, 10.0)
+        self.assertFalse(payment.amendment_ids)

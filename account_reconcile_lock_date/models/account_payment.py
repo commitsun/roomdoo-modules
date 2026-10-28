@@ -8,8 +8,9 @@ from .account_move import BYPASS_CONTEXT_KEY, BYPASS_GROUP
 
 class LockedPaymentError(UserError):
     """A change that a payment of a locked period cannot take. ``code`` says
-    which one (``journal``, ``date``, ``partner``, ``unsupported``), so that an
-    API can answer it with a typed problem."""
+    which one (``journal``, ``date``, ``partner``, ``amount``, ``bank``,
+    ``downpayment``, ``unsupported``), so that an API can answer it with a
+    typed problem."""
 
     def __init__(self, message, code):
         super().__init__(message)
@@ -25,9 +26,11 @@ class AccountPayment(models.Model):
         readonly=True,
         copy=False,
         index="btree_not_null",
-        help="The payment of a locked period this one corrects. That payment is "
-        "never modified itself: the difference, or the refund, is registered "
-        "with the date of the day and linked to it.",
+        help="The payment of a locked period this one corrected. Corrections "
+        "are no longer registered: a payment of an open period that settles a "
+        "document of a closed one is changed itself, and one of a closed period "
+        "is left to accounting. The ones registered before still count in the "
+        "amount of the payment they correct.",
     )
     amendment_ids = fields.One2many(
         comodel_name="account.payment",
@@ -118,23 +121,27 @@ class AccountPayment(models.Model):
         return (self.currency_id or self.company_id.currency_id).round(amount)
 
     def _amend_locked_payment(self, vals, correction_vals=None):
-        """Apply ``vals`` to this payment of a locked period without resetting
-        it to draft. What changes is registered with the date of the day and
-        linked to it:
+        """Apply ``vals`` to this payment of a locked period. Nothing is
+        registered beside it: the change is made to the payment itself, or
+        refused for accounting to correct.
 
         - ``ref`` is written in place: it is no accounting field.
-        - ``amount``: a payment, or a refund, for the difference with the
-          amount once its corrections are counted.
-        - ``partner_id``: a transfer entry moves its open balance to the new
-          customer. A payment that settles an invoice is refused: the customer
-          of a payment follows the invoice it settles, whose own edit moves the
-          money.
-        - ``date``: refused when its own date is locked. A payment locked only
-          by what it is reconciled with moves to another open date in place.
+        - A payment dated within the closed period takes nothing else, except a
+          new customer when it settles nothing: a transfer entry dated today
+          moves its open balance to them.
+        - A payment of an open period, locked only by what it settles (an
+          invoice of the closed period), is changed like any other payment: it
+          is unreconciled, changed and reconciled again with the same
+          documents, the oldest first. The reconciliation is dated in the open
+          period, so the closed one is left as it was. Its customer follows the
+          invoice it settles and cannot change; its date moves in place.
         - ``journal_id``, and anything else, is refused.
 
-        ``correction_vals`` is added to the payments it registers (the links of
-        the PMS to the folio, for instance). Returns them.
+        ``amount`` is what the payment adds up to with the corrections
+        registered before this rule, which is the figure the channels compare.
+
+        ``correction_vals`` is no longer used: kept for the callers. Returns an
+        empty recordset.
         """
         self.ensure_one()
         vals = dict(vals)
@@ -161,23 +168,145 @@ class AccountPayment(models.Model):
                 ),
                 "unsupported",
             )
+        currency = self.currency_id or self.company_id.currency_id
+        amount = None
+        if "amount" in vals:
+            amount = currency.round(
+                vals.pop("amount") - (self._amended_amount() - self.amount)
+            )
+            if currency.compare_amounts(amount, self.amount) == 0:
+                amount = None
         partner = self.partner_id
         if "partner_id" in vals:
             partner = self.env["res.partner"].browse(vals.pop("partner_id"))
-            if partner != self.partner_id:
-                self._check_locked_partner_change()
+        # Everything is checked before anything is done.
+        if amount is not None:
+            self._check_locked_amount_change(amount)
+        if partner != self.partner_id:
+            self._check_locked_partner_change()
         if "date" in vals:
             self._move_locked_payment_date(vals.pop("date"))
         if partner != self.partner_id:
             self._transfer_locked_payment_partner(partner)
-        corrections = self.browse()
-        if "amount" in vals:
-            corrections |= self._register_locked_payment_difference(
-                vals.pop("amount"), partner, correction_vals or {}
-            )
+        if amount is not None:
+            self._change_locked_payment_amount(amount)
         if "ref" in vals:
             self.move_id.ref = vals.pop("ref")
-        return corrections
+        return self.browse()
+
+    def _settled_counterpart_lines(self):
+        """The journal items reconciled with the customer or supplier lines of
+        this payment: what it settles."""
+        self.ensure_one()
+        lines = self.move_id.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+        )
+        partials = lines.matched_debit_ids | lines.matched_credit_ids
+        return (partials.debit_move_id | partials.credit_move_id) - lines
+
+    def _check_locked_amount_change(self, amount):
+        """Refuse a new amount that a payment of a locked period cannot take.
+
+        Only a payment of an open period can change, and only when changing it
+        leaves the documents it settles as they would be after any other
+        payment edit: not one reconciled with the bank (the reconciliation of
+        the statement would break), not one that settles an invoice already
+        rectified (the difference would end up on the invoice that no longer
+        stands), not one that settles a down payment invoice (the down payment
+        has its own way to follow a new amount)."""
+        self.ensure_one()
+        lock_date = self.company_id._get_reconcile_lock_date()
+        currency = self.currency_id or self.company_id.currency_id
+        if self.date <= lock_date:
+            raise LockedPaymentError(
+                _(
+                    "Payment %(payment)s is dated within a closed period (locked "
+                    "up to %(lock)s): its amount cannot be changed. Ask accounting "
+                    "to correct it.",
+                    payment=self.name,
+                    lock=lock_date,
+                ),
+                "amount",
+            )
+        if currency.compare_amounts(amount, 0.0) <= 0:
+            raise LockedPaymentError(
+                _(
+                    "Payment %(payment)s cannot take an amount of %(amount)s. "
+                    "Register a refund instead.",
+                    payment=self.name,
+                    amount=amount,
+                ),
+                "amount",
+            )
+        if self.is_matched:
+            raise LockedPaymentError(
+                _(
+                    "Payment %s is reconciled with a bank statement: its amount "
+                    "cannot be changed. Ask accounting to correct it.",
+                    self.name,
+                ),
+                "bank",
+            )
+        self._check_settles_no_rectified_invoice()
+        downpayments = self._settled_counterpart_lines().move_id.filtered(
+            lambda move: move._is_downpayment()
+        )
+        if downpayments:
+            raise LockedPaymentError(
+                _(
+                    "Payment %(payment)s settles the down payment %(down)s: its "
+                    "amount cannot be changed this way. Ask accounting to correct "
+                    "it.",
+                    payment=self.name,
+                    down=", ".join(downpayments.mapped("display_name")),
+                ),
+                "downpayment",
+            )
+
+    def _change_locked_payment_amount(self, amount):
+        """Change the amount of a payment of an open period that settles a
+        document of a closed one: unreconcile it, reset it, change it, post it
+        and reconcile it again with the same documents, the oldest first. What
+        it no longer covers stays open on the newest of them; what it covers
+        beyond them stays open on the payment."""
+        self.ensure_one()
+        settled = self._settled_counterpart_lines()
+        old_amount = self.amount
+        # The documents of the closed period are only unreconciled here, from a
+        # payment of the open one, and reconciled again in the same operation.
+        payment = self.with_context(**{BYPASS_CONTEXT_KEY: True})
+        payment.action_draft()
+        payment.write({"amount": amount})
+        payment.action_post()
+        own = self.move_id.line_ids.filtered(
+            lambda line: line.account_id.account_type
+            in ("asset_receivable", "liability_payable")
+            and not line.reconciled
+        )
+        # One document at a time, the oldest first: given them all at once,
+        # the core does not settle them in that order.
+        pending = settled.filtered(lambda line: not line.reconciled).sorted(
+            lambda line: (line.date_maturity or line.date, line.id)
+        )
+        for line in pending:
+            mine = own.filtered(
+                lambda own_line, acc=line.account_id: own_line.account_id == acc
+                and not own_line.reconciled
+            )
+            if mine and not line.reconciled:
+                (mine | line).reconcile()
+        self.message_post(
+            body=Markup("<p>%s</p>")
+            % _(
+                "Amount changed from %(old)s to %(new)s. The payment settles "
+                "%(documents)s, of a closed period: it was unreconciled and "
+                "reconciled again with them in the open period.",
+                old=old_amount,
+                new=amount,
+                documents=", ".join(settled.move_id.mapped("display_name")),
+            )
+        )
 
     def _check_locked_partner_change(self):
         """Refuse to change the customer of a payment of a locked period that
@@ -321,61 +450,3 @@ class AccountPayment(models.Model):
             )
         )
         return transfer
-
-    def _register_locked_payment_difference(self, amount, partner, correction_vals):
-        """Register, dated today, a payment or a refund for the difference
-        between ``amount`` and the amount of this payment once its corrections
-        are counted. Returns it, or nothing when there is no difference."""
-        self.ensure_one()
-        currency = self.currency_id or self.company_id.currency_id
-        difference = amount - self._amended_amount()
-        if currency.is_zero(difference):
-            return self.browse()
-        if difference > 0:
-            payment_type = self.payment_type
-        else:
-            payment_type = "outbound" if self.payment_type == "inbound" else "inbound"
-        method_line = self.journal_id._get_available_payment_method_lines(payment_type)[
-            :1
-        ]
-        if not method_line:
-            raise LockedPaymentError(
-                _(
-                    "Journal %(journal)s has no payment method to register the "
-                    "difference of %(payment)s. Ask accounting.",
-                    journal=self.journal_id.display_name,
-                    payment=self.name,
-                ),
-                "unsupported",
-            )
-        ref = _("Correction of %s", self.name)
-        if self.ref:
-            ref = f"{ref} - {self.ref}"
-        vals = {
-            "payment_type": payment_type,
-            "partner_type": self.partner_type,
-            "partner_id": partner.id,
-            "amount": abs(difference),
-            "currency_id": currency.id,
-            "date": fields.Date.context_today(self),
-            "journal_id": self.journal_id.id,
-            "payment_method_line_id": method_line.id,
-            # The account of the payment it corrects: without a customer the
-            # core would take the first receivable account of the company.
-            "destination_account_id": self.destination_account_id.id,
-            "ref": ref,
-            "amended_payment_id": self.id,
-        }
-        vals.update(correction_vals)
-        correction = self.create(vals)
-        correction.action_post()
-        self.message_post(
-            body=Markup("<p>%s</p>")
-            % _(
-                "The payment belongs to a closed period, so its amount was not "
-                "changed: %(correction)s registers the difference of %(amount)s.",
-                correction=correction.name,
-                amount=difference,
-            )
-        )
-        return correction

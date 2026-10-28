@@ -59,23 +59,19 @@ class TestTransactionUpdate(InvoiceServiceCase):
         self.assertIn(invoice, payment.reconciled_invoice_ids)
         self.assertEqual(invoice.payment_state, "paid")
 
-    def test_a_locked_payment_keeps_its_amount_and_registers_the_difference(self):
+    def test_the_amount_of_a_payment_of_a_closed_period_cannot_change(self):
         invoice = self._posted_invoice()
         payment = self._pay(invoice)
         amount = payment.amount
         self._lock(self.today)
 
-        result = self._update(payment, amount=amount + 20.0)
+        with self.assertRaisesRegex(UserError, "Ask accounting"):
+            self._update(payment, amount=amount + 20.0)
 
-        self.assertEqual(result, payment)
         self.assertEqual(payment.amount, amount)
         self.assertEqual(payment.state, "posted")
         self.assertIn(invoice, payment.reconciled_invoice_ids)
-        correction = payment.amendment_ids
-        self.assertEqual(len(correction), 1)
-        self.assertEqual(correction.amount, 20.0)
-        self.assertEqual(correction.payment_type, "inbound")
-        self.assertEqual(correction.folio_ids, payment.folio_ids)
+        self.assertFalse(payment.amendment_ids)
 
     def test_the_customer_of_a_locked_payment_follows_its_invoice(self):
         invoice = self._posted_invoice()
@@ -110,21 +106,29 @@ class TestTransactionUpdate(InvoiceServiceCase):
         self.assertEqual(payment.ref, "Same day")
         self.assertFalse(payment.amendment_ids)
 
-    def test_a_channel_update_registers_the_difference_on_a_locked_payment(self):
+    def test_a_channel_update_of_a_closed_period_payment_leaves_a_note(self):
         invoice = self._posted_invoice()
         payment = self._pay(invoice)
         amount = payment.amount
         self._lock(self.today)
         service = self._service("folios")
+        folio = payment.folio_ids
+        self.assertTrue(folio, "fixture without folio")
 
         self.assertIn(
             ("amended_payment_id", "=", False), service._ota_payment_extra_domain()
         )
         service._update_ota_payment_amount(payment, amount - 15.0)
+        service._update_ota_payment_amount(payment, amount - 15.0)
 
         self.assertEqual(payment.amount, amount)
-        self.assertEqual(payment.amendment_ids.payment_type, "outbound")
-        self.assertEqual(service._ota_payment_amount(payment), amount - 15.0)
+        self.assertEqual(payment.state, "posted")
+        self.assertFalse(payment.amendment_ids)
+        notes = folio.message_ids.filtered(
+            lambda message: "was not updated" in (message.body or "")
+        )
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(service._ota_payment_amount(payment), amount)
 
     def test_a_refund_cannot_be_dated_in_a_closed_period(self):
         invoice = self._posted_invoice()

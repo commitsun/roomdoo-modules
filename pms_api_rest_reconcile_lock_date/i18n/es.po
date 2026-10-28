@@ -27,3 +27,9 @@ msgstr "La nueva fecha %(date)s cae en un periodo cerrado (bloqueado hasta el %(
 #, python-format
 msgid "The refund date %(date)s falls within a closed period (locked up to %(lock)s). Use a later date."
 msgstr "La fecha de la devolución %(date)s cae en un periodo cerrado (bloqueado hasta el %(lock)s). Usa una fecha posterior."
+
+#. module: pms_api_rest_reconcile_lock_date
+#: code:addons/pms_api_rest_reconcile_lock_date/services/pms_folio_service.py:0
+#, python-format
+msgid "The channel changed payment %(payment)s from %(old).2f to %(new).2f, but it was not updated: %(reason)s"
+msgstr "El canal cambió el cobro %(payment)s de %(old).2f a %(new).2f, pero no se ha actualizado: %(reason)s"
