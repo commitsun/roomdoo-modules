@@ -31,6 +31,9 @@ class ChannexRatePlanCase(ChannexBookingCase):
         )
         cls.pricelist.board_service_ids = [(6, 0, [cls.room_only.id, cls.breakfast.id])]
 
+    def _sell_room_only(self):
+        """The rate plans here are the ones connecting the pricelist makes."""
+
     # -- helpers -------------------------------------------------------------
 
     def _connect(self, pricelist=None):
