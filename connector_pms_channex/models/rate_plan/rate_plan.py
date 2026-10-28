@@ -8,6 +8,7 @@ from odoo.addons.connector.exception import IDMissingInBackend
 
 from ...components.adapter import ChannexAPIError
 from ..common.ari import stage_ari, union_window
+from ..common.board import board_total, board_units
 
 
 class ChannelChannexRatePlan(models.Model):
@@ -100,6 +101,43 @@ class ChannelChannexRatePlan(models.Model):
             for rate_plan in self.search(domain):
                 resolved[rate_plan] = union_window(resolved.get(rate_plan), window)
         return resolved
+
+    @api.model
+    def _channex_booked(self, backend, room):
+        """The rate plan a room of a booking was sold under, if it is ours.
+
+        An occupancy other than the primary one has an id of its own on
+        Channex, and so does a rate plan derived from another: a room sold
+        under either carries that id, and the rate plan it belongs to in
+        ``meta.parent_rate_plan_id``. One being taken down is still ours: what
+        it sold before the hotel stopped selling it still has to land.
+        """
+        external_id = (room.get("meta") or {}).get("parent_rate_plan_id") or room.get(
+            "rate_plan_id"
+        )
+        if not external_id:
+            return self.browse()
+        return self.search(
+            [("backend_id", "=", backend.id), ("external_id", "=", external_id)],
+            limit=1,
+        )
+
+    def _channex_room_price(self, night, price, adults, children):
+        """What a night sold under this rate plan at ``price`` leaves for the
+        room, once its board service is taken off at what it was published
+        for. The OTA's discounts all fall on the room."""
+        self.ensure_one()
+        board = board_total(
+            board_units(
+                self.pricelist_id,
+                self.board_service_id,
+                self.backend_id.pms_property_id,
+                fields.Date.to_date(night),
+            ),
+            adults,
+            children,
+        )
+        return self.pricelist_id.currency_id.round(float(price) - board)
 
     def _channex_stage_restrictions(self):
         """Publish the whole window of these rate plans."""
