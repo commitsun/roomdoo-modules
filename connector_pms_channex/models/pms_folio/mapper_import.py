@@ -106,7 +106,9 @@ class ChannelChannexPmsFolioChildMapperImport(Component):
     #: What a room is recognised by. Neither of the two ids Channex puts on a
     #: room survives a modification, so the reservation a room stands for is
     #: deduced from what it is, and these are the three that make a room a
-    #: different room rather than the same one changed.
+    #: different room rather than the same one changed. The rate plan is not
+    #: one of them: the same stay sold under another is the same reservation,
+    #: with another pricelist and board service.
     IDENTITY = ("room_type_id", "checkin", "checkout")
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
