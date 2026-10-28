@@ -1,11 +1,14 @@
 # Copyright 2026 Roomdoo
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+import datetime
+
 from odoo import _
 
 from odoo.addons.component.core import Component
 
 from ..booking_revision.booking_revision import _channex_cancels
+from ..common.board import board_unit
 
 
 class ChannelChannexPmsFolioImporter(Component):
@@ -66,6 +69,7 @@ class ChannelChannexPmsFolioImporter(Component):
         if _channex_cancels(self.channex_message):
             result = self._channex_cancel_booking(binding)
         else:
+            self._channex_price_board_services(binding)
             result = self._channex_reconfirm(binding)
         # The import runs with exports silenced, so no listener noticed the
         # nights it took or freed. Every reservation of the folio is published,
@@ -77,6 +81,34 @@ class ChannelChannexPmsFolioImporter(Component):
         reservations._channex_stage_availability()
         reservations._channex_stage_channel_caps()
         return result
+
+    def _channex_price_board_services(self, binding):
+        """Each night of a board service at what its rate plan published for
+        it, which is what the room was priced net of.
+
+        pms prices a board service by itself, on the day it is consumed: the
+        morning after, for a breakfast. Should its price change from one day to
+        the next, that is not what was taken off the room, and the stay would
+        no longer come to what the OTA sold.
+
+        Only for the stays the message keeps. A cancelled stay is not charged
+        its board service at whatever price.
+        """
+        reservations = binding.odoo_id.reservation_ids.filtered(
+            lambda r: r.state != "cancel"
+        )
+        for reservation in reservations:
+            services = reservation.service_ids.filtered("is_board_service")
+            for line in services.service_line_ids:
+                night = line.date
+                if line.product_id.consumed_on == "after":
+                    night -= datetime.timedelta(days=1)
+                line.price_unit = board_unit(
+                    reservation.pricelist_id,
+                    line.product_id,
+                    reservation.pms_property_id,
+                    night,
+                )
 
     def _channex_cancel_booking(self, binding):
         """The booking is off at the OTA, so it is off here.

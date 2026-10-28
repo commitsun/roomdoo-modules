@@ -133,7 +133,8 @@ class TestChannexBookingRevisions(ChannexFeedCase):
 
 
 class ChannexBookingCase(ChannexFeedCase):
-    """A property with one mapped room type, and messages to feed it."""
+    """A property with one mapped room type, sold room only, and messages to
+    feed it."""
 
     def setUp(self):
         super().setUp()
@@ -143,6 +144,22 @@ class ChannexBookingCase(ChannexFeedCase):
         )
         self.property_uuid = self.server.store["properties"][0]["id"]
         self.room_type_uuid = self.room_type_binding.external_id
+        self._sell_room_only()
+
+    def _sell_room_only(self):
+        """The rate plan the rooms of the messages are sold under: the room and
+        nothing else, so what the OTA sold is what the room costs."""
+        return self.env["channel.channex.rate.plan"].create(
+            {
+                "backend_id": self.backend.id,
+                "pricelist_id": self.pricelist.id,
+                "board_service_id": self.env.ref(
+                    "pms.product_template_board_room_only"
+                ).id,
+                "room_type_binding_id": self.room_type_binding.id,
+                "external_id": "rp-1",
+            }
+        )
 
     def _bind_and_export(self, model, record):
         binding = (
@@ -318,6 +335,19 @@ class TestChannexBookingImport(ChannexBookingCase):
             [str(line.date) for line in lines], ["2026-11-13", "2026-11-14"]
         )
         self.assertEqual(lines.mapped("price"), [76.5, 76.5])
+
+    def test_the_ages_of_the_children_are_kept_as_the_channel_declares_them(self):
+        self._seed_booking(
+            rooms=[
+                self._room(
+                    occupancy={"adults": 2, "children": 1, "infants": 1, "ages": [7, 1]}
+                )
+            ]
+        )
+        self._import()
+        reservation = self._folios().odoo_id.reservation_ids
+        self.assertEqual(reservation.children, 1)
+        self.assertEqual(reservation.children_ages, [7, 1])
 
     def test_a_breakdown_that_does_not_cover_the_stay_is_not_applied(self):
         """No price is ever derived here: what the OTA sold is what gets
@@ -567,6 +597,17 @@ class TestChannexBookingModification(ChannexBookingCase):
         self.assertEqual(binding.revision_external_id, "r2")
         self.assertEqual(str(binding.revision_inserted_at), "2026-11-12 18:20:00")
         self.assertEqual(self._revision("r2").state, "applied")
+
+    def test_new_ages_of_the_children_are_written(self):
+        self._seed_modification(
+            rooms=[
+                self._room(
+                    occupancy={"adults": 2, "children": 1, "infants": 0, "ages": [9]}
+                )
+            ]
+        )
+        self._import()
+        self.assertEqual(self.reservation.children_ages, [9])
 
     def test_a_new_guest_name_is_written(self):
         self._seed_modification(

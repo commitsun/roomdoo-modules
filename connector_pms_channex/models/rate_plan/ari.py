@@ -8,6 +8,7 @@ from odoo import fields
 from odoo.addons.component.core import Component
 
 from ..common.ari import nights, runs
+from ..common.board import board_total, board_units
 
 
 class ChannelChannexRatePlanAriSender(Component):
@@ -135,27 +136,14 @@ class ChannelChannexRatePlanAriSender(Component):
         return self._room_prices[key]
 
     def _board_price(self, pricelist, board_service, night, adults):
-        """The board service for that many adults, as
-        ``product.template._get_board_service_price`` prices it: the price of
-        each product it is made of, once per guest when charged per person."""
+        """The board service for that many adults, children aside, as a
+        booking of this rate plan will take it off the room."""
         key = (pricelist.id, board_service.id, night)
         if key not in self._board_prices:
-            self._board_prices[key] = [
-                (
-                    pricelist._get_product_price(
-                        product,
-                        1,
-                        consumption_date=night,
-                        pms_property_id=self.backend_record.pms_property_id.id,
-                    ),
-                    product.per_person,
-                )
-                for product, _guests in board_service._get_board_service_products(1, 0)
-            ]
-        return sum(
-            unit * (adults if per_person else 1)
-            for unit, per_person in self._board_prices[key]
-        )
+            self._board_prices[key] = board_units(
+                pricelist, board_service, self.backend_record.pms_property_id, night
+            )
+        return board_total(self._board_prices[key], adults, 0)
 
     def _value(self, rate_plan, date_from, date_to, night):
         rates, min_arrival, min_through, max_stay, arrival, departure, closed = night
