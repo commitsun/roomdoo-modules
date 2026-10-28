@@ -22,27 +22,6 @@ class TestWubookConnectorAuth(common.TestWubookConnector):
     configured, and only fall back to the legacy flow otherwise.
     """
 
-    def _build_backend(self, **overrides):
-        p1 = self.browse_ref("pms.main_pms_property")
-        payment_method_line = self.env["account.payment.method.line"].search(
-            [("company_id", "=", p1.company_id.id)], limit=1
-        ) or self.env["account.payment.method.line"].search([], limit=1)
-        values = {
-            "name": "Test backend",
-            "pms_property_id": p1.id,
-            "user_id": self.user1(p1).id,
-            "backend_type_id": self.backend_type1.parent_id.id,
-            "pricelist_external_id": 1,
-            "wubook_payment_method_line_id": payment_method_line.id,
-            **self.fake_credentials,
-            **overrides,
-        }
-        return self.env["channel.wubook.backend"].create(values)
-
-    def _get_adapter(self, backend):
-        with backend.work_on("channel.wubook.pms.room.type") as work:
-            return work.component(usage="backend.adapter")
-
     @mock.patch.object(xmlrpc.client, "Server")
     def test_exec_uses_permanent_token(self, mock_xmlrpc_client_server):
         """
