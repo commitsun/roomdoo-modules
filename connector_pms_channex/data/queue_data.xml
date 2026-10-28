@@ -14,4 +14,12 @@
         <field name="name">others</field>
         <field name="parent_id" ref="channel_channex" />
     </record>
+    <record id="channel_channex_bookings" model="queue.job.channel">
+        <field name="name">bookings</field>
+        <field name="parent_id" ref="channel_channex" />
+    </record>
+    <record id="channel_channex_ari" model="queue.job.channel">
+        <field name="name">ari</field>
+        <field name="parent_id" ref="channel_channex" />
+    </record>
 </odoo>
