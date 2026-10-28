@@ -57,7 +57,15 @@ class AccountMove(models.Model):
             if not move._get_downpayments_to_transfer():
                 continue
             move.downpayment_transfer_state = "pending"
-            move.with_delay()._transfer_downpayments()
+            move._with_user_lang().with_delay()._transfer_downpayments()
+
+    def _with_user_lang(self):
+        """This recordset with the language of its user in the context. A cron
+        runs without one, so the reasons it writes for the hotel -- the
+        automatic invoicing posts most final invoices -- came out in English."""
+        if self.env.lang:
+            return self
+        return self.with_context(lang=self.env.user.lang)
 
     def _get_downpayments_to_transfer(self):
         """Down payment invoices of this invoice's folios that this invoice did
@@ -170,6 +178,7 @@ class AccountMove(models.Model):
 
     @api.model
     def _cron_recheck_downpayment_transfers(self):
+        self = self._with_user_lang()
         moves = self.search(
             [("downpayment_transfer_state", "in", ("manual", "failed"))]
         )
