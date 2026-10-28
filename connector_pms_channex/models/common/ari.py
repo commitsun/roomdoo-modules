@@ -28,10 +28,12 @@ from odoo import api, fields, models
 ARI_KINDS = [
     ("availability", "Availability"),
     ("channel_caps", "Caps of the agencies"),
+    ("restrictions", "Rates and restrictions"),
 ]
 ARI_BINDING_MODELS = {
     "availability": "channel.channex.pms.room.type",
     "channel_caps": "channel.channex.inventory.cap",
+    "restrictions": "channel.channex.rate.plan",
 }
 
 #: Seconds a send waits before it runs, so a burst of changes -- a reservation

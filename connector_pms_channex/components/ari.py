@@ -5,6 +5,10 @@ import json
 
 from odoo.addons.component.core import AbstractComponent
 
+#: What one call carries at most. Channex takes up to 10 MB in a call, and the
+#: whole window of a large property's rates can be more than that.
+MAX_CALL_BYTES = 5 * 1024 * 1024
+
 
 class ChannelChannexAriSender(AbstractComponent):
     """Sends, in one call, everything a backend has pending of one kind.
@@ -34,7 +38,11 @@ class ChannelChannexAriSender(AbstractComponent):
         if not bindings:
             return 0
         first, last = self.backend_record._channex_ari_horizon()
-        result = self._ari_publish(bindings, first, last)
+        # Searched with the archived ones, whose window has to be cleared too,
+        # but worked out without: anything read through these records would
+        # count archived records as well -- a board service's old variant, a
+        # channel gone from Channex.
+        result = self._ari_publish(bindings.with_env(self.env), first, last)
         # Cleared last and in one go: anything noted while the values were being
         # worked out wrote to these same rows, and this write clashing with it
         # is what makes the send start again instead of losing it.
@@ -65,16 +73,34 @@ class ChannelChannexAriSender(AbstractComponent):
         raise NotImplementedError()
 
     def _ari_send(self, values):
-        """One call with every value. What Channex throws away comes back in an
-        answer that is otherwise a success, so it is looked for every time."""
+        """One call with every value, or as few as they fit in. What Channex
+        throws away comes back in an answer that is otherwise a success, so it
+        is looked for every time."""
         adapter = self.component(usage="backend.adapter")
-        body = adapter.request("POST", self._ari_resource, payload={"values": values})
-        if body is None:
-            # Exports are disabled on this backend: nothing left Odoo.
-            return
-        warnings = ((body or {}).get("meta") or {}).get("warnings") or []
-        if warnings:
-            self._ari_warn(warnings)
+        for chunk in self._ari_chunks(values):
+            body = adapter.request(
+                "POST", self._ari_resource, payload={"values": chunk}
+            )
+            if body is None:
+                # Exports are disabled on this backend: nothing left Odoo.
+                return
+            warnings = ((body or {}).get("meta") or {}).get("warnings") or []
+            if warnings:
+                self._ari_warn(warnings)
+
+    @staticmethod
+    def _ari_chunks(values):
+        """The values split in calls of at most ``MAX_CALL_BYTES`` each."""
+        chunk, size = [], 0
+        for value in values:
+            value_size = len(json.dumps(value)) + 1
+            if chunk and size + value_size > MAX_CALL_BYTES:
+                yield chunk
+                chunk, size = [], 0
+            chunk.append(value)
+            size += value_size
+        if chunk:
+            yield chunk
 
     def _ari_warn(self, warnings):
         """Keep what Channex refused, for someone to look at."""

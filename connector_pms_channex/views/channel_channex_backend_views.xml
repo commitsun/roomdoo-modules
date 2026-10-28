@@ -102,9 +102,9 @@
                                 <button
                   name="action_channex_publish_availability"
                   type="object"
-                  string="Publish all availability"
+                  string="Publish everything"
                   class="btn-secondary"
-                  confirm="This sends the availability of every room type for the whole window. Channex allows it once a day at most: it is meant for setting a property going or putting it right, not as a routine."
+                  confirm="This sends the availability of every room type, and the rates and restrictions of every rate plan, for the whole window. Channex allows it once a day at most: it is meant for setting a property going or putting it right, not as a routine."
                   help="What Channex calls a full sync. Changes are published on their own as they happen."
                 />
                             </div>

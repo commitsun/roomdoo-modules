@@ -85,19 +85,25 @@ class ChannelChannexBackend(models.Model):
             return work.component(usage="ari.sender").run()
 
     def action_channex_publish_availability(self):
-        """Publish the availability of every room type, for the whole window.
+        """Publish the availability of every room type and the rates and
+        restrictions of every rate plan, for the whole window.
 
         What Channex calls a full sync: the way to set a property going, or to
         put it right after it drifted. Not something to schedule -- Channex
         allows it once a day at most, and only when needed.
         """
         self.ensure_one()
-        stage_ari(self.env, "availability", (self.pms_property_id.id, None))
+        property_id = self.pms_property_id.id
+        stage_ari(self.env, "availability", (property_id, None))
         # What the agencies have set aside is availability too, by channel. Only
         # the rules that differ from what Channex has are sent.
-        stage_ari(self.env, "channel_caps", (self.pms_property_id.id, None, None))
+        stage_ari(self.env, "channel_caps", (property_id, None, None))
+        stage_ari(self.env, "restrictions", (property_id, None, None, None))
         return self._notify(
-            _("The availability of every room type is queued for Channex.")
+            _(
+                "The availability, rates and restrictions of the property are "
+                "queued for Channex."
+            )
         )
 
     @api.model
@@ -114,4 +120,35 @@ class ChannelChannexBackend(models.Model):
             stage_ari(
                 self.env, "channel_caps", (property_id, None, None), first_new, last
             )
+            stage_ari(
+                self.env,
+                "restrictions",
+                (property_id, None, None, None),
+                first_new,
+                last,
+            )
+        self._channex_stage_sale_windows()
         return True
+
+    @api.model
+    def _channex_stage_sale_windows(self):
+        """Publish the prices of the pricelist items whose sale window opened
+        or closed since the day before.
+
+        An item can be sold only between some dates, and it starts and stops
+        applying then with nothing written to it, so no change would ever
+        publish it.
+        """
+        now = fields.Datetime.now()
+        since = now - datetime.timedelta(days=1)
+        self.env["product.pricelist.item"].search(
+            [
+                "|",
+                "&",
+                ("date_start", ">", since),
+                ("date_start", "<=", now),
+                "&",
+                ("date_end", ">", since),
+                ("date_end", "<=", now),
+            ]
+        )._channex_stage_restrictions()
