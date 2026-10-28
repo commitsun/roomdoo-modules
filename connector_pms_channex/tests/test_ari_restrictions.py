@@ -146,7 +146,7 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
         self.env["product.product"].create(
             {"product_tmpl_id": self.breakfast.id, "active": False}
         )
-        self.backend.action_channex_publish_availability()
+        self.backend._channex_publish_everything()
         self._publish()
         self.assertEqual(
             self._rates(self.breakfast_plan, self.night), {1: "90.00", 2: "120.00"}
@@ -159,7 +159,7 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
         """What Channex's certification checks: every rate plan and night in a
         single call, the nights alike in one range."""
         self.server.restrictions.clear()
-        self.backend.action_channex_publish_availability()
+        self.backend._channex_publish_everything()
         self._publish()
         [call] = self.server.calls_to("POST", RESTRICTIONS)
         values = call[2]["values"]

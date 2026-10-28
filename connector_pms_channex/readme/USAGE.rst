@@ -51,12 +51,20 @@ says it. What is left of a quota is what gets published, so a sale through the
 agency changes the rule of that night. Rules the hotel makes by hand on Channex
 are never touched: ours carry a marker at the end of their title.
 
-*Publish everything*, on the backend, sends every room type, and the rates and
-restrictions of every rate plan, for every night Channex publishes. Channex
-calls it a full sync: it is meant for setting a property going or putting it
-right, and allowed once a day at most, so it is not something to schedule.
-Every day the nights that have just entered the window are published on their
-own.
+*Synchronise everything*, on the backend, brings Channex in line with Odoo for
+the property, all of it: the property itself, every room type it has rooms of,
+the rate plans of the pricelists sold and the channels connected on Channex,
+and then the availability of every room type and the rates and restrictions of
+every rate plan, for every night Channex publishes, in one call each. Last, it
+reads the bookings Channex is holding. The property has to be connected first,
+from its *Connectors* tab, since that is where the hotel says whether to take
+over one already on Channex.
+
+Channex calls it a full sync: it is meant for setting a property going or
+putting it right, not as a routine. In production Channex takes it once a day
+at most, so the button refuses a second one within a day and says when it was
+last done; staging is not held back. Every day the nights that have just
+entered the window are published on their own.
 
 Whatever Channex refuses out of a send is listed on the backend, under
 *Availability, rates and restrictions*, and is not sent again until something
@@ -65,8 +73,11 @@ changes on it.
 Rate plans
 ~~~~~~~~~~
 
-A pricelist is sold through Channex once it is connected: *Connect to a
-channel*, on the *Connectors* tab of the pricelist. Channex has nothing that is
+A pricelist is sold through Channex once it is connected: chosen under *Rate
+plans* on the backend, or with *Connect to a channel* on the *Connectors* tab
+of the pricelist, which is the same. Taking it out of the backend's list is
+disconnecting it, and what Channex refuses either way is said on saving.
+Channex has nothing that is
 a pricelist, so connecting one creates its rate plans there: one for each board
 service the pricelist sells in the property and each room type on Channex,
 titled after the pricelist and the board service in the language of the hotel.
