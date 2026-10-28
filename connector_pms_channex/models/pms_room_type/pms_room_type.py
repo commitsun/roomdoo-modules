@@ -97,10 +97,13 @@ class PmsRoomType(models.Model):
                 continue
             record._channex_reconcile()
 
-    def _channex_reconcile(self):
+    def _channex_reconcile(self, backends=None):
         """Both directions, so one method serves a creation, a room being added
         or moved, and an unarchive: the backends that should carry this room type
         get it created or updated, and the ones that should not lose it.
+
+        Only on ``backends`` when given: synchronising one property leaves the
+        others alone.
         """
         self.ensure_one()
         bindings = self._channex_bindings()
@@ -109,6 +112,9 @@ class PmsRoomType(models.Model):
                 self.class_id
             )
         )
+        if backends is not None:
+            bindings = bindings.filtered(lambda b: b.backend_id in backends)
+            wanted &= backends
         self._channex_remove_from_channel(
             bindings.filtered(lambda b: b.backend_id not in wanted)
         )
