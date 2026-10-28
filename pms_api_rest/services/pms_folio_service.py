@@ -1255,9 +1255,11 @@ class PmsFolioService(Component):
                     + self._ota_payment_extra_domain()
                 )
             )
-            if (
-                not proposed_transaction
-                or self._ota_payment_amount(proposed_transaction) != transaction.amount
+            # Compared as money: a rounded float such as 42.300000000000004 is
+            # the 42.3 the channel sends, and resetting the payment for it
+            # breaks whatever was already done with it.
+            if not proposed_transaction or folio.company_id.currency_id.compare_amounts(
+                self._ota_payment_amount(proposed_transaction), transaction.amount
             ):
                 if proposed_transaction:
                     if self._payment_settles_reversed_invoice(proposed_transaction):
