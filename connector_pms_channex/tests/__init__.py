@@ -3,6 +3,7 @@
 
 from . import test_adapter
 from . import test_ari_availability
+from . import test_ari_channel_caps
 from . import test_bookings
 from . import test_channels
 from . import test_coexistence
