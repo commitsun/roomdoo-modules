@@ -11,4 +11,5 @@ from . import test_group_setup
 from . import test_iframe
 from . import test_listeners
 from . import test_masters
+from . import test_rate_plans
 from . import test_webhook
