@@ -135,7 +135,7 @@ class TestChannexAvailabilitySend(ChannexAvailabilityCase):
         self.assertEqual(self._available(self.night, other_type), 0)
 
     def test_nights_alike_go_as_one_range(self):
-        self.backend.action_channex_publish_availability()
+        self.backend._channex_publish_everything()
         self._publish()
         values = self.server.calls_to("POST", "availability")[0][2]["values"]
         self.assertEqual(
@@ -375,7 +375,7 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
 
     def test_the_full_publication_covers_every_room_type(self):
         other_type, _other_room = self._second_room_type()
-        self.backend.action_channex_publish_availability()
+        self.backend._channex_publish_everything()
         self._commit()
         self.assertEqual(self._pending(), (self.first, self.last))
         self.assertEqual(self._pending(other_type), (self.first, self.last))
