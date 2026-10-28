@@ -5,6 +5,8 @@ import datetime
 
 from odoo.tests import tagged
 
+from odoo.addons.queue_job.tests.common import trap_jobs
+
 from .test_ari_availability import ChannexAvailabilityCase
 
 RULES = "channel_availability_rules"
@@ -228,7 +230,7 @@ class TestChannexChannelCaps(ChannexCapsCase):
         self._agency_rule(self.night, self._days(2), max_avail=1)
         self._publish_caps()
         self.server.calls.clear()
-        self.backend.action_channex_publish_availability()
+        self.backend._channex_publish_everything()
         self._publish_caps()
         self.assertFalse(self._writes())
         self.assertEqual(len(self._rules()), 1)
@@ -312,6 +314,14 @@ class TestChannexChannelCapsStaging(ChannexCapsCase):
         self._reserve(self.night, room=self.rooms[0])
         self._commit()
         self.assertEqual(self._pending_cap(), (self.night, self.night))
+
+    def test_synchronising_everything_leaves_every_night_pending(self):
+        """Room types are published again as they are brought in line, but what
+        the agencies set aside is only published with the full sync."""
+        with trap_jobs():
+            self.backend.action_channex_sync_all()
+        self._commit()
+        self.assertEqual(self._pending_cap(), (self.first, self.last))
 
     def test_a_cap_of_another_agency_leaves_this_one_alone(self):
         other = self._make_agency("Another agency")
