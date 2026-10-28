@@ -1,16 +1,35 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import datetime
+import hashlib
 import logging
+import random
 import xmlrpc.client
+from contextlib import contextmanager, nullcontext
 
 from odoo import _, fields
 from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import AbstractComponent
 from odoo.addons.connector_pms.components.adapter import ChannelAdapterError
+from odoo.addons.queue_job.exception import RetryableJobError
 
 _logger = logging.getLogger(__name__)
+
+
+class ChannelAdapterConcurrentCallError(ChannelAdapterError, RetryableJobError):
+    """Another call to WuBook for the same property is running, so the call
+    is not made (another job holds the property lock) or WuBook rejected it.
+
+    It is transient, so the job is retried later. It is still a
+    ``ChannelAdapterError`` so that the cleanup done around adapter calls
+    (e.g. deleting a half-created plan) keeps running.
+    """
+
+    def __init__(self, message, seconds=None):
+        super().__init__(message)
+        self.seconds = seconds
+
 
 # TODO: move this auxiliary class to a library or connector_pms adapter
 # flake8: noqa=C901
@@ -93,6 +112,42 @@ class ChannelWubookAdapter(AbstractComponent):
         self.permanent_token = self.backend_record.permanent_token
         self.property_code = self.backend_record.property_code
 
+    def _property_lock_key(self):
+        digest = hashlib.sha256(f"wubook:{self.property_code}".encode()).digest()
+        return int.from_bytes(digest[:8], "big", signed=True)
+
+    @contextmanager
+    def _property_lock(self, funcname):
+        """Hold a lock on the WuBook property during a call.
+
+        WuBook allows a single concurrent call per property, and the jobs of
+        a property in different channels (e.g. rules and avail) run in
+        parallel. If another job is calling WuBook for the property, do not
+        call it and retry the job later.
+
+        The lock is held only during the call, so a long job does not block
+        the other jobs of the property. It is a session lock, released right
+        after the call: no SQL runs meanwhile, so the transaction can not be
+        aborted before the release.
+        """
+        key = self._property_lock_key()
+        self.env.cr.execute("SELECT pg_try_advisory_lock(%s)", (key,))
+        if not self.env.cr.fetchone()[0]:
+            _logger.info(
+                "Another job is calling WuBook for property %s. %s delayed later.",
+                self.property_code,
+                funcname,
+            )
+            raise ChannelAdapterConcurrentCallError(
+                f"Another job is calling WuBook for property {self.property_code}. "
+                "The job will be retried later.",
+                seconds=random.randint(10, 60),
+            )
+        try:
+            yield
+        finally:
+            self.env.cr.execute("SELECT pg_advisory_unlock(%s)", (key,))
+
     def _exec(self, funcname, *args, pms_property=True):
         cc = ChannelCallControl(self, funcname, args)
         if self.backend_record.export_disabled:
@@ -120,7 +175,9 @@ class ChannelWubookAdapter(AbstractComponent):
                 f"({', '.join(map(repr, args))})"
             )
             try:
-                data = func(token, *args)
+                lock = self._property_lock(funcname) if pms_property else nullcontext()
+                with lock:
+                    data = func(token, *args)
                 if funcname == "get_channels_info":
                     res = 0
                 else:
@@ -138,6 +195,22 @@ class ChannelWubookAdapter(AbstractComponent):
                     )
                 raise
             if res:
+                # WuBook allows a single concurrent call per property and
+                # rejects the overlapping ones. Retry the job later, with a
+                # random delay so the jobs that collided do not collide again.
+                if "too many concurrent calls" in str(data).lower():
+                    _logger.info(
+                        "WuBook rejected %s for property %s: too many "
+                        "concurrent calls. Job delayed later.",
+                        funcname,
+                        self.property_code,
+                    )
+                    raise ChannelAdapterConcurrentCallError(
+                        f"WuBook rejected {funcname} for property "
+                        f"{self.property_code}: too many concurrent calls. "
+                        "The job will be retried later.",
+                        seconds=random.randint(10, 60),
+                    )
                 # TODO: rethink this and maybie put it to the UX
                 # or better or both as a constant and reuse it on skip_item methods
                 # or maybe it's not necessary to have this here although
