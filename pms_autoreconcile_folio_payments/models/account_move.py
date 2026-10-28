@@ -1,4 +1,5 @@
 import itertools
+from datetime import date
 
 from odoo import _, models
 from odoo.tools import float_compare, float_is_zero
@@ -120,6 +121,51 @@ class AccountMove(models.Model):
         # ── Tier 4: no deterministic match ───────────────────────────────
         return empty
 
+    def _get_folio_entry_candidates(self, pay_term_lines):
+        """Open customer lines of journal entries linked to this invoice's
+        folios that are neither a payment nor a bank statement line: the
+        reversal on the first day of the year of a balance moved to another
+        account at the close, for instance. The outstanding widget leaves them
+        out when their customer differs from the invoice's, or is missing."""
+        self.ensure_one()
+        if len(pay_term_lines.account_id) != 1:
+            return self.env["account.move.line"]
+        return self.env["account.move.line"].search(
+            [
+                ("folio_ids", "in", self.folio_ids.ids),
+                ("account_id", "=", pay_term_lines.account_id.id),
+                ("company_id", "=", self.company_id.id),
+                ("parent_state", "=", "posted"),
+                ("reconciled", "=", False),
+                ("move_id.move_type", "=", "entry"),
+                ("payment_id", "=", False),
+                ("statement_line_id", "=", False),
+                (
+                    "balance",
+                    "<" if sum(pay_term_lines.mapped("balance")) > 0 else ">",
+                    0,
+                ),
+            ]
+        )
+
+    def _align_folio_entry_partner(self, lines, partner):
+        """Give the invoice's customer to the journal entry lines about to
+        settle it, so that the customer's balance shows the invoice paid. Lines
+        of a locked period keep theirs."""
+        self.ensure_one()
+        company = self.company_id
+        lock_date = max(
+            company.period_lock_date or date.min,
+            company.fiscalyear_lock_date or date.min,
+        )
+        to_align = lines.filtered(
+            lambda line: not line.payment_id
+            and line.partner_id != partner
+            and line.date > lock_date
+        )
+        if to_align:
+            to_align.write({"partner_id": partner.id})
+
     def _autoreconcile_folio_payments(self):
         """Reconcile folio payments with this invoice when the match is
         deterministic (see ``_get_folio_payment_candidates``)."""
@@ -131,11 +177,11 @@ class AccountMove(models.Model):
                 to_reconcile_payments_widget_vals = (
                     move.invoice_outstanding_credits_debits_widget
                 )
-                if not to_reconcile_payments_widget_vals:
-                    continue
                 current_amounts = {
                     vals["move_id"]: vals["amount"]
-                    for vals in to_reconcile_payments_widget_vals["content"]
+                    for vals in (to_reconcile_payments_widget_vals or {}).get(
+                        "content", []
+                    )
                 }
                 pay_term_lines = move.line_ids.filtered(
                     lambda line: line.account_type
@@ -151,10 +197,19 @@ class AccountMove(models.Model):
                         and bool(line.payment_id.folio_ids & move.folio_ids)
                     )
                 )
+                to_propose |= move._get_folio_entry_candidates(pay_term_lines)
+                if not to_propose:
+                    continue
                 to_reconcile = move._get_folio_payment_candidates(to_propose)
                 if to_reconcile:
                     try:
-                        (pay_term_lines + to_reconcile).reconcile()
+                        # The new customer of the journal entry lines must not
+                        # outlive a reconciliation that fails.
+                        with self.env.cr.savepoint():
+                            move._align_folio_entry_partner(
+                                to_reconcile, pay_term_lines.partner_id[:1]
+                            )
+                            (pay_term_lines + to_reconcile).reconcile()
                     except Exception as e:
                         message = _(
                             """

@@ -584,3 +584,92 @@ class TestPmsFolioAutoreconcile(TestPms, AccountTestInvoicingCommon):
             "paid",
             "Invoice 50€ should match remaining payment via Tier 1.",
         )
+
+    # ── Journal entry lines linked to the folio ──────────────────────────
+    def _folio_entry(self, folio, account, amount, partner=False, when=None):
+        """A posted journal entry that leaves ``amount`` in favour of the
+        customer on ``account``: the reversal on the first day of the year of
+        a balance moved to another account at the close."""
+        entry = self.env["account.move"].create(
+            {
+                "move_type": "entry",
+                "journal_id": self.company_data_2["default_journal_misc"].id,
+                "date": when or datetime.now().date(),
+                "pms_property_id": self.property.id,
+                "line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "account_id": self.company_data_2[
+                                "default_account_expense"
+                            ].id,
+                            "partner_id": partner and partner.id,
+                            "debit": amount,
+                        },
+                    ),
+                    (
+                        0,
+                        0,
+                        {
+                            "account_id": account.id,
+                            "partner_id": partner and partner.id,
+                            "credit": amount,
+                            "folio_ids": [(6, 0, folio.ids)],
+                        },
+                    ),
+                ],
+            }
+        )
+        entry.action_post()
+        return entry.line_ids.filtered(lambda line: line.account_id == account)
+
+    def _draft_folio_invoice(self):
+        reservation = self.env["pms.reservation"].create(
+            {
+                "checkin": datetime.now(),
+                "checkout": datetime.now() + timedelta(days=1),
+                "adults": 2,
+                "pms_property_id": self.property.id,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+        invoice = reservation.folio_id._create_invoices()
+        receivable = invoice.line_ids.filtered(
+            lambda line: line.account_id.account_type == "asset_receivable"
+        )
+        return reservation.folio_id, invoice, receivable.account_id
+
+    def test_folio_entry_line_settles_invoice(self):
+        """A journal entry line linked to the folio is proposed to the invoice
+        even without a customer, and takes the invoice's."""
+        folio, invoice, account = self._draft_folio_invoice()
+        line = self._folio_entry(folio, account, folio.amount_total)
+        invoice.action_post()
+        self.assertEqual(invoice.payment_state, "paid")
+        self.assertTrue(line.reconciled)
+        self.assertEqual(line.partner_id, invoice.commercial_partner_id)
+
+    def test_folio_entry_line_not_linked_is_ignored(self):
+        """A journal entry line that is not linked to the folio is left alone,
+        whatever its amount."""
+        folio, invoice, account = self._draft_folio_invoice()
+        line = self._folio_entry(folio, account, folio.amount_total)
+        line.folio_ids = False
+        invoice.action_post()
+        self.assertEqual(invoice.payment_state, "not_paid")
+        self.assertFalse(line.reconciled)
+
+    def test_folio_entry_line_of_locked_period_keeps_partner(self):
+        """A line of a locked period still settles the invoice, but keeps its
+        customer."""
+        folio, invoice, account = self._draft_folio_invoice()
+        other = self.env["res.partner"].create({"name": "Previous customer"})
+        yesterday = datetime.now().date() - timedelta(days=1)
+        line = self._folio_entry(folio, account, folio.amount_total, other, yesterday)
+        self.company_reconcile.period_lock_date = yesterday
+        invoice.action_post()
+        self.assertEqual(invoice.payment_state, "paid")
+        self.assertEqual(line.partner_id, other)
