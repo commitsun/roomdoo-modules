@@ -2892,6 +2892,15 @@ class PmsFolioService(Component):
 
     def _generate_payment_link(self, folio_record, amount=False):
         vals = dict()
+        # Agency guests do not pay the hotel: no link on the public page.
+        # Staff calls pass an explicit amount and keep their link.
+        agency = folio_record.agency_id
+        if (
+            not amount
+            and agency
+            and getattr(agency, "bookai_exclude_payment_reminders", False)
+        ):
+            return ""
         # if not provider configured, return ""
         providers = (
             self.env["payment.provider"]
