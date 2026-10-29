@@ -1,5 +1,4 @@
 from odoo import fields, models
-from odoo.exceptions import AccessDenied
 
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT
 
@@ -54,21 +53,19 @@ class ResUsers(models.Model):
         else:
             return []
 
-    def _check_credentials(self, password, env):
-        try:
-            res = super()._check_credentials(password, env)
-            return res
-        except AccessDenied as e:
-            if (
-                not self.env["one.time.res.users.apikeys"]._check_credentials(
-                    scope="ots", key=password
-                )
-                == self.env.uid
-            ):
-                raise AccessDenied() from e
-
 
 class OneTimeAPIKeys(models.Model):
+    """Keys that open a session for their owner without a password.
+
+    A model of their own, as :class:`auth_totp.device` is, so that a key meant
+    to walk past the second factor on one route is never a credential anywhere
+    else. Only the controller that hands these links out accepts them, and it
+    asks for them by scope and by owner.
+
+    They are spent on arrival, but until then each one stands in for both
+    factors.
+    """
+
     _name = "one.time.res.users.apikeys"
     _inherit = "res.users.apikeys"
 
@@ -87,3 +84,8 @@ class OneTimeAPIKeys(models.Model):
             if KEY_CRYPT_CONTEXT.verify(key, current_key):
                 self.sudo().browse(id).unlink()
                 return user_id
+
+    def _check_credentials_for_uid(self, *, scope, key, uid):
+        """Return True when the key is this user's, as `auth_totp.device` does."""
+        assert uid, "uid is required"
+        return self._check_credentials(scope=scope, key=key) == uid
