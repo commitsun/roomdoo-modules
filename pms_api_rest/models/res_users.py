@@ -1,6 +1,10 @@
-from odoo import fields, models
+from datetime import timedelta
+
+from odoo import api, fields, models
 
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT
+
+ONE_TIME_KEY_MAX_AGE = 2 * 60
 
 
 class ResUsers(models.Model):
@@ -63,7 +67,9 @@ class OneTimeAPIKeys(models.Model):
     asks for them by scope and by owner.
 
     They are spent on arrival, but until then each one stands in for both
-    factors.
+    factors, so the shorter they are alive the less there is to lose. The link
+    they travel in is asked for at the moment it is followed, so seconds are
+    enough and this is already generous.
     """
 
     _name = "one.time.res.users.apikeys"
@@ -77,8 +83,10 @@ class OneTimeAPIKeys(models.Model):
             SELECT k.id as id, user_id, key
             FROM {self._table} k INNER JOIN res_users u ON (u.id = user_id)
             WHERE u.active and index = %s AND (scope IS NULL OR scope = %s)
+            AND k.create_date > (NOW() AT TIME ZONE 'UTC'
+                                 - INTERVAL '%s SECONDS')
         """,
-            [index, scope],
+            [index, scope, ONE_TIME_KEY_MAX_AGE],
         )
         for id, user_id, current_key in self.env.cr.fetchall():
             if KEY_CRYPT_CONTEXT.verify(key, current_key):
@@ -89,3 +97,9 @@ class OneTimeAPIKeys(models.Model):
         """Return True when the key is this user's, as `auth_totp.device` does."""
         assert uid, "uid is required"
         return self._check_credentials(scope=scope, key=key) == uid
+
+    @api.autovacuum
+    def _gc_spent_keys(self):
+        """What the check above already refuses, dropped so it stops piling up."""
+        expiry = fields.Datetime.now() - timedelta(seconds=ONE_TIME_KEY_MAX_AGE)
+        self.sudo().search([("create_date", "<", expiry)]).unlink()

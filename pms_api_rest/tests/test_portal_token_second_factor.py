@@ -4,13 +4,16 @@
 user to log in again, carrying a single use token instead.
 
 The token answers for both factors, so it is the only thing this route takes:
-a password opens nothing here.
+a password opens nothing here, and a token that nobody followed in time stops
+working.
 """
 import base64
 import json
 import os
 
 from odoo.tests import HttpCase, tagged
+
+from odoo.addons.pms_api_rest.models.res_users import ONE_TIME_KEY_MAX_AGE
 
 
 @tagged("post_install", "-at_install")
@@ -74,5 +77,19 @@ class TestPortalTokenSecondFactor(HttpCase):
         self.link_user.sudo().totp_secret = base64.b32encode(os.urandom(20)).decode()
 
         self._follow("supersecret")
+
+        self.assertFalse(self._session_uid())
+
+    def test_a_link_left_unopened_stops_working(self):
+        token = self._mint_a_token()
+        self.env.cr.execute(
+            """
+            UPDATE one_time_res_users_apikeys
+            SET create_date = create_date - INTERVAL '%s SECONDS'
+            """,
+            [ONE_TIME_KEY_MAX_AGE + 60],
+        )
+
+        self._follow(token)
 
         self.assertFalse(self._session_uid())
