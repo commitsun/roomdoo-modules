@@ -13,3 +13,4 @@ from . import test_error_cors
 from . import test_login_second_factor
 from . import test_public_precheckin_empty_values
 from . import test_reservation_cancel_date
+from . import test_portal_token_second_factor
