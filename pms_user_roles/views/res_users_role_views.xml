@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_res_users_role_form" model="ir.ui.view">
+        <field name="name">res.users.role.form - pms_user_roles</field>
+        <field name="model">res.users.role</field>
+        <field
+      name="inherit_id"
+      ref="base_user_role.view_res_users_role_form"
+    />
+        <field name="arch" type="xml">
+            <field name="group_id" position="after">
+                <field name="assignable" />
+                <field name="pms_all_properties" />
+            </field>
+        </field>
+    </record>
+    <record id="view_res_users_role_tree" model="ir.ui.view">
+        <field name="name">res.users.role.tree - pms_user_roles</field>
+        <field name="model">res.users.role</field>
+        <field
+      name="inherit_id"
+      ref="base_user_role.view_res_users_role_tree"
+    />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="assignable" optional="show" />
+                <field name="pms_all_properties" optional="hide" />
+            </field>
+        </field>
+    </record>
+</odoo>

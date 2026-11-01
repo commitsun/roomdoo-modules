@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Catalog of roles. Roles are res.groups records (_inherits): name, implied
+     groups and category are set on the role, never group_id. noupdate so that
+     each installation can tune them; none is assignable out of the box. -->
+<odoo noupdate="1">
+    <record id="role_internal_base" model="res.users.role">
+        <field name="name">PMS / Base internal user</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
+    </record>
+    <record id="role_pms_reception" model="res.users.role">
+        <field name="name">PMS / Reception</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <field
+      name="implied_ids"
+      eval="[(4, ref('base.group_user')), (4, ref('pms.group_pms_user'))]"
+    />
+    </record>
+    <record id="role_pms_revenue" model="res.users.role">
+        <field name="name">PMS / Revenue</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <field
+      name="implied_ids"
+      eval="[(4, ref('base.group_user')), (4, ref('pms.group_pms_user'))]"
+    />
+    </record>
+    <record id="role_pms_administrative" model="res.users.role">
+        <field name="name">PMS / Administrative</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <field
+      name="implied_ids"
+      eval="[(4, ref('base.group_user')), (4, ref('pms.group_pms_user'))]"
+    />
+    </record>
+    <record id="role_pms_manager" model="res.users.role">
+        <field name="name">PMS / Manager</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <field
+      name="implied_ids"
+      eval="[(4, ref('base.group_user')), (4, ref('pms.group_pms_manager'))]"
+    />
+    </record>
+    <record id="role_pms_callcenter" model="res.users.role">
+        <field name="name">PMS / Call center</field>
+        <field
+      name="group_category_id"
+      ref="base_user_role.ir_module_category_role"
+    />
+        <!-- group_pms_call has no access rights of its own -->
+        <field
+      name="implied_ids"
+      eval="[(4, ref('base.group_user')), (4, ref('pms.group_pms_user')), (4, ref('pms.group_pms_call'))]"
+    />
+    </record>
+</odoo>

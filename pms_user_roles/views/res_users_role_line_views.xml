@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_res_users_role_line_tree" model="ir.ui.view">
+        <field name="name">res.users.role.line.tree</field>
+        <field name="model">res.users.role.line</field>
+        <field name="arch" type="xml">
+            <tree editable="top" decoration-muted="not is_enabled">
+                <field
+          name="user_id"
+          domain="[('share', '=', False)]"
+          options="{'no_create': True}"
+        />
+                <field
+          name="role_id"
+          domain="[('assignable', '=', True)]"
+          options="{'no_create': True, 'no_open': True}"
+        />
+                <field name="date_from" />
+                <field name="date_to" />
+                <field name="is_enabled" />
+            </tree>
+        </field>
+    </record>
+    <record id="view_res_users_role_line_search" model="ir.ui.view">
+        <field name="name">res.users.role.line.search</field>
+        <field name="model">res.users.role.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id" />
+                <field name="role_id" />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_by_role"
+            string="Role"
+            context="{'group_by': 'role_id'}"
+          />
+                    <filter
+            name="group_by_user"
+            string="User"
+            context="{'group_by': 'user_id'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_res_users_role_line" model="ir.actions.act_window">
+        <field name="name">Role assignments</field>
+        <field name="res_model">res.users.role.line</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_res_users_role_line_tree" />
+        <field name="context">{'search_default_group_by_role': 1}</field>
+    </record>
+    <menuitem
+    id="menu_role_assignment_root"
+    name="Roles"
+    sequence="900"
+    groups="group_role_manager,base.group_erp_manager"
+  />
+    <menuitem
+    id="menu_res_users_role_line"
+    parent="menu_role_assignment_root"
+    action="action_res_users_role_line"
+    sequence="10"
+  />
+</odoo>
