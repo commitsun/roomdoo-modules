@@ -1,0 +1,204 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_user_roles
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-01 08:30+0000\n"
+"PO-Revision-Date: 2026-11-01 08:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pms_user_roles
+#: model:ir.model,name:pms_user_roles.model_res_groups
+msgid "Access Groups"
+msgstr "Grupos de acceso"
+
+#. module: pms_user_roles
+#: model:ir.model.fields,field_description:pms_user_roles.field_res_users_role__pms_all_properties
+msgid "All properties"
+msgstr "Todas las propiedades"
+
+#. module: pms_user_roles
+#: model:ir.model.fields,field_description:pms_user_roles.field_res_users_role__assignable
+msgid "Assignable"
+msgstr "Asignable"
+
+#. module: pms_user_roles
+#: model:res.groups,comment:pms_user_roles.group_role_manager
+msgid ""
+"Assigns the roles flagged as assignable to internal users that are not "
+"administrators, without being an access rights administrator."
+msgstr "Asigna los roles marcados como asignables a usuarios internos que no son administradores, sin ser administrador de permisos de acceso."
+
+#. module: pms_user_roles
+#: model:ir.model.fields,field_description:pms_user_roles.field_res_users__pms_role_scope_company_ids
+msgid "Companies added by roles"
+msgstr "Compañías añadidas por roles"
+
+#. module: pms_user_roles
+#: model_terms:ir.ui.view,arch_db:pms_user_roles.view_res_users_role_line_search
+msgid "Group By"
+msgstr "Agrupar por"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_pms_administrative_res_groups
+msgid "PMS / Administrative"
+msgstr "PMS / Administración"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_internal_base_res_groups
+msgid "PMS / Base internal user"
+msgstr "PMS / Usuario interno base"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_pms_callcenter_res_groups
+msgid "PMS / Call center"
+msgstr "PMS / Call center"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_pms_manager_res_groups
+msgid "PMS / Manager"
+msgstr "PMS / Responsable"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_pms_reception_res_groups
+msgid "PMS / Reception"
+msgstr "PMS / Recepción"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.role_pms_revenue_res_groups
+msgid "PMS / Revenue"
+msgstr "PMS / Revenue"
+
+#. module: pms_user_roles
+#: model:res.groups,name:pms_user_roles.group_role_manager
+msgid "Profile manager"
+msgstr "Gestor de perfiles"
+
+#. module: pms_user_roles
+#: model:ir.model.fields,help:pms_user_roles.field_res_users_role__assignable
+msgid ""
+"Profile managers may assign this role. Roles that grant administration "
+"rights can never be assignable."
+msgstr "Los gestores de perfiles pueden asignar este rol. Los roles que dan permisos de administración nunca pueden ser asignables."
+
+#. module: pms_user_roles
+#: model:ir.model.fields,field_description:pms_user_roles.field_res_users__pms_role_scope_property_ids
+msgid "Properties added by roles"
+msgstr "Propiedades añadidas por roles"
+
+#. module: pms_user_roles
+#: model:ir.model,name:pms_user_roles.model_pms_property
+msgid "Property"
+msgstr "Propiedad"
+
+#. module: pms_user_roles
+#: model_terms:ir.ui.view,arch_db:pms_user_roles.view_res_users_role_line_search
+msgid "Role"
+msgstr "Rol"
+
+#. module: pms_user_roles
+#: model:ir.actions.act_window,name:pms_user_roles.action_res_users_role_line
+#: model:ir.ui.menu,name:pms_user_roles.menu_res_users_role_line
+msgid "Role assignments"
+msgstr "Asignación de roles"
+
+#. module: pms_user_roles
+#: model:ir.ui.menu,name:pms_user_roles.menu_role_assignment_root
+msgid "Roles"
+msgstr "Roles"
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role_line.py:0
+#, python-format
+msgid ""
+"The permissions of %s are not managed by roles yet and assigning this role "
+"would remove some of them. Ask an access rights administrator to migrate the"
+" user."
+msgstr "Los permisos de %s todavía no se gestionan con roles y asignar este rol le quitaría algunos. Pide a un administrador de permisos que migre al usuario."
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role.py:0
+#, python-format
+msgid ""
+"The role %(role)s cannot be assignable by profile managers because it grants"
+" %(groups)s."
+msgstr "El rol %(role)s no puede ser asignable por los gestores de perfiles porque da %(groups)s."
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role.py:0
+#, python-format
+msgid ""
+"The role %(role)s gives access to all the properties, so it must grant "
+"'Multi Companies'."
+msgstr "El rol %(role)s da acceso a todas las propiedades, así que debe incluir 'Multi compañías'."
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role.py:0
+#, python-format
+msgid ""
+"The role %(role)s grants more than one user type (%(types)s). A user can "
+"only be of one type."
+msgstr "El rol %(role)s da más de un tipo de usuario (%(types)s). Un usuario solo puede ser de un tipo."
+
+#. module: pms_user_roles
+#: model:ir.model,name:pms_user_roles.model_res_users
+#: model_terms:ir.ui.view,arch_db:pms_user_roles.view_res_users_role_line_search
+msgid "User"
+msgstr "Usuario"
+
+#. module: pms_user_roles
+#: model:ir.module.category,name:pms_user_roles.module_category_user_roles
+msgid "User Roles"
+msgstr "Roles de usuario"
+
+#. module: pms_user_roles
+#: model:ir.model,name:pms_user_roles.model_res_users_role
+msgid "User role"
+msgstr "Rol de usuario"
+
+#. module: pms_user_roles
+#: model:ir.actions.server,name:pms_user_roles.ir_cron_role_audit_ir_actions_server
+#: model:ir.cron,cron_name:pms_user_roles.ir_cron_role_audit
+msgid "User roles: report role groups without role line"
+msgstr "Roles de usuario: informar de grupos de rol sin línea de rol"
+
+#. module: pms_user_roles
+#: model:ir.model,name:pms_user_roles.model_res_users_role_line
+msgid "Users associated to a role"
+msgstr "Usuarios asociados a un rol"
+
+#. module: pms_user_roles
+#: model:ir.model.fields,help:pms_user_roles.field_res_users_role__pms_all_properties
+msgid ""
+"Users holding this role are given every active property and its company. The"
+" scope added this way is removed again when the user no longer holds any "
+"role with this option. The role must grant 'Multi Companies', otherwise the "
+"role recompute would take it away."
+msgstr "Quien tenga este rol recibe todas las propiedades activas y sus compañías. Lo añadido así se retira cuando el usuario deja de tener algún rol con esta opción. El rol debe incluir 'Multi compañías'; si no, el recálculo de roles se lo quitaría."
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role_line.py:0
+#: code:addons/pms_user_roles/models/res_users_role_line.py:0
+#, python-format
+msgid "You are not allowed to assign the role %s."
+msgstr "No tienes permiso para asignar el rol %s."
+
+#. module: pms_user_roles
+#. odoo-python
+#: code:addons/pms_user_roles/models/res_users_role_line.py:0
+#, python-format
+msgid "You are not allowed to manage the roles of %s."
+msgstr "No tienes permiso para gestionar los roles de %s."

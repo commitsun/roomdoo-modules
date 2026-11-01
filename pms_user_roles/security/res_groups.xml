@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="module_category_user_roles" model="ir.module.category">
+        <field name="name">User Roles</field>
+        <field name="sequence">90</field>
+    </record>
+    <record id="group_role_manager" model="res.groups">
+        <field name="name">Profile manager</field>
+        <field name="category_id" ref="module_category_user_roles" />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
+        <field
+      name="comment"
+    >Assigns the roles flagged as assignable to internal users that are not administrators, without being an access rights administrator.</field>
+    </record>
+</odoo>
