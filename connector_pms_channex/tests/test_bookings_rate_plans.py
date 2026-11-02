@@ -152,6 +152,9 @@ class TestChannexBookingRatePlan(ChannexRestrictionsCase):
 
     def test_a_breakfast_is_priced_on_the_night_it_goes_with(self):
         """Served the morning after, and published with the night before."""
+        # Charged per room, as one charged per person and the same for adults
+        # and children cannot be priced by date.
+        self.breakfast.per_person = False
         night = datetime.date(2026, 11, 13)
         self._item(
             self.breakfast,
@@ -159,11 +162,11 @@ class TestChannexBookingRatePlan(ChannexRestrictionsCase):
             date_start_consumption=night,
             date_end_consumption=night,
         )
-        reservation = self._book(self._sold(self.breakfast_plan, ("130.00", "120.00")))
+        reservation = self._book(self._sold(self.breakfast_plan, ("115.00", "110.00")))
         self.assertEqual(self._room_prices(reservation), [100.0, 100.0])
         self.assertEqual(
             self._board_lines(reservation),
-            [("2026-11-14", 2, 15.0), ("2026-11-15", 2, 10.0)],
+            [("2026-11-14", 1, 15.0), ("2026-11-15", 1, 10.0)],
         )
 
     def test_with_a_child_the_stay_still_comes_to_what_the_ota_sold(self):

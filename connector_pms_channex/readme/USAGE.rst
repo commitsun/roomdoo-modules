@@ -118,9 +118,34 @@ closed, since Channex takes no price of 0.
 
 The restrictions are the ones of the pricelist's availability plan: minimum
 stay on arrival and through the stay, closed to arrival or departure, and
-closed altogether, as is a night the plan closes the board service on. Channex
-has a single maximum stay, so the stricter of the two pms has is published. A
-night with no rule is published unrestricted.
+closed altogether, as is a night the plan closes the board service on, and the
+maximum stay. A night with no rule is published unrestricted.
 
-Children are charged with the rate plan's children fee, which is the one of
-the pricelist's occupancy rule for the room type.
+Children are charged with the rate plan's children fee: the one of the
+pricelist's occupancy rule for the room type, plus what a child adds to the
+board service.
+
+What Channex cannot be told
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two things pms can do have no way to reach Channex, so a pricelist sold
+through Channex is not allowed them. Whatever would bring one in is refused
+with an error that says why and how to put it right: editing a price or a
+rule, connecting the pricelist, giving it a board service or another
+availability plan, or giving its plan another parent.
+
+**What a child consumes of a board service cannot be priced by date.** Channex
+charges each child one fixed amount, the children fee, the same every night.
+That covers the variant for children of a board service with the *Guest*
+attribute, and a board service charged per person that has no such variant,
+since children then pay what adults do. Neither can have a price that applies
+on some dates only, of the nights or of the sale, nor take its price from
+another pricelist where it does; a price whose dates are over no longer counts.
+A board service whose adults and children pay the same and that is priced by
+date needs the *Guest* attribute: the adults' variant can then be priced by
+date, and the children's has a fixed price.
+
+**An availability plan cannot have a maximum stay on arrival.** Channex has a
+single maximum stay, which the channels apply to the whole stay. That covers
+the plan of the pricelist and every plan it inherits from, and only the rules
+that end today or later: those over are not published again.
