@@ -1566,6 +1566,11 @@ msgid "Data Protection Contact Email"
 msgstr "Correo electrónico de contacto de protección de datos"
 
 #. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__scheduled_timing_mode__date_local_hour
+msgid "Date + Local Hour"
+msgstr "Fecha + hora local"
+
+#. module: pms_notifications
 #: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__offset_days
 msgid ""
 "Days offset relative to the time field (negative=before, positive=after)."
@@ -2520,6 +2525,35 @@ msgid "Scheduled Domain"
 msgstr "Dominio programado"
 
 #. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_run_hour
+msgid "Scheduled Local Hour"
+msgstr "Hora local programada"
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Scheduled Local Hour must be between 0 and 23 (rule '%s')."
+msgstr "La hora local programada debe estar entre 0 y 23 (regla '%s')."
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_run_minute
+msgid "Scheduled Local Minute"
+msgstr "Minuto local programado"
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Scheduled Local Minute must be between 0 and 59 (rule '%s')."
+msgstr "El minuto local programado debe estar entre 0 y 59 (regla '%s')."
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_timing_mode
+msgid "Scheduled Timing Mode"
+msgstr "Modo de programación"
+
+#. module: pms_notifications
 #. odoo-python
 #: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
 #, python-format
@@ -2750,6 +2784,24 @@ msgid "Unsupported channel(s) in this database: %s"
 msgstr "Canales no admitidos en esta base de datos: %s"
 
 #. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_run_hour
+msgid ""
+"Used only in 'Date + Local Hour' mode. Hour in property local timezone "
+"(0-23)."
+msgstr ""
+"Solo en el modo «Fecha + hora local». Hora en la zona horaria del hotel "
+"(0-23)."
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_run_minute
+msgid ""
+"Used only in 'Date + Local Hour' mode. Minute (0-59) of the Scheduled Local "
+"Hour at which the window starts."
+msgstr ""
+"Solo en el modo «Fecha + hora local». Minuto (0-59) de la hora local "
+"programada en el que empieza la ventana."
+
+#. module: pms_notifications
 #: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__view_description
 msgid "View Description"
 msgstr "Ver descripción"
@@ -2779,6 +2831,24 @@ msgstr "Cuándo está programado el procesamiento de este registro."
 #: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__sent_date
 msgid "When this log was successfully sent."
 msgstr "Cuando este registro se envió correctamente."
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__scheduled_timing_mode__window
+msgid "Window"
+msgstr "Ventana"
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_timing_mode
+msgid ""
+"Window: legacy datetime window logic using offset days/hours. Date + Local "
+"Hour: for date fields, triggers when (time_field + offset_days) equals "
+"today in property timezone and local time is inside the configured hour "
+"window."
+msgstr ""
+"Ventana: lógica antigua de ventana sobre fecha y hora con días/horas de "
+"desplazamiento. Fecha + hora local: para campos de fecha, se dispara cuando "
+"(campo de tiempo + días de desplazamiento) es hoy en la zona horaria del "
+"hotel y la hora local está dentro de la ventana configurada."
 
 #. module: pms_notifications
 #: model:mail.template,subject:pms_notifications.mail_template_pms_folio_confirmation
