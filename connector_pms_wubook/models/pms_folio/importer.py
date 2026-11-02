@@ -1,8 +1,11 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+from collections import defaultdict
+
 from psycopg2.extensions import AsIs
 
 from odoo import _, fields
+from odoo.tools.misc import formatLang
 
 from odoo.addons.component.core import Component
 
@@ -30,6 +33,12 @@ class ChannelWubookPmsFolioImporter(Component):
     _apply_on = "channel.wubook.pms.folio"
 
     def _import_dependencies(self, external_data, external_fields):
+        # Last hook that reads the incoming booking before the folio is
+        # written: _after_import needs it once the reservations exist
+        self._tourist_tax_included = any(
+            x.get("ota_tourist_tax_included")
+            for x in external_data.get("reservations", [])
+        )
         self._import_dependency(
             {x["room_id"] for x in external_data.get("reservations", [])},
             "channel.wubook.pms.room.type",
@@ -66,6 +75,13 @@ class ChannelWubookPmsFolioImporter(Component):
 
         # TODO: move get_all_items action_cancel here
         # binding.reservation_ids.filtered(lambda x: x['wubook_status'] == '5').action_cancel()
+
+        # Before the OTA payment below, which is capped at the folio total
+        if getattr(self, "_tourist_tax_included", False):
+            self._deduct_included_tourist_tax(
+                folio,
+                getattr(self, "_new_reservations", folio.reservation_ids.browse()),
+            )
 
         # Pre payment Folio
         if binding.payment_gateway_fee > 0:
@@ -147,6 +163,47 @@ class ChannelWubookPmsFolioImporter(Component):
 
         self._refresh_availability_export(binding)
 
+    def _deduct_included_tourist_tax(self, folio, reservations):
+        """Take the tourist tax out of the rates the channel put it in.
+
+        The PMS adds its own tourist tax to every new reservation, so a rate
+        that already has it would charge it twice. Each night gives up what
+        the PMS charges for it that night, so the folio still adds up to what
+        the channel collected even if both work the tax out differently.
+
+        Only the reservations created by this import are touched: the nights
+        of the others are not imported again, so they already are as they
+        should be, or as reception left them.
+        """
+        deducted = 0.0
+        for reservation in reservations.filtered(lambda r: r.state != "cancel"):
+            tax_by_date = defaultdict(float)
+            tax_services = reservation._get_existing_tourist_tax_services()
+            for tax_line in tax_services.service_line_ids:
+                tax_by_date[tax_line.date] += tax_line.price_day_total
+            commands = []
+            for line in reservation.reservation_line_ids:
+                tax = tax_by_date.get(line.date)
+                if tax:
+                    commands.append((1, line.id, {"price": line.price - tax}))
+                    deducted += tax
+            if commands:
+                reservation.with_context(
+                    connector_no_export=True, force_write_blocked=True
+                ).write({"reservation_line_ids": commands})
+        if deducted:
+            folio.sudo().message_post(
+                body=_(
+                    "The channel includes the tourist tax in the room price: "
+                    "%s have been deducted from the accommodation so that the "
+                    "tax is not charged twice.",
+                    formatLang(self.env, deducted, currency_obj=folio.currency_id),
+                ),
+                subtype_id=self.env.ref("mail.mt_note").id,
+                email_from=self.env.user.partner_id.email_formatted
+                or folio.pms_property_id.email_formatted,
+            )
+
     def _refresh_availability_export(self, binding):
         """Re-publish the availability the imported folio just moved.
 
@@ -200,14 +257,19 @@ class ChannelWubookPmsFolioImporter(Component):
 
     def _create(self, model, values):
         """Create the Internal record"""
-        return super()._create(
+        binding = super()._create(
             model.with_context(mail_create_nosubscribe=True, force_overbooking=True),
             values,
         )
+        self._new_reservations = binding.odoo_id.reservation_ids
+        return binding
 
     def _update(self, binding, values):
         """Update an Internal record"""
-        return super()._update(
+        reservations = binding.odoo_id.reservation_ids
+        res = super()._update(
             binding.with_context(mail_create_nosubscribe=True, force_overbooking=True),
             values,
         )
+        self._new_reservations = binding.odoo_id.reservation_ids - reservations
+        return res
