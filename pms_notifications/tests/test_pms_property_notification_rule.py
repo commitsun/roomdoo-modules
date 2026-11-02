@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from odoo import fields
@@ -487,3 +487,87 @@ class TestScheduledMaxSends(TestPms):
         self._create_log(folio)
         self.rule.max_sends_per_record = 0
         self.assertEqual(self.rule._scheduled_filter_by_max_sends(folio), folio)
+
+
+class TestScheduledLocalMinute(TestPms):
+    """scheduled_run_minute shifts the start of the 'Date + Local Hour' window."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.folio_model = cls.env.ref("pms.model_pms_folio")
+        cls.mail_template = cls.env["mail.template"].create(
+            {
+                "name": "Local minute template",
+                "model_id": cls.folio_model.id,
+                "subject": "Test",
+                "body_html": "<p>Test</p>",
+            }
+        )
+        cls.notification_template = cls.env["pms.notification.template"].create(
+            {
+                "name": "Local minute notification",
+                "code": "local_minute_notification",
+                "model_id": cls.folio_model.id,
+                "mail_template_id": cls.mail_template.id,
+            }
+        )
+        cls.rule = cls.env["pms.property.notification.rule"].create(
+            {
+                "name": "Local minute rule",
+                "template_id": cls.notification_template.id,
+                "target_model_id": cls.folio_model.id,
+                "rule_type": "scheduled",
+                "scheduled_domain": "[]",
+                "time_field_name": "first_checkin",
+                "scheduled_timing_mode": "date_local_hour",
+                "channel": "email",
+            }
+        )
+
+    def _inside(self, hour, minute):
+        return self.rule._scheduled_is_inside_local_window(
+            datetime(2026, 11, 2, hour, minute)
+        )
+
+    def test_minute_defaults_to_zero(self):
+        """Existing rules keep starting on the hour."""
+        self.rule.write({"scheduled_run_hour": 20, "time_window_minutes": 60})
+        self.assertEqual(self.rule.scheduled_run_minute, 0)
+        self.assertFalse(self._inside(19, 59))
+        self.assertTrue(self._inside(20, 0))
+        self.assertTrue(self._inside(20, 59))
+        self.assertFalse(self._inside(21, 0))
+
+    def test_window_starts_at_hour_and_minute(self):
+        """14:30 with a window up to 23:59 does not open at 14:00."""
+        self.rule.write(
+            {
+                "scheduled_run_hour": 14,
+                "scheduled_run_minute": 30,
+                "time_window_minutes": 569,
+            }
+        )
+        self.assertFalse(self._inside(14, 0))
+        self.assertFalse(self._inside(14, 29))
+        self.assertTrue(self._inside(14, 30))
+        self.assertTrue(self._inside(23, 58))
+        self.assertFalse(self._inside(23, 59))
+
+    def test_window_crossing_midnight_with_minute(self):
+        self.rule.write(
+            {
+                "scheduled_run_hour": 23,
+                "scheduled_run_minute": 30,
+                "time_window_minutes": 60,
+            }
+        )
+        self.assertFalse(self._inside(23, 29))
+        self.assertTrue(self._inside(23, 45))
+        self.assertTrue(self._inside(0, 15))
+        self.assertFalse(self._inside(0, 30))
+
+    def test_constraint_minute_out_of_range_raises(self):
+        for minute in (-1, 60):
+            with self.assertRaises(ValidationError):
+                self.rule.write({"scheduled_run_minute": minute})

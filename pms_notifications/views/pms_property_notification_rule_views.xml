@@ -84,7 +84,10 @@
               attrs="{'invisible': [('rule_type','!=','scheduled')]}"
             >
                             <group>
-                                <field name="time_field_name" placeholder="checkin" />
+                                <field
+                  name="time_field_name"
+                  placeholder="checkin"
+                />
                                 <field name="offset_days" />
                                 <field
                   name="offset_hours"
@@ -93,6 +96,10 @@
                                 <field name="scheduled_timing_mode" />
                                 <field
                   name="scheduled_run_hour"
+                  attrs="{'invisible': [('scheduled_timing_mode','!=','date_local_hour')]}"
+                />
+                                <field
+                  name="scheduled_run_minute"
                   attrs="{'invisible': [('scheduled_timing_mode','!=','date_local_hour')]}"
                 />
                                 <field name="time_window_minutes" />
@@ -110,7 +117,10 @@
         </field>
     </record>
 
-    <record id="action_pms_property_notification_rule" model="ir.actions.act_window">
+    <record
+    id="action_pms_property_notification_rule"
+    model="ir.actions.act_window"
+  >
         <field name="name">Notification Rules</field>
         <field name="res_model">pms.property.notification.rule</field>
         <field name="view_mode">tree,form</field>

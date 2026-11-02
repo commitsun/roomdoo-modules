@@ -744,6 +744,11 @@ msgid "Data Protection Contact Email"
 msgstr ""
 
 #. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__scheduled_timing_mode__date_local_hour
+msgid "Date + Local Hour"
+msgstr ""
+
+#. module: pms_notifications
 #: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__offset_days
 msgid ""
 "Days offset relative to the time field (negative=before, positive=after)."
@@ -1632,6 +1637,35 @@ msgid "Scheduled Domain"
 msgstr ""
 
 #. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_run_hour
+msgid "Scheduled Local Hour"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Scheduled Local Hour must be between 0 and 23 (rule '%s')."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_run_minute
+msgid "Scheduled Local Minute"
+msgstr ""
+
+#. module: pms_notifications
+#. odoo-python
+#: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
+#, python-format
+msgid "Scheduled Local Minute must be between 0 and 59 (rule '%s')."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,field_description:pms_notifications.field_pms_property_notification_rule__scheduled_timing_mode
+msgid "Scheduled Timing Mode"
+msgstr ""
+
+#. module: pms_notifications
 #. odoo-python
 #: code:addons/pms_notifications/models/pms_property_notification_rule.py:0
 #, python-format
@@ -1840,6 +1874,20 @@ msgid "Unsupported channel(s) in this database: %s"
 msgstr ""
 
 #. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_run_hour
+msgid ""
+"Used only in 'Date + Local Hour' mode. Hour in property local timezone "
+"(0-23)."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_run_minute
+msgid ""
+"Used only in 'Date + Local Hour' mode. Minute (0-59) of the Scheduled Local "
+"Hour at which the window starts."
+msgstr ""
+
+#. module: pms_notifications
 #: model:ir.model.fields,field_description:pms_notifications.field_pms_room_type__view_description
 msgid "View Description"
 msgstr ""
@@ -1866,6 +1914,20 @@ msgstr ""
 #. module: pms_notifications
 #: model:ir.model.fields,help:pms_notifications.field_pms_notification_log__sent_date
 msgid "When this log was successfully sent."
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields.selection,name:pms_notifications.selection__pms_property_notification_rule__scheduled_timing_mode__window
+msgid "Window"
+msgstr ""
+
+#. module: pms_notifications
+#: model:ir.model.fields,help:pms_notifications.field_pms_property_notification_rule__scheduled_timing_mode
+msgid ""
+"Window: legacy datetime window logic using offset days/hours. Date + Local "
+"Hour: for date fields, triggers when (time_field + offset_days) equals "
+"today in property timezone and local time is inside the configured hour "
+"window."
 msgstr ""
 
 #. module: pms_notifications
