@@ -269,12 +269,6 @@ class ChannelWubookPmsFolioAdapter(Component):
 
             for room in value.pop("booked_rooms"):
                 room_id = room["room_id"]
-                # If not occupancies in values set the default occupancy
-                # with the min occupancy of the room type
-                if not occupancies_d:
-                    import_mapper = self.component(usage="import.mapper")
-                    room_type = get_room_type(import_mapper, room_id)
-                    occupancies_d[room_id] = min(room_type.room_ids.mapped("capacity"))
                 # TODO: move the following code to method and
                 #  remove boards_d
                 board = boards_d.get(room_id)
@@ -301,6 +295,8 @@ class ChannelWubookPmsFolioAdapter(Component):
                     guests_children = room.get("ancillary", {}).get("guests_children")
                     if guests_children:
                         children = guests_children
+                if not occupancy:
+                    occupancy = self._get_default_occupancy(room_id)
                 if id_channel == 43:  # AirBnb
                     # Add commission in price
                     self.apply_gross_prices_airbnb(
@@ -357,6 +353,17 @@ class ChannelWubookPmsFolioAdapter(Component):
                 )
             value["reservations"] = reservations
         return values
+
+    def _get_default_occupancy(self, room_id):
+        """The adults of a room the channel did not say who stays in.
+
+        The price of a room type is given for its default occupancy, so that
+        is who the channel sold the room for. Room types priced regardless of
+        their occupancy fall back to the one their rooms guarantee.
+        """
+        import_mapper = self.component(usage="import.mapper")
+        room_type = get_room_type(import_mapper, room_id)
+        return room_type.default_occupancy or room_type.max_occupancy
 
     def apply_gross_prices_airbnb(self, room, commission):
         """

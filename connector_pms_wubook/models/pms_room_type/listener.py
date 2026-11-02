@@ -9,7 +9,8 @@ from odoo.addons.component_event.components.event import skip_if
 # ``name``, ``list_price`` -> ``price``, ``default_code`` -> ``shortname``,
 # ``min_price``, ``max_price``, ``default_availability`` -> ``availability``,
 # ``class_id`` -> ``rtype``, ``board_service_room_type_ids`` -> ``boards``.
-# Also ``room_ids.capacity`` (drives the computed ``occupancy``) is
+# Also ``room_ids.capacity`` and ``room_ids.children_capacity`` (drive the
+# computed ``occupancy``) are
 # relevant, but since ``occupancy`` is stored-and-computed on the binding
 # it surfaces here as a write on the binding model rather than on
 # ``pms.room.type`` itself; the binding's own listener (inherited from
