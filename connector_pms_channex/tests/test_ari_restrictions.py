@@ -204,6 +204,20 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
         )
         self.assertEqual(self._rates(self.breakfast_plan, self.night)[2], "130.00")
 
+    def test_an_item_with_dates_and_one_without_go_out_together(self):
+        """Every night of the room type, as the one without dates prices
+        them all."""
+        self._item(self.room_type.product_id, 120)
+        self._item(
+            self.room_type.product_id,
+            150,
+            date_start_consumption=self.night,
+            date_end_consumption=self.night,
+        )
+        self._publish()
+        self.assertEqual(self._rates(self.room_only_plan, self.first)[2], "120.00")
+        self.assertEqual(self._rates(self.room_only_plan, self.night)[2], "150.00")
+
     def test_an_item_moved_publishes_the_nights_it_leaves(self):
         item = self._item(
             self.room_type.product_id,
