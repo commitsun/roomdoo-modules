@@ -2,8 +2,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import base64
 import json
+from datetime import timedelta
 from urllib.parse import parse_qs, urlsplit
 
+from odoo import fields
 from odoo.tests import tagged
 
 from odoo.addons.pms_fastapi_booking_engine.tests.common import BookingEngineCase
@@ -168,6 +170,28 @@ class TestBookingEngineRedsys(BookingEngineCase):
         )
 
         self.assertEqual(transaction.state, "done")
+
+    def test_denied_payment_fails_and_releases_the_hold(self):
+        """Redsys denials (0101 to 0203) are left pending by the Redsys
+        module: the engine fails them, so the guest can retry and the hold is
+        released if nobody pays."""
+        data, booking = self._create()
+        transaction = booking.transaction_ids
+
+        self.env["payment.transaction"].sudo()._handle_notification_data(
+            "redsys", self._notification(transaction, "0190")
+        )
+
+        self.assertEqual(transaction.state, "error")
+        with self._create_test_client() as client:
+            status = client.get(
+                f"/bookings/{booking.public_id}",
+                headers={"Authorization": f"Bearer {data['accessToken']}"},
+            ).json()
+        self.assertEqual(status["payment"]["lastAttempt"], {"status": "failed"})
+        booking.expires_at = fields.Datetime.now() - timedelta(minutes=1)
+        self.env["pms.booking.engine.booking"]._cron_expire_holds()
+        self.assertEqual(booking.state, "expired")
 
     def test_return_with_the_result_confirms(self):
         """Some terminals never notify the server: the result the guest

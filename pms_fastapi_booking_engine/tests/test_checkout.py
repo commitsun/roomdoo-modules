@@ -268,8 +268,8 @@ class TestCheckout(BookingEngineCase):
         self.assertEqual(data["booking"]["status"], "confirmed")
         self.assertIsNone(data["booking"]["expiresAt"])
         self.assertTrue(data["accessToken"])
-        self.assertEqual(
-            response.headers["Location"], f"/bookings/{data['booking']['id']}"
+        self.assertTrue(
+            response.headers["Location"].endswith(f"/bookings/{data['booking']['id']}")
         )
         booking = self._booking(response)
         folio = booking.folio_id

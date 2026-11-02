@@ -97,7 +97,9 @@ async def create_booking(
         )
     )
     if isinstance(result, CreateBookingResponse):
-        response.headers["Location"] = f"/bookings/{result.booking.id}"
+        response.headers["Location"] = str(
+            request.url_for("get_booking", bookingId=result.booking.id)
+        )
     return result
 
 

@@ -40,15 +40,18 @@ class PaymentTransaction(models.Model):
 
     def _process_notification_data(self, data):
         """Keep a booking engine payment done: the Redsys module writes the
-        state of any notification, even after a done one."""
-        if (
-            self.provider_code == "redsys"
-            and self.booking_engine_booking_id
-            and self.state == "done"
-        ):
+        state of any notification, even after a done one. And fail a denied
+        one: the module leaves the denials (0101 to 0203) pending, so the
+        engine would wait for them forever and never release their hold."""
+        if self.provider_code != "redsys" or not self.booking_engine_booking_id:
+            return super()._process_notification_data(data)
+        if self.state == "done":
             _logger.info(
                 "Booking engine: notification of %s ignored, already done",
                 self.reference,
             )
             return
-        return super()._process_notification_data(data)
+        res = super()._process_notification_data(data)
+        if self.state == "pending":
+            self._set_error(self.state_message)
+        return res
