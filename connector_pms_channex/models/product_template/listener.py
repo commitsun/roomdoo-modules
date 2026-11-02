@@ -17,8 +17,9 @@ _RATE_PLAN_FIELDS = {
 }
 
 
-#: What prices a product where no pricelist item does.
-_PRICE_FIELDS = {"list_price", "per_person"}
+#: What prices a product where no pricelist item does, and which guests a
+#: board service charges, children included.
+_PRICE_FIELDS = {"list_price", "per_person", "attribute_line_ids"}
 
 
 class ChannelChannexProductTemplateListener(Component):
@@ -47,6 +48,10 @@ class ChannelChannexProductTemplateListener(Component):
     def _stage_prices(self, record):
         if record.is_board_service:
             stage_ari(self.env, "restrictions", (None, None, None, record.id))
+            # What a child adds to it is part of the children fee.
+            self.env["channel.channex.backend"].sudo().search(
+                []
+            )._channex_schedule_rate_plans()
             return
         for room_type in self.env["pms.room.type"].search(
             [("product_id.product_tmpl_id", "=", record.id)]

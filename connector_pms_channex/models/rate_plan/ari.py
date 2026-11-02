@@ -91,14 +91,12 @@ class ChannelChannexRatePlanAriSender(Component):
         closed = not rates or bool(board_rule and board_rule.closed)
         if not rule:
             return (rates, 1, 1, 0, False, False, closed)
-        max_stays = [stay for stay in (rule.max_stay, rule.max_stay_arrival) if stay]
         return (
             rates,
             rule.min_stay_arrival or 1,
             rule.min_stay or 1,
-            # Channex has one max stay, which each channel applies on arrival
-            # or through the stay: the stricter of the two pms has holds both.
-            min(max_stays) if max_stays else 0,
+            # Channex has no max stay on arrival, and nothing sold there has one.
+            rule.max_stay,
             rule.closed_arrival,
             rule.closed_departure,
             closed or rule.closed,
