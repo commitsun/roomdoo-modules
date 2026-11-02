@@ -20,6 +20,33 @@ class PmsProperty(models.Model):
         help="Suggest the combination of rooms that best fits the guests searched.",
         default=True,
     )
+    booking_engine_hold_minutes = fields.Integer(
+        string="Booking Engine Hold (minutes)",
+        help="Minutes the rooms of a booking stay held while the guest pays at the "
+        "gateway. The booking is released if the payment does not arrive by then.",
+        default=15,
+    )
+    booking_engine_allowed_origins = fields.Text(
+        string="Booking Engine Allowed Origins",
+        help="Origins of the websites the guest can come back to from the payment "
+        "gateway, one per line, e.g. https://www.example.com",
+    )
+
+    @api.constrains("booking_engine_hold_minutes")
+    def _check_booking_engine_hold_minutes(self):
+        for record in self:
+            if record.booking_engine_hold_minutes < 1:
+                raise ValidationError(
+                    _("The booking engine hold must last at least one minute.")
+                )
+
+    def _get_booking_engine_allowed_origins(self):
+        self.ensure_one()
+        return {
+            origin.strip().rstrip("/").lower()
+            for origin in (self.booking_engine_allowed_origins or "").splitlines()
+            if origin.strip()
+        }
 
     @api.constrains("booking_engine_sale_channel_id")
     def _check_booking_engine_sale_channel(self):

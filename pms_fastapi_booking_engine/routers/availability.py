@@ -28,6 +28,8 @@ from odoo.addons.pms_fastapi_booking_engine.schemas.availability import (
     Discount,
     IncludedService,
     Offer,
+    Penalty,
+    PenaltyScope,
     Price,
     Problem,
     RatePlan,
@@ -778,14 +780,44 @@ class PmsBookingEngineAvailabilityRouterHelper(models.AbstractModel):
     # Cancellation
 
     def _get_cancellation(self, search, pricelist):
+        penalties = self._get_penalties(pricelist)
         deadline = self._get_free_cancellation_deadline(search, pricelist)
         if deadline is None:
-            return Cancellation(type=CancellationType.nonRefundable, freeUntil=None)
+            return Cancellation(
+                type=CancellationType.nonRefundable, freeUntil=None, **penalties
+            )
         tz = pytz.timezone(search.pms_property.tz or "UTC")
         return Cancellation(
             type=CancellationType.free,
             freeUntil=tz.localize(datetime.combine(deadline, time(23, 59, 59))),
+            **penalties,
         )
+
+    def _get_penalties(self, pricelist):
+        """Penalties of the cancellation rule, as
+        pms.reservation._check_cancel_penalty applies them."""
+        rule = pricelist.cancelation_rule_id
+        if not rule:
+            no_penalty = Penalty(percent=0, appliesTo=PenaltyScope.allNights)
+            return {"penalty": no_penalty, "noShowPenalty": no_penalty}
+        return {
+            "penalty": self._get_penalty(
+                rule.penalty_late, rule.apply_on_late, rule.days_late
+            ),
+            # The PMS counts the no show nights with days_late, one less
+            "noShowPenalty": self._get_penalty(
+                rule.penalty_noshow, rule.apply_on_noshow, rule.days_late - 1
+            ),
+        }
+
+    def _get_penalty(self, percent, apply_on, nights):
+        if apply_on == "first":
+            return Penalty(percent=percent, appliesTo=PenaltyScope.firstNight)
+        if apply_on == "days":
+            return Penalty(
+                percent=percent, appliesTo=PenaltyScope.firstNights, nights=nights
+            )
+        return Penalty(percent=percent, appliesTo=PenaltyScope.allNights)
 
     def _get_free_cancellation_deadline(self, search, pricelist):
         """Last day cancelling costs nothing, as decided by
@@ -1023,6 +1055,8 @@ class PmsBookingEngineAvailabilityRouterHelper(models.AbstractModel):
             adults=search.adults,
             children=search.children,
             rooms=search.rooms,
+            checkInFrom=search.pms_property.default_arrival_hour or None,
+            checkOutUntil=search.pms_property.default_departure_hour or None,
         )
 
     def _to_rate_plan(self, search, pricelist):

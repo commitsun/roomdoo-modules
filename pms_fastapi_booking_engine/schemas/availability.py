@@ -17,11 +17,31 @@ class Stay(PmsBaseModel):
     adults: int
     children: int
     rooms: int
+    checkInFrom: str | None = Field(
+        None, description="Check-in time of the property (HH:MM), its local time."
+    )
+    checkOutUntil: str | None = Field(
+        None, description="Check-out time of the property (HH:MM), its local time."
+    )
 
 
 class CancellationType(str, Enum):
     free = "free"
     nonRefundable = "nonRefundable"
+
+
+class PenaltyScope(str, Enum):
+    firstNight = "firstNight"
+    allNights = "allNights"
+    firstNights = "firstNights"
+
+
+class Penalty(PmsBaseModel):
+    percent: float = Field(description="Percent of the price of the nights affected.")
+    appliesTo: PenaltyScope
+    nights: int | None = Field(
+        None, description="Nights affected; only with firstNights."
+    )
 
 
 class Cancellation(PmsBaseModel):
@@ -31,6 +51,8 @@ class Cancellation(PmsBaseModel):
         description="Last moment to cancel for free, in the property time zone. "
         "Null when the rate is non refundable.",
     )
+    penalty: Penalty = Field(description="What cancelling after freeUntil costs.")
+    noShowPenalty: Penalty = Field(description="What not showing up costs.")
 
 
 class RatePlan(PmsBaseModel):

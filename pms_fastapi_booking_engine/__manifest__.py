@@ -3,7 +3,7 @@
 
 {
     "name": "PMS FastAPI Booking Engine",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "summary": "Public API of the web booking engine",
     "category": "Generic Modules/Property Management System",
     "author": "Commit [Sun]",
@@ -15,6 +15,7 @@
         "security/ir.model.access.csv",
         "data/res_users.xml",
         "data/fastapi_endpoint.xml",
+        "data/ir_cron.xml",
         "views/pms_property_views.xml",
     ],
 }

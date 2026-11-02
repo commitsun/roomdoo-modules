@@ -10,3 +10,14 @@
 The module creates the *PMS Booking Engine API* endpoint, run by the
 *PMS Booking Engine* user. Its documentation is at
 ``/booking-engine/v1/docs``.
+
+To take bookings:
+
+#. In the *Booking Engine* tab, list in *Booking Engine Allowed Origins* the
+   websites the guest comes back to from the payment gateway, one per line,
+   e.g. ``https://www.example.com``. A return URL elsewhere is refused.
+#. Set how many minutes the rooms stay held while the guest pays in
+   *Booking Engine Hold (minutes)*; 15 by default.
+#. Publish the payment providers of the property (*Published*, in test or
+   enabled state). A gateway takes part through its own bridge module, e.g.
+   *PMS FastAPI Booking Engine - Redsys*.

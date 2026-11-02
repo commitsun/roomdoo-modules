@@ -71,14 +71,15 @@ class FastapiEndpoint(models.Model):
         app = super()._get_app()
         if self.app == APP_NAME:
             app.add_middleware(ProblemDetailsMiddleware)
-            # Added last, so it wraps the problem responses too. Anonymous and
-            # read only: the engine calls it from the browser on any hotel
-            # website, without credentials.
+            # Added last, so it wraps the problem responses too. The engine
+            # calls it from the browser on any hotel website, without cookies:
+            # a booking is read with the bearer token it was created with.
             app.add_middleware(
                 CORSMiddleware,
                 allow_origins=["*"],
-                allow_methods=["GET"],
+                allow_methods=["GET", "POST"],
                 allow_headers=["*"],
+                expose_headers=["Location"],
             )
             app.openapi = self._get_problem_openapi(app)
         return app

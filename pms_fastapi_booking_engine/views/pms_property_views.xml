@@ -12,6 +12,11 @@
                     <group>
                         <field name="booking_engine_sale_channel_id" />
                         <field name="booking_engine_show_recommended" />
+                        <field name="booking_engine_hold_minutes" />
+                        <field
+              name="booking_engine_allowed_origins"
+              placeholder="https://www.example.com"
+            />
                     </group>
                 </page>
             </page>

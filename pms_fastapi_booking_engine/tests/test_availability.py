@@ -36,6 +36,8 @@ class TestAvailability(BookingEngineCase):
                 "adults": 2,
                 "children": 0,
                 "rooms": 1,
+                "checkInFrom": "14:00",
+                "checkOutUntil": "12:00",
             },
         )
         flexible, non_refundable = data["ratePlans"]
@@ -48,10 +50,27 @@ class TestAvailability(BookingEngineCase):
         self.assertEqual(
             datetime.fromisoformat(flexible["cancellation"]["freeUntil"]), deadline
         )
+        self.assertEqual(
+            flexible["cancellation"]["penalty"],
+            {"percent": 100.0, "appliesTo": "firstNight", "nights": None},
+        )
+        self.assertEqual(
+            flexible["cancellation"]["noShowPenalty"],
+            {"percent": 100.0, "appliesTo": "allNights", "nights": None},
+        )
         self.assertEqual(non_refundable["id"], str(self.pricelist_non_refundable.id))
         self.assertEqual(
             non_refundable["cancellation"],
-            {"type": "nonRefundable", "freeUntil": None},
+            {
+                "type": "nonRefundable",
+                "freeUntil": None,
+                "penalty": {"percent": 100.0, "appliesTo": "allNights", "nights": None},
+                "noShowPenalty": {
+                    "percent": 100.0,
+                    "appliesTo": "allNights",
+                    "nights": None,
+                },
+            },
         )
 
     def test_room_types_and_offers(self):
@@ -497,9 +516,8 @@ class TestAvailability(BookingEngineCase):
         )
 
         flexible = response.json()["ratePlans"][0]
-        self.assertEqual(
-            flexible["cancellation"], {"type": "nonRefundable", "freeUntil": None}
-        )
+        self.assertEqual(flexible["cancellation"]["type"], "nonRefundable")
+        self.assertIsNone(flexible["cancellation"]["freeUntil"])
 
     def test_photos_and_size_of_the_property(self):
         other_property = self.env["pms.property"].create(
@@ -852,10 +870,9 @@ class TestAvailability(BookingEngineCase):
         response = self._get_availability()
 
         self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(
-            response.json()["ratePlans"][0]["cancellation"],
-            {"type": "nonRefundable", "freeUntil": None},
-        )
+        cancellation = response.json()["ratePlans"][0]["cancellation"]
+        self.assertEqual(cancellation["type"], "nonRefundable")
+        self.assertIsNone(cancellation["freeUntil"])
 
     def test_board_item_with_minimum_quantity(self):
         # The service prices its lines with quantity 0 when it creates them, so

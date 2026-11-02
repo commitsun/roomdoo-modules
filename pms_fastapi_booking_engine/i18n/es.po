@@ -175,3 +175,322 @@ msgstr "El canal de venta %(channel)s no está disponible para %(property)s."
 #, python-format
 msgid "There is no property bookable online with id %s."
 msgstr "No hay ninguna propiedad reservable online con el id %s."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Extra not available"
+msgstr "Extra no disponible"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The booking engine does not sell extras yet."
+msgstr "El motor de reservas aún no vende extras."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Idempotency key reused"
+msgstr "Clave de idempotencia reutilizada"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The Idempotency-Key was already used for another request."
+msgstr "La Idempotency-Key ya se usó en otra petición."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Terms not accepted"
+msgstr "Condiciones no aceptadas"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The guest has to accept the booking conditions."
+msgstr "El huésped tiene que aceptar las condiciones de la reserva."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Price changed"
+msgstr "El precio ha cambiado"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The price changed since the preview: show the new one."
+msgstr "El precio ha cambiado desde la vista previa: muestra el nuevo."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Payment method not available"
+msgstr "Método de pago no disponible"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The payment method is not one of the methods of the preview."
+msgstr "El método de pago no es uno de los de la vista previa."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The property does not accept this payment method."
+msgstr "El hotel no acepta este método de pago."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Booking not payable"
+msgstr "Reserva no pagable"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Only a booking waiting for its payment can be paid."
+msgstr "Solo se puede pagar una reserva que espera su pago."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Booking not found"
+msgstr "Reserva no encontrada"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "There is no booking with this id and token."
+msgstr "No hay ninguna reserva con este id y este token."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Occupancy not covered"
+msgstr "Ocupación no cubierta"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The rooms selected cannot lodge the guests, or there are more rooms than adults."
+msgstr "Las habitaciones elegidas no pueden alojar a los huéspedes, o hay más habitaciones que adultos."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Offer unavailable"
+msgstr "Oferta no disponible"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Some offers selected cannot be booked any more."
+msgstr "Algunas ofertas elegidas ya no se pueden reservar."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Return URL not allowed"
+msgstr "URL de vuelta no permitida"
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The return URL is not on a website allowed for the property."
+msgstr "La URL de vuelta no está en una web permitida para el hotel."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_booking_engine_booking.py:0
+#, python-format
+msgid "Payment %(reference)s of %(amount)s %(currency)s received after the booking engine hold expired. Review the booking and refund the payment if it cannot be kept."
+msgstr "Cobro %(reference)s de %(amount)s %(currency)s recibido después de caducar la retención del motor de reservas. Revisa la reserva y devuelve el cobro si no se puede mantener."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_booking_engine_booking.py:0
+msgid "The booking engine hold expired before the payment was done."
+msgstr "La retención del motor de reservas caducó antes de hacerse el pago."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/payment_transaction.py:0
+#, python-format
+msgid "The booking engine could not confirm this booking after its payment %s: confirm it by hand."
+msgstr "El motor de reservas no pudo confirmar esta reserva tras su cobro %s: confírmala a mano."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/payment_transaction.py:0
+#, python-format
+msgid "The payment provider %s has no redirection form."
+msgstr "El proveedor de pago %s no tiene formulario de redirección."
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_property.py:0
+msgid "The booking engine hold must last at least one minute."
+msgstr "La retención del motor de reservas tiene que durar al menos un minuto."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_hold_minutes
+msgid "Booking Engine Hold (minutes)"
+msgstr "Retención del motor de reservas (minutos)"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_hold_minutes
+msgid "Minutes the rooms of a booking stay held while the guest pays at the gateway. The booking is released if the payment does not arrive by then."
+msgstr "Minutos que las habitaciones de una reserva quedan retenidas mientras el huésped paga en la pasarela. La reserva se libera si el pago no llega antes."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_allowed_origins
+msgid "Booking Engine Allowed Origins"
+msgstr "Orígenes permitidos del motor de reservas"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_allowed_origins
+msgid "Origins of the websites the guest can come back to from the payment gateway, one per line, e.g. https://www.example.com"
+msgstr "Orígenes de las webs a las que el huésped puede volver desde la pasarela de pago, uno por línea, p. ej. https://www.example.com"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model,name:pms_fastapi_booking_engine.model_pms_booking_engine_booking
+msgid "Booking Engine Booking"
+msgstr "Reserva del motor de reservas"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__public_id
+msgid "Public ID"
+msgstr "ID público"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__public_id
+msgid "Opaque id the booking engine knows the booking by."
+msgstr "Id opaco con el que el motor de reservas conoce la reserva."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__access_token
+msgid "Access Token"
+msgstr "Token de acceso"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__access_token
+msgid "Credential of the guest to read the booking and pay it."
+msgstr "Credencial del huésped para consultar la reserva y pagarla."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__expires_at
+msgid "Hold Expires At"
+msgstr "La retención caduca el"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__expires_at
+msgid "The reservations are released if the payment is not done by then."
+msgstr "Las reservas se liberan si el pago no se ha hecho para entonces."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__return_url
+msgid "Return URL"
+msgstr "URL de vuelta"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__return_url
+msgid "Page of the booking engine the guest comes back to from the gateway."
+msgstr "Página del motor de reservas a la que vuelve el huésped desde la pasarela."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__language
+msgid "Language the guest booked in (BCP 47)."
+msgstr "Idioma en el que reservó el huésped (BCP 47)."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_first_name
+msgid "Holder First Name"
+msgstr "Nombre del titular"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_last_name
+msgid "Holder Last Name"
+msgstr "Apellidos del titular"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_email
+msgid "Holder Email"
+msgstr "Email del titular"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_phone
+msgid "Holder Phone"
+msgstr "Teléfono del titular"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_country
+msgid "Holder Country"
+msgstr "País del titular"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_country
+msgid "ISO 3166-1 alpha-2 country code."
+msgstr "Código de país ISO 3166-1 alfa-2."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__arrival_time
+msgid "Arrival Time"
+msgstr "Hora de llegada"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__requests
+msgid "Requests"
+msgstr "Peticiones"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__marketing_opt_in
+msgid "Accepts Marketing"
+msgstr "Acepta comunicaciones comerciales"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__terms_accepted_at
+msgid "Terms Accepted At"
+msgstr "Condiciones aceptadas el"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__terms_ip
+msgid "Terms Accepted From"
+msgstr "Condiciones aceptadas desde"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__preview_data
+msgid "Preview Data"
+msgstr "Datos de la vista previa"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__preview_data
+msgid "Price, rooms and payment plan the guest booked, as JSON."
+msgstr "Precio, habitaciones y plan de pago que reservó el huésped, en JSON."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__request_hash
+msgid "Hash of the creation request, to answer its retries the same way."
+msgstr "Hash de la petición de creación, para responder igual a sus reintentos."
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__transaction_ids
+msgid "Transactions"
+msgstr "Transacciones"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__pending_payment
+msgid "Pending Payment"
+msgstr "Pendiente de pago"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__confirmed
+msgid "Confirmed"
+msgstr "Confirmada"
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__expired
+msgid "Expired"
+msgstr "Caducada"

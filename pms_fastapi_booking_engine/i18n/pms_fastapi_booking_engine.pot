@@ -176,3 +176,322 @@ msgstr ""
 #, python-format
 msgid "There is no property bookable online with id %s."
 msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Extra not available"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The booking engine does not sell extras yet."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Idempotency key reused"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The Idempotency-Key was already used for another request."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Terms not accepted"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The guest has to accept the booking conditions."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Price changed"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The price changed since the preview: show the new one."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Payment method not available"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The payment method is not one of the methods of the preview."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The property does not accept this payment method."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Booking not payable"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Only a booking waiting for its payment can be paid."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Booking not found"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "There is no booking with this id and token."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Occupancy not covered"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The rooms selected cannot lodge the guests, or there are more rooms than adults."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Offer unavailable"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Some offers selected cannot be booked any more."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "Return URL not allowed"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/routers/checkout.py:0
+msgid "The return URL is not on a website allowed for the property."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_booking_engine_booking.py:0
+#, python-format
+msgid "Payment %(reference)s of %(amount)s %(currency)s received after the booking engine hold expired. Review the booking and refund the payment if it cannot be kept."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_booking_engine_booking.py:0
+msgid "The booking engine hold expired before the payment was done."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/payment_transaction.py:0
+#, python-format
+msgid "The booking engine could not confirm this booking after its payment %s: confirm it by hand."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/payment_transaction.py:0
+#, python-format
+msgid "The payment provider %s has no redirection form."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#. odoo-python
+#: code:addons/pms_fastapi_booking_engine/models/pms_property.py:0
+msgid "The booking engine hold must last at least one minute."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_hold_minutes
+msgid "Booking Engine Hold (minutes)"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_hold_minutes
+msgid "Minutes the rooms of a booking stay held while the guest pays at the gateway. The booking is released if the payment does not arrive by then."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_property__booking_engine_allowed_origins
+msgid "Booking Engine Allowed Origins"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_property__booking_engine_allowed_origins
+msgid "Origins of the websites the guest can come back to from the payment gateway, one per line, e.g. https://www.example.com"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model,name:pms_fastapi_booking_engine.model_pms_booking_engine_booking
+msgid "Booking Engine Booking"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__public_id
+msgid "Public ID"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__public_id
+msgid "Opaque id the booking engine knows the booking by."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__access_token
+msgid "Access Token"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__access_token
+msgid "Credential of the guest to read the booking and pay it."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__expires_at
+msgid "Hold Expires At"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__expires_at
+msgid "The reservations are released if the payment is not done by then."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__return_url
+msgid "Return URL"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__return_url
+msgid "Page of the booking engine the guest comes back to from the gateway."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__language
+msgid "Language the guest booked in (BCP 47)."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_first_name
+msgid "Holder First Name"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_last_name
+msgid "Holder Last Name"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_email
+msgid "Holder Email"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_phone
+msgid "Holder Phone"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_country
+msgid "Holder Country"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__holder_country
+msgid "ISO 3166-1 alpha-2 country code."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__arrival_time
+msgid "Arrival Time"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__requests
+msgid "Requests"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__marketing_opt_in
+msgid "Accepts Marketing"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__terms_accepted_at
+msgid "Terms Accepted At"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__terms_ip
+msgid "Terms Accepted From"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__preview_data
+msgid "Preview Data"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__preview_data
+msgid "Price, rooms and payment plan the guest booked, as JSON."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,help:pms_fastapi_booking_engine.field_pms_booking_engine_booking__request_hash
+msgid "Hash of the creation request, to answer its retries the same way."
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields,field_description:pms_fastapi_booking_engine.field_pms_booking_engine_booking__transaction_ids
+msgid "Transactions"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__pending_payment
+msgid "Pending Payment"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__confirmed
+msgid "Confirmed"
+msgstr ""
+
+#. module: pms_fastapi_booking_engine
+#: model:ir.model.fields.selection,name:pms_fastapi_booking_engine.selection__pms_booking_engine_booking__state__expired
+msgid "Expired"
+msgstr ""

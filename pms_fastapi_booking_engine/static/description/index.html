@@ -424,6 +424,17 @@ rooms of a property.</li>
 <p>The module creates the <em>PMS Booking Engine API</em> endpoint, run by the
 <em>PMS Booking Engine</em> user. Its documentation is at
 <tt class="docutils literal"><span class="pre">/booking-engine/v1/docs</span></tt>.</p>
+<p>To take bookings:</p>
+<ol class="arabic simple">
+<li>In the <em>Booking Engine</em> tab, list in <em>Booking Engine Allowed Origins</em> the
+websites the guest comes back to from the payment gateway, one per line,
+e.g. <tt class="docutils literal"><span class="pre">https://www.example.com</span></tt>. A return URL elsewhere is refused.</li>
+<li>Set how many minutes the rooms stay held while the guest pays in
+<em>Booking Engine Hold (minutes)</em>; 15 by default.</li>
+<li>Publish the payment providers of the property (<em>Published</em>, in test or
+enabled state). A gateway takes part through its own bridge module, e.g.
+<em>PMS FastAPI Booking Engine - Redsys</em>.</li>
+</ol>
 </div>
 <div class="section" id="usage">
 <h1><a class="toc-backref" href="#toc-entry-2">Usage</a></h1>
@@ -436,6 +447,23 @@ required.</p>
 <p>Each offer is priced for one unit filled with the guests searched up to its
 capacity, adults first. The recommended rooms are priced with the guests of
 each room. <tt class="docutils literal">availableUnits</tt> is shared by all the offers of a room type.</p>
+<p>To book, the engine sends the offers chosen to
+<tt class="docutils literal">POST <span class="pre">/booking-engine/v1/properties/{propertyId}/bookings/preview</span></tt>, which
+prices them again and tells how the booking is paid, and then the same
+selection with the holder to <tt class="docutils literal">POST <span class="pre">.../bookings</span></tt>, with an
+<tt class="docutils literal"><span class="pre">Idempotency-Key</span></tt> header per checkout. The creation answers the booking, its
+<tt class="docutils literal">accessToken</tt> and the next action: nothing, or a form to submit to the
+payment gateway. The rooms are held as pre-reservations until the payment
+arrives; the folio is confirmed when the gateway notifies it, and the holds not
+paid in time are released by a cron, without penalty.</p>
+<p>The gateway sends the guest back to <tt class="docutils literal"><span class="pre">returnUrl?bookingId=…&amp;payment=ok|ko</span></tt>.
+That result only guides: the engine reads the status with
+<tt class="docutils literal">GET <span class="pre">/booking-engine/v1/bookings/{bookingId}</span></tt> and
+<tt class="docutils literal">Authorization: Bearer &lt;accessToken&gt;</tt>, and retries a failed payment with
+<tt class="docutils literal">POST <span class="pre">.../bookings/{bookingId}/payments</span></tt>.</p>
+<p>Until the rates have payment policies, the rooms of a rate that cannot be
+cancelled for free are paid in full when booking, their tourist tax included,
+and the rest at the property.</p>
 </div>
 <div class="section" id="bug-tracker">
 <h1><a class="toc-backref" href="#toc-entry-3">Bug Tracker</a></h1>
