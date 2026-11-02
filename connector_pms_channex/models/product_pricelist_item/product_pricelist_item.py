@@ -61,8 +61,9 @@ class ProductPricelistItem(models.Model):
                 pricelists._channex_stage_restrictions(
                     room_type=room_type,
                     board_service=board_service,
-                    date_from=item.date_start_consumption,
-                    date_to=item.date_end_consumption,
+                    # An end left open is every night on that side.
+                    date_from=item.date_start_consumption or None,
+                    date_to=item.date_end_consumption or None,
                     pms_properties=item.pms_property_ids,
                 )
 
