@@ -20,3 +20,5 @@ class PmsRoomTypeInfo(Datamodel):
     minPrice = fields.Float(required=False, allow_none=True)
     defaultMaxAvail = fields.Integer(required=False, allow_none=True)
     defaultQuota = fields.Integer(required=False, allow_none=True)
+    maxOccupancy = fields.Integer(required=False, allow_none=True)
+    defaultOccupancy = fields.Integer(required=False, allow_none=True)
