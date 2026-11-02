@@ -1,7 +1,7 @@
 # Copyright 2026 Roomdoo
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 #: What Channex can be told a rate plan includes to eat. Its ``none``, which is
 #: telling nothing, is the field left empty. ``carribean`` is spelt as Channex
@@ -41,3 +41,12 @@ class ProductTemplate(models.Model):
         help="What Channex, and the channels it sells through, are told this "
         "board service includes. Left empty, they are told nothing.",
     )
+
+    @api.constrains("per_person")
+    def _check_channex_children_board(self):
+        """Charged per person, a board service charges children too."""
+        boards = self.filtered("is_board_service")
+        if boards:
+            self.env["product.pricelist"].search(
+                [("board_service_ids", "in", boards.ids)]
+            )._channex_check_children_board()

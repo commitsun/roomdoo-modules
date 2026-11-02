@@ -18,14 +18,17 @@ class ChannelChannexProductPricelistItemListener(Component):
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
         record._channex_stage_restrictions()
+        record._channex_schedule_rate_plans()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if fields and set(fields) & PRICE_FIELDS:
             record._channex_stage_restrictions()
+            record._channex_schedule_rate_plans()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_unlink(self, record, fields=None):
         # Read before the item is gone: deleting it moves the price back to
         # whatever priced those nights before.
         record._channex_stage_restrictions()
+        record._channex_schedule_rate_plans()
