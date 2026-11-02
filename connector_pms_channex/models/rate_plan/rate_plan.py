@@ -8,7 +8,7 @@ from odoo.addons.connector.exception import IDMissingInBackend
 
 from ...components.adapter import ChannexAPIError
 from ..common.ari import stage_ari, union_window
-from ..common.board import board_total, board_units
+from ..common.board import board_child_fee, board_total, board_units
 
 
 class ChannelChannexRatePlan(models.Model):
@@ -168,6 +168,11 @@ class ChannelChannexRatePlan(models.Model):
         Priced per guest and by hand, never derived by Channex: Odoo works out
         the price of every occupancy itself. The occupancies are only sent on
         creation, as from then on Channex makes them follow the room type.
+
+        Children are not an occupancy: Channex charges each one the children
+        fee, the pricelist's for the room type plus what a child adds to the
+        board service. That is one amount for every night, which is why a
+        pricelist sold here cannot price by date what a child consumes.
         """
         self.ensure_one()
         room_type_binding = self.room_type_binding_id
@@ -176,7 +181,15 @@ class ChannelChannexRatePlan(models.Model):
         primary = room_type.default_occupancy
         if not 0 < primary <= occupancies:
             primary = occupancies
-        children_fee = room_type._get_occupancy_rule(self.pricelist_id).children_fee
+        # Any night does: no price a child pays here changes with the date.
+        board = board_units(
+            self.pricelist_id,
+            self.board_service_id,
+            self.backend_id.pms_property_id,
+            fields.Date.context_today(self),
+        )
+        occupancy_rule = room_type._get_occupancy_rule(self.pricelist_id)
+        children_fee = occupancy_rule.children_fee + board_child_fee(board)
         return {
             "title": self._channex_title(),
             "property_id": self.backend_id._channex_bound_property_id(),
