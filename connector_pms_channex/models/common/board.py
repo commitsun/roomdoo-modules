@@ -55,3 +55,22 @@ def board_total(units, adults, children):
         if count:
             total += unit * (count if product.per_person else 1)
     return total
+
+
+def board_child_fee(units):
+    """What a child adds to the board service of a room, which Channex
+    charges as a fixed amount for each child on top of the adults' price.
+
+    :param units: as ``board_units`` returns them
+    """
+    return board_total(units, 1, 1) - board_total(units, 1, 0)
+
+
+def child_products(board_service):
+    """The products of a board service that charge for a child. Their price is
+    part of the children fee, so it cannot change from one night to another."""
+    return [
+        product
+        for product, _guest_type in board_service._get_board_service_products(1, 1)
+        if board_child_fee({product: 1.0})
+    ]
