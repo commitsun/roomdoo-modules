@@ -83,6 +83,9 @@ class PmsPriceService(Component):
 
         PmsPriceInfo = self.env.datamodels["pms.price.info"]
         result_prices = []
+        # Only room types are priced by who stays in them
+        adults = prices_search_param.adults if room_type else False
+        children = prices_search_param.children if room_type else False
         date_from = fields.Date.from_string(prices_search_param.dateFrom)
         date_to = fields.Date.from_string(prices_search_param.dateTo)
         dates = [
@@ -128,6 +131,8 @@ class PmsPriceService(Component):
                                 partner_id=prices_search_param.partnerId,
                                 product_qty=prices_search_param.productQty,
                                 consumption_date=price_date,
+                                adults=adults,
+                                children=children,
                             ),
                             2,
                         ),
@@ -145,6 +150,8 @@ class PmsPriceService(Component):
         consumption_date=False,
         board_service_id=False,
         board_service_line_id=False,
+        adults=False,
+        children=False,
     ):
         pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
         pms_api_check_access(user=self.env.user, records=pms_property)
@@ -162,12 +169,18 @@ class PmsPriceService(Component):
             consumption_date=consumption_date,
         )
         if pricelist:
+            # Priced the same way as the nights of a reservation: the adults
+            # derive it from the default occupancy of the room type, and the
+            # children are charged on top where a module adds their fee
             price = pricelist._get_product_price(
                 product=product,
                 quantity=product_qty or 1,
                 consumption_date=consumption_date,
                 pms_property_id=pms_property_id,
                 board_service_line_id=board_service_line_id,
+                occupancy=adults,
+                children=children,
+                pricelist=pricelist,
             )
         else:
             price = product.lst_price

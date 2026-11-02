@@ -91,6 +91,7 @@ class PmsRoomService(Component):
                     name=room.display_name,
                     roomTypeId=room.room_type_id,
                     capacity=room.capacity,
+                    childrenCapacity=room.children_capacity,
                     shortName=short_name,
                     roomTypeClassId=room.room_type_id.class_id,
                     ubicationId=room.ubication_id,
@@ -133,6 +134,7 @@ class PmsRoomService(Component):
             name=room.name,
             roomTypeId=room.room_type_id,
             capacity=room.capacity,
+            childrenCapacity=room.children_capacity,
             shortName=room.short_name,
             extraBedsAllowed=room.extra_beds_allowed,
             cleaningStatus=room.cleaning_status,
@@ -211,6 +213,7 @@ class PmsRoomService(Component):
                     "name": pms_room_info_param.name,
                     "room_type_id": pms_room_info_param.roomTypeId,
                     "capacity": pms_room_info_param.capacity,
+                    "children_capacity": pms_room_info_param.childrenCapacity or 0,
                     "short_name": pms_room_info_param.shortName,
                     "pms_property_id": pms_room_info_param.pmsPropertyId,
                 }
