@@ -353,6 +353,9 @@ class ChannelWubookPmsFolioAdapter(Component):
                         "customer_notes": customer_notes,
                         "lines": lines,
                         "id_channel": id_channel,
+                        "ota_tourist_tax_included": (
+                            id_channel == 2 and self._tourist_tax_included(room)
+                        ),
                     }
                 )
             value["reservations"] = reservations
@@ -376,3 +379,21 @@ class ChannelWubookPmsFolioAdapter(Component):
         for day in room["roomdays"]:
             day["price"] = round(day["price"] * coef, 2)
         return True
+
+    def _tourist_tax_included(self, room):
+        """Whether Booking.com put the tourist tax inside the room rates.
+
+        Booking.com lists the taxes of each room in its ``extracomponents``
+        with their name in the language of the account ('IVA', 'Impuesto
+        municipal', 'Mehrwertsteuer'...), so they are told apart by how they
+        are charged: VAT is never charged per person, a tourist tax per guest
+        is. Whether it is part of the rates depends on how the hotel set the
+        tax up in Booking.com.
+        """
+        ancillary = room.get("ancillary")
+        if not isinstance(ancillary, dict):
+            return False
+        return any(
+            component.get("amount_included") and component.get("per_person")
+            for component in ancillary.get("extracomponents") or []
+        )
