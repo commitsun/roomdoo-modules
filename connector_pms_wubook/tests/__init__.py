@@ -16,3 +16,4 @@ from . import test_master_sync
 from . import test_ota_locator
 from . import test_pricelist_flatten
 from . import test_reservation_mapper
+from . import test_room_type_occupancy
