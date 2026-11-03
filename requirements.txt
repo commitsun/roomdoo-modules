@@ -1,6 +1,8 @@
 # generated from manifests external_dependencies
+cryptography
 geopy
 jose
+lxml
 marshmallow
 phonenumbers
 pyinstrument
@@ -14,3 +16,4 @@ simplejson
 thefuzz
 whatsapp_formatter
 xlsxwriter
+xmlsig

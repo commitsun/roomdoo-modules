@@ -1,0 +1,8 @@
+<soapenv:Envelope
+  xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+><soapenv:Body><ns0:envioFicheroXMLResponse
+      xmlns:ns0="https://ws.negocio.registroHostelero.a19.gvdi.com"
+    ><ns0:return><respuesta><error><codigo>403</codigo><descripcion
+            >Error de seguridad: no autorizado</descripcion></error><peticion
+          /></respuesta><resultado
+        /></ns0:return></ns0:envioFicheroXMLResponse></soapenv:Body></soapenv:Envelope>
