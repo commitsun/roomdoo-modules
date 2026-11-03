@@ -117,9 +117,19 @@ class ChannelWubookPmsFolioMapperImport(Component):
 
     @mapping
     def lang(self, record):
-        lang = self.env["res.lang"].search(
-            [("iso_code", "=", record["customer_language_iso"])], limit=1
+        # Wubook sends a bare ISO code ("en"), which stock data gives to a
+        # single language (English (US)); pms.channel_lang.<iso> picks
+        # another active one, as in pms_api_rest.
+        iso_code = record["customer_language_iso"]
+        langs = self.env["res.lang"]
+        lang_code = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param(f"pms.channel_lang.{iso_code}")
         )
+        lang = lang_code and langs.search([("code", "=", lang_code)], limit=1)
+        if not lang:
+            lang = langs.search([("iso_code", "=", iso_code)], limit=1)
         if lang:
             return {"lang": lang.code}
         return {}
