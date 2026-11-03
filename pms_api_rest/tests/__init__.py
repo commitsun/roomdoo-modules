@@ -16,3 +16,4 @@ from . import test_reservation_cancel_date
 from . import test_folio_list_reservation_price
 from . import test_portal_token_second_factor
 from . import test_dashboard_archived_rooms
+from . import test_channel_lang
