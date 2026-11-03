@@ -2055,12 +2055,7 @@ class PmsFolioService(Component):
         external_app = self.env.user.pms_api_client
         if not external_app:
             return lang_code
-        return (
-            self.env["res.lang"]
-            .sudo()
-            .search([("iso_code", "=", lang_code)], limit=1)
-            .code
-        )
+        return self.env["pms.folio"]._get_channel_lang(lang_code)
 
     def get_board_service_room_type_id(
         self, room_type_id, pms_property_id, board_service_id=False, pricelist_id=False

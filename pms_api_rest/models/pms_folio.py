@@ -327,6 +327,28 @@ class PmsFolio(models.Model):
 
         return cmds
 
+    def _get_channel_lang(self, iso_code):
+        """Return the code of the active language for a channel ISO code.
+
+        Channels send a bare ISO code ("en"), which stock data gives to a
+        single language (English (US)). The system parameter
+        ``pms.channel_lang.<iso_code>`` (e.g. ``pms.channel_lang.en`` =
+        ``en_GB``) sends those guests to another active language instead.
+        Returns False when no active language matches.
+        """
+        if not iso_code:
+            return False
+        langs = self.env["res.lang"].sudo()
+        lang_code = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param(f"pms.channel_lang.{iso_code}")
+        )
+        lang = lang_code and langs.search([("code", "=", lang_code)], limit=1)
+        if not lang:
+            lang = langs.search([("iso_code", "=", iso_code)], limit=1)
+        return lang.code
+
     def create_folio_vals(self, folio_record, pms_folio_info):
         folio_vals = {}
 
@@ -362,12 +384,10 @@ class PmsFolio(models.Model):
 
         # language (special case)
         if pms_folio_info.language:
-            lang_obj = (
-                self.env["res.lang"]
-                .sudo()
-                .search([("iso_code", "=", pms_folio_info.language)], limit=1)
+            lang = (
+                self._get_channel_lang(pms_folio_info.language)
+                or pms_folio_info.language
             )
-            lang = lang_obj.code if lang_obj else pms_folio_info.language
             if not folio_record or lang != folio_record.lang:
                 folio_vals["lang"] = lang
 
