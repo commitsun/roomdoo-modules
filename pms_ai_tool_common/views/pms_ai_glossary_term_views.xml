@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_ai_glossary_term_view_tree" model="ir.ui.view">
+        <field name="name">pms.ai.glossary.term.tree</field>
+        <field name="model">pms.ai.glossary.term</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted="not active">
+                <field name="name" />
+                <field name="code" />
+                <field name="area" />
+                <field name="tax_basis" optional="show" />
+                <field name="synonyms" optional="show" />
+                <field name="tool_names" optional="hide" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="pms_ai_glossary_term_view_form" model="ir.ui.view">
+        <field name="name">pms.ai.glossary.term.form</field>
+        <field name="model">pms.ai.glossary.term</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <field name="active" invisible="1" />
+                    <div class="oe_title">
+                        <label for="name" />
+                        <h1>
+                            <field name="name" placeholder="RevPAR" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="revpar" />
+                            <field name="area" />
+                            <field name="tax_basis" />
+                        </group>
+                        <group>
+                            <field name="synonyms" />
+                            <field
+                name="source"
+                placeholder="pms.reservation.line.price"
+              />
+                            <field name="tool_names" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="definition" />
+                        <field name="formula" />
+                        <field name="pitfalls" />
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" />
+                    <field name="message_ids" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="pms_ai_glossary_term_view_search" model="ir.ui.view">
+        <field name="name">pms.ai.glossary.term.search</field>
+        <field name="model">pms.ai.glossary.term</field>
+        <field name="arch" type="xml">
+            <search>
+                <field
+          name="name"
+          string="Term"
+          filter_domain="['|', '|', '|', ('name', 'ilike', self), ('code', 'ilike', self), ('synonyms', 'ilike', self), ('definition', 'ilike', self)]"
+        />
+                <field name="tool_names" />
+                <filter
+          name="without_vat"
+          string="Without VAT"
+          domain="[('tax_basis', '=', 'without_vat')]"
+        />
+                <filter
+          name="with_vat"
+          string="With VAT"
+          domain="[('tax_basis', '=', 'with_vat')]"
+        />
+                <filter
+          name="unverified"
+          string="Unverified"
+          domain="[('definition', 'ilike', '[Sin verificar]')]"
+        />
+                <separator />
+                <filter
+          name="archived"
+          string="Archived"
+          domain="[('active', '=', False)]"
+        />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_area"
+            string="Area"
+            context="{'group_by': 'area'}"
+          />
+                    <filter
+            name="group_tax_basis"
+            string="VAT"
+            context="{'group_by': 'tax_basis'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="pms_ai_glossary_term_action" model="ir.actions.act_window">
+        <field name="name">AI glossary</field>
+        <field name="res_model">pms.ai.glossary.term</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_group_area': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add the first term of the glossary
+            </p>
+            <p>
+                The AI tools read these terms to know what a word means in the data of the PMS.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+    id="menu_pms_ai_glossary_term"
+    name="Glossary"
+    parent="ai_tool.ai_menu_root"
+    action="pms_ai_glossary_term_action"
+    sequence="20"
+  />
+    <!-- Settings > Technical is only for administrators: the editors of the
+         glossary reach it from here. -->
+    <menuitem
+    id="menu_pms_ai_glossary_root"
+    name="AI glossary"
+    action="pms_ai_glossary_term_action"
+    groups="group_ai_glossary_editor"
+    sequence="95"
+  />
+</odoo>

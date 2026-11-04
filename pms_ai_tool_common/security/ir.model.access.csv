@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pms_ai_glossary_term_user,pms.ai.glossary.term user,model_pms_ai_glossary_term,base.group_user,1,0,0,0
+access_pms_ai_glossary_term_editor,pms.ai.glossary.term editor,model_pms_ai_glossary_term,group_ai_glossary_editor,1,1,1,0
+access_pms_ai_glossary_term_system,pms.ai.glossary.term system,model_pms_ai_glossary_term,base.group_system,1,1,1,1

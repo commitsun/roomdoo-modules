@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_my_scope" model="ai.tool">
+        <field name="name">pms_my_scope</field>
+        <field
+      name="description"
+    >Properties (hotels) and companies the user can access, with their ids, property code, city and company. Call it first to learn which ids the other tools accept. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_my_scope</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_property_find" model="ai.tool">
+        <field name="name">pms_property_find</field>
+        <field
+      name="description"
+    >Finds the properties (hotels) of the user by name, code or city and returns their ids, code, city and company, at most 20. Use it to turn a hotel name into the property_id other tools ask for. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_property_find</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_folio_find" model="ai.tool">
+        <field name="name">pms_folio_find</field>
+        <field
+      name="description"
+    >Finds folios by folio code, by the locator of the channel or OTA, or by the holder name, optionally in one property and around an arrival date (3 days each side). Returns at most 20 folios with id, code, locator, property, arrival, departure, state and the holder shortened to first name and surname initial. Read only; no other guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_find</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_partner_find" model="ai.tool">
+        <field name="name">pms_partner_find</field>
+        <field
+      name="description"
+    >Finds the companies and agencies the user can read by name, tax id (VAT) or reference, and returns id, name, tax id, whether it is an agency and its salesperson, at most 20. Private individuals, e-mails and phones are never returned. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_partner_find</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_user_find" model="ai.tool">
+        <field name="name">pms_user_find</field>
+        <field
+      name="description"
+    >Finds internal users by name or login, and employees by name or job, with their job and the properties where they work (optionally only one property). Use it to find who holds a role, such as the TAZ or the manager of a hotel. At most 20 of each. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_user_find</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_product_find" model="ai.tool">
+        <field name="name">pms_product_find</field>
+        <field
+      name="description"
+    >Finds service products (id, name, per night or not, when it is consumed), board services and room types (id, name, class, properties) by name or code, at most 20 of each kind. Kind: service, board, room_type or all. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_product_find</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_glossary_search" model="ai.tool">
+        <field name="name">pms_glossary_search</field>
+        <field
+      name="description"
+    >Looks up a word in the business glossary (in Spanish): terms and acronyms of the PMS, revenue, accounting, regulation and Alda, such as pickup, a asignar or diario TB. Matches names, codes, synonyms and definitions, best first, at most 20, optionally in one area. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_glossary_search</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_glossary_term" model="ai.tool">
+        <field name="name">pms_glossary_term</field>
+        <field
+      name="description"
+    >Full card of a glossary term by its code: definition, formula, source model and field, whether the amounts are with or without VAT, synonyms, usual pitfalls and the tools that use it. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_glossary_term</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>

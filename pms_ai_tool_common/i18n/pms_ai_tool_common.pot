@@ -1,0 +1,671 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_common
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-04 12:57+0000\n"
+"PO-Revision-Date: 2026-11-04 12:57+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"%(products)s service products, %(board)s board services and %(room_types)s "
+"room types found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "%(properties)s properties and %(companies)s companies."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "%(users)s users and %(employees)s employees found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "%s companies or agencies found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "%s folios found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid "%s glossary terms found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "%s properties found."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid ""
+"A definition marked [Sin verificar] says something about how Alda or Roomdoo"
+" work that has not been checked against the code or the data: present it as "
+"a hypothesis."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.actions.act_window,name:pms_ai_tool_common.pms_ai_glossary_term_action
+#: model:ir.ui.menu,name:pms_ai_tool_common.menu_pms_ai_glossary_root
+msgid "AI glossary"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:res.groups,name:pms_ai_tool_common.group_ai_glossary_editor
+msgid "AI glossary editor"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model,name:pms_ai_tool_common.model_pms_ai_glossary_term
+msgid "AI glossary term"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__accounting
+msgid "Accounting and tax"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_needaction
+msgid "Action Needed"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__active
+msgid "Active"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.actions.act_window,help:pms_ai_tool_common.pms_ai_glossary_term_action
+msgid "Add the first term of the glossary"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Agency (glossary: agencia): a partner that brings folios as an intermediary."
+" Salesperson (glossary: comercial): the user responsible for the partner."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__alda
+msgid "Alda and Roomdoo"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_form
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__area
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Area"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Arrival and departure are the first check-in and the last check-out of the "
+"folio."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_attachment_count
+msgid "Attachment Count"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Board service (glossary: regimen): the meals included in a reservation. Room"
+" type (glossary: tipo_habitacion): a kind of room that is sold, with its own"
+" price and availability."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:res.groups,comment:pms_ai_tool_common.group_ai_glossary_editor
+msgid ""
+"Can create and change the terms of the glossary that the AI tools read. "
+"Everybody else can only read them."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__code
+msgid "Code"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__definition
+msgid "Definition"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "Employees are not available for this user."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "Employees cannot be filtered by property: it is not recorded."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Folio (glossary: folio): the booking file that groups the reservations of a "
+"stay. Code: the folio number. Locator: its reference in an external system, "
+"usually the OTA or channel manager (glossary: localizador)."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_follower_ids
+msgid "Followers"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_partner_ids
+msgid "Followers (Partners)"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__formula
+msgid "Formula"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.ui.menu,name:pms_ai_tool_common.menu_pms_ai_glossary_term
+msgid "Glossary"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Group By"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__has_message
+msgid "Has Message"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Holder: only the first name and the initial of the surname, to protect the "
+"guests; companies are shown in full. Open the folio in Odoo for the full "
+"name."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__formula
+msgid "How it is calculated, if it is a figure."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__id
+msgid "ID"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_error
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_is_follower
+msgid "Is Follower"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_main_attachment_id
+msgid "Main Attachment"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_error
+msgid "Message Delivery error"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_ids
+msgid "Messages"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__source
+msgid ""
+"Model and field where the data comes from, for example "
+"pms.reservation.line.price."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__tool_names
+msgid "Names of the AI tools that use the term, separated by commas."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__tax_basis__n_a
+msgid "Not applicable"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_needaction_counter
+msgid "Number of Actions"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_error_counter
+msgid "Number of errors"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Only companies and agencies are searched; private individuals are never "
+"returned, and no e-mail or phone is returned."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "Only the first %(shown)s %(what)s are shown: narrow the search."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid ""
+"Only the first %(shown)s of %(total)s terms are shown: narrow the text or "
+"choose an area."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Only the properties the user can access are searched. The id is what the "
+"other tools ask for as property_id."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__synonyms
+msgid "Other names of the term, separated by commas, as people say it."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__pms
+msgid "PMS"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model,name:pms_ai_tool_common.model_pms_ai_tools
+msgid "PMS AI tools"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__pitfalls
+msgid "Pitfalls"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Property (glossary: propiedad): a hotel. Company (glossary: sociedad): the "
+"legal entity that owns the property and issues its invoices."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__regulatory
+msgid "Regulatory"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_form
+msgid "RevPAR"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__revenue
+msgid "Revenue"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid "Search it with pms_glossary_search."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"Service product (glossary: servicio): an extra that can be added to a "
+"reservation. per_day: charged for each night. consumed_on: when it is "
+"consumed in relation to the night (glossary: consumo_servicio)."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__code
+msgid ""
+"Short lowercase identifier (letters, digits, underscores and hyphens) that "
+"the AI tools use to ask for the term."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid "Similar terms: %s."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__source
+msgid "Source"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__area__support
+msgid "Support"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__synonyms
+msgid "Synonyms"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__name
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Term"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.actions.act_window,help:pms_ai_tool_common.pms_ai_glossary_term_action
+msgid ""
+"The AI tools read these terms to know what a word means in the data of the "
+"PMS."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_term.py:0
+#, python-format
+msgid ""
+"The code %s is not valid: use lowercase letters, digits, underscores and "
+"hyphens, without spaces."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.constraint,message:pms_ai_tool_common.constraint_pms_ai_glossary_term_code_uniq
+msgid "The code of a glossary term must be unique."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid ""
+"The glossary is kept in Odoo by the business. A definition marked [Sin "
+"verificar] says something about how Alda or Roomdoo work that has not been "
+"checked against the code or the data: present it as a hypothesis."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid ""
+"The glossary is kept in Odoo by the business. Ask for the full card of a "
+"term with pms_glossary_term and its code."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "The search text is empty."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_glossary_tools.py:0
+#, python-format
+msgid "There is no glossary term with the code %(code)s. %(hint)s"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__tool_names
+msgid "Tools"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Unverified"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid ""
+"User: an internal login of Odoo. Employee: a person of the staff, with the "
+"job and the properties where they work. TAZ (glossary: taz) is a job."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__pitfalls
+msgid "Usual mistakes and cases that do not match the definition."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__tax_basis
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "VAT"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,field_description:pms_ai_tool_common.field_pms_ai_glossary_term__website_message_ids
+msgid "Website Messages"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__website_message_ids
+msgid "Website communication history"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__definition
+msgid ""
+"What the term means and how it is computed in the data of the PMS. Say if "
+"the amounts are with or without VAT."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields,help:pms_ai_tool_common.field_pms_ai_glossary_term__tax_basis
+msgid "Whether the amounts of the term include VAT."
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__tax_basis__with_vat
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "With VAT"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model:ir.model.fields.selection,name:pms_ai_tool_common.selection__pms_ai_glossary_term__tax_basis__without_vat
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_search
+msgid "Without VAT"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "board services"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "employees"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "folios"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "partners"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_form
+msgid "pms.reservation.line.price"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "products"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "properties"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#: model_terms:ir.ui.view,arch_db:pms_ai_tool_common.pms_ai_glossary_term_view_form
+msgid "revpar"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "room types"
+msgstr ""
+
+#. module: pms_ai_tool_common
+#. odoo-python
+#: code:addons/pms_ai_tool_common/models/pms_ai_finders.py:0
+#, python-format
+msgid "users"
+msgstr ""

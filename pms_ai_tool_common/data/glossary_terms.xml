@@ -1,0 +1,2268 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="glossary_folio" model="pms.ai.glossary.term">
+        <field name="code">folio</field>
+        <field name="name">Folio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Expediente o carpeta de una estancia (pms.folio): agrupa de 1 a N reservas con sus servicios, pagos y facturas. Una reserva pertenece a exactamente un folio. En la interfaz en español de PMS se llama «Ficha».</field>
+        <field name="source">pms.folio</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">ficha, expediente, carpeta, booking</field>
+        <field
+      name="pitfalls"
+    >Los importes se agregan por folio, no por habitación: en un folio de varias habitaciones el precio puede estar consolidado en una sola reserva.</field>
+        <field name="tool_names">pms_folio_find</field>
+    </record>
+    <record id="glossary_reserva" model="pms.ai.glossary.term">
+        <field name="code">reserva</field>
+        <field name="name">Reserva</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Una habitación con fecha de entrada y de salida (pms.reservation). Sus noches son líneas de reserva y pertenece a un único folio.</field>
+        <field name="source">pms.reservation</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">reservation, habitación reservada</field>
+        <field
+      name="pitfalls"
+    >No es lo mismo que el folio: una reserva es una habitación; un grupo es un folio con varias reservas.</field>
+        <field name="tool_names">pms_folio_find</field>
+    </record>
+    <record id="glossary_linea_reserva" model="pms.ai.glossary.term">
+        <field name="code">linea_reserva</field>
+        <field name="name">Línea de reserva (noche)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Una línea por cada noche de una reserva (pms.reservation.line), con la habitación, el precio de la noche (price, con IVA), el descuento y el neto del día (price_day_total).</field>
+        <field
+      name="formula"
+    >price_day_total = price × (1 − discount/100) × (1 − cancel_discount/100)</field>
+        <field name="source">pms.reservation.line.price</field>
+        <field name="tax_basis">with_vat</field>
+        <field name="synonyms">noche, línea de noche</field>
+        <field
+      name="pitfalls"
+    >«Neto» significa después de descuentos pero con IVA incluido. El importe sin IVA está en los subtotales aparte.</field>
+        <field
+      name="tool_names"
+    >pms_discounts_summary, pms_salesperson_sales</field>
+    </record>
+    <record id="glossary_habitacion" model="pms.ai.glossary.term">
+        <field name="code">habitacion</field>
+        <field name="name">Habitación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Habitación física de un hotel (pms.room): pertenece a un tipo de habitación, tiene capacidad (plazas) y nombre corto único por hotel. La capacidad del hotel es el número de habitaciones activas.</field>
+        <field name="source">pms.room</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">room, unidad</field>
+        <field
+      name="pitfalls"
+    >Las habitaciones archivadas no cuentan hoy pero sí en los históricos: para fechas pasadas hay que usar active_test=False y las fechas de alta y baja si existen.</field>
+    </record>
+    <record id="glossary_tipo_habitacion" model="pms.ai.glossary.term">
+        <field name="code">tipo_habitacion</field>
+        <field name="name">Tipo de habitación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Clase de alojamiento que se vende (doble, suite, apartamento…) con su precio, disponibilidad y reglas (pms.room.type). Es también un producto de Odoo y pertenece a una clase de habitación.</field>
+        <field name="source">pms.room.type</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">room type, categoría, tipología</field>
+        <field
+      name="pitfalls"
+    >Un tipo que debe viajar al channel manager necesita su binding: sin él queda fuera de todos los envíos y no da ningún error.</field>
+        <field name="tool_names">pms_product_find</field>
+    </record>
+    <record id="glossary_clase_habitacion" model="pms.ai.glossary.term">
+        <field name="code">clase_habitacion</field>
+        <field name="name">Clase de habitación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Clase a la que pertenece un tipo de habitación (pms.room.type.class, con código): agrupa tipos parecidos.</field>
+        <field name="source">pms.room.type.class</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">clase, tipología general</field>
+    </record>
+    <record id="glossary_propiedad" model="pms.ai.glossary.term">
+        <field name="code">propiedad</field>
+        <field name="name">Propiedad (hotel)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Establecimiento que gestiona el PMS (pms.property); en la interfaz en español se llama «Hotel». Tiene código corto, ciudad, sociedad, tarifa por defecto, habitaciones y cuenta analítica.</field>
+        <field name="source">pms.property</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >hotel, establecimiento, property, alojamiento</field>
+        <field
+      name="pitfalls"
+    >El property_id que piden las herramientas es el id de Odoo, no el código corto del hotel (pms_property_code). Resolverlo con pms_property_find.</field>
+        <field name="tool_names">pms_my_scope, pms_property_find</field>
+    </record>
+    <record id="glossary_sociedad" model="pms.ai.glossary.term">
+        <field name="code">sociedad</field>
+        <field name="name">Sociedad</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Entidad legal que posee uno o varios hoteles y emite sus facturas (res.company). Los diarios, los asientos y las fechas de bloqueo pertenecen a una sociedad.</field>
+        <field name="source">res.company</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">compañía, empresa del grupo, company</field>
+        <field
+      name="pitfalls"
+    >Alda tiene varias sociedades: las cifras contables no se pueden sumar ni comparar sin decir de cuál se habla.</field>
+        <field name="tool_names">pms_my_scope</field>
+    </record>
+    <record id="glossary_regimen" model="pms.ai.glossary.term">
+        <field name="code">regimen</field>
+        <field name="name">Régimen (pensión)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Comidas incluidas en una reserva: solo alojamiento, desayuno, media pensión, pensión completa. En el PMS es un servicio con is_board_service=True cuyas cantidades diarias van en líneas de servicio (pms.board.service define los regímenes).</field>
+        <field name="source">pms.board.service</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >pensión, board, board service, desayuno, media pensión</field>
+        <field
+      name="pitfalls"
+    >priceOnlyServices suma régimen y extras, con IVA: para separar los desayunos hay que filtrar por isBoardService. Reservas con desayuno a 0 por el bug de board services huérfanos (bolsa legacy 2025-2026) infrafacturan el régimen.</field>
+        <field name="tool_names">pms_product_find</field>
+    </record>
+    <record id="glossary_servicio" model="pms.ai.glossary.term">
+        <field name="code">servicio</field>
+        <field name="name">Servicio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Extra de una reserva (desayuno, parking, cuna…) y también los regímenes (pms.service). Cada servicio tiene líneas de servicio con la cantidad de cada día.</field>
+        <field name="source">pms.service</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">extra, service</field>
+        <field
+      name="pitfalls"
+    >Régimen y extra son el mismo modelo: lo que distingue al régimen es is_board_service.</field>
+        <field name="tool_names">pms_product_find, pms_service_nights</field>
+    </record>
+    <record id="glossary_linea_servicio" model="pms.ai.glossary.term">
+        <field name="code">linea_servicio</field>
+        <field name="name">Línea de servicio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Cantidad diaria (day_qty) de un servicio en una fecha (pms.service.line). Solo cuenta como consumo la línea con day_qty mayor que 0.</field>
+        <field name="source">pms.service.line.day_qty</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">service line, línea de consumo</field>
+        <field
+      name="pitfalls"
+    >Puede haber líneas fuera de la estancia (cargadas a mano otro día) o repetidas para la misma noche (cargadas dos veces): una noche se cuenta una sola vez.</field>
+        <field name="tool_names">pms_service_nights</field>
+    </record>
+    <record id="glossary_consumo_servicio" model="pms.ai.glossary.term">
+        <field name="code">consumo_servicio</field>
+        <field name="name">Consumo del servicio (consumed_on)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Cuándo se consume un producto respecto a la noche: before (todo antes de la noche), after (todo después), checkin (solo el primer día) o checkout (solo el último día).</field>
+        <field name="source">product.template.consumed_on</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">consumido antes o después de la noche</field>
+        <field
+      name="pitfalls"
+    >Con before, la línea del último día de la estancia es la de la víspera de la salida; con after, es la de la fecha de salida. Es la regla con la que se descuenta la «última noche» al contar noches de un servicio.</field>
+        <field name="tool_names">pms_service_nights, pms_product_find</field>
+    </record>
+    <record id="glossary_servicio_por_dia" model="pms.ai.glossary.term">
+        <field name="code">servicio_por_dia</field>
+        <field name="name">Servicio por día o por persona</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Un producto con per_day se carga una vez por cada noche; con per_person, la cantidad crece con el número de personas.</field>
+        <field
+      name="source"
+    >product.template.per_day, product.template.per_person</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">per_day, per_person, servicio diario</field>
+        <field name="tool_names">pms_product_find</field>
+    </record>
+    <record id="glossary_tarifa" model="pms.ai.glossary.term">
+        <field name="code">tarifa</field>
+        <field name="name">Tarifa</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Lista de precios de Odoo (product.pricelist) que usa el PMS. Las disponibles para el PMS (is_pms_available) llevan un plan de disponibilidad, pueden asociarse a canales de venta y a una regla de cancelación, y cada hotel tiene una tarifa por defecto.</field>
+        <field name="source">product.pricelist</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">pricelist, lista de precios, rate plan</field>
+        <field
+      name="pitfalls"
+    >Los precios de las líneas de reserva ya vienen con IVA.</field>
+    </record>
+    <record id="glossary_plan_disponibilidad" model="pms.ai.glossary.term">
+        <field name="code">plan_disponibilidad</field>
+        <field name="name">Plan de disponibilidad</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Conjunto de reglas diarias por tipo de habitación (cupo, estancias mínima y máxima, cierres) que se asigna a una o varias tarifas (pms.availability.plan).</field>
+        <field name="source">pms.availability.plan</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">plan de disponibilidad, availability plan</field>
+        <field
+      name="pitfalls"
+    >Una fecha sin regla cae en la disponibilidad por defecto del plan (típicamente 0): un tipo «sin regla» no es un tipo «sin límite».</field>
+    </record>
+    <record id="glossary_regla_disponibilidad" model="pms.ai.glossary.term">
+        <field name="code">regla_disponibilidad</field>
+        <field name="name">Regla de disponibilidad</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Regla de un día, un tipo de habitación y un hotel dentro de un plan (pms.availability.plan.rule): cupo, disponibilidad máxima, estancia mínima y máxima y cierres. Es única por plan, tipo, fecha y hotel.</field>
+        <field name="source">pms.availability.plan.rule</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">regla de plan, rule</field>
+    </record>
+    <record id="glossary_cupo" model="pms.ai.glossary.term">
+        <field name="code">cupo</field>
+        <field name="name">Cupo (quota)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Cupo genérico asignado a un tipo de habitación y día en una regla de disponibilidad (quota).</field>
+        <field name="source">pms.availability.plan.rule.quota</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">quota, cupo genérico</field>
+        <field
+      name="pitfalls"
+    >Históricamente cambiar el cupo o max_avail no encolaba el envío de disponibilidad al canal (solo el de plan y restricciones); lo corrige la PR roomdoo-modules#90: verificar si está en la imagen desplegada.</field>
+    </record>
+    <record id="glossary_disponibilidad_maxima" model="pms.ai.glossary.term">
+        <field name="code">disponibilidad_maxima</field>
+        <field name="name">Disponibilidad máxima (max_avail)</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Máximo de habitaciones vendibles a la vez en el motor de reservas propio para un tipo y día (max_avail de la regla de disponibilidad).</field>
+        <field name="source">pms.availability.plan.rule.max_avail</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">max_avail, máximo del motor propio</field>
+    </record>
+    <record id="glossary_disponibilidad_real" model="pms.ai.glossary.term">
+        <field name="code">disponibilidad_real</field>
+        <field name="name">Disponibilidad real</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Habitaciones LIBRES que quedan de un tipo en un día (real_avail de pms.availability), no la capacidad del hotel.</field>
+        <field name="source">pms.availability.real_avail</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >real_avail, habitaciones libres, availability</field>
+        <field
+      name="pitfalls"
+    >No se puede deducir el número de habitaciones de un hotel de la disponibilidad (error real: un hotel de 31 habitaciones tratado como de 27 dio ocupaciones superiores al 100% fantasma).</field>
+    </record>
+    <record id="glossary_restriccion" model="pms.ai.glossary.term">
+        <field name="code">restriccion</field>
+        <field name="name">Restricción</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Condición de venta de una regla de disponibilidad: estancia mínima o máxima, cerrado a la llegada, cerrado a la salida o cerrado. Se publican a los canales.</field>
+        <field name="source">pms.availability.plan.rule</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">restricciones, reglas de venta, cierres</field>
+        <field
+      name="pitfalls"
+    >En el push forzado de barrido (pms_api_push_batch) un tramo homogéneo final se perdía: un mes de reglas uniformes podía empujar cero reglas (verificar si está corregido).</field>
+    </record>
+    <record id="glossary_estancia_minima" model="pms.ai.glossary.term">
+        <field name="code">estancia_minima</field>
+        <field name="name">Estancia mínima</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Número mínimo de noches de una reserva (min_stay). min_stay_arrival aplica solo si la entrada es ese día; max_stay y max_stay_arrival son las equivalentes máximas.</field>
+        <field name="source">pms.availability.plan.rule.min_stay</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">min stay, MLOS, estancia máxima</field>
+    </record>
+    <record id="glossary_cerrado_llegada" model="pms.ai.glossary.term">
+        <field name="code">cerrado_llegada</field>
+        <field name="name">Cerrado a la llegada</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Restricción (closed_arrival) que impide entradas un día aunque queden habitaciones libres.</field>
+        <field name="source">pms.availability.plan.rule.closed_arrival</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">CTA, closed to arrival</field>
+    </record>
+    <record id="glossary_cerrado_salida" model="pms.ai.glossary.term">
+        <field name="code">cerrado_salida</field>
+        <field name="name">Cerrado a la salida</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Restricción (closed_departure) que impide salidas un día. La marca closed cierra el día para la venta.</field>
+        <field name="source">pms.availability.plan.rule.closed_departure</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">CTD, closed to departure</field>
+    </record>
+    <record id="glossary_canal_venta" model="pms.ai.glossary.term">
+        <field name="code">canal_venta</field>
+        <field name="name">Canal de venta</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Origen comercial de una reserva (pms.sale.channel). Puede ser directo (sin intermediario) o indirecto (con intermediarios) y online o no.</field>
+        <field name="source">pms.sale.channel</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">canal, sale channel, canal de reserva</field>
+        <field
+      name="pitfalls"
+    >El peso de cada canal se mide sobre noches o ingresos de un periodo: decir cuál de los dos.</field>
+    </record>
+    <record id="glossary_canal_origen" model="pms.ai.glossary.term">
+        <field name="code">canal_origen</field>
+        <field name="name">Canal de origen</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Canal que se toma como origen de la venta de un folio o reserva (sale_channel_origin_id); sale_channel_ids es el conjunto de canales asociados.</field>
+        <field name="source">pms.folio.sale_channel_origin_id</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">origen, sale_channel_origin</field>
+    </record>
+    <record id="glossary_agencia" model="pms.ai.glossary.term">
+        <field name="code">agencia</field>
+        <field name="name">Agencia</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Partner marcado is_agency que trae folios como intermediario (agencia de viajes, touroperador, OTA). Tiene canal de venta, comisión por defecto y un ajuste para facturar a la agencia (invoice_to_agency).</field>
+        <field name="source">res.partner.is_agency</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >agencia de viajes, touroperador, intermediario, TTOO</field>
+        <field
+      name="pitfalls"
+    >En un folio de agencia sin nombre de huésped, el titular es un texto provisional con el nombre de la agencia.</field>
+        <field name="tool_names">pms_partner_find</field>
+    </record>
+    <record id="glossary_ota" model="pms.ai.glossary.term">
+        <field name="code">ota</field>
+        <field name="name">OTA</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Online Travel Agency: agencia de viajes online (Booking, Expedia…) que vende habitaciones del hotel por Internet. Sus reservas llegan a Roomdoo a través del channel manager.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >Booking, Expedia, agencia online, canal online</field>
+        <field
+      name="pitfalls"
+    >Los prepagos de las OTA solo se registran como pago en Roomdoo si el hotel y el canal tienen configurado el registro automático y un diario de destino.</field>
+    </record>
+    <record id="glossary_channel_manager" model="pms.ai.glossary.term">
+        <field name="code">channel_manager</field>
+        <field name="name">Channel manager</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Sistema que sincroniza disponibilidad, precios, restricciones y reservas entre Roomdoo y las OTA. En Alda el flujo pasa por Neobookings con el protocolo Wubook (connector_pms_wubook) y un envío REST adicional.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">gestor de canales, CM, Wubook</field>
+        <field
+      name="pitfalls"
+    >Un backend marcado «(DISABLED)» puede seguir empujando por el envío REST: no asumir que disabled significa que no sale nada.</field>
+    </record>
+    <record id="glossary_neobookings" model="pms.ai.glossary.term">
+        <field name="code">neobookings</field>
+        <field name="name">Neobookings</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Channel manager y motor de reservas con el que se comunica Roomdoo. Salida: envío de disponibilidad, precios y restricciones. Entrada: reservas por la API (/folios/external/&lt;ref&gt;) y trabajos de importación del protocolo Wubook.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">Neo, Neo bookings</field>
+        <field
+      name="pitfalls"
+    >Los errores 5xx de Neobookings pueden perder un envío si no se reintenta: una ventana de 500 puede causar overbookings en varios hoteles a la vez.</field>
+    </record>
+    <record id="glossary_binding" model="pms.ai.glossary.term">
+        <field name="code">binding</field>
+        <field name="name">Binding de tipo de habitación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Enlace (channel.wubook.pms.room.type) entre un tipo de habitación y su equivalente en el channel manager, por hotel. Sin él, el tipo queda fuera de todos los envíos sin error alguno.</field>
+        <field name="source">channel.wubook.pms.room.type</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">enlace al channel manager, binding wubook</field>
+        <field
+      name="pitfalls"
+    >Nada lo crea al dar de alta un tipo nuevo ni al re-segmentar habitaciones. Señal: un tipo que solo aparece en el canal cuando se fuerza el push de barrido.</field>
+    </record>
+    <record id="glossary_push" model="pms.ai.glossary.term">
+        <field name="code">push</field>
+        <field name="name">Push al canal</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Envío de disponibilidad, precios o restricciones desde Roomdoo al channel manager. En tiempo real lo disparan listeners tras cada cambio; el push forzado de barrido es pms_api_push_batch de pms.property, que no mira los bindings.</field>
+        <field name="source">pms.property.pms_api_push_batch</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >envío al canal, push de barrido, sincronización</field>
+        <field
+      name="pitfalls"
+    >Un fallo puntual se autocura solo si hay actividad en el hotel: en hoteles con poco movimiento puede persistir días.</field>
+    </record>
+    <record id="glossary_localizador" model="pms.ai.glossary.term">
+        <field name="code">localizador</field>
+        <field name="name">Localizador</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Referencia de un folio o reserva en un sistema externo, normalmente el localizador de la OTA o del channel manager (external_reference). El del folio se calcula a partir de las reservas.</field>
+        <field name="source">pms.folio.external_reference</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >referencia externa, external_reference, locator</field>
+        <field name="tool_names">pms_folio_find</field>
+    </record>
+    <record id="glossary_overbooking" model="pms.ai.glossary.term">
+        <field name="code">overbooking</field>
+        <field name="name">Overbooking</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Más reservas que habitaciones para un tipo y una noche. Roomdoo lo permite (forzado para usuarios de API y canal), así que la ocupación real puede pasar del 100%. Se marca en la línea (overbooking) y la reserva lo hereda si alguna línea lo tiene.</field>
+        <field name="source">pms.reservation.overbooking</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">sobreventa, sobreocupación, over</field>
+        <field
+      name="pitfalls"
+    >Causas vistas: un push con disponibilidad obsoleta justo tras una reserva, y una corrección perdida por un 5xx de Neobookings. Los paneles deben tolerar ocupaciones por encima del 100%.</field>
+    </record>
+    <record id="glossary_a_asignar" model="pms.ai.glossary.term">
+        <field name="code">a_asignar</field>
+        <field name="name">A asignar</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva cuya habitación se asignó automáticamente y aún no ha confirmado una persona (to_assign = verdadero, que es el valor por defecto). Pasa a falso cuando recepción confirma la habitación.</field>
+        <field name="source">pms.reservation.to_assign</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >to_assign, habitación sin confirmar, pendiente de asignar</field>
+        <field
+      name="pitfalls"
+    >No significa «sin habitación»: tiene una asignada, pendiente de confirmar.</field>
+    </record>
+    <record id="glossary_checkin_partner" model="pms.ai.glossary.term">
+        <field name="code">checkin_partner</field>
+        <field name="name">Check-in partner</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Huésped registrado en una reserva (pms.checkin.partner) con sus datos de viajero. Estados: huésped desconocido (dummy), datos incompletos (draft), llegada pendiente (precheckin), dentro (onboard), fuera (done) y cancelado.</field>
+        <field name="source">pms.checkin.partner</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >huésped registrado, ficha de huésped, viajero, checkin</field>
+    </record>
+    <record id="glossary_precheckin" model="pms.ai.glossary.term">
+        <field name="code">precheckin</field>
+        <field name="name">Precheckin</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Registro previo de los datos de los viajeros antes de la llegada, mediante un enlace que se comparte con el huésped. En el check-in partner, el estado precheckin significa datos completos y llegada pendiente; draft significa datos incompletos.</field>
+        <field name="source">pms.checkin.partner.state</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >pre-checkin, registro previo, datos de huéspedes pendientes</field>
+        <field
+      name="pitfalls"
+    >Los datos completos de los huéspedes son los que luego exigen el SES Hospedajes y el INE.</field>
+    </record>
+    <record id="glossary_estado_folio" model="pms.ai.glossary.term">
+        <field name="code">estado_folio</field>
+        <field name="name">Estados del folio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >draft: presupuesto; sent: presupuesto enviado; confirm: confirmado; done: bloqueado; cancel: cancelado.</field>
+        <field name="source">pms.folio.state</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">state del folio, estado de la ficha</field>
+        <field
+      name="pitfalls"
+    >En los ingresos hay que excluir los cancelados (state distinto de cancel).</field>
+        <field name="tool_names">pms_folio_find</field>
+    </record>
+    <record id="glossary_estado_reserva" model="pms.ai.glossary.term">
+        <field name="code">estado_reserva</field>
+        <field name="name">Estados de la reserva</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >draft: pre-reserva; confirm: llegada pendiente; onboard: dentro (en casa); done: fuera (salida hecha); cancel: cancelada; arrival_delayed: llegada retrasada; departure_delayed: salida retrasada.</field>
+        <field name="source">pms.reservation.state</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">state de la reserva, estado de la reserva</field>
+        <field
+      name="pitfalls"
+    >Algún endpoint antiguo (get_daily_billings) no filtraba canceladas ni staff: comprobar qué endpoint alimenta cada informe.</field>
+    </record>
+    <record id="glossary_pre_reserva" model="pms.ai.glossary.term">
+        <field name="code">pre_reserva</field>
+        <field name="name">Pre-reserva</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva en estado draft: creada pero aún no confirmada.</field>
+        <field name="source">pms.reservation.state</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">draft, reserva sin confirmar</field>
+    </record>
+    <record id="glossary_en_casa" model="pms.ai.glossary.term">
+        <field name="code">en_casa</field>
+        <field name="name">En casa</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva en estado onboard: el huésped ya ha hecho el check-in y aún no ha salido. En la interfaz en español de PMS se llama «Dentro».</field>
+        <field name="source">pms.reservation.state</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >onboard, dentro, huéspedes en casa, in house</field>
+    </record>
+    <record id="glossary_no_show" model="pms.ai.glossary.term">
+        <field name="code">no_show</field>
+        <field name="name">No-show</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva cancelada porque el huésped no se presentó (cancelled_reason = noshow). La regla de cancelación fija el porcentaje a cobrar (penalty_noshow) y los días a los que se aplica.</field>
+        <field name="source">pms.reservation.cancelled_reason</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">no show, no presentado, noshow</field>
+        <field
+      name="pitfalls"
+    >No confundir con la cancelación tardía (late) ni con la hecha a tiempo (intime).</field>
+    </record>
+    <record id="glossary_cancelacion" model="pms.ai.glossary.term">
+        <field name="code">cancelacion</field>
+        <field name="name">Cancelación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva en estado cancel, con el motivo en cancelled_reason: intime (a tiempo), late (tardía), noshow o modified. cancelDiscount es binario, 0 o 100: 100 solo si la reserva entera está cancelada.</field>
+        <field name="source">pms.reservation.cancelled_reason</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">cancelada, anulación, baja de reserva</field>
+        <field
+      name="pitfalls"
+    >Nunca hay un cancelDiscount parcial. Las penalizaciones van aparte, como servicio.</field>
+    </record>
+    <record id="glossary_regla_cancelacion" model="pms.ai.glossary.term">
+        <field name="code">regla_cancelacion</field>
+        <field name="name">Regla de cancelación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Define los días de cancelación gratuita antes de la entrada (days_intime), la penalización por cancelación tardía (penalty_late, % del precio total) y por no-show (penalty_noshow), y sobre qué días se aplica: el primero, todos o días concretos. Se asocia a tarifas.</field>
+        <field name="source">pms.cancelation.rule</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >política de cancelación, condiciones de cancelación</field>
+    </record>
+    <record id="glossary_penalizacion_cancelacion" model="pms.ai.glossary.term">
+        <field name="code">penalizacion_cancelacion</field>
+        <field name="name">Penalización de cancelación</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Importe que se cobra por una cancelación tardía o un no-show. Se carga en el folio como servicio («Cancel Penalty»), no como descuento.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">Cancel Penalty, gastos de cancelación</field>
+        <field
+      name="pitfalls"
+    >Si la penalización no aparece, buscar la línea de servicio del folio, no un descuento de la reserva.</field>
+    </record>
+    <record id="glossary_fuera_de_servicio" model="pms.ai.glossary.term">
+        <field name="code">fuera_de_servicio</field>
+        <field name="name">Fuera de servicio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva de tipo out que bloquea una habitación (avería, obras…) sin huésped ni ingreso, con un motivo de cierre. Normalmente se excluye de los ingresos y, en el RevPAR del INE, sus habitaciones-día se restan de las disponibles.</field>
+        <field name="source">pms.reservation.reservation_type</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >out of service, OOS, bloqueo, habitación bloqueada</field>
+        <field
+      name="pitfalls"
+    >No cuenta como venta aunque aparezca en el calendario.</field>
+    </record>
+    <record id="glossary_staff" model="pms.ai.glossary.term">
+        <field name="code">staff</field>
+        <field name="name">Staff</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva de tipo staff: alojamiento de personal del hotel. Normalmente se excluye de los cálculos de ingreso.</field>
+        <field name="source">pms.reservation.reservation_type</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">personal, alojamiento de empleados</field>
+    </record>
+    <record id="glossary_grupo" model="pms.ai.glossary.term">
+        <field name="code">grupo</field>
+        <field name="name">Grupo</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >No existe como tipo de reserva: un grupo es un folio con N reservas. El precio puede estar consolidado en una sola reserva del folio y las demás salir a 0 sin que sea un error.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >grupos, folio de grupo, bloque de habitaciones</field>
+        <field
+      name="pitfalls"
+    >Habitaciones a 0 € en un grupo no son ingreso perdido: agregar por folio. Los grupos facturados fuera del PMS no tienen su ingreso en la API (se ven como folios con importe 0 o solo servicios).</field>
+    </record>
+    <record id="glossary_tipo_reserva" model="pms.ai.glossary.term">
+        <field name="code">tipo_reserva</field>
+        <field name="name">Tipo de reserva</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >reservation_type: normal, staff o out (fuera de servicio). Las ventas se cuentan sobre las normales.</field>
+        <field name="source">pms.reservation.reservation_type</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">reservation_type, normal staff out</field>
+    </record>
+    <record id="glossary_reserva_dividida" model="pms.ai.glossary.term">
+        <field name="code">reserva_dividida</field>
+        <field name="name">Reserva dividida</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Reserva en la que los huéspedes no duermen todas las noches en la misma habitación (splitted).</field>
+        <field name="source">pms.reservation.splitted</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >splitted, cambio de habitación durante la estancia</field>
+    </record>
+    <record id="glossary_noche_ocupada" model="pms.ai.glossary.term">
+        <field name="code">noche_ocupada</field>
+        <field name="name">Noche que ocupa disponibilidad</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Marca (occupies_availability) de la línea de reserva cuya noche resta una habitación de la disponibilidad. Junto con el tipo de reserva normal, es el filtro con el que se cuentan las noches vendidas.</field>
+        <field name="source">pms.reservation.line.occupies_availability</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">occupies_availability, noche vendida</field>
+        <field name="tool_names">pms_salesperson_sales</field>
+    </record>
+    <record id="glossary_motivo_cierre" model="pms.ai.glossary.term">
+        <field name="code">motivo_cierre</field>
+        <field name="name">Motivo de cierre</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Causa (room.closure.reason) que se anota en una reserva fuera de servicio, por ejemplo una avería o unas obras.</field>
+        <field name="source">room.closure.reason</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">causa de cierre, closure reason</field>
+    </record>
+    <record id="glossary_comision" model="pms.ai.glossary.term">
+        <field name="code">comision</field>
+        <field name="name">Comisión</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Importe que se paga a una agencia por los folios que trae: la reserva guarda el porcentaje y el importe (commission_percent, commission_amount) y el folio el total (commission). La agencia fija el porcentaje y el tipo por defecto.</field>
+        <field name="source">pms.reservation.commission_amount</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">comisión de agencia, commission</field>
+        <field
+      name="pitfalls"
+    >Decir siempre si el ingreso es bruto o neto de comisión.</field>
+    </record>
+    <record id="glossary_capacidad" model="pms.ai.glossary.term">
+        <field name="code">capacidad</field>
+        <field name="name">Capacidad</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Número de habitaciones activas de un hotel (pms.room); por habitación, capacity son sus plazas. Es el denominador de la ocupación.</field>
+        <field name="source">pms.room.capacity</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >habitaciones del hotel, plazas, inventario</field>
+        <field
+      name="pitfalls"
+    >La disponibilidad no es la capacidad. Con habitaciones archivadas, los históricos necesitan las fechas de alta y baja.</field>
+    </record>
+    <record id="glossary_pax" model="pms.ai.glossary.term">
+        <field name="code">pax</field>
+        <field name="name">Pax</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Personas de una reserva: adultos (adults) y niños (children; children_occupying son los que ocupan plaza).</field>
+        <field name="source">pms.reservation.adults</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >huéspedes, personas, adultos y niños, ocupantes</field>
+    </record>
+    <record id="glossary_titular" model="pms.ai.glossary.term">
+        <field name="code">titular</field>
+        <field name="name">Titular del folio</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Persona o empresa a cuyo nombre se hace la reserva (partner_name del folio y partner_id). Las herramientas de IA solo muestran el nombre de pila y la inicial del apellido de las personas.</field>
+        <field name="source">pms.folio.partner_name</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >holder, cliente del folio, nombre de la reserva</field>
+        <field
+      name="pitfalls"
+    >En un folio de agencia el titular puede ser provisional («Reserva de &lt;agencia&gt;»).</field>
+        <field name="tool_names">pms_folio_find</field>
+    </record>
+    <record id="glossary_cama_supletoria" model="pms.ai.glossary.term">
+        <field name="code">cama_supletoria</field>
+        <field name="name">Cama supletoria y cuna</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Productos marcados is_extra_bed (suma una plaza a la capacidad de la habitación) o is_crib (cuna).</field>
+        <field name="source">product.template.is_extra_bed</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">cama extra, extra bed, cuna, crib</field>
+    </record>
+    <record id="glossary_rol_equipo" model="pms.ai.glossary.term">
+        <field name="code">rol_equipo</field>
+        <field name="name">Rol del equipo del hotel</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Papel de un miembro del equipo de un hotel (pms.team.member): recepción, revenue, administrativo o director de operaciones.</field>
+        <field name="source">pms.team.member.pms_role</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >equipo del hotel, roles, recepción, director de operaciones</field>
+        <field
+      name="pitfalls"
+    >No es el puesto del empleado (hr.employee): para localizar a una persona por su puesto se usa pms_user_find.</field>
+        <field name="tool_names">pms_user_find</field>
+    </record>
+    <record id="glossary_habitacion_noche" model="pms.ai.glossary.term">
+        <field name="code">habitacion_noche</field>
+        <field name="name">Habitación-noche</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Unidad de venta: una habitación durante una noche. En las noches de un servicio es una línea de servicio con day_qty mayor que 0, contada una vez por reserva y fecha.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">room night, RN, noche vendida</field>
+        <field name="tool_names">pms_service_nights</field>
+    </record>
+    <record id="glossary_fecha_estancia" model="pms.ai.glossary.term">
+        <field name="code">fecha_estancia</field>
+        <field name="name">Fecha de estancia</field>
+        <field name="area">pms</field>
+        <field
+      name="definition"
+    >Fecha de la noche (date de la línea de reserva), distinta de la fecha de entrada (checkin) y de la fecha de venta (date_order). Hay que fijar cuál se usa al comparar cifras.</field>
+        <field name="source">pms.reservation.line.date</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >fecha de la noche, fecha de consumo, fecha de venta, fecha de check-in</field>
+        <field
+      name="pitfalls"
+    >Una de las causas más frecuentes de «no me cuadra» es comparar una cifra por fecha de estancia con otra por fecha de entrada o de venta.</field>
+    </record>
+    <record id="glossary_ocupacion" model="pms.ai.glossary.term">
+        <field name="code">ocupacion</field>
+        <field name="name">Ocupación</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Porcentaje de habitaciones vendidas en un periodo: noches vendidas entre las habitaciones disponibles por noche. Como Roomdoo admite overbooking, puede pasar del 100%. [Sin verificar]</field>
+        <field
+      name="formula"
+    >noches vendidas / (habitaciones × noches del periodo)</field>
+        <field name="source">pms.reservation.line.occupies_availability</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">ocupación, occupancy, % de ocupación, OCC</field>
+        <field
+      name="pitfalls"
+    >El denominador es la capacidad (habitaciones activas en pms.room), nunca la disponibilidad. Si hubo habitaciones archivadas, los históricos necesitan sus fechas de alta y baja. Antes de comparar fuentes, fijar si las habitaciones fuera de servicio restan del denominador.</field>
+    </record>
+    <record id="glossary_ocupacion_mayor_100" model="pms.ai.glossary.term">
+        <field name="code">ocupacion_mayor_100</field>
+        <field name="name">Ocupación superior al 100%</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Puede ser real (overbooking, que Roomdoo permite) o un error de denominador: capacidad deducida de la disponibilidad, habitaciones archivadas o un número de habitaciones que cambió.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >ocupación mayor de 100, ocupación fantasma, más del 100%</field>
+        <field
+      name="pitfalls"
+    >Primero comprobar la capacidad real del hotel en pms.room (con las archivadas de la época); si es correcta, es overbooking.</field>
+    </record>
+    <record id="glossary_adr" model="pms.ai.glossary.term">
+        <field name="code">adr</field>
+        <field name="name">ADR (tarifa media diaria)</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Average Daily Rate: ingreso de alojamiento entre habitaciones vendidas. Con los datos de Alda, el precio de la línea (price) va CON IVA, así que un ADR calculado con él es con IVA.</field>
+        <field
+      name="formula"
+    >ingresos de alojamiento / habitaciones vendidas</field>
+        <field name="source">pms.reservation.line.price</field>
+        <field name="tax_basis">with_vat</field>
+        <field
+      name="synonyms"
+    >average daily rate, tarifa media, precio medio por habitación</field>
+        <field
+      name="pitfalls"
+    >En la exportación del INE (pms.property._get_adr) el ADR mensual es la media simple de los ADR diarios: la media del price de cada día, solo en líneas que ocupan disponibilidad y de reservas normales; no es ingresos entre noches vendidas. En la herramienta de comerciales el ADR deja fuera los folios cuya estancia vale 0. Para un ADR sin IVA hay que partir de los subtotales sin impuestos, no de price.</field>
+        <field name="tool_names">pms_salesperson_sales</field>
+    </record>
+    <record id="glossary_revpar" model="pms.ai.glossary.term">
+        <field name="code">revpar</field>
+        <field name="name">RevPAR</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Revenue per Available Room: ingreso de alojamiento entre habitaciones disponibles; es el ADR multiplicado por la ocupación. Con price, es con IVA.</field>
+        <field
+      name="formula"
+    >ingresos de alojamiento / habitaciones disponibles (= ADR × ocupación)</field>
+        <field name="source">pms.reservation.line.price</field>
+        <field name="tax_basis">with_vat</field>
+        <field
+      name="synonyms"
+    >revenue per available room, ingreso por habitación disponible</field>
+        <field
+      name="pitfalls"
+    >En la exportación del INE (pms.property._get_revpar) se suma el price de las líneas normales que ocupan disponibilidad en habitaciones marcadas in_ine, y se divide entre habitaciones × días del rango menos las habitaciones-día de reservas no normales (staff y fuera de servicio).</field>
+    </record>
+    <record id="glossary_produccion" model="pms.ai.glossary.term">
+        <field name="code">produccion</field>
+        <field name="name">Producción</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Importe que genera un comercial o un cliente por las noches de un periodo. En las herramientas de comerciales es la suma de price_day_total de las noches que ocupan disponibilidad en reservas normales: neto de descuentos y con IVA.</field>
+        <field
+      name="formula"
+    >suma de price_day_total de las noches del periodo</field>
+        <field name="source">pms.reservation.line.price_day_total</field>
+        <field name="tax_basis">with_vat</field>
+        <field
+      name="synonyms"
+    >producción, ventas del comercial, importe producido</field>
+        <field
+      name="pitfalls"
+    >Los folios sin ingreso en el PMS (grupos facturados fuera, cortesías) producen 0. Se atribuye a la agencia del folio si su comercial está en la lista; si no, al de la empresa cliente.</field>
+        <field
+      name="tool_names"
+    >pms_salesperson_sales, pms_salesperson_top_customers</field>
+    </record>
+    <record id="glossary_ingresos" model="pms.ai.glossary.term">
+        <field name="code">ingresos</field>
+        <field name="name">Ingresos de alojamiento</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Importe de las noches vendidas. En los datos de Alda puede salir con IVA (price, price_day_total) o sin IVA (subtotales sin impuestos del folio): hay que decir de cuál se habla.</field>
+        <field name="source">pms.reservation.line.price_day_total</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >revenue, facturación de alojamiento, ventas, importe</field>
+        <field
+      name="pitfalls"
+    >Fijar siempre: fecha (estancia, entrada o venta), con o sin IVA, estados incluidos (excluir canceladas) y si entran staff y fuera de servicio.</field>
+    </record>
+    <record id="glossary_pickup" model="pms.ai.glossary.term">
+        <field name="code">pickup</field>
+        <field name="name">Pickup</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Noches o ingresos que se han ganado en los últimos N días (reservas nuevas menos cancelaciones) para una fecha o mes de estancia. Mide el ritmo de venta reciente. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >pick up, reservas ganadas, ritmo de reservas</field>
+        <field
+      name="pitfalls"
+    >Hay que decir si se mide por fecha de venta y qué ventana de días se usa.</field>
+    </record>
+    <record id="glossary_pace" model="pms.ai.glossary.term">
+        <field name="code">pace</field>
+        <field name="name">Pace</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Cómo va lo reservado para una fecha futura comparado con el año anterior a la misma antelación (los mismos días antes de la estancia). [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >ritmo de reservas, pace vs año pasado, comparativa con año anterior</field>
+        <field
+      name="pitfalls"
+    >Comparar con la misma antelación, no con el cierre final del año anterior.</field>
+    </record>
+    <record id="glossary_otb" model="pms.ai.glossary.term">
+        <field name="code">otb</field>
+        <field name="name">On the books (OTB)</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Reservas confirmadas ya registradas en un momento dado para una fecha de estancia futura (noches e ingresos). Los informes internos de Alda de OTB y de presupuesto contra el año anterior los gestiona Alda. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >OTB, on the books, reservas en cartera, en libros</field>
+        <field
+      name="pitfalls"
+    >Indicar la fecha de corte y si se incluyen las canceladas (normalmente no).</field>
+    </record>
+    <record id="glossary_estancia_media" model="pms.ai.glossary.term">
+        <field name="code">estancia_media</field>
+        <field name="name">Estancia media</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Número medio de noches por reserva (LOS, length of stay). [Sin verificar]</field>
+        <field name="formula">noches vendidas / reservas</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >LOS, length of stay, noches por reserva, duración media</field>
+        <field
+      name="pitfalls"
+    >Decir si se cuenta por reserva o por folio.</field>
+    </record>
+    <record id="glossary_antelacion" model="pms.ai.glossary.term">
+        <field name="code">antelacion</field>
+        <field name="name">Antelación de la reserva</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Días entre la fecha de venta del folio (date_order) y la fecha de entrada de la reserva (checkin).</field>
+        <field name="formula">checkin − date_order, en días</field>
+        <field name="source">pms.folio.date_order</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >booking window, lead time, antelación, anticipación</field>
+    </record>
+    <record id="glossary_mix" model="pms.ai.glossary.term">
+        <field name="code">mix</field>
+        <field name="name">Mix de canales</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Peso de cada canal de venta (o segmento) en las noches o en los ingresos de un periodo. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >channel mix, mix de canales, peso de los canales, reparto por canal</field>
+        <field
+      name="pitfalls"
+    >Decir si el peso es en noches o en ingresos, y si se excluyen canceladas, staff y fuera de servicio.</field>
+    </record>
+    <record id="glossary_tasa_cancelacion" model="pms.ai.glossary.term">
+        <field name="code">tasa_cancelacion</field>
+        <field name="name">Tasa de cancelación</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Reservas canceladas entre reservas totales de un periodo. [Sin verificar]</field>
+        <field name="formula">reservas canceladas / reservas totales</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >cancellation rate, porcentaje de cancelaciones</field>
+        <field
+      name="pitfalls"
+    >Fijar la fecha de referencia (venta, entrada o cancelación) y si se cuenta por reserva o por noche.</field>
+    </record>
+    <record id="glossary_descuento" model="pms.ai.glossary.term">
+        <field name="code">descuento</field>
+        <field name="name">Descuento</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Porcentaje que se rebaja del precio de una noche (discount de la línea de reserva) más los descuentos de servicios. La herramienta pms_discounts_summary mide la parte de noches con descuento, las de 50% o más y las de 100%, y el importe descontado, por canal y por hotel frente a sus 4 periodos anteriores.</field>
+        <field name="formula">price × (1 − discount/100)</field>
+        <field name="source">pms.reservation.line.discount</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >rebaja, dto, descuentos de personal, descuento de canal</field>
+        <field
+      name="pitfalls"
+    >Un descuento del 100% no es una cancelación. El importe descontado es con IVA, igual que el precio de la línea.</field>
+        <field name="tool_names">pms_discounts_summary</field>
+    </record>
+    <record id="glossary_descuento_cancelacion" model="pms.ai.glossary.term">
+        <field name="code">descuento_cancelacion</field>
+        <field name="name">Descuento por cancelación</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >cancel_discount de la línea de reserva: es binario, 0 o 100. Vale 100 solo cuando la reserva entera está cancelada.</field>
+        <field name="source">pms.reservation.line.cancel_discount</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">cancelDiscount, descuento de cancelación</field>
+        <field
+      name="pitfalls"
+    >Nunca es parcial: las penalizaciones de cancelación van como un servicio aparte.</field>
+    </record>
+    <record id="glossary_cortesia" model="pms.ai.glossary.term">
+        <field name="code">cortesia</field>
+        <field name="name">Cortesía</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Reserva a 0 € legítima: cortesías, personal (staff) y fuera de servicio. Es distinta de un grupo, donde el precio puede estar consolidado en otra reserva del folio.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">cortesías, reserva a cero, invitación</field>
+        <field
+      name="pitfalls"
+    >Una reserva a 0 no implica un error: comprobar el tipo de reserva y el resto del folio.</field>
+    </record>
+    <record id="glossary_presupuesto" model="pms.ai.glossary.term">
+        <field name="code">presupuesto</field>
+        <field name="name">Presupuesto de ingresos</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Previsión anual de ocupación e ingresos por hotel con la que se compara lo real; en Alda se guarda como pms.budget. [Sin verificar]</field>
+        <field name="source">pms.budget</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >budget, presupuesto anual, real contra presupuesto</field>
+        <field
+      name="pitfalls"
+    >No confundir con el estado «Presupuesto» (draft) del folio, que es una cotización aún no confirmada.</field>
+    </record>
+    <record id="glossary_kpi_diario" model="pms.ai.glossary.term">
+        <field name="code">kpi_diario</field>
+        <field name="name">KPI diario</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Cifras diarias de ocupación e ingresos precalculadas por el módulo alda_pms_kpi (pms.daily.kpi). La regeneración histórica cuenta las habitaciones con active=True a fecha actual.</field>
+        <field name="source">pms.daily.kpi</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">KPIs, alda_pms_kpi, indicadores diarios</field>
+        <field
+      name="pitfalls"
+    >Si se archivaron habitaciones, los KPIs históricos regenerados salen mal (denominador de hoy, no el de la época): tenerlo en cuenta antes de regenerar y comparar.</field>
+    </record>
+    <record id="glossary_forecast" model="pms.ai.glossary.term">
+        <field name="code">forecast</field>
+        <field name="name">Previsión (forecast)</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Estimación de ocupación e ingresos de las semanas siguientes a partir de lo ya reservado y del comportamiento histórico. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >forecast, previsión de ocupación, proyección</field>
+    </record>
+    <record id="glossary_comercial" model="pms.ai.glossary.term">
+        <field name="code">comercial</field>
+        <field name="name">Comercial</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Usuario responsable de una empresa o agencia (user_id del partner). Un folio se atribuye al comercial de su agencia si lo tiene y está en la lista de comerciales; si no, al de su empresa cliente.</field>
+        <field name="source">res.partner.user_id</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >vendedor, salesperson, account manager, responsable comercial</field>
+        <field
+      name="pitfalls"
+    >Las herramientas de comerciales solo cubren a los usuarios configurados como tales (parámetro pms_ai_tool.salesperson_ids) o los que se pasen como argumento.</field>
+        <field
+      name="tool_names"
+    >pms_salesperson_sales, pms_salesperson_portfolio, pms_partner_find</field>
+    </record>
+    <record id="glossary_cliente_enfriando" model="pms.ai.glossary.term">
+        <field name="code">cliente_enfriando</field>
+        <field name="name">Cliente que se enfría</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Empresa de un comercial con varios folios en los 12 meses anteriores (3 por defecto) y ninguno en las últimas semanas (8 por defecto). Se señalan aparte las que tampoco reservaron esas mismas semanas del año pasado (puede ser estacional) y los autónomos.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >cooling, cliente en enfriamiento, cliente que baja, clientes dormidos</field>
+        <field
+      name="pitfalls"
+    >Una empresa estacional que no reservó en las mismas semanas del año anterior no se considera una caída.</field>
+        <field name="tool_names">pms_salesperson_cooling_customers</field>
+    </record>
+    <record id="glossary_dependencia_cliente" model="pms.ai.glossary.term">
+        <field name="code">dependencia_cliente</field>
+        <field name="name">Dependencia de un cliente</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Un cliente que supone más del umbral (40% por defecto, parámetro pms_ai_tool.customer_dependency_pct) de lo que factura un comercial entre los clientes empresa.</field>
+        <field
+      name="formula"
+    >importe facturado sin IVA del cliente (facturas menos rectificativas) / total del comercial</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >concentración de clientes, dependencia de un cliente, umbral de dependencia</field>
+        <field name="tool_names">pms_salesperson_top_customers</field>
+    </record>
+    <record id="glossary_cartera" model="pms.ai.glossary.term">
+        <field name="code">cartera</field>
+        <field name="name">Cartera de un comercial</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Empresas y agencias asignadas a un comercial. La herramienta de cartera cuenta cuántas tuvieron folios en las últimas semanas, las creadas en el periodo, las fichas sin CIF o sin correo y las facturas vencidas, con la parte de ellas ya cobrada en el folio pero sin aplicar.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >portfolio, clientes del comercial, empresas asignadas</field>
+        <field name="tool_names">pms_salesperson_portfolio</field>
+    </record>
+    <record id="glossary_autonomo" model="pms.ai.glossary.term">
+        <field name="code">autonomo</field>
+        <field name="name">Autónomo</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Empresa cuyo CIF tiene la forma de un DNI o NIE (persona física): lo más probable es que sea un trabajador autónomo y no una sociedad.</field>
+        <field name="source">res.partner.vat</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >persona física, empresario individual, DNI como CIF</field>
+        <field
+      name="pitfalls"
+    >Es una detección por el formato del documento, no un dato guardado.</field>
+        <field name="tool_names">pms_salesperson_cooling_customers</field>
+    </record>
+    <record id="glossary_no_me_cuadra" model="pms.ai.glossary.term">
+        <field name="code">no_me_cuadra</field>
+        <field name="name">Por qué no cuadra una cifra</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Casi siempre es una de cuatro cosas distintas entre las dos fuentes: la fecha usada (estancia, entrada o venta), con o sin IVA, los estados incluidos (canceladas) y si entran staff y fuera de servicio.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >descuadre de cifras, no coincide, diferencia entre informes, cuadrar totales</field>
+        <field
+      name="pitfalls"
+    >También: habitaciones a 0 € en grupos, grupos facturados fuera del PMS y la diferencia entre endpoints antiguos que no filtraban canceladas.</field>
+    </record>
+    <record id="glossary_precio_con_iva" model="pms.ai.glossary.term">
+        <field name="code">precio_con_iva</field>
+        <field name="name">Precios con IVA</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >En Alda el precio de la línea de reserva (price) y los derivados de la API (priceTotal, priceOnlyRoom, priceOnlyServices) van CON IVA. El importe sin IVA está en los subtotales aparte.</field>
+        <field name="source">pms.reservation.line.price</field>
+        <field name="tax_basis">with_vat</field>
+        <field
+      name="synonyms"
+    >con IVA, IVA incluido, sin IVA, neto, bruto, priceTotal</field>
+        <field
+      name="pitfalls"
+    >Los campos que no existen en la API aunque aparezcan en capas de terceros: boardServices_total_amount y priceOnlyServices_amount. Los reales de cabecera son priceOnlyRoom, priceOnlyServices, priceTotal, servicesDiscount y priceTax.</field>
+    </record>
+    <record id="glossary_filtro_fecha_dashboard" model="pms.ai.glossary.term">
+        <field name="code">filtro_fecha_dashboard</field>
+        <field name="name">Filtro de fecha de un panel</field>
+        <field name="area">revenue</field>
+        <field
+      name="definition"
+    >Error típico de los paneles de hojas de cálculo: un filtro de mes que selecciona desde el último día del mes anterior por un desfase de zona horaria. Síntoma: la suma de los meses no cuadra con el total anual.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >dashboard, panel, filtro de mes, desfase de un día</field>
+        <field
+      name="pitfalls"
+    >Ante cualquier descuadre de mes contra año, comprobar primero la ventana real del filtro contra una consulta limpia de mes natural.</field>
+    </record>
+    <record id="glossary_factura" model="pms.ai.glossary.term">
+        <field name="code">factura</field>
+        <field name="name">Factura</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Documento fiscal de venta (account.move) que se emite al cliente de un folio. Puede ser nominal, con los datos fiscales completos, o simplificada. Cuándo se genera depende de la política de facturación del hotel o del cliente.</field>
+        <field name="source">account.move</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">invoice, factura de cliente, facturación</field>
+        <field
+      name="pitfalls"
+    >Se factura por folio. El importe con IVA de la factura no tiene por qué coincidir con el price de las líneas si hubo descuentos, anticipos o rectificativas.</field>
+    </record>
+    <record id="glossary_factura_simplificada" model="pms.ai.glossary.term">
+        <field name="code">factura_simplificada</field>
+        <field name="name">Factura simplificada</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Factura que no identifica al cliente, hasta un importe máximo configurable por hotel (max_amount_simplified_invoice). Usa el cliente anónimo compartido y el diario de simplificadas del hotel (journal_simplified_invoice_id).</field>
+        <field name="source">pms.property.max_amount_simplified_invoice</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >simplificada, ticket, factura sin datos del cliente</field>
+        <field
+      name="pitfalls"
+    >Los partners sin datos de facturación suficientes pasan a simplificadas en la facturación automática; los que tienen perfil fiscal completo se facturan con factura nominal.</field>
+    </record>
+    <record id="glossary_cliente_anonimo" model="pms.ai.glossary.term">
+        <field name="code">cliente_anonimo</field>
+        <field name="name">Cliente anónimo</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Partner compartido de las facturas simplificadas (xmlid pms.various_pms_partner), referenciado por cientos de miles de asientos. Está protegido: no se puede modificar por la interfaz, la API ni el shell normal («Cannot modify the anonymous customer»).</field>
+        <field name="source">pms.various_pms_partner</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >various partner, cliente varios, cliente genérico</field>
+        <field
+      name="pitfalls"
+    >La protección es deliberada: un flujo llegó a renombrarlo y contaminó todas las simplificadas. Su edición, solo con autorización, escribe firstname y lastname con el write base; nunca name.</field>
+    </record>
+    <record id="glossary_factura_rectificativa" model="pms.ai.glossary.term">
+        <field name="code">factura_rectificativa</field>
+        <field name="name">Factura rectificativa</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Factura que corrige o anula otra ya emitida (abono). Apunta a la original con reversed_entry_id. En los anticipos se rectifica con una rectificativa fechada en un periodo abierto, sin reescribir nunca un periodo cerrado.</field>
+        <field name="source">account.move.reversed_entry_id</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >abono, rectificativa, nota de crédito, credit note</field>
+        <field
+      name="pitfalls"
+    >Una devolución facturada como una nota de crédito nueva desde el asistente del folio no rectifica nada: no tiene reversed_entry_id y deja el anticipo original en pie.</field>
+    </record>
+    <record id="glossary_anticipo" model="pms.ai.glossary.term">
+        <field name="code">anticipo</field>
+        <field name="name">Anticipo</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cobro recibido antes de la estancia que se factura aparte (factura de anticipo) y se descuenta en la factura final. El módulo pms_downpayment_lifecycle mantiene correcta esa factura cuando cambia el cliente, hay una devolución, una cancelación o un cambio de importe.</field>
+        <field name="source">pms_downpayment_lifecycle</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >downpayment, depósito, señal, prepago, factura de anticipo</field>
+        <field
+      name="pitfalls"
+    >El cobro nunca se desconcilia de su anticipo y nada se contabiliza en un periodo cerrado: los cambios se hacen con una rectificativa fechada en periodo abierto. La política de la sociedad (pms_invoice_downpayment_policy) decide si se factura manualmente, todo o solo lo de salidas del mes pasado.</field>
+    </record>
+    <record id="glossary_cobro" model="pms.ai.glossary.term">
+        <field name="code">cobro</field>
+        <field name="name">Cobro</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Pago recibido de un cliente (account.payment), ligado a un folio y a un diario del hotel (caja, TPV o banco). Se concilia con su factura o con el anticipo.</field>
+        <field name="source">account.payment</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >pago de cliente, recaudación, payment, ingreso</field>
+        <field
+      name="pitfalls"
+    >Un folio de OTA cobrado en el canal y sin pago en Roomdoo: revisar primero la configuración de pagos del hotel y el canal y luego los pms.api.log del folio.</field>
+    </record>
+    <record id="glossary_conciliacion" model="pms.ai.glossary.term">
+        <field name="code">conciliacion</field>
+        <field name="name">Conciliación</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Casar apuntes contables de signo contrario: un cobro con su factura, una línea de extracto con su pago.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">reconciliation, casar, conciliar, punteo</field>
+        <field
+      name="pitfalls"
+    >El campo is_matched de los pagos puede quedar obsoleto tras arreglos por SQL: afecta al widget de conciliación, no al balance.</field>
+    </record>
+    <record id="glossary_romper_conciliacion" model="pms.ai.glossary.term">
+        <field name="code">romper_conciliacion</field>
+        <field name="name">Romper conciliación</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Deshacer una conciliación para liberar los apuntes casados. En periodos cerrados lo impide la fecha de bloqueo (módulo account_reconcile_lock_date).</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >deshacer conciliación, desconciliar, unreconcile</field>
+        <field
+      name="pitfalls"
+    >No usarlo a ciegas en pagos de periodos cerrados: usar una rectificativa en periodo abierto.</field>
+    </record>
+    <record id="glossary_conciliacion_bancaria" model="pms.ai.glossary.term">
+        <field name="code">conciliacion_bancaria</field>
+        <field name="name">Conciliación bancaria</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Casar cada línea del extracto del banco con los asientos de cobros del hotel. Los abonos de TPV se casan con el diario TB y las transferencias con el diario CB.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >conciliar el banco, extracto del banco, casar banco</field>
+        <field
+      name="pitfalls"
+    >Si una combinación de varios asientos es posible, se presentan todas las candidatas: no elegir una sola sin que lo valide una persona.</field>
+        <field
+      name="tool_names"
+    >alda_bank_pending_lines, alda_bank_match_candidates, alda_bank_reconcile</field>
+    </record>
+    <record id="glossary_diario" model="pms.ai.glossary.term">
+        <field name="code">diario</field>
+        <field name="name">Diario</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Libro donde se contabilizan los asientos de un tipo (ventas, banco, caja, TPV). Los diarios de cada hotel se identifican por un prefijo y el código del hotel y se enlazan a él con account.journal.pms_property_ids.</field>
+        <field name="source">account.journal</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">journal, libro diario, diarios del hotel</field>
+        <field name="tool_names">alda_bank_pending_lines</field>
+    </record>
+    <record id="glossary_diario_cb" model="pms.ai.glossary.term">
+        <field name="code">diario_cb</field>
+        <field name="name">Diario CB</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Diario CB&lt;código del hotel&gt; donde se registran los cobros por transferencia de un hotel. Al conciliar el banco se buscan sus apuntes del mismo día o del siguiente. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >CB, diario de transferencias, cobros por transferencia, CB&lt;hotel&gt;</field>
+        <field
+      name="pitfalls"
+    >Significado de la sigla y otros usos del diario no verificados.</field>
+        <field
+      name="tool_names"
+    >alda_bank_match_candidates, alda_bank_reconcile</field>
+    </record>
+    <record id="glossary_diario_tb" model="pms.ai.glossary.term">
+        <field name="code">diario_tb</field>
+        <field name="name">Diario TB</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Diario TB&lt;código del hotel&gt; donde se registran los cobros con TPV (tarjeta) de un hotel. Al conciliar el extracto se busca el apunte TB del día anterior con el mismo importe, o se desglosan cobros menos devoluciones y se miran los días contiguos. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >TB, diario del TPV, cobros con tarjeta, TB&lt;hotel&gt;</field>
+        <field
+      name="pitfalls"
+    >Significado de la sigla no verificado. El abono del banco no coincide día a día con los cobros: puede agrupar varios días.</field>
+        <field
+      name="tool_names"
+    >alda_bank_match_candidates, alda_bank_reconcile</field>
+    </record>
+    <record id="glossary_asiento" model="pms.ai.glossary.term">
+        <field name="code">asiento</field>
+        <field name="name">Asiento contable</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Registro contable (account.move) con sus apuntes. Odoo exige que cuadre (suma del debe igual a la del haber, _check_balanced): un balance descuadrado implica asientos con líneas incompletas.</field>
+        <field name="source">account.move</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">asiento, journal entry, move</field>
+    </record>
+    <record id="glossary_apunte" model="pms.ai.glossary.term">
+        <field name="code">apunte</field>
+        <field name="name">Apunte contable</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Línea de un asiento (account.move.line) con debe, haber, cuenta y tercero.</field>
+        <field name="source">account.move.line</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">línea de asiento, move line, apuntes</field>
+        <field
+      name="pitfalls"
+    >La edición masiva de apuntes por la interfaz llegó a romper asientos al cambiar el estado o la fecha apunte por apunte (incidencia real).</field>
+    </record>
+    <record id="glossary_descuadre_balance" model="pms.ai.glossary.term">
+        <field name="code">descuadre_balance</field>
+        <field name="name">Descuadre de balance</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Asientos con líneas incompletas, por ejemplo asientos de pago de una sola línea a los que falta la contrapartida de la cuenta puente de pendientes. El descuadre visible puede ser mucho menor que el daño real porque los netos casi se compensan.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >balance descuadrado, asientos sin contrapartida, asiento incompleto</field>
+        <field
+      name="pitfalls"
+    >El arreglo correcto restaura la pata que falta volteando debe y haber de la línea existente, nunca un apunte en vario de una sola línea; se valida antes en staging con copia y copia de seguridad.</field>
+    </record>
+    <record id="glossary_extracto_bancario" model="pms.ai.glossary.term">
+        <field name="code">extracto_bancario</field>
+        <field name="name">Extracto bancario</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Conjunto de movimientos del banco o sesión de una caja (account.bank.statement); cada línea (account.bank.statement.line) se concilia con asientos.</field>
+        <field name="source">account.bank.statement</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >extracto, statement, línea de extracto, movimientos del banco</field>
+        <field
+      name="pitfalls"
+    >Dos extractos del mismo día en un diario de caja (uno abierto y vacío con fecha nula y otro cerrado con las líneas reales) hacen que el cierre cuente la recaudación dos veces.</field>
+    </record>
+    <record id="glossary_cierre_caja" model="pms.ai.glossary.term">
+        <field name="code">cierre_caja</field>
+        <field name="name">Cierre de caja</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cierre de la sesión de caja de un diario de efectivo: compara el importe teórico (saldo inicial más cobros) con lo contado.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >caja, arqueo, diferencia de caja, diferencia fantasma, forzar caja</field>
+        <field
+      name="pitfalls"
+    >Si pide un importe raro puede ser el bug del extracto fantasma: no pulsar «Forzar caja», que crea una línea de pérdida falsa e intenta reconciliar pagos ya conciliados. Se arregla borrando el extracto vacío tras comprobar que no tiene líneas.</field>
+    </record>
+    <record id="glossary_tpv" model="pms.ai.glossary.term">
+        <field name="code">tpv</field>
+        <field name="name">TPV</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Terminal punto de venta (datáfono) para cobros con tarjeta. En el extracto del banco, un concepto que empieza por «ON» seguido del número de comercio se trata como abono de TPV; el resto, como transferencia.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >datáfono, cobro con tarjeta, terminal punto de venta, POS</field>
+        <field
+      name="pitfalls"
+    >La regla de «ON» + comercio es la de la herramienta de banco; los conceptos del banco pueden venir truncados.</field>
+        <field name="tool_names">alda_bank_pending_lines</field>
+    </record>
+    <record id="glossary_diferencia_centimos" model="pms.ai.glossary.term">
+        <field name="code">diferencia_centimos</field>
+        <field name="name">Diferencia de céntimos</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cuando el banco ingresa menos que los cobros, la diferencia se lleva a la cuenta 678; si ingresa más, a la 778, siempre con la analítica del hotel.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >cuenta 678, cuenta 778, redondeo bancario, diferencia mínima</field>
+        <field name="pitfalls">Solo se aplica a diferencias de céntimos.</field>
+        <field name="tool_names">alda_bank_reconcile</field>
+    </record>
+    <record id="glossary_cuenta_465" model="pms.ai.glossary.term">
+        <field name="code">cuenta_465</field>
+        <field name="name">Cuenta 465</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cuenta 465 del Plan General Contable, «Remuneraciones pendientes de pago»: recoge las nóminas devengadas hasta que se pagan. En Alda se concilian sus apuntes agrupándolos por un número de 7 dígitos del concepto (parece el código de empleado) y el mes. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >465, nóminas pendientes, remuneraciones pendientes de pago, conciliación de nóminas</field>
+        <field
+      name="pitfalls"
+    >Algunos grupos mezclan meses y el mismo número se repite cada mes: por eso se propone agrupar primero por número y mes y después solo por número. La simulación se hace con alda_payroll_465_preview antes de conciliar.</field>
+        <field
+      name="tool_names"
+    >alda_payroll_465_preview, alda_payroll_465_reconcile</field>
+    </record>
+    <record id="glossary_cuenta_430" model="pms.ai.glossary.term">
+        <field name="code">cuenta_430</field>
+        <field name="name">Cuenta 430</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cuenta 430 «Clientes»: lo que los clientes deben al hotel. Los cobros de folio y las facturas se concilian en ella, por folio.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >430, clientes, deudores, cobros pendientes de aplicar</field>
+    </record>
+    <record id="glossary_iva" model="pms.ai.glossary.term">
+        <field name="code">iva</field>
+        <field name="name">IVA</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Impuesto sobre el Valor Añadido. En los datos de Alda los precios de las líneas de reserva incluyen IVA; las bases sin IVA están en los subtotales del folio y de la factura.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >impuesto, IVA incluido, VAT, tipo impositivo</field>
+        <field
+      name="pitfalls"
+    >Decir siempre si una cifra es con o sin IVA.</field>
+    </record>
+    <record id="glossary_base_imponible" model="pms.ai.glossary.term">
+        <field name="code">base_imponible</field>
+        <field name="name">Base imponible</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Importe sin IVA sobre el que se calcula el impuesto (amount_untaxed en el folio y la factura).</field>
+        <field name="source">pms.folio.amount_untaxed</field>
+        <field name="tax_basis">without_vat</field>
+        <field
+      name="synonyms"
+    >subtotal sin impuestos, neto sin IVA, untaxed, importe sin IVA</field>
+    </record>
+    <record id="glossary_sii" model="pms.ai.glossary.term">
+        <field name="code">sii</field>
+        <field name="name">SII</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Suministro Inmediato de Información del IVA: envío a la AEAT de los registros de las facturas emitidas y recibidas a medida que se contabilizan. En el PMS lo adapta pms_l10n_es_sii.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >Suministro Inmediato de Información, envío a la AEAT, libros de IVA</field>
+        <field
+      name="pitfalls"
+    >El jobrunner puede acumular un backlog de SII que mantiene locks sobre account_move: relevante en los despliegues. Estados que se miran: sin enviar, rechazadas y aceptadas con errores.</field>
+    </record>
+    <record id="glossary_verifactu" model="pms.ai.glossary.term">
+        <field name="code">verifactu</field>
+        <field name="name">Verifactu</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Sistema de facturación verificable de la AEAT (VERI*FACTU): el programa de facturación genera por cada factura un registro con huella encadenada y puede remitirlo a la AEAT. La API de Roomdoo expone un estado VERI*FACTU en las facturas (pms_fastapi_verifactu). [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >VERI*FACTU, veri factu, facturación verificable, antifraude</field>
+        <field
+      name="pitfalls"
+    >No está comprobado si está activo en producción en Alda ni cómo convive con el SII.</field>
+    </record>
+    <record id="glossary_ticketbai" model="pms.ai.glossary.term">
+        <field name="code">ticketbai</field>
+        <field name="name">TicketBAI</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Sistema de facturación de las haciendas forales del País Vasco; el PMS tiene un módulo de localización (pms_l10n_es_tbai). [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">TBAI, Ticket BAI, facturación vasca</field>
+    </record>
+    <record id="glossary_modelo_303" model="pms.ai.glossary.term">
+        <field name="code">modelo_303</field>
+        <field name="name">Modelo 303</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Autoliquidación periódica del IVA ante la AEAT: IVA repercutido menos IVA soportado deducible, normalmente trimestral. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >303, declaración de IVA, autoliquidación del IVA</field>
+    </record>
+    <record id="glossary_modelo_111" model="pms.ai.glossary.term">
+        <field name="code">modelo_111</field>
+        <field name="name">Modelo 111</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Declaración periódica de las retenciones e ingresos a cuenta del IRPF practicados a trabajadores y profesionales. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >111, retenciones de nóminas, retenciones IRPF</field>
+    </record>
+    <record id="glossary_modelo_115" model="pms.ai.glossary.term">
+        <field name="code">modelo_115</field>
+        <field name="name">Modelo 115</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Declaración periódica de las retenciones por el arrendamiento de inmuebles urbanos. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >115, retenciones de alquileres, retenciones por arrendamiento</field>
+    </record>
+    <record id="glossary_modelo_347" model="pms.ai.glossary.term">
+        <field name="code">modelo_347</field>
+        <field name="name">Modelo 347</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Declaración anual de operaciones con terceros: clientes y proveedores con los que el importe del año supera 3.005,06 €. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">347, operaciones con terceros</field>
+    </record>
+    <record id="glossary_modelo_349" model="pms.ai.glossary.term">
+        <field name="code">modelo_349</field>
+        <field name="name">Modelo 349</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Declaración recapitulativa de operaciones intracomunitarias. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">349, operaciones intracomunitarias</field>
+    </record>
+    <record id="glossary_modelo_390" model="pms.ai.glossary.term">
+        <field name="code">modelo_390</field>
+        <field name="name">Modelo 390</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Resumen anual del IVA: recapitula las autoliquidaciones del modelo 303 del ejercicio. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">390, resumen anual del IVA</field>
+    </record>
+    <record id="glossary_fecha_bloqueo" model="pms.ai.glossary.term">
+        <field name="code">fecha_bloqueo</field>
+        <field name="name">Fecha de bloqueo</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Fecha hasta la que no se pueden crear ni modificar asientos en una sociedad (bloqueo de periodo, fiscal o de impuestos). El módulo account_reconcile_lock_date aplica esa fecha también a deshacer conciliaciones y a desasentar asientos.</field>
+        <field name="source">account_reconcile_lock_date</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >lock date, cierre contable, periodo cerrado, bloqueo de periodo</field>
+        <field
+      name="pitfalls"
+    >Es por sociedad. Nada se contabiliza en un periodo cerrado: se corrige con documentos en periodo abierto.</field>
+    </record>
+    <record id="glossary_analitica_hotel" model="pms.ai.glossary.term">
+        <field name="code">analitica_hotel</field>
+        <field name="name">Analítica del hotel</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cuenta analítica de cada hotel (analytic_account_id de pms.property) con la que se etiquetan sus apuntes, por ejemplo las diferencias de céntimos.</field>
+        <field name="source">pms.property.analytic_account_id</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >cuenta analítica, centro de coste del hotel</field>
+    </record>
+    <record id="glossary_politica_facturacion" model="pms.ai.glossary.term">
+        <field name="code">politica_facturacion</field>
+        <field name="name">Política de facturación automática</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Cuándo se factura un folio sin intervención: manual, desde el check-out (con un margen de días) o un día fijo del mes. Cada hotel tiene una por defecto y cada cliente puede usar la del hotel o la suya.</field>
+        <field name="source">res.partner.invoicing_policy</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >autoinvoice, facturación automática, política de facturación, desde checkout, día del mes</field>
+        <field
+      name="pitfalls"
+    >Los partners sin datos de facturación suficientes caen al diario de simplificadas en la facturación automática.</field>
+    </record>
+    <record id="glossary_autofacturacion" model="pms.ai.glossary.term">
+        <field name="code">autofacturacion</field>
+        <field name="name">Autofacturación</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >En el PMS, las facturas cuyo cliente es la propia sociedad del hotel salen en el diario de autofacturación configurado en la sociedad (self_billed_journal_id). [Sin verificar]</field>
+        <field name="source">res.company.self_billed_journal_id</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >autofactura, self billing, factura a la propia sociedad</field>
+        <field
+      name="pitfalls"
+    >No confundir con la facturación automática (política de facturación). El uso de negocio de las autofacturas no está verificado.</field>
+    </record>
+    <record id="glossary_pago_ota" model="pms.ai.glossary.term">
+        <field name="code">pago_ota</field>
+        <field name="name">Pagos de las OTA</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >El registro automático de los prepagos de las OTA depende de la configuración por hotel y canal: pagos permitidos (pms_api_alowed_payments), un texto identificador que se busca en la petición (pms_api_payment_identifier) y un diario de destino.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >prepago de Booking, pago de la OTA, cobro de canal</field>
+        <field
+      name="pitfalls"
+    >Con pagos permitidos y el identificador vacío falla el proceso; para no registrar pagos, usar un identificador imposible (por ejemplo PAYDISABLED). Nunca el identificador estándar sin diario: crearía transacciones sin diario.</field>
+    </record>
+    <record id="glossary_docuware" model="pms.ai.glossary.term">
+        <field name="code">docuware</field>
+        <field name="name">DocuWare</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Gestor documental al que, según el catálogo de herramientas, llegan las facturas de proveedor pendientes de contabilizar. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">facturas de proveedor, gestor documental</field>
+    </record>
+    <record id="glossary_redsys" model="pms.ai.glossary.term">
+        <field name="code">redsys</field>
+        <field name="name">Redsys</field>
+        <field name="area">accounting</field>
+        <field
+      name="definition"
+    >Pasarela de pago de tarjeta usada para cobros online; sus cobros se concilian con el extracto del banco. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >pasarela de pago, cobro online, tarjeta online</field>
+    </record>
+    <record id="glossary_ses_hospedajes" model="pms.ai.glossary.term">
+        <field name="code">ses_hospedajes</field>
+        <field name="name">SES Hospedajes</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >Sistema de Registro de Hospedajes del Ministerio del Interior, al que el hotel comunica las reservas (RH) y los partes de viajeros (PV) por servicio web. Cada comunicación es un pms.ses.communication con su entidad (RH o PV), su operación (alta o baja) y su estado: datos incompletos, pendiente de notificar, pendiente de procesar, error de envío, error de procesamiento o procesada.</field>
+        <field name="source">pms.ses.communication</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >SES, Hospedajes, registro de viajeros, Ministerio del Interior, comunicación a Hospedajes</field>
+        <field
+      name="pitfalls"
+    >El cron de envío de las comunicaciones de reserva (autosend_pending_reservation_com) está desactivado a propósito en Alda producción desde 2025-09: hacía HTTP dentro de la transacción, con 258.000 pendientes tumbaba la instancia. No reactivarlo sin rediseñarlo con queue.job. El de partes de viajeros sí está activo.</field>
+    </record>
+    <record id="glossary_parte_viajeros" model="pms.ai.glossary.term">
+        <field name="code">parte_viajeros</field>
+        <field name="name">Parte de viajeros (PV)</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >Comunicación al Ministerio del Interior con los datos de los huéspedes de una reserva (entidad PV de pms.ses.communication). Si faltan datos del check-in, queda en «datos incompletos».</field>
+        <field name="source">pms.ses.communication.entity</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >PV, parte de entrada, partes de viajeros, traveller report</field>
+        <field
+      name="pitfalls"
+    >Se genera desde los datos de los check-in partner: sin ellos completos no sale.</field>
+    </record>
+    <record id="glossary_comunicacion_reserva_rh" model="pms.ai.glossary.term">
+        <field name="code">comunicacion_reserva_rh</field>
+        <field name="name">Comunicación de reserva (RH)</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >Comunicación al Ministerio del Interior de la reserva de hospedaje (entidad RH de pms.ses.communication), distinta del parte de viajeros.</field>
+        <field name="source">pms.ses.communication.entity</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >RH, reserva de hospedaje, comunicación de reserva</field>
+        <field
+      name="pitfalls"
+    >Su envío automático está desactivado en Alda producción desde 2025-09 (ver SES Hospedajes).</field>
+    </record>
+    <record id="glossary_ine" model="pms.ai.glossary.term">
+        <field name="code">ine</field>
+        <field name="name">INE</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >Encuesta mensual de ocupación hotelera del Instituto Nacional de Estadística. El asistente de pms_l10n_es genera el fichero XML del mes con habitaciones, plazas, ADR y RevPAR de las habitaciones marcadas in_ine.</field>
+        <field name="source">pms.room.in_ine</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >Instituto Nacional de Estadística, encuesta de ocupación, fichero del INE</field>
+        <field
+      name="pitfalls"
+    >Su ADR y su RevPAR tienen una fórmula propia (ver ADR y RevPAR), con IVA, y no coinciden necesariamente con los de los informes de dirección.</field>
+    </record>
+    <record id="glossary_residencia_huesped" model="pms.ai.glossary.term">
+        <field name="code">residencia_huesped</field>
+        <field name="name">Residencia del huésped</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >País y provincia de residencia del huésped, que se registran en el check-in y que pide la encuesta del INE. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >país de residencia, provincia de residencia, tipo de residencia</field>
+        <field
+      name="pitfalls"
+    >Los huéspedes sin país o provincia de residencia dejan incompleto el INE del mes.</field>
+    </record>
+    <record id="glossary_tasa_turistica" model="pms.ai.glossary.term">
+        <field name="code">tasa_turistica</field>
+        <field name="name">Tasa turística</field>
+        <field name="area">regulatory</field>
+        <field
+      name="definition"
+    >Impuesto por persona y noche que algunas administraciones cobran por alojarse. En el PMS es un producto marcado is_tourist_tax con reglas de aplicación: fechas de inicio y fin, desde y hasta qué noche de la estancia, y edad mínima y máxima. [Sin verificar]</field>
+        <field name="source">product.template.is_tourist_tax</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">impuesto turístico, tourist tax, ecotasa</field>
+        <field
+      name="pitfalls"
+    >No verificado cómo la aplica cada hotel ni cómo se trata cuando la OTA ya la incluye en el precio.</field>
+    </record>
+    <record id="glossary_pms_api_log" model="pms.ai.glossary.term">
+        <field name="code">pms_api_log</field>
+        <field name="name">Log de la API (pms.api.log)</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Registro de las llamadas de la API: las de entrada (Neobookings, el front, integradores) y las de salida de tipo PUSH hacia el canal, con su estado y respuesta. Los PUSH con el usuario de un hotel son trabajos de listener que corren como ese usuario, no un push manual suyo.</field>
+        <field name="source">pms.api.log</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >log de API, llamadas API, api log, registro de llamadas</field>
+        <field
+      name="pitfalls"
+    >Un push con payload vacío (un mes sin reglas) puede registrarse como error siendo un no-op benigno.</field>
+    </record>
+    <record id="glossary_queue_job" model="pms.ai.glossary.term">
+        <field name="code">queue_job</field>
+        <field name="name">Trabajo en segundo plano (queue.job)</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Trabajo que ejecuta el jobrunner de OCA queue_job fuera de la petición: envíos al channel manager, facturación automática, etc. Un trabajo fallido queda en estado failed.</field>
+        <field name="source">queue.job</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >queue job, job, cola de trabajos, jobrunner, trabajos fallidos</field>
+        <field
+      name="pitfalls"
+    >Al diagnosticar que un cambio no llegó al canal, buscar los queue.job de exportación en estado failed (por ejemplo un ReadTimeout del canal).</field>
+    </record>
+    <record id="glossary_hot_patch" model="pms.ai.glossary.term">
+        <field name="code">hot_patch</field>
+        <field name="name">Hot-patch</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Arreglo aplicado directamente en el contenedor de producción sin pasar por el pipeline de despliegue. Cada uno debe quedar registrado y retirarse cuando la imagen ya lleva el arreglo.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">hotfix, parche en caliente, parche vivo</field>
+        <field
+      name="pitfalls"
+    >Tras un despliegue se comprueba que el contenedor no tiene diferencias contra la imagen y que los parches retirados ya están en ella.</field>
+    </record>
+    <record id="glossary_staging" model="pms.ai.glossary.term">
+        <field name="code">staging</field>
+        <field name="name">Staging</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Copia de pruebas del Odoo de Alda para validar cambios antes de producción. No sale a Internet.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >entorno de pruebas, preproducción, staging de Alda, pruebas</field>
+        <field
+      name="pitfalls"
+    >La configuración de reglas, plantillas y WhatsApp no se replica automáticamente entre staging y producción. Una escritura de prueba debe hacerse siempre aquí.</field>
+    </record>
+    <record id="glossary_helpdesk" model="pms.ai.glossary.term">
+        <field name="code">helpdesk</field>
+        <field name="name">Helpdesk</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Sistema de tickets de incidencias. El de Alda vive en su propio Odoo de producción y lo atiende Soporte de Roomdoo; el de Roomdoo es otro sistema distinto.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >tickets, incidencias, soporte, ticket de hotel</field>
+        <field
+      name="pitfalls"
+    >La asignación automática de tickets usa el puesto y los hoteles del empleado (hr.employee.property_ids).</field>
+    </record>
+    <record id="glossary_sla" model="pms.ai.glossary.term">
+        <field name="code">sla</field>
+        <field name="name">SLA</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Acuerdo de nivel de servicio: plazo comprometido de respuesta o de resolución de un ticket. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">plazo de respuesta, vencimiento de ticket</field>
+    </record>
+    <record id="glossary_mcp" model="pms.ai.glossary.term">
+        <field name="code">mcp</field>
+        <field name="name">MCP</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Model Context Protocol: el protocolo por el que un cliente de IA llama a las herramientas que sirve Odoo (módulos ai_tool y ai_oca_mcp). Hay un servidor por persona con una clave personal con caducidad, y cada herramienta tiene su lista de usuarios permitidos.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >servidor MCP, conector, clave personal, herramientas de IA</field>
+    </record>
+    <record id="glossary_tool_ia" model="pms.ai.glossary.term">
+        <field name="code">tool_ia</field>
+        <field name="name">Herramienta de IA (tool)</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Función registrada como ai.tool que la IA puede llamar. Las de lectura corren en una transacción de solo lectura con tiempo máximo; las de escritura necesitan vista previa y confirmación en dos pasos.</field>
+        <field name="source">ai.tool</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">tool, herramienta, función de IA</field>
+        <field
+      name="pitfalls"
+    >Las lecturas por ORM respetan los permisos de Odoo del usuario; no devuelven más de lo que él vería en la aplicación.</field>
+    </record>
+    <record id="glossary_confirmacion_dos_pasos" model="pms.ai.glossary.term">
+        <field name="code">confirmacion_dos_pasos</field>
+        <field name="name">Escritura en dos pasos</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Una herramienta de escritura se llama primero con confirm=false: devuelve una vista previa y un token firmado ligado al usuario, la herramienta y los argumentos. Solo se aplica al repetir los mismos argumentos con confirm=true y ese token, que caduca (10 minutos por defecto) y se usa una sola vez.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >confirmación, vista previa, preview, confirmation_token, confirmar escritura</field>
+        <field
+      name="pitfalls"
+    >Si los datos cambian entre la vista previa y la confirmación, la confirmación se rechaza: hay que repetir la vista previa. Mostrar siempre la vista previa a la persona antes de confirmar.</field>
+    </record>
+    <record id="glossary_write_enabled" model="pms.ai.glossary.term">
+        <field name="code">write_enabled</field>
+        <field name="name">Escrituras activadas</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Interruptor doble de las escrituras de IA: el parámetro del sistema pms_ai_tool.write_enabled y la casilla «Write enabled» de cada herramienta. Mientras uno de los dos esté apagado, la confirmación falla.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >activar escrituras, write enabled, usuarios permitidos</field>
+        <field
+      name="pitfalls"
+    >Las herramientas de escritura siempre necesitan una lista explícita de usuarios permitidos.</field>
+    </record>
+    <record id="glossary_sobre" model="pms.ai.glossary.term">
+        <field name="code">sobre</field>
+        <field name="name">Sobre de respuesta</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Estructura común de la respuesta de toda herramienta: entorno, hora de generación, nombre, resumen, periodo, definiciones, avisos y resultado.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >envelope, respuesta de la herramienta, avisos, warnings, definiciones</field>
+        <field
+      name="pitfalls"
+    >Los avisos (warnings) indican datos dudosos o recortes: hay que leerlos antes de dar la cifra.</field>
+    </record>
+    <record id="glossary_datos_personales" model="pms.ai.glossary.term">
+        <field name="code">datos_personales</field>
+        <field name="name">Datos personales</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Las herramientas de IA no devuelven correos ni teléfonos de personas. Los titulares de folio se muestran con el nombre de pila y la inicial del apellido, y solo se devuelve lo que el usuario vería en Odoo según sus hoteles y sociedades.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >RGPD, privacidad, anonimización, enmascarado, datos del huésped</field>
+        <field
+      name="pitfalls"
+    >Para ver el nombre completo de un huésped hay que abrir el folio en Odoo.</field>
+        <field name="tool_names">pms_folio_find, pms_partner_find</field>
+    </record>
+    <record id="glossary_sentry" model="pms.ai.glossary.term">
+        <field name="code">sentry</field>
+        <field name="name">Sentry</field>
+        <field name="area">support</field>
+        <field
+      name="definition"
+    >Sistema donde llegan los errores de las aplicaciones: la primera fuente al investigar un traceback del Odoo de producción o de staging.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >errores, excepciones, traceback, monitorización de errores</field>
+    </record>
+    <record id="glossary_alda_hotels" model="pms.ai.glossary.term">
+        <field name="code">alda_hotels</field>
+        <field name="name">Alda Hotels</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Cadena hotelera cliente de Roomdoo. Su Odoo de producción es odoo.gestionalda.es, con varias sociedades y muchos hoteles.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">Alda, gestionalda, cadena Alda</field>
+        <field
+      name="pitfalls"
+    >Las dudas sobre informes internos de Alda (presupuesto contra año anterior, OTB) las gestiona Alda, no el equipo Roomdoo.</field>
+    </record>
+    <record id="glossary_roomdoo" model="pms.ai.glossary.term">
+        <field name="code">roomdoo</field>
+        <field name="name">Roomdoo</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >PMS (sistema de gestión hotelera) sobre Odoo 16 que desarrolla Commit [Sun]. Alda lo usa en su propia instalación; hay además una plataforma SaaS con otros clientes.</field>
+        <field name="tax_basis">n_a</field>
+        <field name="synonyms">PMS, Roomdoo PMS, plataforma Roomdoo</field>
+        <field
+      name="pitfalls"
+    >Alda y la plataforma SaaS son instalaciones distintas: no mezclar sus datos ni sus despliegues.</field>
+    </record>
+    <record id="glossary_td" model="pms.ai.glossary.term">
+        <field name="code">td</field>
+        <field name="name">Transformación Digital (TD)</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Equipo de Alda que prueba las herramientas de IA y propone nuevas. Sus peticiones y comentarios se llevan en el proyecto «BookAI Tools» de Odoo.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >TD, transformación digital, equipo de pruebas, taller de IA, BookAI Tools</field>
+    </record>
+    <record id="glossary_taz" model="pms.ai.glossary.term">
+        <field name="code">taz</field>
+        <field name="name">TAZ</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Puesto de Alda al que se avisa de las incidencias administrativas de un hotel: folios sin facturar, una caja con diferencias o un apunte bancario que hay que aclarar. Se localiza con pms_user_find buscando el puesto TAZ y el hotel en las propiedades del empleado (hr.employee.property_ids). [Sin verificar]</field>
+        <field name="source">hr.employee.property_ids</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >TAZ del hotel, responsable administrativo del hotel, administrativo TAZ</field>
+        <field
+      name="pitfalls"
+    >El significado de la sigla y los nombres exactos del puesto no constan en las fuentes: confirmarlos con los datos antes de afirmar quién es el TAZ de un hotel.</field>
+        <field name="tool_names">pms_user_find, alda_bank_notify_taz</field>
+    </record>
+    <record id="glossary_bookai" model="pms.ai.glossary.term">
+        <field name="code">bookai</field>
+        <field name="name">BookAI</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Asistente de IA por WhatsApp para los huéspedes, con un backend propio, independiente de Odoo. Odoo guarda la configuración (reglas y plantillas) y el libro de envíos; BookAI sabe la entrega real (sent, delivered, read o failed en Meta).</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >asistente de WhatsApp, bookai-aws, backend BookAI</field>
+        <field
+      name="pitfalls"
+    >Un «se envió» en Odoo solo significa que BookAI aceptó la petición, no que llegara al móvil del huésped.</field>
+    </record>
+    <record id="glossary_regla_notificacion" model="pms.ai.glossary.term">
+        <field name="code">regla_notificacion</field>
+        <field name="name">Regla de notificación</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Dice qué evento dispara qué plantilla, por qué canal (bookai_whatsapp), con qué desfase temporal y en qué hoteles se aplica.</field>
+        <field name="source">pms_notifications</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >regla de WhatsApp, notificación automática, regla de BookAI</field>
+        <field
+      name="pitfalls"
+    >Si no hay registro de envío de un folio, ninguna regla se disparó: revisar si el hotel está incluido, si la regla tiene plantilla y las condiciones del evento. Las agencias pueden estar excluidas de los recordatorios de pago (bookai_exclude_payment_reminders).</field>
+    </record>
+    <record id="glossary_plantilla" model="pms.ai.glossary.term">
+        <field name="code">plantilla</field>
+        <field name="name">Plantilla de notificación</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Contenido de un mensaje automático. En WhatsApp se aprueba en Meta por nombre e idioma: cambiar el cuerpo en Odoo no cambia lo aprobado en Meta y deben mantenerse alineados.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >plantilla de WhatsApp, plantilla Meta, template</field>
+        <field
+      name="pitfalls"
+    >Una plantilla rechazada o desalineada falla en silencio solo para ese idioma: al auditar, comprobar todos los idiomas configurados.</field>
+    </record>
+    <record id="glossary_notification_log" model="pms.ai.glossary.term">
+        <field name="code">notification_log</field>
+        <field name="name">Log de envío de notificaciones</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >pms.notification.log guarda un registro por intento de envío. sent, delivered y read son correctos; skipped significa que no se envió por una condición o regla (mirar el campo de error, por ejemplo «BookAI deshabilitado para la propiedad»); failed y error son fallos reales con el HTTP status de BookAI.</field>
+        <field name="source">pms.notification.log</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >log de envíos, envíos de WhatsApp, estado del mensaje, skipped</field>
+        <field
+      name="pitfalls"
+    >skipped no es un fallo. Si el envío consta como sent y el huésped dice que no le llegó, el problema está en BookAI y Meta: plantilla no aprobada en ese idioma, número inválido o fuera de ventana.</field>
+    </record>
+    <record id="glossary_ventana_24h" model="pms.ai.glossary.term">
+        <field name="code">ventana_24h</field>
+        <field name="name">Ventana de 24 horas de WhatsApp</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Un mensaje libre por WhatsApp solo puede enviarse dentro de las 24 horas siguientes al último mensaje del huésped; fuera de ella solo valen las plantillas aprobadas por Meta. [Sin verificar]</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >ventana de conversación, fuera de ventana, 24 horas</field>
+    </record>
+    <record id="glossary_smartlock" model="pms.ai.glossary.term">
+        <field name="code">smartlock</field>
+        <field name="name">Cerradura inteligente</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Los módulos pms_smartlock_* integran las cerraduras inteligentes de varios fabricantes con el PMS (una base más Omnitec, Salto, Tesa y TTLock).</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >smart lock, cerradura electrónica, cerraduras, llaves digitales</field>
+        <field
+      name="pitfalls"
+    >Que un hotel o un entorno tenga un fabricante activo no está comprobado en estos datos.</field>
+    </record>
+    <record id="glossary_codigo_puerta" model="pms.ai.glossary.term">
+        <field name="code">codigo_puerta</field>
+        <field name="name">Código de puerta</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Código de acceso que genera el módulo pms_door_codes con un sistema pseudoaleatorio.</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >door code, código de acceso, código de habitación</field>
+    </record>
+    <record id="glossary_eco_one" model="pms.ai.glossary.term">
+        <field name="code">eco_one</field>
+        <field name="name">Eco One</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Programa de sostenibilidad en el que la habitación no se limpia durante la estancia. Se carga como un servicio por noche (el producto eco-one). La herramienta pms_service_nights cuenta sus noches: unidad habitación-noche (línea de servicio con day_qty mayor que 0), sin reservas de una noche, sin canceladas y sin la línea de la salida según consumed_on.</field>
+        <field name="source">product.template.consumed_on</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >eco-one, ecoone, programa eco, habitación sin limpiar</field>
+        <field
+      name="pitfalls"
+    >La herramienta avisa de las líneas fuera de la estancia y de las repetidas. Pregunta abierta: si el producto se apunta antes o después de la noche (consumed_on real); validarlo con un mes cerrado con Operaciones.</field>
+        <field name="tool_names">pms_service_nights, pms_product_find</field>
+    </record>
+    <record id="glossary_hora_entrada_salida" model="pms.ai.glossary.term">
+        <field name="code">hora_entrada_salida</field>
+        <field name="name">Horas de entrada y salida</field>
+        <field name="area">alda</field>
+        <field
+      name="definition"
+    >Horas por defecto de entrada y de salida de un hotel (default_arrival_hour y default_departure_hour, formato HH:MM). Cada reserva puede tener las suyas (arrival_hour y departure_hour).</field>
+        <field name="source">pms.property.default_arrival_hour</field>
+        <field name="tax_basis">n_a</field>
+        <field
+      name="synonyms"
+    >hora de check-in, hora de check-out, late check-out, early check-in</field>
+    </record>
+</odoo>
