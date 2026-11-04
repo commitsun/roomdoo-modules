@@ -1,0 +1,437 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_support
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid ""
+"%(count)s logs are still waiting although they were due more than "
+"%(hours)s hours ago: the sending job may not be running."
+msgstr ""
+"%(count)s registros siguen esperando aunque tocaba enviarlos hace más de "
+"%(hours)s horas: puede que la tarea de envío no se esté ejecutando."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "%(total)s notification logs for the folio %(code)s: %(states)s."
+msgstr "%(total)s registros de notificación del folio %(code)s: %(states)s."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+#, python-format
+msgid ""
+"%s payments are not in the currency of the folio: their amounts are added "
+"without conversion."
+msgstr ""
+"%s pagos no están en la moneda del folio: sus importes se suman sin "
+"convertir."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+#, python-format
+msgid ""
+"%s payments are shared with other folios: their whole amount is listed "
+"here."
+msgstr ""
+"%s pagos se comparten con otros folios: aquí se muestra su importe "
+"completo."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "BookAI failed on its side (HTTP %s); it can be retried."
+msgstr "BookAI falló por su parte (HTTP %s); se puede reintentar."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"BookAI is not configured in this database (API address or token missing), "
+"so nothing can be sent."
+msgstr ""
+"BookAI no está configurado en esta base de datos (falta la dirección de la "
+"API o el token), así que no se puede enviar nada."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "BookAI refused the credentials of Odoo (HTTP %s)."
+msgstr "BookAI rechazó las credenciales de Odoo (HTTP %s)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "BookAI refused the request as invalid (HTTP %s): see the error text."
+msgstr ""
+"BookAI rechazó la petición por no ser válida (HTTP %s): revisa el texto "
+"del error."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "BookAI refused the request: see the error text."
+msgstr "BookAI rechazó la petición: revisa el texto del error."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "Cancelled by a person before it was sent."
+msgstr "Cancelado por una persona antes de enviarse."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+#, python-format
+msgid ""
+"Folio %(code)s (%(state)s) of %(property)s: %(reservations)s reservations, "
+"%(total).2f %(currency)s with VAT, %(pending).2f pending, "
+"%(notifications)s notifications."
+msgstr ""
+"Folio %(code)s (%(state)s) de %(property)s: %(reservations)s reservas, "
+"%(total).2f %(currency)s con IVA, %(pending).2f pendientes, "
+"%(notifications)s notificaciones."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_support_tools.py:0
+msgid "Give either folio_id or folio_code."
+msgstr "Indica folio_id o folio_code, uno de los dos."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid ""
+"Handed over to the %(channel)s channel on %(date)s. Odoo does not know "
+"whether the guest received or read it; for WhatsApp only BookAI knows the "
+"final delivery."
+msgstr ""
+"Entregado al canal %(channel)s el %(date)s. Odoo no sabe si el huésped lo "
+"recibió o lo leyó; en WhatsApp solo BookAI conoce la entrega final."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"Invoices: invoices and refunds linked to the folio (refunds are negative)."
+msgstr ""
+"Facturas: facturas y rectificativas vinculadas al folio (las "
+"rectificativas son negativas)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Logs of the folio: the ones triggered by the folio or by one of its "
+"reservations, plus (with BookAI) the ones whose origin folio is this one, "
+"such as notices about invoices or payments."
+msgstr ""
+"Registros del folio: los generados por el folio o por una de sus reservas "
+"y, con BookAI, los que tienen este folio como folio de origen, como los "
+"avisos de facturas o de pagos."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_support_tools.py:0
+msgid "No folio found with that id or code among your properties."
+msgstr ""
+"No se ha encontrado ningún folio con ese id o código entre tus propiedades."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "No recipient with an e-mail address was found."
+msgstr "No se encontró ningún destinatario con correo electrónico."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"Notifications: logs of the notification system (e-mail or WhatsApp to the "
+"guest) linked to the folio. 'Sent' means handed over to the channel, not "
+"delivered; the detail is in pms_folio_notifications."
+msgstr ""
+"Notificaciones: registros del sistema de notificaciones (correo o WhatsApp "
+"al huésped) vinculados al folio. «Enviado» significa entregado al canal, "
+"no recibido; el detalle está en pms_folio_notifications."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Odoo could not reach BookAI (network error or timeout); it can be retried."
+msgstr ""
+"Odoo no pudo contactar con BookAI (error de red o tiempo agotado); se "
+"puede reintentar."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"Payments: posted payments and statement lines linked to the folio by "
+"journal and method, net of refunds. Draft and cancelled payments are not "
+"counted."
+msgstr ""
+"Pagos: pagos publicados y líneas de extracto vinculados al folio por "
+"diario y método, netos de devoluciones. Los pagos en borrador o cancelados "
+"no se cuentan."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"Reservation amounts are for the room only (room_without_vat, "
+"room_with_vat) and the services of that reservation. In folios with "
+"several rooms the price can be set on only one reservation and the others "
+"show 0: use the totals of the folio."
+msgstr ""
+"Los importes de la reserva son solo de la habitación (room_without_vat, "
+"room_with_vat) y de los servicios de esa reserva. En folios con varias "
+"habitaciones el precio puede estar en una sola reserva y las demás salen a "
+"0: usa los totales del folio."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Rule: the notification rule that created the log; empty for a manual send "
+"or when the rule was deleted."
+msgstr ""
+"Regla: la regla de notificación que creó el registro; vacía en un envío "
+"manual o si la regla se eliminó."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "Sending failed with the error shown."
+msgstr "El envío falló con el error indicado."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_support_tools.py:0
+#, python-format
+msgid "Several folios have the code %(code)s: use folio_id (%(ids)s)."
+msgstr "Varios folios tienen el código %(code)s: usa folio_id (%(ids)s)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Skipped on purpose: BookAI is disabled for the property, so nothing was "
+"sent."
+msgstr ""
+"Omitido a propósito: BookAI está deshabilitado para la propiedad, así que "
+"no se envió nada."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Skipped on purpose: the property is in manual mode, where rules do not "
+"send by themselves (a person can still send it by hand)."
+msgstr ""
+"Omitido a propósito: la propiedad está en modo manual, donde las reglas no "
+"envían solas (una persona aún puede enviarlo a mano)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Skipped when it was due: the folio no longer met the conditions of the "
+"rule (or no longer existed)."
+msgstr ""
+"Omitido al tocar enviarlo: el folio ya no cumplía las condiciones de la "
+"regla (o ya no existía)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid "Statement line"
+msgstr "Línea de extracto"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+#, python-format
+msgid ""
+"The customer is the holder of the folio; the e-mail and the mobile are "
+"masked. Times are in the time zone %s."
+msgstr ""
+"El cliente es el titular del folio; el correo y el móvil van enmascarados. "
+"Las horas están en la zona horaria %s."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"The folio of this message could not be found: check the origin folio "
+"expression of the template."
+msgstr ""
+"No se encontró el folio de este mensaje: revisa la expresión del folio de "
+"origen de la plantilla."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"The folio total is 0: it may be a courtesy, staff or billed outside the "
+"PMS (not verified here)."
+msgstr ""
+"El total del folio es 0: puede ser una cortesía, personal o facturarse "
+"fuera del PMS (no verificado aquí)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "The guest has no phone number that the PMS can use for this message."
+msgstr ""
+"El huésped no tiene un teléfono que el PMS pueda usar para este mensaje."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"The notification template has no BookAI template code, so the message "
+"cannot be built."
+msgstr ""
+"La plantilla de notificación no tiene código de plantilla de BookAI, así "
+"que no se puede construir el mensaje."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"The payments of this folio are shared with other folios: the pending "
+"amount takes all of them into account."
+msgstr ""
+"Los pagos de este folio se comparten con otros folios: el pendiente tiene "
+"en cuenta todos ellos."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"The phone number of the guest is not valid or its country could not be "
+"worked out."
+msgstr "El teléfono del huésped no es válido o no se pudo deducir su país."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "Times are in the time zone %s."
+msgstr "Las horas están en la zona horaria %s."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"Waiting for the next run of the sending job: it has not been processed yet."
+msgstr ""
+"Esperando a la próxima ejecución de la tarea de envío: aún no se ha "
+"procesado."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+#, python-format
+msgid "Waiting: it will be processed from %s on."
+msgstr "En espera: se procesará a partir del %s."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_support_tools.py:0
+#, python-format
+msgid "You have no access to %s: that part is left out."
+msgstr "No tienes acceso a %s: esa parte se omite."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"http_status is the answer of BookAI to the last attempt (only with BookAI "
+"installed); recipient is masked (last three digits of the phone, first "
+"letter of the e-mail)."
+msgstr ""
+"http_status es la respuesta de BookAI al último intento (solo con BookAI "
+"instalado); recipient va enmascarado (últimos tres dígitos del teléfono, "
+"primera letra del correo)."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid "invoices"
+msgstr "facturas"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid "none"
+msgstr "ninguno"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid "notifications"
+msgstr "notificaciones"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"paid and pending are the ones the PMS keeps on the folio: paid is what the "
+"posted payments and statement lines linked to the folio add up to, and "
+"pending the rest of the total."
+msgstr ""
+"paid y pending son los que el PMS guarda en el folio: paid es lo que suman "
+"los pagos publicados y las líneas de extracto vinculados al folio, y "
+"pending el resto del total."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid "payments"
+msgstr "pagos"
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_notifications.py:0
+msgid ""
+"sent means handed over to the channel. Odoo does not know the final "
+"delivery; for WhatsApp it is only known to BookAI."
+msgstr ""
+"sent significa entregado al canal. Odoo no conoce la entrega final; en "
+"WhatsApp solo la conoce BookAI."
+
+#. module: pms_ai_tool_support
+#. odoo-python
+#: code:addons/pms_ai_tool_support/models/pms_folio_360.py:0
+msgid ""
+"with_vat is the total of the folio (rooms and services, taxes included) as "
+"the PMS computes it; without_vat is the net amount and vat the taxes. Room "
+"prices of the PMS include VAT."
+msgstr ""
+"with_vat es el total del folio (habitaciones y servicios, impuestos "
+"incluidos) tal como lo calcula el PMS; without_vat es el importe neto y "
+"vat los impuestos. Los precios de habitación del PMS incluyen IVA."

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_folio_360" model="ai.tool">
+        <field name="name">pms_folio_360</field>
+        <field
+      name="description"
+    >Overview of one folio, by id or by code (for example 416/26/009337), among the user's properties: state, property, stay dates, sale channel and agency, customer (name; e-mail and mobile masked), reservations (room, room type, board service, state, adults), amounts with and without VAT, paid and pending, payments by journal and method, invoices (number, state, amount) and how many guest notifications there are by state. Read only. Shows personal data (guest name), so the result is not kept in the log.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_360</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_folio_notifications" model="ai.tool">
+        <field name="name">pms_folio_notifications</field>
+        <field
+      name="description"
+    >Notification logs of one folio, by id or by code (at most 50, newest first): rule, template, channel, state, plain-words explanation of why a notification was skipped, failed or is waiting, error text, HTTP status of BookAI when installed, recipient (masked) and dates. A state of sent means handed over to the channel, not delivered. Read only. Shows personal data (masked recipient, error texts), so the result is not kept in the log.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_notifications</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>
