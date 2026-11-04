@@ -1,0 +1,202 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_operations
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_ai_operations_common.py:0
+msgid "You have no properties assigned: there is nothing to show."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_board_services_forecast.py:0
+#, python-format
+msgid "%(units)s units of %(products)s board service products."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_board_services_forecast.py:0
+msgid "Quantity: units of the board service product to prepare on the day, that is the sum of the quantities of the service lines dated that day. The date of a line is the day of consumption, set by the product: a breakfast (consumed after the night) is dated the day after each night, a dinner (consumed before it) the night itself."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_board_services_forecast.py:0
+msgid "Only board services of reservations that are neither cancelled nor pre-reservations (not confirmed) are counted. Staff stays count; out of service blocks do not."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_board_services_forecast.py:0
+#, python-format
+msgid "No board service in the period for: %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_board_services_forecast.py:0
+#, python-format
+msgid "Units of board services of pre-reservations (not confirmed) are not included: %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+#, python-format
+msgid "%(arr)s arrivals (%(arr_in)s already checked in), %(dep)s departures (%(dep_out)s already out) and %(rooms)s rooms with %(pax)s guests in house that night."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+msgid "Arrival: reservation with check-in on the day, in a room for overnight stays and not cancelled. Staff stays count; out of service blocks and pre-reservations (not confirmed) do not."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+msgid "Checked in: the guests of the reservation have arrived (it is on board, or already out). Pending: still expected; if the day has passed, a no-show not yet cancelled."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+msgid "Departure: reservation with check-out on the day. Checked out: already out. Pending: still on board, or never arrived."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+msgid "In house: reservations with a night on the day (check-in on or before it, check-out after it), whatever their arrival state: rooms are reservations and pax adults plus children."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_daily_movements.py:0
+#, python-format
+msgid "Pre-reservations (not confirmed) arriving or leaving on this day are not counted: %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+msgid "The note is empty."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+#, python-format
+msgid "Post an internal note on the folio %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+msgid "The note is posted in the chatter of the folio as an internal note, with the name of the user. Nobody is notified and no email is sent."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+#, python-format
+msgid "Internal note posted on the folio %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+#, python-format
+msgid "No folio found with the id or code %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_folio_reception_note.py:0
+#, python-format
+msgid "Several folios have the code %s: use the id of the folio."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_guest_data_pending.py:0
+#, python-format
+msgid "%(guests)s guests in %(folios)s folios (%(reservations)s of %(arrivals)s arriving reservations) still have to complete their check-in data between %(date_from)s and %(date_to)s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_guest_data_pending.py:0
+msgid "Arrivals: normal reservations with check-in in the period, in a room for overnight stays, confirmed and not cancelled (also those on board with only some of the guests in). Staff stays, out of service blocks and pre-reservations (not confirmed) are left out."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_guest_data_pending.py:0
+msgid "A guest has pending data when the check-in record has no data at all (unknown guest) or lacks some mandatory field (incomplete data): the pre-check-in is not done."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_guest_data_pending.py:0
+msgid "Missing: the mandatory fields, such as the identity document, that the incomplete guests of the folio still lack. Holders are shown as first name and initial."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+#, python-format
+msgid "%(overbooked)s property days overbooked and %(high)s more at %(pct)s%% or above between %(date_from)s and %(date_to)s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+msgid "Occupied: nights of normal and staff reservations in active rooms for overnight stays. Pre-reservations (not confirmed) and cancelled reservations are not counted."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+msgid "Blocked: nights of out of service blocks. Available: rooms that are neither occupied nor blocked."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+msgid "Rooms: active rooms for overnight stays today (the count of past dates uses today's rooms). Occupancy: occupied nights over rooms, as in the Alda KPIs, so blocked rooms are not taken out of the denominator."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+#, python-format
+msgid "Room nights of pre-reservations (not confirmed) in the period are not counted: %s."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+#, python-format
+msgid "Flag high: occupancy at %s%% or more. Flag overbooking: more rooms used (occupied plus blocked) than the property has; above 100%% occupancy the PMS allows overbooking."
+msgstr ""
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_occupancy_outlook.py:0
+#, python-format
+msgid "%s has no rooms for overnight stays."
+msgstr ""

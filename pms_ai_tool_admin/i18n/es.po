@@ -1,0 +1,134 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_admin
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+#, python-format
+msgid "%(count)s cash differences from %(from)s to %(to)s: %(losses)s missing and %(profits)s in surplus."
+msgstr "%(count)s diferencias de caja del %(from)s al %(to)s: %(losses)s que faltan y %(profits)s que sobran."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Cash session (shift): a statement of a cash journal, opened and closed from the PMS (the legacy API and the FastAPI one work on the same statements). Closing it compares the cash counted with the theoretical balance (opening balance plus the cash payments of the shift)."
+msgstr "Sesión de caja (turno): un extracto de un diario de caja, abierto y cerrado desde el PMS (la API antigua y la de FastAPI trabajan sobre los mismos extractos). Al cerrarla se compara el efectivo contado con el saldo teórico (saldo de apertura más los cobros en efectivo del turno)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Difference: the statement line posted to the loss account of the cash journal (negative: cash missing) or to its profit account (positive: surplus) when the counted cash does not match. A difference found when opening a session with a forced base is recorded the same way: concept shows which."
+msgstr "Diferencia: la línea de extracto que se registra en la cuenta de pérdidas del diario de caja (negativa: falta efectivo) o en la de beneficios (positiva: sobra) cuando el efectivo contado no cuadra. Una diferencia detectada al abrir una sesión con base forzada se registra igual: el concepto indica cuál es."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "date: accounting date of the difference line. closed_by: the user who recorded it, which is the user closing the session (or opening it, for a difference found when opening)."
+msgstr "date: fecha contable de la línea de diferencia. closed_by: el usuario que la registró, que es quien cierra la sesión (o quien la abre, si la diferencia se detectó al abrir)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Only cash journals of the hotels in scope. The listed differences are the largest in absolute value; the figures by property cover all of them."
+msgstr "Solo diarios de caja de los hoteles en alcance. Las diferencias listadas son las mayores en valor absoluto; las cifras por hotel las incluyen todas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Sensitive: it names the employees who closed the cash."
+msgstr "Sensible: nombra a los empleados que cerraron la caja."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+#, python-format
+msgid "%(invoices)s overdue invoices for %(amount)s on %(date)s."
+msgstr "%(invoices)s facturas vencidas por %(amount)s a %(date)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Overdue invoice: posted customer invoice (credit notes are not counted) with an open amount and a due date before as_of. The amount is what is still open, in the company currency, without netting payments or credit notes of the same customer that were not applied to the invoice."
+msgstr "Factura vencida: factura de cliente publicada (no cuentan las rectificativas) con importe pendiente y vencimiento anterior a as_of. El importe es lo que sigue pendiente, en la moneda de la compañía, sin compensar cobros ni rectificativas del mismo cliente que no se hayan aplicado a la factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Aging: days between the due date and as_of, in the buckets 1_30, 31_60, 61_90 and over_90. An invoice with several due dates is aged by its last one."
+msgstr "Antigüedad: días entre el vencimiento y as_of, en los tramos 1_30, 31_60, 61_90 y over_90. Una factura con varios vencimientos se clasifica por el último."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Property: the property of the invoice; invoices without property are grouped apart. partner_kind filters by the commercial partner of the invoice: agency (marked as agency), company (a company that is not an agency) or all."
+msgstr "Hotel: el hotel de la factura; las facturas sin hotel se agrupan aparte. partner_kind filtra por la empresa comercial de la factura: agency (marcada como agencia), company (empresa que no es agencia) o all."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Sensitive: accounting data of customers."
+msgstr "Sensible: datos contables de clientes."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+#, python-format
+msgid "top_debtors: the %s customers with the largest open amount. anonymous_customer marks the shared customer of simplified invoices."
+msgstr "top_debtors: los %s clientes con más importe pendiente. anonymous_customer marca el cliente compartido de las facturas simplificadas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "No property"
+msgstr "Sin hotel"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+#, python-format
+msgid "%(folios)s finished folios still to invoice (%(amount)s without taxes) with checkout from %(from)s to %(to)s."
+msgstr "%(folios)s folios terminados pendientes de facturar (%(amount)s sin impuestos) con salida del %(from)s al %(to)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Finished folio: normal folio with at least one reservation that is not cancelled and all of them checked out (state Out). Checkout: the latest checkout date of its reservations that are not cancelled."
+msgstr "Folio terminado: folio normal con al menos una reserva no cancelada y todas con la salida hecha (estado Out). Salida: la fecha de salida más tardía de sus reservas no canceladas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Still to invoice: the PMS flags the folio as To invoice and its amount to invoice is above 0. amount_to_invoice_untaxed is that PMS amount, without taxes and without down payments, in the folio currency. A folio whose whole amount is already in a draft invoice is not counted."
+msgstr "Pendiente de facturar: el PMS marca el folio como «A facturar» y su importe a facturar es mayor que 0. amount_to_invoice_untaxed es ese importe del PMS, sin impuestos y sin anticipos, en la moneda del folio. No cuenta un folio cuyo importe completo ya está en una factura en borrador."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Reason hints, not exclusive: no_customer (the folio has no customer or it is the anonymous one), no_vat (the customer has no tax id), payment_pending (the folio still has an amount to be paid), partial_invoice (some nights or services are already in an invoice, posted or draft). A folio without hints has simply not been invoiced yet."
+msgstr "Pistas del motivo, no excluyentes: no_customer (el folio no tiene cliente o es el anónimo), no_vat (el cliente no tiene NIF), payment_pending (el folio aún tiene importe pendiente de cobro), partial_invoice (algunas noches o servicios ya están en una factura, publicada o en borrador). Un folio sin pistas simplemente no se ha facturado todavía."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "The listed folios are the ones with the largest amounts; the figures by property cover all of them."
+msgstr "Los folios listados son los de mayor importe; las cifras por hotel los incluyen todos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+#, python-format
+msgid "%(folios)s folios with an amount to invoice (%(amount)s without taxes) have their last checkout in the period but reservations not checked out in the PMS (for example no-shows or delayed departures), so they are not counted until the hotel closes them."
+msgstr "%(folios)s folios con importe a facturar (%(amount)s sin impuestos) tienen su última salida en el periodo, pero reservas sin salida hecha en el PMS (por ejemplo, no-shows o salidas retrasadas), así que no se cuentan hasta que el hotel las cierre."

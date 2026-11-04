@@ -1,0 +1,133 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_admin
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+#, python-format
+msgid "%(count)s cash differences from %(from)s to %(to)s: %(losses)s missing and %(profits)s in surplus."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Cash session (shift): a statement of a cash journal, opened and closed from the PMS (the legacy API and the FastAPI one work on the same statements). Closing it compares the cash counted with the theoretical balance (opening balance plus the cash payments of the shift)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Difference: the statement line posted to the loss account of the cash journal (negative: cash missing) or to its profit account (positive: surplus) when the counted cash does not match. A difference found when opening a session with a forced base is recorded the same way: concept shows which."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "date: accounting date of the difference line. closed_by: the user who recorded it, which is the user closing the session (or opening it, for a difference found when opening)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Only cash journals of the hotels in scope. The listed differences are the largest in absolute value; the figures by property cover all of them."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_cash_session_differences.py:0
+msgid "Sensitive: it names the employees who closed the cash."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+#, python-format
+msgid "%(invoices)s overdue invoices for %(amount)s on %(date)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Overdue invoice: posted customer invoice (credit notes are not counted) with an open amount and a due date before as_of. The amount is what is still open, in the company currency, without netting payments or credit notes of the same customer that were not applied to the invoice."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Aging: days between the due date and as_of, in the buckets 1_30, 31_60, 61_90 and over_90. An invoice with several due dates is aged by its last one."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Property: the property of the invoice; invoices without property are grouped apart. partner_kind filters by the commercial partner of the invoice: agency (marked as agency), company (a company that is not an agency) or all."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "Sensitive: accounting data of customers."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+#, python-format
+msgid "top_debtors: the %s customers with the largest open amount. anonymous_customer marks the shared customer of simplified invoices."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_customer_overdue.py:0
+msgid "No property"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+#, python-format
+msgid "%(folios)s finished folios still to invoice (%(amount)s without taxes) with checkout from %(from)s to %(to)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Finished folio: normal folio with at least one reservation that is not cancelled and all of them checked out (state Out). Checkout: the latest checkout date of its reservations that are not cancelled."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Still to invoice: the PMS flags the folio as To invoice and its amount to invoice is above 0. amount_to_invoice_untaxed is that PMS amount, without taxes and without down payments, in the folio currency. A folio whose whole amount is already in a draft invoice is not counted."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "Reason hints, not exclusive: no_customer (the folio has no customer or it is the anonymous one), no_vat (the customer has no tax id), payment_pending (the folio still has an amount to be paid), partial_invoice (some nights or services are already in an invoice, posted or draft). A folio without hints has simply not been invoiced yet."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+msgid "The listed folios are the ones with the largest amounts; the figures by property cover all of them."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folios_pending_invoice.py:0
+#, python-format
+msgid "%(folios)s folios with an amount to invoice (%(amount)s without taxes) have their last checkout in the period but reservations not checked out in the PMS (for example no-shows or delayed departures), so they are not counted until the hotel closes them."
+msgstr ""
