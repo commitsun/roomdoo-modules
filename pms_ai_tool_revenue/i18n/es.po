@@ -1,0 +1,352 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_revenue
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-04 12:00+0000\n"
+"PO-Revision-Date: 2026-11-04 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "No agency (direct sales)"
+msgstr "Sin agencia (venta directa)"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "No channel"
+msgstr "Sin canal"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+#, python-format
+msgid "Other (%s more)"
+msgstr "Otros (%s más)"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "Agency: the agency company of the folio (its contacts are grouped under the company); nights without agency are grouped as direct sales."
+msgstr "Agencia: la empresa agencia del folio (sus contactos se agrupan bajo la empresa); las noches sin agencia se agrupan como venta directa."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "agency"
+msgstr "agencia"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "Channel: the sale channel of each night (the one of the reservation line or, if it has none, the origin channel of the reservation)."
+msgstr "Canal: el canal de venta de cada noche (el de la línea de reserva o, si no tiene, el canal de origen de la reserva)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "sale channel"
+msgstr "canal de venta"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+#, python-format
+msgid "Mix of %(nights)s room nights by %(group)s from %(from)s to %(to)s; the first one is %(name)s with %(share)s%% of the revenue."
+msgstr "Mix de %(nights)s noches de habitación por %(group)s del %(from)s al %(to)s; el primero es %(name)s con el %(share)s%% de los ingresos."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+msgid "Share: part of all the room nights and of all the room revenue without VAT of the period; the other row adds up the rest. Changes in share are in percentage points."
+msgstr "Cuota: parte del total de noches de habitación y del total de ingresos de alojamiento sin IVA del periodo; la fila «Otros» suma el resto. Los cambios de cuota son en puntos porcentuales."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_channel_mix.py:0
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+msgid "Last year: the same calendar dates one year earlier, calculated the same way from today's data."
+msgstr "Año anterior: las mismas fechas del calendario un año antes, calculadas del mismo modo con los datos de hoy."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+#, python-format
+msgid "Stay dates before %s are already past: their figure now is what was finally sold, while last year at the same time is the picture of the books on that day. For those dates compare with last_year_final."
+msgstr "Las fechas de estancia anteriores a %s ya han pasado: su cifra actual es lo que finalmente se vendió, mientras que el año anterior en la misma fecha es la foto de la cartera de ese día. Para esas fechas compara con last_year_final."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+#, python-format
+msgid "%s nights of last year belong to cancelled reservations with no cancel date: they are treated as cancelled before the cut-off, so last year at the same time may be understated."
+msgstr "%s noches del año anterior pertenecen a reservas canceladas sin fecha de cancelación: se tratan como canceladas antes del corte, así que el año anterior en la misma fecha puede estar infravalorado."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+#, python-format
+msgid "On the books %(nights)s room nights (%(revenue)s without VAT) for stays from %(from)s to %(to)s; last year at the same time %(ly_nights)s (%(ly_revenue)s): %(change)s room nights (%(change_pct)s%%)."
+msgstr "En cartera %(nights)s noches de habitación (%(revenue)s sin IVA) para estancias del %(from)s al %(to)s; el año anterior en la misma fecha %(ly_nights)s (%(ly_revenue)s): %(change)s noches de habitación (%(change_pct)s%%)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+msgid "On the books now: room nights of normal reservations in rooms for overnight stays, dated in the stay period, that occupy availability (neither cancelled nor resold; pre-reservations count)."
+msgstr "En cartera ahora: noches de habitación de reservas normales en habitaciones para pernoctar, fechadas en el periodo de estancia, que ocupan disponibilidad (ni canceladas ni revendidas; las prerreservas cuentan)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+msgid "Last year at the same time: the same stay dates one year earlier, counting the reservations created before this same moment a year ago and not cancelled by then, according to the creation and cancel dates the PMS records."
+msgstr "Año anterior en la misma fecha: las mismas fechas de estancia un año antes, contando las reservas creadas antes de este mismo momento hace un año y no canceladas para entonces, según las fechas de creación y de cancelación que registra el PMS."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+msgid "Last year final: what the same stay dates of last year hold today."
+msgstr "Año anterior final: lo que tienen hoy las mismas fechas de estancia del año anterior."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pace_vs_last_year.py:0
+msgid "Last year is rebuilt from today's data: changes made to a reservation after that moment (dates, rooms, prices) show their current version."
+msgstr "El año anterior se reconstruye con los datos de hoy: los cambios hechos en una reserva después de ese momento (fechas, habitaciones, precios) aparecen en su versión actual."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "Nothing to change: all the partners already have this salesperson."
+msgstr "Nada que cambiar: todos los contactos ya tienen este comercial."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "%s partners already have this salesperson and will be left as they are."
+msgstr "%s contactos ya tienen este comercial y se dejarán como están."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "%(count)s partners will get %(salesperson)s as salesperson."
+msgstr "%(count)s contactos tendrán a %(salesperson)s como comercial."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "%(count)s partners will lose their salesperson."
+msgstr "A %(count)s contactos se les quitará el comercial."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "Salesperson: the user set as Salesperson on the company or agency; the salesperson tools attribute production and invoicing through it."
+msgstr "Comercial: el usuario indicado como Comercial en la empresa o agencia; las herramientas de comerciales atribuyen la producción y la facturación a través de él."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "Only active companies and agencies that the user can read are accepted; individuals and archived records are refused."
+msgstr "Solo se aceptan empresas y agencias activas que el usuario puede leer; se rechazan las personas físicas y los registros archivados."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "To undo the change, run the tool again with the previous salesperson shown in this preview (0 removes the salesperson)."
+msgstr "Para deshacer el cambio, vuelve a ejecutar la herramienta con el comercial anterior que muestra esta previsualización (0 quita el comercial)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "%(count)s partners now have the new salesperson."
+msgstr "%(count)s contactos ya tienen el nuevo comercial."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "Unknown salesperson user: %s."
+msgstr "Usuario comercial desconocido: %s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "The salesperson must be an active internal user."
+msgstr "El comercial debe ser un usuario interno activo."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "Unknown partners: %s."
+msgstr "Contactos desconocidos: %s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "You cannot read the partners %s, so you cannot change them."
+msgstr "No puedes leer los contactos %s, así que no puedes cambiarlos."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "archived"
+msgstr "archivado"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+msgid "individual"
+msgstr "persona física"
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_assign_salesperson.py:0
+#, python-format
+msgid "Only active companies and agencies can be given a salesperson. Refused: %s."
+msgstr "Solo se puede asignar un comercial a empresas y agencias activas. Rechazados: %s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+msgid "The end of the booking window is earlier than its start."
+msgstr "El final de la ventana de reserva es anterior a su inicio."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+#, python-format
+msgid "The booking window cannot be longer than %s days."
+msgstr "La ventana de reserva no puede ser de más de %s días."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+#, python-format
+msgid "%s of the cancelled nights come from modified bookings: a new reservation replaced them, so they are not lost business."
+msgstr "%s de las noches canceladas proceden de reservas modificadas: una reserva nueva las sustituyó, así que no son negocio perdido."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+#, python-format
+msgid "%s nights belong to cancelled reservations with no cancel date that were changed in the booking window: they may be cancellations of the window that cannot be dated, so the cancelled figures may be understated."
+msgstr "%s noches pertenecen a reservas canceladas sin fecha de cancelación que se modificaron en la ventana de reserva: pueden ser cancelaciones de la ventana que no se pueden fechar, así que las cifras de canceladas pueden estar infravaloradas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+#, python-format
+msgid "%(nights)s room nights (%(revenue)s without VAT) booked from %(booked_from)s to %(booked_to)s for stays from %(from)s to %(to)s; %(cancelled)s nights cancelled in the window, net pickup %(net)s nights."
+msgstr "%(nights)s noches de habitación (%(revenue)s sin IVA) reservadas del %(booked_from)s al %(booked_to)s para estancias del %(from)s al %(to)s; %(cancelled)s noches canceladas en la ventana, pickup neto de %(net)s noches."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+#, python-format
+msgid "Booked: room nights of the reservations created in the booking window, dated in the stay period, that are still on the books (normal reservations in rooms for overnight stays, not cancelled nor resold; pre-reservations count). The creation moment is the one the PMS records when the reservation is created, taken in the time zone %s."
+msgstr "Reservadas: noches de habitación de las reservas creadas en la ventana de reserva, fechadas en el periodo de estancia, que siguen en cartera (reservas normales en habitaciones para pernoctar, ni canceladas ni revendidas; las prerreservas cuentan). El momento de creación es el que registra el PMS al crear la reserva, tomado en la zona horaria %s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+msgid "Cancelled: room nights of the reservations cancelled in the booking window, whenever they were booked, by the cancel date the PMS records when a reservation is cancelled; their revenue is the price before the cancellation, without VAT. booked_then_cancelled_nights are those of reservations created in the window and cancelled afterwards."
+msgstr "Canceladas: noches de habitación de las reservas canceladas en la ventana de reserva, se hubieran reservado cuando se hubieran reservado, según la fecha de cancelación que registra el PMS al cancelar una reserva; sus ingresos son el precio antes de la cancelación, sin IVA. booked_then_cancelled_nights son las de reservas creadas en la ventana y canceladas después."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+msgid "cancelled_modified_nights: part of the cancelled nights that is not lost business, because the booking was modified and a new reservation replaced it (the new one counts as booked)."
+msgstr "cancelled_modified_nights: parte de las noches canceladas que no es negocio perdido, porque la reserva se modificó y una reserva nueva la sustituyó (la nueva cuenta como reservada)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_pickup.py:0
+msgid "Net: booked minus the nights and revenue of reservations booked before the window and cancelled in it."
+msgstr "Neto: reservado menos las noches y los ingresos de las reservas hechas antes de la ventana y canceladas en ella."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+#, python-format
+msgid "Occupancy is above 100%% or there are no room nights available in %(count)s properties (%(names)s): overbooking, or rooms missing from the capacity."
+msgstr "La ocupación supera el 100%% o no hay noches de habitación disponibles en %(count)s hoteles (%(names)s): overbooking, o faltan habitaciones en la capacidad."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+#, python-format
+msgid "Occupancy %(occupancy)s%% (%(sold)s of %(available)s room nights), ADR %(adr)s, RevPAR %(revpar)s, from %(from)s to %(to)s."
+msgstr "Ocupación %(occupancy)s%% (%(sold)s de %(available)s noches de habitación), ADR %(adr)s, RevPAR %(revpar)s, del %(from)s al %(to)s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+#, python-format
+msgid "Last year: occupancy %(occupancy)s%%, ADR %(adr)s, RevPAR %(revpar)s."
+msgstr "Año anterior: ocupación %(occupancy)s%%, ADR %(adr)s, RevPAR %(revpar)s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+msgid "Room nights available: for each night, the rooms for overnight stays of the property that existed that night, minus the rooms out of service and those used by staff (both are reported). A room counts from its creation date, or from its first occupied night if earlier; archived rooms count until their last occupied night, because the PMS keeps no retirement date."
+msgstr "Noches de habitación disponibles: para cada noche, las habitaciones para pernoctar del hotel que existían esa noche, menos las habitaciones fuera de servicio y las usadas por el personal (ambas se indican). Una habitación cuenta desde su fecha de creación, o desde su primera noche ocupada si es anterior; las habitaciones archivadas cuentan hasta su última noche ocupada, porque el PMS no guarda fecha de baja."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+msgid "Occupancy: room nights sold / room nights available. It can exceed 100% because the PMS accepts overbooking."
+msgstr "Ocupación: noches de habitación vendidas / noches de habitación disponibles. Puede superar el 100% porque el PMS admite overbooking."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_kpis.py:0
+msgid "RevPAR: room revenue without VAT / room nights available."
+msgstr "RevPAR: ingresos de alojamiento sin IVA / noches de habitación disponibles."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_tools.py:0
+msgid "Room night: a reservation line dated in the period that occupies availability (neither cancelled nor resold) in a normal reservation (staff and out of service are left out) and in a room for overnight stays. Pre-reservations count, as in the other tools."
+msgstr "Noche de habitación: una línea de reserva fechada en el periodo que ocupa disponibilidad (ni cancelada ni revendida) en una reserva normal (se dejan fuera las de personal y las fuera de servicio) y en una habitación para pernoctar. Las prerreservas cuentan, como en las demás herramientas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_tools.py:0
+msgid "Room revenue without VAT: final night price (after discounts) divided by 1 plus the percentage of the taxes included in the price of the reservation. Services and extras are not included. room_revenue_incl_vat is the final night price as the PMS stores it and the other tools use it: it carries VAT when the room prices do (the Alda configuration)."
+msgstr "Ingresos de alojamiento sin IVA: precio final de la noche (tras descuentos) dividido entre 1 más el porcentaje de los impuestos incluidos en el precio de la reserva. No incluyen servicios ni extras. room_revenue_incl_vat es el precio final de la noche tal como lo guarda el PMS y lo usan las demás herramientas: lleva IVA cuando los precios de las habitaciones lo llevan (la configuración de Alda)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_tools.py:0
+msgid "ADR: room revenue without VAT / room nights, leaving out the nights of folios whose whole stay is worth 0 (courtesies or invoiced outside the PMS; reported as zero_value_nights). Group folios with the price in one room do count."
+msgstr "ADR: ingresos de alojamiento sin IVA / noches de habitación, dejando fuera las noches de folios cuya estancia completa vale 0 (cortesías o facturadas fuera del PMS; se indican como zero_value_nights). Los folios de grupo con el precio en una sola habitación sí cuentan."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_tools.py:0
+#, python-format
+msgid "%s nights of stays worth 0 (courtesies or invoiced outside the PMS) count as room nights but are left out of the ADR."
+msgstr "%s noches de estancias que valen 0 (cortesías o facturadas fuera del PMS) cuentan como noches de habitación pero se dejan fuera del ADR."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_revenue_tools.py:0
+#, python-format
+msgid "%s nights belong to reservations with no taxes: their price is taken as already without VAT."
+msgstr "%s noches pertenecen a reservas sin impuestos: su precio se toma como ya sin IVA."

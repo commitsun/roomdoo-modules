@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_revenue_kpis" model="ai.tool">
+        <field name="name">pms_revenue_kpis</field>
+        <field
+      name="description"
+    >Revenue KPIs of a period (at most 93 days), per property and in total: room nights sold, room nights available (rooms for overnight stays minus out of service and staff), occupancy %, room revenue without VAT, ADR and RevPAR, with the same figures for the same dates last year and the changes. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_revenue_kpis</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_pickup" model="ai.tool">
+        <field name="name">pms_pickup</field>
+        <field
+      name="description"
+    >Pickup: room nights and room revenue (without VAT) of the reservations created in a booking window (at most 31 days, default the last 7 days) for the stays of a period (at most 93 days), by stay month and property. Also the nights cancelled in the window (and those of modified bookings that a new reservation replaced) and the net pickup. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_pickup</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_pace_vs_last_year" model="ai.tool">
+        <field name="name">pms_pace_vs_last_year</field>
+        <field
+      name="description"
+    >Pace: room nights and room revenue (without VAT) on the books today for the stays of a period (at most 93 days) against the same stay dates last year at the same lead time (reservations created and not cancelled by this same moment a year ago), plus what last year finally sold. By property and month. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_pace_vs_last_year</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_channel_mix" model="ai.tool">
+        <field name="name">pms_channel_mix</field>
+        <field
+      name="description"
+    >Mix of room nights and room revenue (without VAT) by sale channel or by agency in a period (at most 93 days): shares, ADR and the comparison with the same dates last year, for the top rows (at most 30) plus an other row. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_channel_mix</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_partner_assign_salesperson" model="ai.tool">
+        <field name="name">pms_partner_assign_salesperson</field>
+        <field
+      name="description"
+    >Assign the salesperson (a user) of up to 50 customer companies or agencies. Two steps: the first call returns a preview with each company and its current salesperson plus a confirmation token; repeat the same call with confirm=true and the token to apply it. Refuses individuals and archived records. To undo, run it again with the previous salesperson shown in the preview (0 removes the salesperson). Changes data: needs an explicit list of allowed users.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_partner_assign_salesperson</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>
