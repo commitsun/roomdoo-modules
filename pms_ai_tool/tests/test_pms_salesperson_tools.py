@@ -14,6 +14,18 @@ class TestPmsSalespersonTools(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
+        # The invoices below need a sale journal, which only exists with a chart
+        # of accounts; CI databases may have none.
+        company = cls.env.ref("base.main_company")
+        if not company.chart_template_id:
+            coa = cls.env.ref("l10n_generic_coa.configurable_chart_template", False)
+            if not coa:
+                coa = cls.env["account.chart.template"].search(
+                    [("visible", "=", True)], limit=1
+                )
+            if not coa:
+                cls.skipTest(cls, "No chart of accounts available.")
+            coa.try_loading(company=company, install_demo=False)
         plan = cls.env["pms.availability.plan"].create({"name": "AI plan"})
         pricelist = cls.env["product.pricelist"].create(
             {
