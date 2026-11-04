@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_daily_movements" model="ai.tool">
+        <field name="name">pms_daily_movements</field>
+        <field
+      name="description"
+    >Movements of a day (default today) for each property: arrivals and departures (reservations and guests), how many arrivals are already checked in and how many departures are already out, and the rooms and guests in house that night. Cancelled reservations, out of service blocks and unconfirmed pre-reservations are not counted. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_daily_movements</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_occupancy_outlook" model="ai.tool">
+        <field name="name">pms_occupancy_outlook</field>
+        <field
+      name="description"
+    >Occupancy outlook for the coming nights (default today, 14 days, at most 31): per property and night, occupied, blocked and available rooms and occupancy percentage, flagging nights at 95% or more and overbooked nights (more rooms used than the property has). Properties are sorted by risk. Read only; aggregated figures.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_occupancy_outlook</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_board_services_forecast" model="ai.tool">
+        <field name="name">pms_board_services_forecast</field>
+        <field
+      name="description"
+    >Board services to prepare (breakfast, half board, dinner...) for the days from date_from (default tomorrow) to date_to (at most 14 days): units of each board service product per property and day, from the service lines of the reservations that are neither cancelled nor unconfirmed pre-reservations. Read only; aggregated figures.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_board_services_forecast</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_guest_data_pending" model="ai.tool">
+        <field name="name">pms_guest_data_pending</field>
+        <field
+      name="description"
+    >Arrivals of the next days (default today, 3 days, at most 7) whose guests still have to complete their check-in data: counts per property and a list of up to 50 folios with code, arrival, holder (first name and initial) and the missing items (unknown guests, incomplete guests and the mandatory fields they lack). Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_guest_data_pending</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_folio_reception_note" model="ai.tool">
+        <field name="name">pms_folio_reception_note</field>
+        <field
+      name="description"
+    >Post an internal note (at most 2000 characters) in the chatter of a folio, given its code or id. Nobody is notified and no email is sent. Two steps: confirm=false previews the folio and the note; only after the user's approval, call again with confirm=true and the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_reception_note</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>
