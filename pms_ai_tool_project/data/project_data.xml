@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Stages: no mail templates, so that moving a task sends nothing. -->
+    <record id="stage_proposal" model="project.task.type">
+        <field name="name">Proposal</field>
+        <field name="sequence">10</field>
+        <field name="fold" eval="False" />
+    </record>
+    <record id="stage_implemented" model="project.task.type">
+        <field name="name">Implemented</field>
+        <field name="sequence">20</field>
+        <field name="fold" eval="False" />
+    </record>
+    <record id="stage_validated" model="project.task.type">
+        <field name="name">Validated</field>
+        <field name="sequence">30</field>
+        <field name="fold" eval="False" />
+    </record>
+    <record id="stage_rejected" model="project.task.type">
+        <field name="name">Rejected</field>
+        <field name="sequence">40</field>
+        <field name="fold" eval="True" />
+    </record>
+
+    <!-- Area of the tool -->
+    <record id="tag_area_operations" model="project.tags">
+        <field name="name">Operations</field>
+        <field name="color">1</field>
+    </record>
+    <record id="tag_area_administration" model="project.tags">
+        <field name="name">Administration</field>
+        <field name="color">4</field>
+    </record>
+    <record id="tag_area_support" model="project.tags">
+        <field name="name">Support</field>
+        <field name="color">2</field>
+    </record>
+    <record id="tag_area_commercial" model="project.tags">
+        <field name="name">Commercial and revenue</field>
+        <field name="color">10</field>
+    </record>
+    <record id="tag_area_cross" model="project.tags">
+        <field name="name">Cross-cutting</field>
+        <field name="color">7</field>
+    </record>
+
+    <!-- Type of the task -->
+    <record id="tag_type_new" model="project.tags">
+        <field name="name">New tool</field>
+        <field name="color">3</field>
+    </record>
+    <record id="tag_type_change" model="project.tags">
+        <field name="name">Change</field>
+        <field name="color">5</field>
+    </record>
+
+    <record id="project_bookai_tools" model="project.project">
+        <field name="name">BookAI Tools</field>
+        <field name="privacy_visibility">employees</field>
+        <field name="allow_subtasks" eval="True" />
+        <field name="rating_active" eval="False" />
+        <field name="user_id" eval="False" />
+        <field
+      name="type_ids"
+      eval="[(6, 0, [ref('stage_proposal'), ref('stage_implemented'), ref('stage_validated'), ref('stage_rejected')])]"
+    />
+    </record>
+</odoo>

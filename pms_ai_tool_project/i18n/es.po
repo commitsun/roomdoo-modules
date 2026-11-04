@@ -1,0 +1,419 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_ai_tool_project
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "%(shown)s of %(total)s tasks."
+msgstr "%(shown)s de %(total)s tareas."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "%(task)s is now %(stage)s."
+msgstr "%(task)s está ahora en «%(stage)s»."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "%(task)s will be moved from %(from_stage)s to %(to_stage)s."
+msgstr "%(task)s pasará de «%(from_stage)s» a «%(to_stage)s»."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "A task will be created in the stage %(stage)s of %(project)s."
+msgstr "Se creará una tarea en la etapa «%(stage)s» de %(project)s."
+
+#. module: pms_ai_tool_project
+#: model:ir.model.fields,field_description:pms_ai_tool_project.field_project_task__ai_tool_id
+msgid "AI tool"
+msgstr "Herramienta de IA"
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_area_administration
+msgid "Administration"
+msgstr "Administración"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid ""
+"An internal note will be posted on %(task)s and a change will be created "
+"in the stage %(stage)s."
+msgstr ""
+"Se publicará una nota interna en %(task)s y se creará un cambio en la "
+"etapa «%(stage)s»."
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,legend_blocked:pms_ai_tool_project.stage_implemented
+#: model:project.task.type,legend_blocked:pms_ai_tool_project.stage_proposal
+#: model:project.task.type,legend_blocked:pms_ai_tool_project.stage_rejected
+#: model:project.task.type,legend_blocked:pms_ai_tool_project.stage_validated
+msgid "Blocked"
+msgstr "Bloqueado"
+
+#. module: pms_ai_tool_project
+#: model:project.project,name:pms_ai_tool_project.project_bookai_tools
+msgid "BookAI Tools"
+msgstr "BookAI Tools"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Bug report"
+msgstr "Informe de fallo"
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_type_change
+msgid "Change"
+msgstr "Cambio"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Change request"
+msgstr "Petición de cambio"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Change: %s"
+msgstr "Cambio: %s"
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_area_commercial
+msgid "Commercial and revenue"
+msgstr "Comercial y revenue"
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_area_cross
+msgid "Cross-cutting"
+msgstr "Transversales"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Example"
+msgstr "Ejemplo"
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,name:pms_ai_tool_project.stage_implemented
+msgid "Implemented"
+msgstr "Implementada"
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,legend_normal:pms_ai_tool_project.stage_implemented
+#: model:project.task.type,legend_normal:pms_ai_tool_project.stage_proposal
+#: model:project.task.type,legend_normal:pms_ai_tool_project.stage_rejected
+#: model:project.task.type,legend_normal:pms_ai_tool_project.stage_validated
+msgid "In Progress"
+msgstr "En proceso"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid ""
+"Messages: the last %(count)s comments and notes, newest first, in plain "
+"text and cut. Changes: the change requests made on this tool, with their "
+"stage."
+msgstr ""
+"Mensajes: los últimos %(count)s comentarios y notas, los más recientes "
+"primero, en texto plano y recortados. Cambios: las peticiones de cambio "
+"hechas sobre esta herramienta, con su etapa."
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_type_new
+msgid "New tool"
+msgstr "Tool nueva"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Note posted on %(task)s and task #%(id)s created."
+msgstr "Nota publicada en %(task)s y tarea #%(id)s creada."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid ""
+"Only a tester of the task, or an administrator, can validate it. Take it "
+"first with bookai_tools_take."
+msgstr ""
+"Solo un probador de la tarea, o un administrador, puede validarla. Antes "
+"tómela con bookai_tools_take."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Only the tool itself is validated, not one of its changes."
+msgstr "Solo se valida la herramienta, no uno de sus cambios."
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_area_operations
+msgid "Operations"
+msgstr "Operaciones"
+
+#. module: pms_ai_tool_project
+#: model:ir.model,name:pms_ai_tool_project.model_pms_ai_tools
+msgid "PMS AI tools"
+msgstr "Herramientas de IA del PMS"
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,name:pms_ai_tool_project.stage_proposal
+msgid "Proposal"
+msgstr "Propuesta"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Question it should answer"
+msgstr "Pregunta que debe responder"
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,legend_done:pms_ai_tool_project.stage_implemented
+#: model:project.task.type,legend_done:pms_ai_tool_project.stage_proposal
+#: model:project.task.type,legend_done:pms_ai_tool_project.stage_rejected
+#: model:project.task.type,legend_done:pms_ai_tool_project.stage_validated
+msgid "Ready"
+msgstr "Preparado"
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,name:pms_ai_tool_project.stage_rejected
+msgid "Rejected"
+msgstr "Rechazada"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Send the feedback on the task of the tool, not on one of its changes."
+msgstr ""
+"Envíe el comentario sobre la tarea de la herramienta, no sobre uno de sus "
+"cambios."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid ""
+"Stages: Proposal (asked for, not built yet), Implemented (built, waiting "
+"for its testers), Validated (tested and accepted) and Rejected (it will "
+"not be built)."
+msgstr ""
+"Etapas: Propuesta (pedida, aún sin construir), Implementada (construida, "
+"a la espera de sus probadores), Validada (probada y aceptada) y Rechazada "
+"(no se construirá)."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Subtask #%(id)s: %(name)s"
+msgstr "Subtarea #%(id)s: %(name)s"
+
+#. module: pms_ai_tool_project
+#: model:project.tags,name:pms_ai_tool_project.tag_area_support
+msgid "Support"
+msgstr "Soporte"
+
+#. module: pms_ai_tool_project
+#: model:ir.model,name:pms_ai_tool_project.model_project_task
+msgid "Task"
+msgstr "Tarea"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Task #%(id)s created in the stage %(stage)s."
+msgstr "Tarea #%(id)s creada en la etapa «%(stage)s»."
+
+#. module: pms_ai_tool_project
+#: model:project.project,label_tasks:pms_ai_tool_project.project_bookai_tools
+msgid "Tasks"
+msgstr "Tareas"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The %s is empty."
+msgstr "El campo «%s» está vacío."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The BookAI Tools project is archived."
+msgstr "El proyecto BookAI Tools está archivado."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The BookAI Tools project is not set up: %s is missing."
+msgstr "El proyecto BookAI Tools no está configurado: falta %s."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The task is already validated."
+msgstr "La tarea ya está validada."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The task is in the stage %s: it cannot be taken."
+msgstr "La tarea está en la etapa «%s»: no se puede tomar."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The task is in the stage %s: it cannot be validated."
+msgstr "La tarea está en la etapa «%s»: no se puede validar."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The task is in the stage %s: it takes no more feedback."
+msgstr "La tarea está en la etapa «%s»: ya no admite comentarios."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "The task is still a proposal: the tool may not be built yet."
+msgstr ""
+"La tarea sigue siendo una propuesta: puede que la herramienta aún no esté "
+"construida."
+
+#. module: pms_ai_tool_project
+#: model:ir.model.fields,help:pms_ai_tool_project.field_project_task__ai_tool_id
+msgid "The tool of the catalogue this task is about, once it exists."
+msgstr ""
+"La herramienta del catálogo a la que se refiere esta tarea, cuando ya "
+"existe."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "There is already a task with this name: %s."
+msgstr "Ya hay una tarea con este nombre: %s."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "There is no task %s in the BookAI Tools project."
+msgstr "No hay ninguna tarea %s en el proyecto BookAI Tools."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid ""
+"Type: a new tool, or a change asked for on an existing tool (a subtask of "
+"the task of that tool, with parent_id set). Testers: the people in charge "
+"of testing the tool."
+msgstr ""
+"Tipo: una tool nueva, o un cambio pedido sobre una tool existente (una "
+"subtarea de la tarea de esa tool, con parent_id informado). Probadores: "
+"las personas encargadas de probar la tool."
+
+#. module: pms_ai_tool_project
+#: model:project.task.type,name:pms_ai_tool_project.stage_validated
+msgid "Validated"
+msgstr "Validada"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "Validated by %s"
+msgstr "Validada por %s"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "You are already a tester of this task."
+msgstr "Ya es probador de esta tarea."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "You are now a tester of: %s."
+msgstr "Ahora es probador de: %s."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "You will be added as a tester of: %s."
+msgstr "Se le añadirá como probador de: %s."
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "name"
+msgstr "nombre"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "notes"
+msgstr "notas"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "question"
+msgstr "pregunta"
+
+#. module: pms_ai_tool_project
+#. odoo-python
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#: code:addons/pms_ai_tool_project/models/pms_ai_bookai_tools.py:0
+#, python-format
+msgid "text"
+msgstr "texto"

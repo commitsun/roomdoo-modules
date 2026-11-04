@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_bookai_tools_list" model="ai.tool">
+        <field name="name">bookai_tools_list</field>
+        <field
+      name="description"
+    >Lists the tasks of the BookAI Tools project, the catalogue of AI tools: id, name, stage, area, type, testers and the linked tool. Filter by stage (proposal, implemented, validated, rejected), by area or with mine to get only the tools where the user is a tester. Also counts the tasks by stage. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_list</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_bookai_tools_detail" model="ai.tool">
+        <field name="name">bookai_tools_detail</field>
+        <field
+      name="description"
+    >Card of a task of the BookAI Tools project: description, stage, area, testers, the description of the linked AI tool, its change requests (subtasks) and the last 10 messages and notes in plain text. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_detail</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_bookai_tools_request" model="ai.tool">
+        <field name="name">bookai_tools_request</field>
+        <field
+      name="description"
+    >Asks for a new AI tool: creates a task in the stage Proposal of the BookAI Tools project with the question the tool should answer, an example and an area, and makes the user a follower. Needs a preview and a confirmation. Changes data only in that project.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_request</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_bookai_tools_take" model="ai.tool">
+        <field name="name">bookai_tools_take</field>
+        <field
+      name="description"
+    >Makes the user a tester of a task of the BookAI Tools project (I will test it). Needs a preview and a confirmation. Changes data only in that project.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_take</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_bookai_tools_feedback" model="ai.tool">
+        <field name="name">bookai_tools_feedback</field>
+        <field
+      name="description"
+    >Reports a change or a bug on a tool of the BookAI Tools project: posts an internal note on its task and creates a subtask Change in the stage Proposal. Needs a preview and a confirmation. Changes data only in that project.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_feedback</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_bookai_tools_validate" model="ai.tool">
+        <field name="name">bookai_tools_validate</field>
+        <field
+      name="description"
+    >Validates a tool after testing it: only a tester of the task (or an administrator) can move it to the stage Validated and post the notes of the test. Needs a preview and a confirmation. Changes data only in the BookAI Tools project.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_bookai_tools_validate</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>
