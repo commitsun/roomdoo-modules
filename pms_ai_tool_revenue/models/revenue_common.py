@@ -135,6 +135,9 @@ def volume_columns(condition, suffix):
 # counts from its creation date (or from its first occupied night, if the room
 # was created after the nights it already served) and, if archived, until the
 # last night it was occupied: the PMS keeps no retirement date.
+# "date + 0" keeps PostgreSQL from turning min()/max() into a walk of the date
+# index, which reads most of the table for each new or archived room; this way
+# it uses the room index instead (minutes down to well under a second).
 CAPACITY_QUERY = """
 WITH rooms AS (
     SELECT r.id, r.pms_property_id AS property_id, r.active,
@@ -150,7 +153,7 @@ spans AS (
                     least(
                         rooms.created,
                         coalesce(
-                            (SELECT min(l.date)
+                            (SELECT min(l.date + 0)
                                FROM pms_reservation_line l
                               WHERE l.room_id = rooms.id
                                 AND l.occupies_availability),
@@ -160,7 +163,7 @@ spans AS (
                 ELSE rooms.created
            END AS first_night,
            CASE WHEN rooms.active THEN NULL
-                ELSE (SELECT max(l.date)
+                ELSE (SELECT max(l.date + 0)
                         FROM pms_reservation_line l
                        WHERE l.room_id = rooms.id
                          AND l.occupies_availability)
