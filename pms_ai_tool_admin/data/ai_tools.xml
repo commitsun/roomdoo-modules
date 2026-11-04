@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_folios_pending_invoice" model="ai.tool">
+        <field name="name">pms_folios_pending_invoice</field>
+        <field
+      name="description"
+    >Folios whose stay is finished (every reservation checked out) with a checkout date in a period (at most 93 days) that still have an amount to invoice, by property: number of folios and untaxed amount, how many lack customer data, have pending payments or are already partly invoiced, and the largest ones with their reason hints. Folios with reservations not checked out are reported apart. Read only; no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folios_pending_invoice</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_customer_overdue" model="ai.tool">
+        <field name="name">pms_customer_overdue</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Overdue customer invoices (posted, with an open amount and a due date before the reference date) in aging buckets of 1-30, 31-60, 61-90 and over 90 days, by property, plus the 20 largest debtors; it can be limited to agencies or to companies. Read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_customer_overdue</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_cash_session_differences" model="ai.tool">
+        <field name="name">pms_cash_session_differences</field>
+        <field
+      name="description"
+    >Cash differences recorded when closing (or opening) the cash sessions of the hotels in a period (at most 93 days): property, cash journal, date, amount (negative: cash missing; positive: surplus) and the user who recorded it. Cash sessions are the statements of the cash journals and a difference is the line posted to the journal's loss or profit account. Read only.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_cash_session_differences</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>
