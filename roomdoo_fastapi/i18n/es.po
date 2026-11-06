@@ -293,8 +293,12 @@ msgstr ""
 
 #. module: roomdoo_fastapi
 #: model:ir.model.fields,help:roomdoo_fastapi.field_feature_flag__is_active_instance
-msgid "When enabled, this flag is active for all users."
-msgstr "Cuando está habilitado, este indicador está activo para todos los usuarios."
+msgid ""
+"When enabled, this flag is active for all users. Enabling it logs every user"
+" out of the PMS."
+msgstr ""
+"Cuando está habilitado, este indicador está activo para todos los usuarios. "
+"Habilitarlo cierra la sesión de todos los usuarios en el PMS."
 
 #. module: roomdoo_fastapi
 #: model:ir.model,name:roomdoo_fastapi.model_pms_fastapi_login_endpoint
