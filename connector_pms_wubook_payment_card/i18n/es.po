@@ -1,0 +1,249 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* connector_pms_wubook_payment_card
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 09:26+0000\n"
+"PO-Revision-Date: 2026-11-09 09:26+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__backend_id
+msgid "Backend"
+msgstr "Backend"
+
+#. module: connector_pms_wubook_payment_card
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook_payment_card.channel_wubook_backend_card_password_wizard_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend__payment_card_password_configured
+msgid "Card password entered"
+msgstr "Contraseña de tarjetas introducida"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,help:connector_pms_wubook_payment_card.field_channel_wubook_backend__payment_card_password
+msgid ""
+"Card password of the Wubook account, sealed with the key pair of the "
+"property: only a request with the card password of the property opens it."
+msgstr "Contraseña de tarjetas de la cuenta de Wubook, sellada con el par de claves del hotel: solo la abre una petición con la contraseña de tarjetas del hotel."
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model,name:connector_pms_wubook_payment_card.model_channel_wubook_backend
+msgid "Channel Wubook PMS Backend"
+msgstr "Backend de Wubook del PMS"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__confirm_password
+msgid "Confirm Password"
+msgstr "Confirmar la contraseña"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/wizards/channel_wubook_backend_card_password_wizard.py:0
+#, python-format
+msgid "Create the card password of the property %s first."
+msgstr "Crea antes la contraseña de tarjetas del hotel %s."
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/wizards/channel_wubook_backend_card_password_wizard.py:0
+#, python-format
+msgid "Enter the card password of the Wubook account."
+msgstr "Introduce la contraseña de tarjetas de la cuenta de Wubook."
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model,name:connector_pms_wubook_payment_card.model_pms_folio_payment_card
+msgid "Folio payment card"
+msgstr "Tarjeta de pago del folio"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__id
+msgid "ID"
+msgstr "ID"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,help:connector_pms_wubook_payment_card.field_channel_wubook_backend__payment_card_fetch_enabled
+msgid ""
+"Let users with the card password see the cards Wubook keeps for the bookings"
+" of this backend."
+msgstr "Permite que quien tenga la contraseña de tarjetas vea las tarjetas que Wubook guarda para las reservas de este backend."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/wizards/channel_wubook_backend_card_password_wizard.py:0
+#, python-format
+msgid "Only an administrator can enter this password."
+msgstr "Solo un administrador puede introducir esta contraseña."
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend_card_password_wizard__password
+msgid "Password"
+msgstr "Contraseña"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model,name:connector_pms_wubook_payment_card.model_pms_payment_card_vault
+msgid "Payment card vault"
+msgstr "Llavero de tarjetas"
+
+#. module: connector_pms_wubook_payment_card
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook_payment_card.channel_wubook_backend_view_form
+msgid "Payment cards"
+msgstr "Tarjetas de pago"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend__payment_card_fetch_enabled
+msgid "Read payment cards"
+msgstr "Leer tarjetas de pago"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Reading cards from Wubook is disabled for this property."
+msgstr "La lectura de tarjetas de Wubook está desactivada para este hotel."
+
+#. module: connector_pms_wubook_payment_card
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook_payment_card.channel_wubook_backend_card_password_wizard_form
+msgid "Save"
+msgstr "Guardar"
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_channel_wubook_backend__payment_card_password
+msgid "Sealed card password"
+msgstr "Contraseña de tarjetas sellada"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The Wubook backend of this card no longer exists."
+msgstr "El backend de Wubook de esta tarjeta ya no existe."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid ""
+"The Wubook card password has to be entered again in the Wubook backend."
+msgstr "Hay que volver a introducir la contraseña de tarjetas de Wubook en el backend de Wubook."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid ""
+"The Wubook card password is missing. Ask an administrator to enter it in the"
+" Wubook backend."
+msgstr "Falta la contraseña de tarjetas de Wubook. Pide a un administrador que la introduzca en el backend de Wubook."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/channel_wubook_backend.py:0
+#, python-format
+msgid ""
+"The channel manager allows %(calls)s card requests an hour. Try again later."
+msgstr "El channel manager permite %(calls)s consultas de tarjetas por hora. Inténtalo más tarde."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/channel_wubook_backend.py:0
+#, python-format
+msgid "The channel manager does not answer. Try again later."
+msgstr "El channel manager no responde. Inténtalo más tarde."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/channel_wubook_backend.py:0
+#, python-format
+msgid "The channel manager gave an unexpected answer."
+msgstr "El channel manager ha dado una respuesta inesperada."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/channel_wubook_backend.py:0
+#, python-format
+msgid "The channel manager refused the credentials of this backend."
+msgstr "El channel manager ha rechazado las credenciales de este backend."
+
+#. module: connector_pms_wubook_payment_card
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook_payment_card.channel_wubook_backend_card_password_wizard_form
+msgid ""
+"The password Wubook asks for to show the cards of the bookings. It\n"
+"                    is kept sealed: only a user who types the card password of the\n"
+"                    property can use it."
+msgstr "La contraseña que pide Wubook para mostrar las tarjetas de las reservas.\n                    Se guarda sellada: solo puede usarla quien escriba la contraseña de\n                    tarjetas del hotel."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/wizards/channel_wubook_backend_card_password_wizard.py:0
+#, python-format
+msgid "The password and its confirmation do not match."
+msgstr "La contraseña y su confirmación no coinciden."
+
+#. module: connector_pms_wubook_payment_card
+#: model:ir.model.fields,field_description:connector_pms_wubook_payment_card.field_pms_folio_payment_card__wubook_backend_id
+msgid "Wubook Backend"
+msgstr "Backend de Wubook"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/channel_wubook_backend.py:0
+#: model:ir.model,name:connector_pms_wubook_payment_card.model_channel_wubook_backend_card_password_wizard
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook_payment_card.channel_wubook_backend_view_form
+#, python-format
+msgid "Wubook card password"
+msgstr "Contraseña de tarjetas de Wubook"
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Wubook no longer keeps this card."
+msgstr "Wubook ya no guarda esta tarjeta."
+
+#. module: connector_pms_wubook_payment_card
+#. odoo-python
+#: code:addons/connector_pms_wubook_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Wubook refused to give the card (error %(code)s)."
+msgstr "Wubook se ha negado a dar la tarjeta (error %(code)s)."

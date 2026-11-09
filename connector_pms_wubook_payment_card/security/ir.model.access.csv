@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_channel_wubook_backend_card_password_wizard_system,channel.wubook.backend.card.password.wizard system,model_channel_wubook_backend_card_password_wizard,base.group_system,1,1,1,0
