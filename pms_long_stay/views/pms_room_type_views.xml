@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_pms_room_type_form_long_stay" model="ir.ui.view">
+        <field name="name">pms.room.type.form.long.stay</field>
+        <field name="model">pms.room.type</field>
+
+        <!-- TODO: adjust inherit_id to match your real PMS view ID -->
+        <field name="inherit_id" ref="pms.pms_room_type_view_form" />
+
+        <field name="arch" type="xml">
+
+            <!-- Add a new tab for Long Stay configuration -->
+            <notebook position="inside">
+                <page string="Long Stay">
+                    <group>
+                        <field name="long_stay_period" />
+                        <field name="long_stay_price" />
+                        <field name="long_stay_tax_ids" widget="many2many_tags" />
+                    </group>
+
+                    <!-- Internal product field (hidden for the user) -->
+                    <group invisible="1">
+                        <field name="long_stay_product_id" readonly="1" />
+                    </group>
+                </page>
+            </notebook>
+
+        </field>
+    </record>
+</odoo>
