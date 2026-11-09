@@ -19,3 +19,4 @@ from . import test_portal_token_second_factor
 from . import test_dashboard_archived_rooms
 from . import test_channel_lang
 from . import test_derived_room_type_prices
+from . import test_room_type_occupancy

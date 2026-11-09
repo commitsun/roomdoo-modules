@@ -70,6 +70,8 @@ class PmsRoomTypeService(Component):
                     classId=room.class_id,
                     defaultMaxAvail=room.default_max_avail,
                     defaultQuota=room.default_quota,
+                    maxOccupancy=room.max_occupancy,
+                    defaultOccupancy=room.default_occupancy,
                     **self._get_price_derivation_info(room),
                 )
             )
@@ -101,6 +103,8 @@ class PmsRoomTypeService(Component):
                 classId=room_type_record.class_id,
                 defaultMaxAvail=room_type_record.default_max_avail,
                 defaultQuota=room_type_record.default_quota,
+                maxOccupancy=room_type_record.max_occupancy,
+                defaultOccupancy=room_type_record.default_occupancy,
                 **self._get_price_derivation_info(room_type_record),
             )
         else:

@@ -12,8 +12,10 @@
   depth: 1
   remotes:
     oca: https://github.com/OCA/pms.git
+    commitsun: https://github.com/commitsun/pms.git
   merges:
-    - oca 16.0
+    # TEMP: OCA/pms#464 (with #463), drop once both are merged
+    - commitsun 16.0-add-occupancy-pricing
   target: oca 16.0
 
 ./deps/rest-framework:
