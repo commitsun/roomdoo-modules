@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from odoo.addons.base_rest import restapi
@@ -312,6 +313,22 @@ class PmsCalendarService(Component):
         auth="jwt_api_pms",
     )
     def get_prices_rules_calendar(self, calendar_search_param):
+        """Prices and availability rules of the room types of the property.
+
+        One entry per room type with rooms in the property, with one dict per
+        date. Besides the price, the item of the pricelist that sets it
+        (pricelistItemId) and the availability rules, each date tells:
+
+        - priceDerived: the price is derived from the one of another room
+          type, as the pricelist has no rule of its own for this one that
+          day. It is the price the pricing engine sells and it changes with
+          the price of that room type. Setting a price on that date creates
+          an item of the room type, which overrides the derivation.
+        - priceBaseRoomTypeId: the room type the price is derived from in the
+          pricelist, also on the dates with an item of the room type
+          (overrides), or null when the room type does not derive its price
+          in the pricelist.
+        """
         pms_property = (
             self.env["pms.property"].sudo().browse(calendar_search_param.pmsPropertyId)
         )
@@ -406,6 +423,9 @@ class PmsCalendarService(Component):
         )
 
         result = self.env.cr.dictfetchall()
+        self._apply_derived_room_type_prices(
+            result, calendar_search_param.pricelistId, pms_property.id
+        )
         CalendarPricesRulesRenderInfo = self.env.datamodels[
             "pms.calendar.prices.rules.render.info"
         ]
@@ -416,6 +436,8 @@ class PmsCalendarService(Component):
                 "freeRooms": item["free_rooms"],
                 "pricelistItemId": item["pricelist_item_id"],
                 "price": item["price"],
+                "priceDerived": item["price_derived"],
+                "priceBaseRoomTypeId": item["price_base_room_type_id"],
                 #
                 "availabilityPlanRuleId": item["availability_plan_rule_id"],
                 "maxAvail": item["max_avail"],
@@ -439,6 +461,71 @@ class PmsCalendarService(Component):
             else:
                 response[-1].dates.append(date)
         return response
+
+    def _apply_derived_room_type_prices(self, rows, pricelist_id, pms_property_id):
+        """Price the rows of the room types deriving their price as sold.
+
+        The query of the grid reads the daily items of the pricelist and, on
+        the days a room type has none, its list price. A room type deriving
+        its price from another one has no items on the days it follows that
+        room type: the pricing engine derives its price when the pricelist
+        has no rule for it. Those rows get the price the engine sells instead,
+        computed for all the room types of a date at once. A row with an item
+        of the room type is an override and keeps its price.
+
+        Updates ``rows``, the rows of the query, adding to every one:
+
+        - ``price_derived``: the price is derived, as the pricelist has no
+          rule for the room type that day
+        - ``price_base_room_type_id``: the room type the price is derived
+          from in the pricelist, None when it is not derived there (null, as
+          ``pricelist_item_id`` with no item and in the room type info)
+        """
+        for row in rows:
+            row["price_derived"] = False
+            row["price_base_room_type_id"] = None
+        # As superuser, like the query: the access to the property is checked
+        pricelist = self.env["product.pricelist"].sudo().browse(pricelist_id).exists()
+        room_types = self.env["pms.room.type"].sudo()
+        # Nothing is derived while the pms module installed does not derive
+        # room type prices yet
+        if (
+            not rows
+            or not pricelist
+            or "price_base_room_type_id" not in room_types._fields
+        ):
+            return
+        room_types = room_types.browse(
+            sorted({row["room_type_id"] for row in rows})
+        )._get_price_derivation(pricelist)
+        base_room_type_ids = {
+            room_type.id: room_type.price_base_room_type_id.id
+            for room_type in room_types
+        }
+        product_ids = {
+            room_type.id: room_type.product_id.id for room_type in room_types
+        }
+        rows_by_date = defaultdict(list)
+        for row in rows:
+            if row["room_type_id"] not in base_room_type_ids:
+                continue
+            row["price_base_room_type_id"] = base_room_type_ids[row["room_type_id"]]
+            # An item of the room type that day overrides the derivation
+            if not row["pricelist_item_id"]:
+                rows_by_date[row["date"]].append(row)
+        for date, date_rows in rows_by_date.items():
+            products = room_types.product_id.browse(
+                sorted({product_ids[row["room_type_id"]] for row in date_rows})
+            )
+            prices = pricelist._compute_price_rule(
+                products, 1, consumption_date=date, pms_property_id=pms_property_id
+            )
+            for row in date_rows:
+                price, rule_id = prices[product_ids[row["room_type_id"]]]
+                row["price"] = pricelist.currency_id.round(price)
+                # Any rule of the pricelist covering the room type that day,
+                # such as a category or a global one, wins over the derivation
+                row["price_derived"] = not rule_id
 
     @restapi.method(
         [

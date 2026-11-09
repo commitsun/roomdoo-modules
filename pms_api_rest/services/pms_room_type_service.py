@@ -70,6 +70,7 @@ class PmsRoomTypeService(Component):
                     classId=room.class_id,
                     defaultMaxAvail=room.default_max_avail,
                     defaultQuota=room.default_quota,
+                    **self._get_price_derivation_info(room),
                 )
             )
         return result_rooms
@@ -100,6 +101,38 @@ class PmsRoomTypeService(Component):
                 classId=room_type_record.class_id,
                 defaultMaxAvail=room_type_record.default_max_avail,
                 defaultQuota=room_type_record.default_quota,
+                **self._get_price_derivation_info(room_type_record),
             )
         else:
             raise MissingError(_("Room Type Class not found"))
+
+    def _get_price_derivation_info(self, room_type):
+        """The room type the price is derived from, its variation and where.
+
+        Values of the room type info. The variation (type and value) applies
+        in the pricelists the price is derived in (all of them when the list
+        is empty), on the days they have no rule of their own for the room
+        type. They are all None when the price is not derived, and missing
+        while the pms module installed does not derive room type prices yet.
+        """
+        if "price_base_room_type_id" not in room_type._fields:
+            return {}
+        # Read as stored, as pms does: neither the access of the user to the
+        # pricelists nor archiving them may empty the list, which would read
+        # as deriving the price in all the pricelists
+        stored = room_type.sudo().with_context(active_test=False)
+        if not stored.price_base_room_type_id:
+            return {
+                "priceBaseRoomTypeId": None,
+                "priceDerivationType": None,
+                "priceDerivationValue": None,
+                "priceDerivationPricelistIds": None,
+            }
+        return {
+            "priceBaseRoomTypeId": stored.price_base_room_type_id.id,
+            "priceDerivationType": stored.price_derivation_type,
+            "priceDerivationValue": stored.price_derivation_value,
+            "priceDerivationPricelistIds": sorted(
+                stored.price_derivation_pricelist_ids.ids
+            ),
+        }
