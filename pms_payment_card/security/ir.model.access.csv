@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pms_folio_payment_card_system,pms.folio.payment.card system,model_pms_folio_payment_card,base.group_system,1,0,0,0
+access_pms_payment_card_vault_system,pms.payment.card.vault system,model_pms_payment_card_vault,base.group_system,1,0,0,0
+access_pms_payment_card_lock_system,pms.payment.card.lock system,model_pms_payment_card_lock,base.group_system,1,0,0,0
+access_pms_payment_card_access_log_system,pms.payment.card.access.log system,model_pms_payment_card_access_log,base.group_system,1,0,0,0
+access_pms_payment_card_password_wizard_system,pms.payment.card.password.wizard system,model_pms_payment_card_password_wizard,base.group_system,1,1,1,0
