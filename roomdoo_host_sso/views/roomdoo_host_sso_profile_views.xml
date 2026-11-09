@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="roomdoo_host_sso_profile_tree" model="ir.ui.view">
+        <field name="name">roomdoo.host.sso.profile.tree</field>
+        <field name="model">roomdoo.host.sso.profile</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="code" />
+                <field name="group_ids" widget="many2many_tags" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="roomdoo_host_sso_profile_form" model="ir.ui.view">
+        <field name="name">roomdoo.host.sso.profile.form</field>
+        <field name="model">roomdoo.host.sso.profile</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" />
+                        <field name="code" />
+                        <field name="group_ids" widget="many2many_tags" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="roomdoo_host_sso_profile_action" model="ir.actions.act_window">
+        <field name="name">Host access profiles</field>
+        <field name="res_model">roomdoo.host.sso.profile</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    id="roomdoo_host_sso_profile_menu"
+    name="Host access profiles"
+    parent="base.menu_users"
+    sequence="90"
+    action="roomdoo_host_sso_profile_action"
+    groups="base.group_system"
+  />
+</odoo>
