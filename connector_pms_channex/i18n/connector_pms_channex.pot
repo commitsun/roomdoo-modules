@@ -326,6 +326,13 @@ msgid "Another job is sending %s to Channex for this property."
 msgstr ""
 
 #. module: connector_pms_channex
+#. odoo-python
+#: code:addons/connector_pms_channex/components/call_control.py:0
+#, python-format
+msgid "Another job is starting the call accounting of %s."
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_backend_type__default_property_type__apartment
 #: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_pms_property__channex_property_type__apartment
 msgid "Apartment"
