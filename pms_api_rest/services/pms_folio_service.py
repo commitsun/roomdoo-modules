@@ -1038,9 +1038,12 @@ class PmsFolioService(Component):
                             )
                         )
                     vals["reservation_line_ids"] = vals_lines
-                else:
-                    vals["checkin"] = reservation.checkin
-                    vals["checkout"] = reservation.checkout
+                # Send the stay dates also when the nights come in the payload:
+                # with a board service the room is assigned before checkin and
+                # checkout are computed from the lines, i.e. for today, and it
+                # could land on a room already taken on the real dates.
+                vals["checkin"] = reservation.checkin
+                vals["checkout"] = reservation.checkout
 
                 reservation_record = (
                     self.env["pms.reservation"]
