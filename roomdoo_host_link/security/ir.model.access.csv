@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_feature_flag_host_link,feature.flag host link,roomdoo_fastapi.model_feature_flag,group_host_link,1,1,1,0
