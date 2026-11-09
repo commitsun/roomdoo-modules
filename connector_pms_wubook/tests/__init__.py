@@ -23,3 +23,4 @@ from . import test_tourist_tax_included
 from . import test_folio_mapper_lang
 from . import test_mirai_booking_data
 from . import test_folio_channel_extras
+from . import test_room_type_occupancy
