@@ -1,0 +1,829 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_payment_card
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 09:26+0000\n"
+"PO-Revision-Date: 2026-11-09 09:26+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid ""
+"A card from the channel manager cannot be edited. Delete it and add a new "
+"one."
+msgstr "Una tarjeta del channel manager no se puede editar. Elimínala y añade una nueva."
+
+#. module: pms_payment_card
+#: model:ir.model.constraint,message:pms_payment_card.constraint_pms_folio_payment_card_folio_source_unique
+msgid "A folio has at most one card of each source."
+msgstr "Un folio tiene como máximo una tarjeta de cada origen."
+
+#. module: pms_payment_card
+#: model:ir.model.constraint,message:pms_payment_card.constraint_pms_payment_card_vault_pms_property_unique
+msgid "A property has a single card password."
+msgstr "Un hotel tiene una sola contraseña de tarjetas."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__action
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_access_log_search
+msgid "Action"
+msgstr "Acción"
+
+#. module: pms_payment_card
+#: model:res.groups,name:pms_payment_card.group_payment_card_manage
+msgid "Add and delete payment cards"
+msgstr "Añadir y eliminar tarjetas de pago"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__add
+msgid "Add card"
+msgstr "Añadir tarjeta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__source_type__manual
+msgid "Added in Roomdoo"
+msgstr "Añadida en Roomdoo"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__amex
+msgid "American Express"
+msgstr "American Express"
+
+#. module: pms_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_password_wizard_form
+msgid "Apply"
+msgstr "Aplicar"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__state__available
+msgid "Available"
+msgstr "Disponible"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__available_until
+msgid "Available Until"
+msgstr "Disponible hasta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__external_reference
+msgid "Booking code in the channel that sold it."
+msgstr "Código de la reserva en el canal que la vendió."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__brand
+msgid "Brand"
+msgstr "Marca"
+
+#. module: pms_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_password_wizard_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__card_already_exists
+msgid "Card already exists"
+msgstr "La tarjeta ya existe"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__payload
+msgid "Card data of a manual card, sealed with the key pair of the property."
+msgstr "Datos de una tarjeta añadida a mano, sellados con el par de claves del hotel."
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__card_not_available
+msgid "Card not available"
+msgstr "Tarjeta no disponible"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_property.py:0
+#: model:ir.model,name:pms_payment_card.model_pms_payment_card_password_wizard
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_property_views_form
+#, python-format
+msgid "Card password"
+msgstr "Contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_channel_wubook_pms_property_availability__payment_card_password_configured
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__password_configured
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_property__payment_card_password_configured
+msgid "Card password configured"
+msgstr "Contraseña de tarjetas creada"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__card_password_not_configured
+msgid "Card password not configured"
+msgstr "Sin contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__change_password
+msgid "Change card password"
+msgstr "Cambiar la contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_password_wizard__operation__change
+msgid "Change the password"
+msgstr "Cambiar la contraseña"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__channel_name
+msgid "Channel"
+msgstr "Canal"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__channel_code
+msgid "Channel Code"
+msgstr "Código en el channel manager"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__source_type__channel
+msgid "Channel manager"
+msgstr "Channel manager"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__channel_manager_unavailable
+msgid "Channel manager unavailable"
+msgstr "Channel manager no disponible"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/wizards/pms_payment_card_password_wizard.py:0
+#, python-format
+msgid "Choose what to do with the card password."
+msgstr "Elige qué hacer con la contraseña de tarjetas."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__channel_code
+msgid "Code of the booking in the channel manager."
+msgstr "Código de la reserva en el channel manager."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__confirm_password
+msgid "Confirm Password"
+msgstr "Confirmar la contraseña"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_password_wizard__operation__set
+msgid "Create the password"
+msgstr "Crear la contraseña"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__create_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__create_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__create_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__create_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__create_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__create_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__create_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__create_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__current_password
+msgid "Current Password"
+msgstr "Contraseña actual"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__available_until
+msgid "Day the channel manager deletes the card."
+msgstr "Día en que el channel manager borra la tarjeta."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_channel_wubook_pms_property_availability__payment_card_retention_days
+#: model:ir.model.fields,help:pms_payment_card.field_pms_property__payment_card_retention_days
+msgid ""
+"Days after the check-out after which the cards added in Roomdoo are deleted."
+msgstr "Días después de la salida tras los que se borran las tarjetas añadidas en Roomdoo."
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__delete
+msgid "Delete card"
+msgstr "Eliminar tarjeta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__diners
+msgid "Diners Club"
+msgstr "Diners Club"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__discover
+msgid "Discover"
+msgstr "Discover"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__state__dismissed
+msgid "Dismissed"
+msgstr "Descartada"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__display_name
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__display_name
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__display_name
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__display_name
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__edit
+msgid "Edit card"
+msgstr "Editar tarjeta"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Enter the card number."
+msgstr "Introduce el número de tarjeta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Enter the name of the cardholder."
+msgstr "Introduce el nombre del titular."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Enter the security code."
+msgstr "Introduce el código de seguridad."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__external_reference
+msgid "External Reference"
+msgstr "Referencia externa"
+
+#. module: pms_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_access_log_search
+msgid "Failed"
+msgstr "Fallidos"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__failures
+msgid "Failures"
+msgstr "Fallos"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__folio_id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__folio_id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__folio_id
+msgid "Folio"
+msgstr "Folio"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__folio_not_found
+msgid "Folio not found"
+msgstr "Folio no encontrado"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Folio not found."
+msgstr "No se ha encontrado el folio."
+
+#. module: pms_payment_card
+#: model:ir.model,name:pms_payment_card.model_pms_folio_payment_card
+msgid "Folio payment card"
+msgstr "Tarjeta de pago del folio"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__forbidden
+msgid "Forbidden"
+msgstr "Sin permiso"
+
+#. module: pms_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_access_log_search
+msgid "Group By"
+msgstr "Agrupar por"
+
+#. module: pms_payment_card
+#: model:ir.model,name:pms_payment_card.model_ir_http
+msgid "HTTP Routing"
+msgstr "Enrutamiento HTTP"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__holder
+msgid "Holder"
+msgstr "Titular"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__id
+msgid "ID"
+msgstr "ID"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__remote_addr
+msgid "IP address"
+msgstr "Dirección IP"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__invalid_card_password
+msgid "Invalid card password"
+msgstr "Contraseña de tarjetas incorrecta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__jcb
+msgid "JCB"
+msgstr "JCB"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__kdf_n
+msgid "Kdf N"
+msgstr "Kdf N"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__kdf_p
+msgid "Kdf P"
+msgstr "Kdf P"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__kdf_r
+msgid "Kdf R"
+msgstr "Kdf R"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__kdf_salt
+msgid "Kdf Salt"
+msgstr "Sal del Kdf"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_channel_wubook_pms_property_availability__payment_card_retention_days
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_property__payment_card_retention_days
+msgid "Keep cards added in Roomdoo for"
+msgstr "Conservar las tarjetas añadidas en Roomdoo durante"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card____last_update
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log____last_update
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock____last_update
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard____last_update
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__write_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__write_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__write_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__write_uid
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__write_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__write_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__write_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__write_date
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__last4
+msgid "Last digits"
+msgstr "Últimos dígitos"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__card_password_locked
+msgid "Locked"
+msgstr "Bloqueado"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__locked_until
+msgid "Locked Until"
+msgstr "Bloqueado hasta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__maestro
+msgid "Maestro"
+msgstr "Maestro"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__mastercard
+msgid "Mastercard"
+msgstr "Mastercard"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__new_password
+msgid "New Password"
+msgstr "Contraseña nueva"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__state__not_available
+msgid "No longer in the channel manager"
+msgstr "Ya no está en el channel manager"
+
+#. module: pms_payment_card
+#: model:ir.model.constraint,message:pms_payment_card.constraint_pms_payment_card_lock_user_folio_unique
+msgid "One lock per folio."
+msgstr "Un bloqueo por folio."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/wizards/pms_payment_card_password_wizard.py:0
+#, python-format
+msgid "Only an administrator can manage the card password."
+msgstr "Solo un administrador puede gestionar la contraseña de tarjetas."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__operation
+msgid "Operation"
+msgstr "Operación"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__payload
+msgid "Payload"
+msgstr "Datos sellados"
+
+#. module: pms_payment_card
+#: model:ir.actions.act_window,name:pms_payment_card.action_pms_payment_card_access_log
+#: model:ir.model,name:pms_payment_card.model_pms_payment_card_access_log
+#: model:ir.ui.menu,name:pms_payment_card.menu_pms_payment_card_access_log
+msgid "Payment card access log"
+msgstr "Registro de accesos a tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model,name:pms_payment_card.model_pms_payment_card_lock
+msgid "Payment card password lock"
+msgstr "Bloqueo de la contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model,name:pms_payment_card.model_pms_payment_card_vault
+msgid "Payment card vault"
+msgstr "Llavero de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.module.category,name:pms_payment_card.module_category_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_property_views_form
+msgid "Payment cards"
+msgstr "Tarjetas de pago"
+
+#. module: pms_payment_card
+#: model:ir.actions.server,name:pms_payment_card.ir_cron_clean_payment_card_locks_ir_actions_server
+#: model:ir.cron,cron_name:pms_payment_card.ir_cron_clean_payment_card_locks
+msgid "Payment cards: clean expired password locks"
+msgstr "Tarjetas de pago: limpiar los bloqueos de contraseña caducados"
+
+#. module: pms_payment_card
+#: model:ir.actions.server,name:pms_payment_card.ir_cron_purge_payment_cards_ir_actions_server
+#: model:ir.cron,cron_name:pms_payment_card.ir_cron_purge_payment_cards
+msgid "Payment cards: delete the expired ones"
+msgstr "Tarjetas de pago: borrar las caducadas"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__pms_property_id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_password_wizard__pms_property_id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__pms_property_id
+msgid "Pms Property"
+msgstr "Hotel"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__private_key
+msgid "Private Key"
+msgstr "Clave privada"
+
+#. module: pms_payment_card
+#: model:ir.model,name:pms_payment_card.model_pms_property
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__pms_property_id
+msgid "Property"
+msgstr "Hotel"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__provider
+msgid "Provider"
+msgstr "Proveedor"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_vault__public_key
+msgid "Public Key"
+msgstr "Clave pública"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__reservation_id
+msgid "Reservation"
+msgstr "Reserva"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__reservation_id
+msgid "Reservation that brought the card."
+msgstr "Reserva que trajo la tarjeta."
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_password_wizard__operation__reset
+msgid "Reset a forgotten password"
+msgstr "Restablecer una contraseña olvidada"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__reset_password
+msgid "Reset card password"
+msgstr "Restablecer la contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_password_wizard_form
+msgid ""
+"Resetting the password deletes the cards added in Roomdoo for this\n"
+"                    property and the card password of its channel managers, which will\n"
+"                    have to be entered again. The cards the channel manager keeps are\n"
+"                    not affected."
+msgstr "Al restablecer la contraseña se borran las tarjetas añadidas en Roomdoo\n                    para este hotel y la contraseña de tarjetas de sus channel managers,\n                    que habrá que volver a introducir. Las tarjetas que guarda el channel\n                    manager no se ven afectadas."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__result
+msgid "Result"
+msgstr "Resultado"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__set_password
+msgid "Set card password"
+msgstr "Crear la contraseña de tarjetas"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__source_type
+msgid "Source Type"
+msgstr "Origen"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__state
+msgid "State"
+msgstr "Estado"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__success
+msgid "Success"
+msgstr "Correcto"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__provider
+msgid "Technical name of the channel manager that keeps the card."
+msgstr "Nombre técnico del channel manager que guarda la tarjeta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The card data is not valid."
+msgstr "Los datos de la tarjeta no son válidos."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The card has expired."
+msgstr "La tarjeta ha caducado."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The card number has a wrong length."
+msgstr "El número de tarjeta tiene una longitud no válida."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The card number is not valid."
+msgstr "El número de tarjeta no es válido."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The card password is not correct."
+msgstr "La contraseña de tarjetas no es correcta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_payment_card_vault.py:0
+#, python-format
+msgid "The card password must have at least %(length)s characters."
+msgstr "La contraseña de tarjetas debe tener al menos %(length)s caracteres."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_payment_card_vault.py:0
+#, python-format
+msgid "The current card password is not correct."
+msgstr "La contraseña de tarjetas actual no es correcta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The expiry date cannot be more than 20 years ahead."
+msgstr "La fecha de caducidad no puede superar los 20 años."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The expiry date is not valid."
+msgstr "La fecha de caducidad no es válida."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The expiry month and year have to be sent together."
+msgstr "El mes y el año de caducidad tienen que enviarse juntos."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The name of the cardholder is too long."
+msgstr "El nombre del titular es demasiado largo."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/wizards/pms_payment_card_password_wizard.py:0
+#, python-format
+msgid "The new password and its confirmation do not match."
+msgstr "La contraseña nueva y su confirmación no coinciden."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,help:pms_payment_card.field_pms_folio_payment_card__pms_property_id
+msgid "The property for folios"
+msgstr "El hotel de los folios"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The security code has a wrong length."
+msgstr "El código de seguridad tiene una longitud no válida."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "The stored card cannot be read anymore."
+msgstr "La tarjeta guardada ya no se puede leer."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "There is nothing to change."
+msgstr "No hay nada que cambiar."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "This channel manager cannot provide cards."
+msgstr "Este channel manager no puede dar tarjetas."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "This folio already has a card."
+msgstr "Este folio ya tiene una tarjeta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "This folio has no card available."
+msgstr "Este folio no tiene ninguna tarjeta disponible."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "This folio has no card."
+msgstr "Este folio no tiene tarjeta."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_payment_card_vault.py:0
+#, python-format
+msgid "This property already has a card password."
+msgstr "Este hotel ya tiene contraseña de tarjetas."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/wizards/pms_payment_card_password_wizard.py:0
+#, python-format
+msgid "This property has no card password yet."
+msgstr "Este hotel todavía no tiene contraseña de tarjetas."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid ""
+"This property has no card password yet. Ask an administrator to create it."
+msgstr "Este hotel todavía no tiene contraseña de tarjetas. Pide a un administrador que la cree."
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__timestamp
+msgid "Timestamp"
+msgstr "Fecha y hora"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "Too many wrong card passwords. Try again in a few minutes."
+msgstr "Demasiadas contraseñas de tarjetas incorrectas. Inténtalo de nuevo dentro de unos minutos."
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__unionpay
+msgid "UnionPay"
+msgstr "UnionPay"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__unknown
+msgid "Unknown"
+msgstr "Desconocida"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_access_log__user_id
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_payment_card_lock__user_id
+#: model_terms:ir.ui.view,arch_db:pms_payment_card.pms_payment_card_access_log_search
+msgid "User"
+msgstr "Usuario"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__result__validation_error
+msgid "Validation error"
+msgstr "Error de validación"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_payment_card_access_log__action__view_details
+msgid "View card details"
+msgstr "Ver los datos de la tarjeta"
+
+#. module: pms_payment_card
+#: model:res.groups,name:pms_payment_card.group_payment_card_view
+msgid "View payment cards"
+msgstr "Ver tarjetas de pago"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__vcc_balance
+msgid "Virtual card balance"
+msgstr "Saldo de la tarjeta virtual"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__vcc_valid_from
+msgid "Virtual card chargeable from"
+msgstr "Tarjeta virtual cobrable desde"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__vcc_valid_until
+msgid "Virtual card chargeable until"
+msgstr "Tarjeta virtual cobrable hasta"
+
+#. module: pms_payment_card
+#: model:ir.model.fields,field_description:pms_payment_card.field_pms_folio_payment_card__vcc_currency_id
+msgid "Virtual card currency"
+msgstr "Moneda de la tarjeta virtual"
+
+#. module: pms_payment_card
+#: model:ir.model.fields.selection,name:pms_payment_card.selection__pms_folio_payment_card__brand__visa
+msgid "Visa"
+msgstr "Visa"
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "You are not allowed to access this folio."
+msgstr "No tienes acceso a este folio."
+
+#. module: pms_payment_card
+#. odoo-python
+#: code:addons/pms_payment_card/models/pms_folio_payment_card.py:0
+#, python-format
+msgid "You are not allowed to do this with payment cards."
+msgstr "No tienes permiso para hacer esto con las tarjetas de pago."

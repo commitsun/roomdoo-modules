@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Commit [Sun]
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <record id="ir_cron_purge_payment_cards" model="ir.cron">
+        <field name="name">Payment cards: delete the expired ones</field>
+        <field name="model_id" ref="model_pms_folio_payment_card" />
+        <field name="state">code</field>
+        <field name="code">model._cron_purge()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False" />
+    </record>
+    <record id="ir_cron_clean_payment_card_locks" model="ir.cron">
+        <field name="name">Payment cards: clean expired password locks</field>
+        <field name="model_id" ref="model_pms_payment_card_lock" />
+        <field name="state">code</field>
+        <field name="code">model._cron_clean()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False" />
+    </record>
+</odoo>
