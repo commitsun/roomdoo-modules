@@ -38,6 +38,7 @@
         "views/product_template_views.xml",
         "views/pms_api_log_views.xml",
         "views/roomdoo_app_menu_views.xml",
+        "views/res_partner_views.xml",
     ],
     "demo": [
         "demo/pms_api_rest_master_data.xml",
