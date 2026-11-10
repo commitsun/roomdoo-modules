@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="ai_tool_pms_discounts_summary" model="ai.tool">
+        <field name="name">pms_discounts_summary</field>
+        <field
+      name="description"
+    >Discounts applied to the room nights of a period (at most 31 days): share of discounted nights, nights at 50% or more and at 100%, and amount discounted. Broken down by sale channel and by property, comparing each property with its 4 previous periods of the same length. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_discounts_summary</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_salesperson_sales" model="ai.tool">
+        <field name="name">pms_salesperson_sales</field>
+        <field
+      name="description"
+    >Nights, production and ADR per salesperson for the stays of a period (at most 93 days), split into folios brought by an agency and folios of customer companies. ADR leaves out folios whose stay is worth 0. Read only; aggregated figures.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_salesperson_sales</field>
+        <field name="kind">generic</field>
+    </record>
+
+    <record id="ai_tool_pms_salesperson_top_customers" model="ai.tool">
+        <field name="name">pms_salesperson_top_customers</field>
+        <field
+      name="description"
+    >Top customer companies of each salesperson by untaxed amount invoiced in a period (invoices minus refunds, at most 93 days), with their share of the salesperson's total and a flag when one customer is more than the dependency threshold. Read only.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_salesperson_top_customers</field>
+        <field name="kind">generic</field>
+    </record>
+
+    <record id="ai_tool_pms_salesperson_portfolio" model="ai.tool">
+        <field name="name">pms_salesperson_portfolio</field>
+        <field
+      name="description"
+    >Portfolio of each salesperson on a date: assigned companies, how many had folios in the last weeks, companies created in the period, records without tax id or email, overdue invoices and the part of them already paid on the folio but not applied. Read only.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_salesperson_portfolio</field>
+        <field name="kind">generic</field>
+    </record>
+
+    <record id="ai_tool_pms_salesperson_cooling_customers" model="ai.tool">
+        <field name="name">pms_salesperson_cooling_customers</field>
+        <field
+      name="description"
+    >Companies of each salesperson that are cooling: several folios in the previous 12 months and none in the last weeks. Flags the ones that did not book in the same weeks last year either (maybe seasonal) and the self-employed. Read only.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_salesperson_cooling_customers</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_service_nights" model="ai.tool">
+        <field name="name">pms_service_nights</field>
+        <field
+      name="description"
+    >Room nights with a service product in a period (at most 93 days), such as a sustainability programme where the room is not cleaned. Leaves out one-night stays, the last night of each stay (by the product's before/after setting) and cancelled reservations, and reports lines that fall outside the stay. By property. Read only; aggregated figures.</field>
+        <field name="model_id" ref="model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_service_nights</field>
+        <field name="kind">generic</field>
+    </record>
+</odoo>

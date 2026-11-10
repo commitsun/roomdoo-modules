@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_tool_system,ai.tool system,ai_tool.model_ai_tool,base.group_system,1,1,0,0
+access_pms_ai_confirmation_system,pms.ai.confirmation system,model_pms_ai_confirmation,base.group_system,1,0,0,0
