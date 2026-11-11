@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Commit [Sun]
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_wubook_backend_view_form" model="ir.ui.view">
+        <field name="name">channel.wubook.backend.form.payment.card</field>
+        <field name="model">channel.wubook.backend</field>
+        <field
+      name="inherit_id"
+      ref="connector_pms_wubook.channel_wubook_backend_view_form"
+    />
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page
+          string="Payment cards"
+          name="payment_cards"
+          groups="base.group_system"
+        >
+                    <group>
+                        <field name="payment_card_fetch_enabled" />
+                        <field name="payment_card_password_configured" />
+                    </group>
+                    <button
+            name="action_payment_card_password"
+            type="object"
+            string="Wubook card password"
+            class="btn-secondary"
+          />
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
