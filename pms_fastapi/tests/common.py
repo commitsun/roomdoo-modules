@@ -283,3 +283,137 @@ class CommonTestPmsApiPayment(CommonTestPmsApi):
         if post:
             invoice.action_post()
         return invoice
+
+
+class CommonTestCheckin(CommonTestPmsApi):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.country_es = cls.env.ref("base.es")
+        cls.country_pt = cls.env.ref("base.pt")
+        cls.country_fr = cls.env.ref("base.fr")
+        cls.test_property.write({"country_id": cls.country_es.id})
+        cls.room_type_class = cls.env["pms.room.type.class"].create(
+            {"name": "Standard", "default_code": "STD"}
+        )
+        cls.room_type = cls.env["pms.room.type"].create(
+            {
+                "pms_property_ids": [cls.test_property.id],
+                "name": "Double Test",
+                "default_code": "DBL_Test",
+                "class_id": cls.room_type_class.id,
+            }
+        )
+        cls.room1 = cls.env["pms.room"].create(
+            {
+                "pms_property_id": cls.test_property.id,
+                "name": "101",
+                "room_type_id": cls.room_type.id,
+                "capacity": 2,
+            }
+        )
+        cls.room2 = cls.env["pms.room"].create(
+            {
+                "pms_property_id": cls.test_property.id,
+                "name": "102",
+                "room_type_id": cls.room_type.id,
+                "capacity": 2,
+            }
+        )
+        cls.sale_channel = cls.env["pms.sale.channel"].create(
+            {"name": "Direct Test", "channel_type": "direct"}
+        )
+        cls.id_category = cls.env["res.partner.id_category"].create(
+            {"name": "Test document", "code": "TST"}
+        )
+        cls.folio = cls._create_folio()
+        cls.reservation = cls._create_reservation(cls.folio, cls.room1, adults=2)
+        cls.checkin_partners = cls.reservation.checkin_partner_ids.sorted("id")
+        cls.guest = cls.checkin_partners[0]
+
+    @classmethod
+    def _create_folio(cls):
+        partner = cls.env["res.partner"].create({"name": "Folio Customer"})
+        return cls.env["pms.folio"].create(
+            {
+                "pms_property_id": cls.test_property.id,
+                "partner_name": partner.name,
+                "partner_id": partner.id,
+            }
+        )
+
+    @classmethod
+    def _create_reservation(cls, folio, room, adults=1, nights=2):
+        start = fields.date.today()
+        return cls.env["pms.reservation"].create(
+            {
+                "folio_id": folio.id,
+                "room_type_id": room.room_type_id.id,
+                "preferred_room_id": room.id,
+                "partner_id": folio.partner_id.id,
+                "adults": adults,
+                "sale_channel_origin_id": cls.sale_channel.id,
+                "reservation_line_ids": [
+                    (0, False, {"date": start + datetime.timedelta(days=i)})
+                    for i in range(nights)
+                ],
+            }
+        )
+
+    @classmethod
+    def _create_other_property_user(cls, same_company=False):
+        company = (
+            cls.test_company
+            if same_company
+            else cls.env["res.company"].create({"name": "Company 2"})
+        )
+        pricelist = cls.env["product.pricelist"].create(
+            {
+                "name": "Pricelist 2",
+                "availability_plan_id": cls.test_availability_plan.id,
+            }
+        )
+        user = cls.env["res.users"].create(
+            {
+                "name": "Other PMS user",
+                "login": "other_pms_api",
+                "password": "supersecret2",
+                "email": "other@example.org",
+                "company_ids": [(4, company.id)],
+                "company_id": company.id,
+            }
+        )
+        cls.env["pms.property"].create(
+            {
+                "name": "Property 2",
+                "company_id": company.id,
+                "default_pricelist_id": pricelist.id,
+                "user_ids": [(6, 0, [user.id])],
+            }
+        )
+        return user
+
+    def _login_other_user(self, test_client):
+        response = test_client.post(
+            "/login",
+            json={"username": "other_pms_api", "password": "supersecret2"},
+        )
+        self.assertEqual(response.status_code, 204, response.text)
+
+    def _enable_test_ocr_supplier(self):
+        """Give the property a document scanning supplier named "test".
+
+        The suppliers are selection options added by their own modules, which
+        are not dependencies here, so one is registered for the test only."""
+        field = self.env["pms.property"]._fields["ocr_checkin_supplier"]
+        option = ("test", "Test")
+        field.selection.append(option)
+        self.addCleanup(field.selection.remove, option)
+        self.test_property.ocr_checkin_supplier = "test"
+
+    def _base_url(self, folio=None, checkin_partner=None):
+        folio = folio or self.folio
+        url = f"/folios/{folio.id}/checkin-partners"
+        if checkin_partner is not None:
+            url += f"/{checkin_partner.id}"
+        return url
