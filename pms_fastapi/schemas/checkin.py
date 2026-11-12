@@ -67,6 +67,41 @@ class CheckinPartnerDetail(CheckinDocumentData):
     mobile: str | None = None
 
 
+class CheckinPartnerUpdate(PmsBaseModel):
+    """Merge-patch body: an absent field is untouched, null clears it."""
+
+    firstname: str | None = None
+    lastname: str | None = None
+    lastname2: str | None = None
+    gender: CheckinGender | None = None
+    birthdate: date | None = None
+    nationality: str | None = Field(None, description="ISO 3166-1 alpha-2 code.")
+    documentType: str | None = Field(None, description="Identity document type code.")
+    documentNumber: str | None = None
+    documentCountryId: str | None = Field(
+        None, description="ISO 3166-1 alpha-2 code of the document country."
+    )
+    documentSupportNumber: str | None = None
+    responsibleCheckinPartnerId: str | None = Field(
+        None, description="Check-in partner of the same folio that is responsible."
+    )
+    relationship: str | None = Field(
+        None, description="Relationship from the responsible adult's perspective."
+    )
+    countryId: str | None = Field(
+        None, description="ISO 3166-1 alpha-2 code of the residence country."
+    )
+    countryState: str | None = Field(None, description="Residence state name.")
+    residenceCity: str | None = None
+    residenceStreet: str | None = None
+    zip: str | None = None
+    email: str | None = None
+    mobile: str | None = None
+    signature: str | None = Field(
+        None, description="PNG image encoded in base64, without data: prefix."
+    )
+
+
 class CheckinContext(PmsBaseModel):
     localization: str | None = Field(
         None, description="Lowercase ISO code of the property country."
