@@ -1,6 +1,6 @@
 import base64
 import binascii
-from datetime import date
+from datetime import date, datetime
 
 from fastapi import HTTPException
 from fastapi.responses import Response
@@ -15,15 +15,18 @@ from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.checkin import (
     CheckinContext,
+    CheckinDocumentData,
     CheckinGuest,
     CheckinGuests,
     CheckinPartnerDetail,
     CheckinPartnerUpdate,
     CheckinRoom,
+    DocumentScanInput,
 )
 from odoo.addons.pms_fastapi.utils import ApiProblem, build_problem
 
 ORIGIN_INPUT_WIZARD = "wizard"
+GENDERS = ("male", "female", "other")
 # Payload key -> check-in partner field, for the values written as they come.
 SIMPLE_FIELDS = {
     "firstname": "firstname",
@@ -109,6 +112,25 @@ async def update_checkin_partner(
     return Response(status_code=204)
 
 
+@pms_api_router.post(
+    "/folios/{folio_id}/checkin-partners/{checkin_partner_id}/document-scan",
+    tags=["checkin"],
+    response_model_exclude_unset=True,
+)
+async def scan_checkin_partner_document(
+    env: AuthenticatedEnv,
+    folio_id: int,
+    checkin_partner_id: int,
+    payload: DocumentScanInput,
+) -> CheckinDocumentData:
+    """Read an identity document with the property OCR. Nothing is saved."""
+    helper = env["pms_api_checkin.checkin_router.helper"].new()
+    try:
+        return helper.scan_document(folio_id, checkin_partner_id, payload)
+    except _CheckinProblem as problem:
+        return problem.response
+
+
 class PmsApiCheckinRouterHelper(models.AbstractModel):
     _name = "pms_api_checkin.checkin_router.helper"
     _description = "Pms api check-in Service Helper"
@@ -174,6 +196,14 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
                 field="documentType",
             )
         return category
+
+    @staticmethod
+    def _date_iso(value):
+        if isinstance(value, datetime):
+            return value.date().isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        return str(value)[:10]
 
     # Guests list
 
@@ -402,3 +432,67 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
                 field="signature",
             )
         return base64.b64encode(raw)
+
+    # Document scan
+
+    def scan_document(self, folio_id, checkin_partner_id, payload):
+        folio = self._get_folio(folio_id)
+        self._get_checkin_partner_or_404(folio, checkin_partner_id)
+        pms_property = folio.pms_property_id
+        supplier = pms_property.ocr_checkin_supplier
+        method_name = f"_{supplier}_document_process"
+        if not supplier or not hasattr(pms_property, method_name):
+            self._raise_problem(
+                422,
+                "/errors/ocr-not-available",
+                _("Document scan not available"),
+                _("The property has no document scanning service."),
+            )
+        try:
+            result = getattr(pms_property, method_name)(
+                payload.front, payload.back or False
+            )
+        except UserError:
+            result = {}
+        if not result:
+            self._raise_problem(
+                422,
+                "/errors/document-not-readable",
+                _("Document not readable"),
+                _("The document could not be read."),
+            )
+        return CheckinDocumentData(**self._scan_result_values(result))
+
+    def _scan_result_values(self, result):
+        env = self.env
+        country = env["res.country"]
+        values = {
+            "firstname": result.get("firstname"),
+            "lastname": result.get("lastname"),
+            "lastname2": result.get("lastname2"),
+            "documentNumber": result.get("document_number"),
+            "documentSupportNumber": result.get("document_support_number"),
+            "residenceStreet": result.get("residence_street"),
+            "residenceCity": result.get("residence_city"),
+            "zip": result.get("zip"),
+        }
+        for key, scan_key in (
+            ("nationality", "nationality"),
+            ("countryId", "country_id"),
+            ("documentCountryId", "document_country_id"),
+        ):
+            if result.get(scan_key):
+                values[key] = country.browse(result[scan_key]).code
+        if result.get("document_type"):
+            values["documentType"] = (
+                env["res.partner.id_category"].browse(result["document_type"]).code
+            )
+        if result.get("country_state"):
+            values["countryState"] = (
+                env["res.country.state"].browse(result["country_state"]).name
+            )
+        if result.get("gender") in GENDERS:
+            values["gender"] = result["gender"]
+        if result.get("birthdate"):
+            values["birthdate"] = self._date_iso(result["birthdate"])
+        return {k: v for k, v in values.items() if v}

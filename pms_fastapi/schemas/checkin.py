@@ -102,6 +102,11 @@ class CheckinPartnerUpdate(PmsBaseModel):
     )
 
 
+class DocumentScanInput(PmsBaseModel):
+    front: str = Field(description="JPEG image encoded in base64, no prefix.")
+    back: str | None = Field(None, description="Optional back side, same encoding.")
+
+
 class CheckinContext(PmsBaseModel):
     localization: str | None = Field(
         None, description="Lowercase ISO code of the property country."
