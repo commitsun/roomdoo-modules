@@ -2,6 +2,9 @@ from . import common
 from . import test_contacts
 from . import test_countries
 from . import test_folios
+from . import test_checkin_read
+from . import test_checkin_document_scan
+from . import test_checkin_update
 from . import test_folio_billing
 from . import test_folio_invoicing
 from . import test_invoices
