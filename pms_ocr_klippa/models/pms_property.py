@@ -289,8 +289,12 @@ class PmsProperty(models.Model):
 
         # If the document number exist and not get the complete checkin information
         # recovery the lost data from the found document
-        if mapped_data.get("document_number") and not all(
-            [mapped_data.get(field, False) for field in CHECKIN_FIELDS]
+        # Callers acting on behalf of one guest skip it so that the data of
+        # another partner is never returned
+        if (
+            not self.env.context.get("ocr_skip_document_lookup")
+            and mapped_data.get("document_number")
+            and not all([mapped_data.get(field, False) for field in CHECKIN_FIELDS])
         ):
             document = self.env["res.partner.id_number"].search(
                 [

@@ -449,9 +449,11 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
                 _("The property has no document scanning service."),
             )
         try:
-            result = getattr(pms_property, method_name)(
-                payload.front, payload.back or False
-            )
+            # The supplier must not complete the result with the data of other
+            # partners found by document number
+            result = getattr(
+                pms_property.with_context(ocr_skip_document_lookup=True), method_name
+            )(payload.front, payload.back or False)
         except UserError:
             result = {}
         if not result:

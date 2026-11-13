@@ -116,3 +116,18 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
         self.assertEqual(
             response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
         )
+
+    def test_scan_skips_the_document_lookup_of_the_supplier(self):
+        self._enable_test_ocr_supplier()
+        seen = []
+
+        def process(property_, front, back):
+            seen.append(property_.env.context.get("ocr_skip_document_lookup"))
+            return {"firstname": "Ann"}
+
+        with mock.patch.object(
+            PmsProperty, "_test_document_process", create=True, new=process
+        ):
+            response = self._post()
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(seen, [True])
