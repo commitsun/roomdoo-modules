@@ -295,9 +295,24 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
 
     # Update
 
+    def _check_not_read_only(self, cp):
+        # The stored state of a guest is not recomputed when its reservation is
+        # cancelled, so the reservation is checked as well
+        if cp.state in ("done", "cancel") or cp.reservation_id.state == "cancel":
+            self._raise_problem(
+                409,
+                "/errors/checkin-partner-read-only",
+                _("Check-in partner is read-only"),
+                _(
+                    "A guest that has left or whose reservation is cancelled "
+                    "cannot be modified."
+                ),
+            )
+
     def update_partner(self, folio_id, checkin_partner_id, payload):
         folio = self._get_folio(folio_id)
         cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
+        self._check_not_read_only(cp)
         data = payload.model_dump(exclude_unset=True)
         if not data:
             return
@@ -437,7 +452,8 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
 
     def scan_document(self, folio_id, checkin_partner_id, payload):
         folio = self._get_folio(folio_id)
-        self._get_checkin_partner_or_404(folio, checkin_partner_id)
+        cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
+        self._check_not_read_only(cp)
         pms_property = folio.pms_property_id
         supplier = pms_property.ocr_checkin_supplier
         method_name = f"_{supplier}_document_process"

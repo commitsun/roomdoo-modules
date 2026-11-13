@@ -131,3 +131,19 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
             response = self._post()
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertEqual(seen, [True])
+
+    def test_read_only_partner_is_409_and_never_reaches_the_supplier(self):
+        self._enable_test_ocr_supplier()
+        for state in ("done", "cancel"):
+            self.guest.state = state
+            with mock.patch.object(
+                PmsProperty, "_test_document_process", create=True
+            ) as process:
+                response = self._post()
+            self.assertEqual(
+                response.status_code, status.HTTP_409_CONFLICT, response.text
+            )
+            self.assertEqual(
+                response.json()["type"], "/errors/checkin-partner-read-only"
+            )
+            process.assert_not_called()

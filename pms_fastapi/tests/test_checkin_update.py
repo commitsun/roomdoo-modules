@@ -320,3 +320,23 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
             )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
         self.assertFalse(self.guest.firstname)
+
+    def test_done_and_cancelled_partners_are_read_only(self):
+        self.guest.write({"firstname": "Ann"})
+        for state in ("done", "cancel"):
+            self.guest.state = state
+            for payload in ({"firstname": "Bob"}, {}):
+                response = self._patch(payload)
+                self.assertEqual(
+                    response.status_code, status.HTTP_409_CONFLICT, response.text
+                )
+                self.assertEqual(
+                    response.json()["type"], "/errors/checkin-partner-read-only"
+                )
+                self.assertEqual(self.guest.firstname, "Ann")
+                self.assertFalse(self.guest.origin_input_data)
+
+    def test_cancelled_reservation_makes_its_partners_read_only(self):
+        self.reservation.action_cancel()
+        response = self._patch({"firstname": "Bob"})
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
