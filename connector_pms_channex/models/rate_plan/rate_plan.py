@@ -55,6 +55,13 @@ class ChannelChannexRatePlan(models.Model):
         ondelete="cascade",
     )
     external_id = fields.Char(string="Channex ID", readonly=True, copy=False)
+    channex_ari_held = fields.Json(
+        string="Held on Channex",
+        readonly=True,
+        copy=False,
+        help="What Channex holds of this rate plan night by night, as last "
+        "sent: only what differs from it is sent.",
+    )
     channex_to_remove = fields.Boolean(
         string="Being removed",
         readonly=True,

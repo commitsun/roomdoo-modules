@@ -2106,6 +2106,11 @@ msgid "Has Unreconciled Entries"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_held
+msgid "Held on Channex"
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_room_type__heterogeneous_capacity
 msgid "Heterogeneous Capacity"
 msgstr ""
@@ -4923,6 +4928,13 @@ msgstr ""
 msgid ""
 "What Channex calls the notification we registered. Kept so the same one is "
 "updated instead of piling up a new one every time."
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_held
+msgid ""
+"What Channex holds of this rate plan night by night, as last sent: only what"
+" differs from it is sent."
 msgstr ""
 
 #. module: connector_pms_channex
