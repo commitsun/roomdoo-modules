@@ -117,7 +117,7 @@ class FakeChannexServer:
 
     def age_out_of_feed(self, external_id):
         """Drop a revision from the feed while leaving it unacknowledged, which
-        is what Channex does to one half an hour after issuing it."""
+        Channex does not say it does and has been seen doing."""
         self._aged_out.add(external_id)
 
     def ignore_filter(self, field):

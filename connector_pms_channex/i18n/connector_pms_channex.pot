@@ -3608,6 +3608,13 @@ msgstr ""
 #. module: connector_pms_channex
 #: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
 msgid ""
+"Read every message Channex holds unacknowledged for this property, including"
+" those it no longer offers. Only for bookings missing after a long outage."
+msgstr ""
+
+#. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid ""
 "Read the messages Channex is holding for this property and queue one job per"
 " message. What became of each one shows up below as its job runs."
 msgstr ""
@@ -3620,6 +3627,11 @@ msgstr ""
 #. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__user_id
 msgid "Reception Manager"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid "Recover missing bookings"
 msgstr ""
 
 #. module: connector_pms_channex
@@ -4558,6 +4570,14 @@ msgstr ""
 msgid ""
 "This pricelist will be used, instead of the default one, for sales to the "
 "current partner"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid ""
+"This reads every message Channex holds unacknowledged for this property, "
+"however old. Use it only when bookings are missing after a long outage: "
+"Channex does not count a booking read this way as received. Continue?"
 msgstr ""
 
 #. module: connector_pms_channex
