@@ -29,6 +29,17 @@ def _channex_nights(room):
     return nights
 
 
+def _channex_guests(room):
+    """The adults and children of a room, as pms counts them.
+
+    Infants are left out: Channex counts them apart from children precisely
+    because they do not take a place, and pms has no third number to put them
+    in.
+    """
+    occupancy = room.get("occupancy") or {}
+    return occupancy.get("adults") or 1, occupancy.get("children") or 0
+
+
 #: Everything Channex can say about a booking. A message of any other status is
 #: recorded without one: this field is not the place to keep a word we do not
 #: understand, and the reason on the row says what the word was.
@@ -382,6 +393,9 @@ class ChannelChannexBookingRevision(models.Model):
                 problem = self._channex_price_problem(room)
                 if problem:
                     return problem
+                problem = self._channex_rate_plan_problem(backend, room)
+                if problem:
+                    return problem
             return self._channex_dropped_problem(backend, payload, rooms, binder)
 
     @api.model
@@ -474,8 +488,8 @@ class ChannelChannexBookingRevision(models.Model):
         """Whether every night of a room can be priced exactly as the OTA sold it.
 
         No price of an OTA booking is ever derived here. Either the message
-        carries the price of every night of the stay and that is what gets
-        written, or the message is not applied: a folio priced from our own
+        carries the price of every night of the stay and that is what the stay
+        costs, or the message is not applied: a folio priced from our own
         pricelist would be an invoice for money nobody agreed to.
 
         Asked of a booking coming in or being modified, and of nothing else. A
@@ -500,4 +514,42 @@ class ChannelChannexBookingRevision(models.Model):
             return _("The message gives %s away, and that price cannot be kept.") % (
                 ", ".join(free)
             )
+        return False
+
+    @api.model
+    def _channex_rate_plan_problem(self, backend, room):
+        """Whether a room was sold under a rate plan of ours, at a price that
+        pays for its board service.
+
+        The rate plan is what says which pricelist and board service the room
+        was sold under, and with them what is served and what calling the stay
+        off costs. One we do not have -- made by hand on Channex, or taken down
+        since -- says none of that, and guessing would be serving a board
+        service nobody sold, or charging for one.
+
+        Asked once the prices are known to cover the stay: the board service is
+        taken off each of them.
+        """
+        rate_plan = self.env["channel.channex.rate.plan"]._channex_booked(backend, room)
+        if not rate_plan:
+            return _("Rate plan %s is not one this property sells on Channex.") % (
+                room.get("rate_plan_id") or _("none")
+            )
+        adults, children = _channex_guests(room)
+        short = [
+            night
+            for night in _channex_nights(room)
+            if rate_plan._channex_room_price(
+                night, room["days"][night], adults, children
+            )
+            <= 0
+        ]
+        if short:
+            return _(
+                "The message prices %(nights)s at no more than the %(board)s "
+                "it includes."
+            ) % {
+                "nights": ", ".join(short),
+                "board": rate_plan.board_service_id.name,
+            }
         return False
