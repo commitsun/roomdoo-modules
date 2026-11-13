@@ -132,6 +132,18 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertEqual(seen, [True])
 
+    def test_oversize_images_are_422(self):
+        for payload in (
+            {"front": "A" * 1_500_001},
+            {"front": "ZnJvbnQ=", "back": "A" * 1_500_001},
+        ):
+            response = self._post(payload)
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                response.text,
+            )
+
     def test_read_only_partner_is_409_and_never_reaches_the_supplier(self):
         self._enable_test_ocr_supplier()
         for state in ("done", "cancel"):

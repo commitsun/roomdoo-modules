@@ -340,3 +340,9 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         self.reservation.action_cancel()
         response = self._patch({"firstname": "Bob"})
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT, response.text)
+
+    def test_oversize_signature_is_422(self):
+        response = self._patch({"signature": "A" * 500_001})
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )

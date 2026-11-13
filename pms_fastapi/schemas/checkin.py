@@ -98,13 +98,21 @@ class CheckinPartnerUpdate(PmsBaseModel):
     email: str | None = None
     mobile: str | None = None
     signature: str | None = Field(
-        None, description="PNG image encoded in base64, without data: prefix."
+        None,
+        max_length=500_000,
+        description="PNG image encoded in base64, without data: prefix.",
     )
 
 
 class DocumentScanInput(PmsBaseModel):
-    front: str = Field(description="JPEG image encoded in base64, no prefix.")
-    back: str | None = Field(None, description="Optional back side, same encoding.")
+    front: str = Field(
+        max_length=1_500_000, description="JPEG image encoded in base64, no prefix."
+    )
+    back: str | None = Field(
+        None,
+        max_length=1_500_000,
+        description="Optional back side, same encoding.",
+    )
 
 
 class CheckinContext(PmsBaseModel):
