@@ -20,14 +20,6 @@ class ChannelChannexPmsRoomTypeExporter(Component):
             return True
         return super()._has_to_skip()
 
-    def _export_dependencies(self):
-        """Channex needs the property to exist before its room types."""
-        self._export_dependency(
-            self.binding.backend_id.pms_property_id,
-            "channel.channex.pms.property",
-        )
-        return super()._export_dependencies()
-
     def _after_export(self):
         """A room type that has just reached Channex has no availability there
         yet, and one whose rooms changed has a different one: either way, the
