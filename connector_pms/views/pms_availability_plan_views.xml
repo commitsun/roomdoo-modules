@@ -14,16 +14,11 @@
             string="Connectors"
             name="connector"
             groups="connector.group_connector_manager"
+            attrs="{'invisible': [('channel_can_connect', '=', False), ('channel_connection_state', '!=', 'connected')]}"
           >
                         <group name="channel_connect">
-                            <field
-                name="channel_connection_state"
-                widget="badge"
-              />
-                            <field
-                name="channel_backend_ids"
-                widget="many2many_tags"
-              />
+                            <field name="channel_connection_state" widget="badge" />
+                            <field name="channel_backend_ids" widget="many2many_tags" />
                             <field name="channel_can_connect" invisible="1" />
                             <div>
                                 <button
