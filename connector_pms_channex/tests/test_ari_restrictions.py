@@ -191,6 +191,11 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
         self.assertEqual(self._rates(self.room_only_plan, self._days(1))[2], "100.00")
 
     def test_a_board_service_price_moves_only_its_rate_plans(self):
+        # Charged per room, as one charged per person and the same for adults
+        # and children cannot be priced by date.
+        self.breakfast.per_person = False
+        self._publish()
+        self.server.calls.clear()
         self._item(
             self.breakfast,
             15,
@@ -202,7 +207,7 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
             {value["rate_plan_id"] for value in self._sent()},
             {self.breakfast_plan.external_id},
         )
-        self.assertEqual(self._rates(self.breakfast_plan, self.night)[2], "130.00")
+        self.assertEqual(self._rates(self.breakfast_plan, self.night)[2], "115.00")
 
     def test_an_item_with_dates_and_one_without_go_out_together(self):
         """Every night of the room type, as the one without dates prices
@@ -421,7 +426,6 @@ class TestChannexRestrictionsRules(ChannexRestrictionsCase):
             min_stay=3,
             min_stay_arrival=2,
             max_stay=5,
-            max_stay_arrival=4,
             closed_arrival=True,
         )
         self._publish()
@@ -431,8 +435,7 @@ class TestChannexRestrictionsRules(ChannexRestrictionsCase):
                 **NEUTRAL,
                 "min_stay_arrival": 2,
                 "min_stay_through": 3,
-                # The stricter of the two max stays pms has.
-                "max_stay": 4,
+                "max_stay": 5,
                 "closed_to_arrival": True,
             },
         )

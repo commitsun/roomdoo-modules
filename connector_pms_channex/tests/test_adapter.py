@@ -5,7 +5,10 @@
 of failure is classified. Getting that wrong either fills the queue with jobs
 that can never succeed, or silently drops updates that only needed a retry."""
 
+from unittest.mock import patch
+
 from odoo.tests.common import tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.connector.exception import IDMissingInBackend
 from odoo.addons.connector_pms_channex.components.adapter import ChannexAPIError
@@ -223,3 +226,22 @@ class TestChannexAdapter(ChannexConnectorCase):
         self.assertTrue(
             self._adapter(PROPERTIES).create({"title": "New", "currency": "EUR"})
         )
+
+    def test_losing_the_race_to_start_the_accounting_retries_the_call(self):
+        """Another job made the endpoint's row after this one started: the row
+        is in the table, but not in what this transaction can read."""
+        Method = self.env["channel.backend.method"]
+        Method.create(
+            {
+                "name": "GET /properties",
+                "backend_type_id": self.backend.backend_type_id.id,
+            }
+        )
+        with patch.object(
+            type(Method), "search", return_value=Method.browse()
+        ), mute_logger("odoo.sql_db"), self.assertRaises(RetryableJobError) as caught:
+            self._adapter(PROPERTIES).search_read([])
+        self.assertTrue(caught.exception.ignore_retry)
+        self.assertFalse(self.server.calls_to("GET"))
+        # Only the insert was undone: the transaction is still usable.
+        self.assertEqual(Method.search_count([("name", "=", "GET /properties")]), 1)

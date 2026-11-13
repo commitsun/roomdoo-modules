@@ -14,5 +14,6 @@ from . import test_iframe
 from . import test_listeners
 from . import test_masters
 from . import test_rate_plans
+from . import test_sold_limits
 from . import test_sync_all
 from . import test_webhook

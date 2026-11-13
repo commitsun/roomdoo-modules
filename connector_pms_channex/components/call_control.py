@@ -11,6 +11,9 @@ the start rather than added later.
 import datetime
 import logging
 
+import psycopg2
+from psycopg2 import errorcodes
+
 from odoo import _, fields
 
 from odoo.addons.queue_job.exception import RetryableJobError
@@ -30,6 +33,11 @@ DEFAULT_LIMITS = {
     "POST /restrictions": (10, 60),
 }
 
+#: Seconds before a call that lost the race to create its method row tries
+#: again. It only learns it lost once the winner has committed, so by then the
+#: row is there for a new transaction to read.
+METHOD_RACE_RETRY_SECONDS = 2
+
 
 class ChannexCallControl:
     def __init__(self, adapter, funcname, arguments):
@@ -47,23 +55,43 @@ class ChannexCallControl:
         return self.adapter.backend_record.parent_id
 
     def _method(self, funcname):
+        """The row that accounts for the calls to this endpoint, made the first
+        time the endpoint is called.
+
+        Two jobs calling an endpoint for the first time at once both miss the
+        row and both create it, and the second insert breaks the unique key.
+        The row the other job committed cannot be read from this transaction,
+        which only sees what was there when it started, so the job is retried
+        instead of failed: the next attempt finds the row. Losing that race is
+        not a failure, so it does not spend a retry.
+        """
         Method = self.adapter.env["channel.backend.method"]
         backend_type = self.adapter.backend_record.backend_type_id
         method = Method.search(
             [("name", "=", funcname), ("backend_type_id", "=", backend_type.id)],
             limit=1,
         )
-        if not method:
-            max_calls, time_window = DEFAULT_LIMITS.get(funcname, (0, 0))
-            method = Method.create(
-                {
-                    "name": funcname,
-                    "backend_type_id": backend_type.id,
-                    "max_calls": max_calls,
-                    "time_window": time_window,
-                }
-            )
-        return method
+        if method:
+            return method
+        max_calls, time_window = DEFAULT_LIMITS.get(funcname, (0, 0))
+        try:
+            with self.adapter.env.cr.savepoint():
+                return Method.create(
+                    {
+                        "name": funcname,
+                        "backend_type_id": backend_type.id,
+                        "max_calls": max_calls,
+                        "time_window": time_window,
+                    }
+                )
+        except psycopg2.IntegrityError as err:
+            if err.pgcode != errorcodes.UNIQUE_VIOLATION:
+                raise
+            raise RetryableJobError(
+                _("Another job is starting the call accounting of %s.") % funcname,
+                seconds=METHOD_RACE_RETRY_SECONDS,
+                ignore_retry=True,
+            ) from err
 
     def _calls_domain(self):
         window_start = self.exec_timestamp - datetime.timedelta(
