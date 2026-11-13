@@ -40,12 +40,36 @@ class PmsInventoryRule(models.Model):
                 rule.date_to,
             )
 
+    def _channex_stage_channel_caps(self):
+        """Publish again what agencies have set aside where these rules apply.
+
+        Rules of every scope: one of an agency or a sale channel is the cap
+        itself, and one of the property decides whether the agency's is any
+        stricter.
+        """
+        for rule in self:
+            stage_ari(
+                self.env,
+                "channel_caps",
+                (
+                    rule.pms_property_id.id,
+                    rule.agency_id.id or None,
+                    rule.room_type_id.id,
+                ),
+                rule.date_from,
+                rule.date_to,
+            )
+
+    def _channex_stage(self):
+        self._channex_stage_availability()
+        self._channex_stage_channel_caps()
+
     def write(self, vals):
         if INVENTORY_FIELDS & set(vals) and not self.env.context.get(
             "connector_no_export"
         ):
             # A rule shortened, moved to other dates or another room type, or
-            # taken out of the general scope stops capping nights the listener
-            # cannot see any more: they are read here, before they go.
-            self._channex_stage_availability()
+            # moved to another scope stops capping nights the listener cannot
+            # see any more: they are read here, before they go.
+            self._channex_stage()
         return super().write(vals)

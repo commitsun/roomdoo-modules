@@ -93,6 +93,9 @@ class ChannelChannexBackend(models.Model):
         """
         self.ensure_one()
         stage_ari(self.env, "availability", (self.pms_property_id.id, None))
+        # What the agencies have set aside is availability too, by channel. Only
+        # the rules that differ from what Channex has are sent.
+        stage_ari(self.env, "channel_caps", (self.pms_property_id.id, None, None))
         return self._notify(
             _("The availability of every room type is queued for Channex.")
         )
@@ -105,11 +108,10 @@ class ChannelChannexBackend(models.Model):
             if not backend._channex_bound_property_id():
                 continue
             last = backend._channex_ari_horizon()[1]
+            first_new = last - datetime.timedelta(days=HORIZON_TOPUP_NIGHTS - 1)
+            property_id = backend.pms_property_id.id
+            stage_ari(self.env, "availability", (property_id, None), first_new, last)
             stage_ari(
-                self.env,
-                "availability",
-                (backend.pms_property_id.id, None),
-                last - datetime.timedelta(days=HORIZON_TOPUP_NIGHTS - 1),
-                last,
+                self.env, "channel_caps", (property_id, None, None), first_new, last
             )
         return True

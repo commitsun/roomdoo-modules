@@ -8,8 +8,9 @@ from .pms_inventory_rule import INVENTORY_FIELDS
 
 
 class ChannelChannexPmsInventoryRuleListener(Component):
-    """The inventory declared for a property caps its availability, and lives
-    in a model nothing else watched: this is what tells Channex a cap moved."""
+    """The inventory declared for a property caps its availability, and the one
+    declared for an agency or a sale channel caps what they sell. It lives in a
+    model nothing else watched: this is what tells Channex a cap moved."""
 
     _name = "channel.channex.pms.inventory.rule.listener"
     _inherit = "base.connector.listener"
@@ -17,14 +18,14 @@ class ChannelChannexPmsInventoryRuleListener(Component):
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_create(self, record, fields=None):
-        record._channex_stage_availability()
+        record._channex_stage()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_write(self, record, fields=None):
         if fields and set(fields) & INVENTORY_FIELDS:
-            record._channex_stage_availability()
+            record._channex_stage()
 
     @skip_if(lambda self, record, **kwargs: self.no_connector_export(record))
     def on_record_unlink(self, record, fields=None):
         # Read before the rule is gone: deleting it lifts its cap.
-        record._channex_stage_availability()
+        record._channex_stage()
