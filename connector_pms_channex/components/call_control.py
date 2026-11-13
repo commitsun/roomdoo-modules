@@ -17,14 +17,27 @@ from odoo.addons.queue_job.exception import RetryableJobError
 
 _logger = logging.getLogger(__name__)
 
+#: Logged instead of a call while exports are disabled. Nothing reached
+#: Channex, so these rows do not count towards the limit.
+SKIPPED = "skipped"
+
+#: Channex's documented limits, per property and endpoint: ten calls a minute
+#: to each of the two ARI endpoints. Set on the method row the first time it is
+#: seen, so an installation is paced from its very first call instead of from
+#: the day someone remembers to configure it. Anything else stays unlimited.
+DEFAULT_LIMITS = {
+    "POST /availability": (10, 60),
+    "POST /restrictions": (10, 60),
+}
+
 
 class ChannexCallControl:
     def __init__(self, adapter, funcname, arguments):
         self.adapter = adapter
+        self.funcname = funcname
         self.arguments = arguments
         self.exec_timestamp = fields.Datetime.now()
         self.method = self._method(funcname)
-        self._check_limit(funcname)
 
     @property
     def _log_backend(self):
@@ -41,39 +54,76 @@ class ChannexCallControl:
             limit=1,
         )
         if not method:
+            max_calls, time_window = DEFAULT_LIMITS.get(funcname, (0, 0))
             method = Method.create(
-                {"name": funcname, "backend_type_id": backend_type.id}
+                {
+                    "name": funcname,
+                    "backend_type_id": backend_type.id,
+                    "max_calls": max_calls,
+                    "time_window": time_window,
+                }
             )
         return method
 
-    def _check_limit(self, funcname):
-        if not (self.method.max_calls > 0 and self.method.time_window > 0):
-            return
+    def _calls_domain(self):
         window_start = self.exec_timestamp - datetime.timedelta(
             seconds=self.method.time_window
         )
-        calls = self.adapter.env["channel.backend.log"].search_count(
-            [
-                ("backend_id", "=", self._log_backend.id),
-                ("method_id", "=", self.method.id),
-                ("timestamp", ">=", window_start),
-            ]
-        )
-        if calls >= self.method.max_calls:
-            # Deliberately retryable: a traffic spike must delay the job, not
-            # fail it, or a burst would drop updates on the floor.
-            raise RetryableJobError(
-                _(
-                    "Channex rate limit reached for %(function)s: %(calls)s calls "
-                    "in the last %(seconds)s seconds"
-                )
-                % {
-                    "function": funcname,
-                    "calls": calls,
-                    "seconds": self.method.time_window,
-                },
-                seconds=self.method.time_window,
+        return [
+            ("backend_id", "=", self._log_backend.id),
+            ("method_id", "=", self.method.id),
+            ("timestamp", ">=", window_start),
+            ("response_code", "!=", SKIPPED),
+        ]
+
+    def check(self):
+        """Refuse the call if it would go over the limit.
+
+        Separate from the constructor because a call that is skipped -- exports
+        disabled -- never reaches Channex and must not be refused for a limit it
+        does not consume.
+
+        Being over the limit is a "not yet", not a "never": the oldest call in
+        the window falls out of it on its own and the same call goes through. So
+        it is retryable, and it does not spend the job's retries, because being
+        paced is not a failure. The delay is a range rather than the exact
+        expiry: every job refused within the same window computes the same
+        expiry, and they would all wake up together for a single free slot.
+        """
+        if not (self.method.max_calls > 0 and self.method.time_window > 0):
+            return
+        domain = self._calls_domain()
+        calls = self.adapter.env["channel.backend.log"].search_count(domain)
+        if calls < self.method.max_calls:
+            return
+        wait = self._seconds_until_a_call_expires(domain)
+        raise RetryableJobError(
+            _(
+                "Channex rate limit reached for %(function)s: %(calls)s calls "
+                "in the last %(seconds)s seconds"
             )
+            % {
+                "function": self.funcname,
+                "calls": calls,
+                "seconds": self.method.time_window,
+            },
+            seconds=(wait, wait + self.method.time_window),
+            ignore_retry=True,
+        )
+
+    def _seconds_until_a_call_expires(self, domain):
+        """How long until the oldest call in the window leaves it.
+
+        One second more because the window boundary is inclusive: retrying at
+        the exact expiry would still count that call.
+        """
+        oldest = self.adapter.env["channel.backend.log"].search(
+            domain, order="timestamp asc", limit=1
+        )
+        if not oldest:
+            return self.method.time_window
+        elapsed = (self.exec_timestamp - oldest.timestamp).total_seconds()
+        return max(1, int(self.method.time_window - elapsed) + 1)
 
     def add_result(self, response_code, response):
         self.adapter.env["channel.backend.log"].create(

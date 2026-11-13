@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<!-- Each kind of work on its own channel. Bookings are what a guest is
+     waiting on and must not queue behind a full publication of rates, and the
+     masters are rare and slow. -->
+<odoo noupdate="0">
+    <!-- masters -->
+    <record id="job_function_room_type_channex_sync" model="queue.job.function">
+        <field name="model_id" ref="pms.model_pms_room_type" />
+        <field name="method">channex_sync</field>
+        <field name="channel_id" ref="channel_channex_masters" />
+    </record>
+    <record
+    id="job_function_room_type_binding_export_record"
+    model="queue.job.function"
+  >
+        <field name="model_id" ref="model_channel_channex_pms_room_type" />
+        <field name="method">export_record</field>
+        <field name="channel_id" ref="channel_channex_masters" />
+    </record>
+    <record
+    id="job_function_room_type_binding_export_delete_record"
+    model="queue.job.function"
+  >
+        <field name="model_id" ref="model_channel_channex_pms_room_type" />
+        <field name="method">export_delete_record</field>
+        <field name="channel_id" ref="channel_channex_masters" />
+    </record>
+    <record id="job_function_property_binding_export_record" model="queue.job.function">
+        <field name="model_id" ref="model_channel_channex_pms_property" />
+        <field name="method">export_record</field>
+        <field name="channel_id" ref="channel_channex_masters" />
+    </record>
+    <!-- bookings -->
+    <record id="job_function_backend_import_booking_feed" model="queue.job.function">
+        <field name="model_id" ref="model_channel_channex_backend" />
+        <field name="method">channex_import_booking_feed</field>
+        <field name="channel_id" ref="channel_channex_bookings" />
+    </record>
+    <record
+    id="job_function_backend_import_booking_revisions"
+    model="queue.job.function"
+  >
+        <field name="model_id" ref="model_channel_channex_backend" />
+        <field name="method">channex_import_booking_revisions</field>
+        <field name="channel_id" ref="channel_channex_bookings" />
+    </record>
+    <record id="job_function_booking_revision_take_message" model="queue.job.function">
+        <field name="model_id" ref="model_channel_channex_booking_revision" />
+        <field name="method">channex_take_message</field>
+        <field name="channel_id" ref="channel_channex_bookings" />
+    </record>
+    <record id="job_function_booking_revision_acknowledge" model="queue.job.function">
+        <field name="model_id" ref="model_channel_channex_booking_revision" />
+        <field name="method">channex_acknowledge</field>
+        <field name="channel_id" ref="channel_channex_bookings" />
+    </record>
+    <!-- availability, rates and restrictions -->
+    <record id="job_function_backend_send_ari" model="queue.job.function">
+        <field name="model_id" ref="model_channel_channex_backend" />
+        <field name="method">channex_send_ari</field>
+        <field name="channel_id" ref="channel_channex_ari" />
+    </record>
+</odoo>

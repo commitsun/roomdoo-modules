@@ -97,6 +97,23 @@
                             </div>
                             <field name="channel_ids" nolabel="1" readonly="1" />
                         </page>
+                        <page string="Availability, rates and restrictions" name="ari">
+                            <div class="mb-2">
+                                <button
+                  name="action_channex_publish_availability"
+                  type="object"
+                  string="Publish all availability"
+                  class="btn-secondary"
+                  confirm="This sends the availability of every room type for the whole window. Channex allows it once a day at most: it is meant for setting a property going or putting it right, not as a routine."
+                  help="What Channex calls a full sync. Changes are published on their own as they happen."
+                />
+                            </div>
+                            <field
+                name="channex_ari_warning_ids"
+                nolabel="1"
+                readonly="1"
+              />
+                        </page>
                         <page string="Bookings" name="bookings">
                             <div class="mb-2">
                                 <button
@@ -114,6 +131,33 @@
               />
                         </page>
                     </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="channel_channex_ari_warning_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.ari.warning.tree</field>
+        <field name="model">channel.channex.ari.warning</field>
+        <field name="arch" type="xml">
+            <tree string="Refused by Channex" create="false">
+                <field name="create_date" string="Sent" />
+                <field name="kind" />
+                <field name="count" />
+            </tree>
+        </field>
+    </record>
+    <record id="channel_channex_ari_warning_view_form" model="ir.ui.view">
+        <field name="name">channel.channex.ari.warning.form</field>
+        <field name="model">channel.channex.ari.warning</field>
+        <field name="arch" type="xml">
+            <form string="Refused by Channex" create="false">
+                <sheet>
+                    <group>
+                        <field name="create_date" string="Sent" />
+                        <field name="kind" />
+                        <field name="count" />
+                    </group>
+                    <field name="warnings" />
                 </sheet>
             </form>
         </field>
