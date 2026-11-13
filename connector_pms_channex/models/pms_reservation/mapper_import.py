@@ -83,15 +83,26 @@ class ChannelChannexPmsReservationMapperImport(Component):
     def reservation_line_ids(self, record):
         """One line per night of the stay, priced as the OTA sold it.
 
-        The nights come from the stay and the prices from the breakdown, and the
-        two are known to agree: a message whose breakdown does not cover its own
+        For a booking coming in or being modified the nights and the breakdown
+        are known to agree: a message whose breakdown does not cover its own
         stay exactly is reported on the revision and never reaches here. Nothing
         is derived, defaulted or completed.
+
+        A cancellation is the exception, and only because nothing is allowed to
+        hold one up. A night it leaves unpriced still gets its line, with the
+        date and no more, exactly as pms fills one in, and pms prices it from
+        the pricelist. It is a price nobody will ever be charged: the stay is
+        not happening.
+
+        The line has to be there even so. pms works the nights of a reservation
+        out from the stay only as long as nothing states them, and stating some
+        of them leaves the rest uncomputed and the reservation refused.
         """
-        days = record["days"]
-        return {
-            "reservation_line_ids": [
-                (0, 0, {"date": night, "price": float(days[night])})
-                for night in _channex_nights(record)
-            ]
-        }
+        days = record.get("days") or {}
+        lines = []
+        for night in _channex_nights(record):
+            line = {"date": night}
+            if night in days:
+                line["price"] = float(days[night])
+            lines.append((0, 0, line))
+        return {"reservation_line_ids": lines}

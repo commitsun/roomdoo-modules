@@ -211,6 +211,70 @@ class ChannexBookingCase(ChannexFeedCase):
             [("backend_id", "=", self.backend.id)]
         )
 
+    def _invoice(self, folio):
+        """Invoice the folio for real: what the guard reads is ``move_ids``, and
+        that is computed from the invoice lines of the folio's own sale lines."""
+        receivable = self._setup_accounting()
+        folio.partner_id = (
+            self.env["res.partner"]
+            .with_company(self.company)
+            .create(
+                {"name": "A guest", "property_account_receivable_id": receivable.id}
+            )
+        )
+        return folio._create_invoices(partner_invoice_id=folio.partner_id.id)
+
+    def _setup_accounting(self):
+        """A company created by a test has no chart of accounts, and an invoice
+        needs the little of one that it touches."""
+        accounts = self.env["account.account"]
+        income = accounts.create(
+            {
+                "name": "Channex income",
+                "code": "CHX700",
+                "account_type": "income",
+                "company_id": self.company.id,
+            }
+        )
+        receivable = accounts.create(
+            {
+                "name": "Channex receivable",
+                "code": "CHX430",
+                "account_type": "asset_receivable",
+                "reconcile": True,
+                "company_id": self.company.id,
+            }
+        )
+        # pms picks the journal off the property, and the two it looks for are
+        # these: whom the invoice is for decides which.
+        journals = self.env["account.journal"].create(
+            [
+                {
+                    "name": "Channex invoices",
+                    "code": "CHXI",
+                    "type": "sale",
+                    "company_id": self.company.id,
+                },
+                {
+                    "name": "Channex simplified invoices",
+                    "code": "CHXSI",
+                    "type": "sale",
+                    "is_simplified_invoice": True,
+                    "company_id": self.company.id,
+                },
+            ]
+        )
+        self.pms_property.write(
+            {
+                "journal_normal_invoice_id": journals[0].id,
+                "journal_simplified_invoice_id": journals[1].id,
+            }
+        )
+        self.room_type.product_id.with_company(
+            self.company
+        ).property_account_income_id = income
+        return receivable
+
 
 @tagged("post_install", "-at_install")
 class TestChannexBookingImport(ChannexBookingCase):
@@ -340,11 +404,14 @@ class TestChannexBookingImport(ChannexBookingCase):
         self.assertEqual(revision.state, "error")
         self.assertIn("not-mapped", revision.error)
 
-    def test_a_cancellation_is_not_taken_in_yet(self):
-        self._seed_booking(status="cancelled")
-        self._import()
+    def test_a_message_of_an_unknown_status_is_reported(self):
+        """Channex has three, and a fourth would mean something we have not been
+        told about. Reported rather than guessed at."""
+        self._seed_booking(status="reinstated")
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
         self.assertFalse(self._folios())
         self.assertEqual(self._revision().state, "error")
+        self.assertIn("reinstated", self._revision().error)
 
     def test_a_modification_of_a_booking_we_never_saw_becomes_a_folio(self):
         """A modification is a whole snapshot of the booking, not a diff, so it
@@ -353,14 +420,6 @@ class TestChannexBookingImport(ChannexBookingCase):
         self._seed_booking(status="modified")
         self.assertEqual(self._import(), {"total": 1, "queued": 1})
         self.assertEqual(len(self._folios().odoo_id.reservation_ids), 1)
-
-    def test_a_message_cancelling_every_room_is_not_applied(self):
-        """A modification that cancels all of its rooms is a cancellation by
-        another name."""
-        self._seed_booking(status="modified", rooms=[self._room(is_cancelled=True)])
-        self._import()
-        self.assertFalse(self._folios())
-        self.assertEqual(self._revision().state, "error")
 
     def test_a_message_with_no_booking_id_is_reported(self):
         self._seed_booking(booking_id=None)
@@ -628,72 +687,8 @@ class TestChannexBookingModification(ChannexBookingCase):
 
     # -- money already on paper --------------------------------------------
 
-    def _invoice(self):
-        """Invoice the folio for real: what the guard reads is ``move_ids``, and
-        that is computed from the invoice lines of the folio's own sale lines."""
-        receivable = self._setup_accounting()
-        self.folio.partner_id = (
-            self.env["res.partner"]
-            .with_company(self.company)
-            .create(
-                {"name": "A guest", "property_account_receivable_id": receivable.id}
-            )
-        )
-        return self.folio._create_invoices(partner_invoice_id=self.folio.partner_id.id)
-
-    def _setup_accounting(self):
-        """A company created by a test has no chart of accounts, and an invoice
-        needs the little of one that it touches."""
-        accounts = self.env["account.account"]
-        income = accounts.create(
-            {
-                "name": "Channex income",
-                "code": "CHX700",
-                "account_type": "income",
-                "company_id": self.company.id,
-            }
-        )
-        receivable = accounts.create(
-            {
-                "name": "Channex receivable",
-                "code": "CHX430",
-                "account_type": "asset_receivable",
-                "reconcile": True,
-                "company_id": self.company.id,
-            }
-        )
-        # pms picks the journal off the property, and the two it looks for are
-        # these: whom the invoice is for decides which.
-        journals = self.env["account.journal"].create(
-            [
-                {
-                    "name": "Channex invoices",
-                    "code": "CHXI",
-                    "type": "sale",
-                    "company_id": self.company.id,
-                },
-                {
-                    "name": "Channex simplified invoices",
-                    "code": "CHXSI",
-                    "type": "sale",
-                    "is_simplified_invoice": True,
-                    "company_id": self.company.id,
-                },
-            ]
-        )
-        self.pms_property.write(
-            {
-                "journal_normal_invoice_id": journals[0].id,
-                "journal_simplified_invoice_id": journals[1].id,
-            }
-        )
-        self.room_type.product_id.with_company(
-            self.company
-        ).property_account_income_id = income
-        return receivable
-
     def test_an_invoiced_folio_holds_up_the_change(self):
-        invoice = self._invoice()
+        invoice = self._invoice(self.folio)
         invoice.action_post()
         self._seed_modification(
             rooms=[self._room(days={"2026-11-13": "70.00", "2026-11-14": "80.00"})]
@@ -708,7 +703,7 @@ class TestChannexBookingModification(ChannexBookingCase):
 
     def test_a_draft_invoice_is_deleted_and_the_change_applied(self):
         """It says what was sold before the change, so it cannot stand."""
-        invoice = self._invoice()
+        invoice = self._invoice(self.folio)
         self.assertEqual(invoice.state, "draft")
         self._seed_modification(
             rooms=[self._room(days={"2026-11-13": "70.00", "2026-11-14": "80.00"})]
@@ -720,6 +715,235 @@ class TestChannexBookingModification(ChannexBookingCase):
             self.reservation.reservation_line_ids.sorted("date").mapped("price"),
             [70.0, 80.0],
         )
+
+
+@tagged("post_install", "-at_install")
+class TestChannexBookingCancellation(ChannexBookingCase):
+    """A booking called off at the OTA.
+
+    Channex says so in the status of the message and nowhere else: the rooms of
+    a cancellation come over with their dates and their prices and their
+    ``is_cancelled`` false, which is checked against staging and not assumed. So
+    a cancellation is not a snapshot to write, it is a state to reach -- and it
+    has to reach it whatever the message looks like, because a cancellation that
+    does not land is a room the hotel keeps blocked and a guest charged for a
+    stay they called off.
+    """
+
+    def _seed_cancellation(self, external_id="r2", **values):
+        return self._seed_booking(
+            external_id=external_id,
+            status="cancelled",
+            inserted_at="2026-11-12T18:20:00.000000",
+            **values,
+        )
+
+    def _booked(self):
+        """The booking, sold and in the folio, before anyone calls it off."""
+        self._seed_booking()
+        self._import()
+        folio = self._folios().odoo_id
+        return folio, folio.reservation_ids
+
+    def _cancelation_rule(self):
+        """The hotel's own terms for this pricelist, which is what a guest
+        cancelling is charged by."""
+        rule = self.env["pms.cancelation.rule"].create(
+            {
+                "name": "Channex CR",
+                # Every cancellation of these tests falls inside the window.
+                "days_intime": 3650,
+                "penalty_late": 100,
+                "apply_on_late": "first",
+            }
+        )
+        self.pricelist.cancelation_rule_id = rule
+        return rule
+
+    # -- a booking the hotel has -------------------------------------------
+
+    def test_the_booking_is_cancelled(self):
+        folio, reservation = self._booked()
+        self._seed_cancellation()
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(reservation.state, "cancel")
+        self.assertEqual(folio.state, "cancel")
+        self.assertEqual(self._revision("r2").state, "applied")
+
+    def test_the_guest_is_charged_by_the_rule_of_the_pricelist(self):
+        """Not cancelled as ``modified``: that reason is for a reservation our
+        own import supersedes, and it is what tells pms to charge nothing. A
+        guest calling off a stay is charged whatever the hotel said they would
+        be."""
+        self._cancelation_rule()
+        folio, reservation = self._booked()
+        self._seed_cancellation()
+        self._import()
+        self.assertEqual(reservation.cancelled_reason, "late")
+        penalty = folio.service_ids.filtered(lambda s: s.reservation_id == reservation)
+        self.assertEqual(len(penalty), 1)
+        self.assertEqual(penalty.service_line_ids.price_unit, 76.5)
+
+    def test_the_folio_is_left_pointing_at_the_cancellation(self):
+        """So a message delivered after it cannot bring the booking back."""
+        self._booked()
+        self._seed_cancellation()
+        self._import()
+        binding = self._folios()
+        self.assertEqual(binding.revision_external_id, "r2")
+        self.assertEqual(str(binding.revision_inserted_at), "2026-11-12 18:20:00")
+
+    def test_the_prices_the_hotel_sold_at_are_not_touched(self):
+        """Channex hands cancelled bookings of some OTAs over with their rates
+        zeroed, and the prices in the folio are what the charge is worked out
+        from. A cancellation restates nothing."""
+        folio, reservation = self._booked()
+        self._seed_cancellation(
+            rooms=[self._room(days={"2026-11-13": "0.00", "2026-11-14": "0.00"})]
+        )
+        self._import()
+        self.assertEqual(
+            reservation.reservation_line_ids.sorted("date").mapped("price"),
+            [76.5, 76.5],
+        )
+        self.assertEqual(reservation.state, "cancel")
+
+    def test_the_stay_is_not_restated_either(self):
+        folio, reservation = self._booked()
+        self._seed_cancellation(
+            rooms=[
+                self._room(
+                    checkout_date="2026-11-20",
+                    days={f"2026-11-{day}": "10.00" for day in range(13, 20)},
+                )
+            ]
+        )
+        self._import()
+        self.assertEqual(folio.reservation_ids, reservation)
+        self.assertEqual(str(reservation.checkout), "2026-11-15")
+
+    def test_a_breakdown_that_does_not_add_up_still_cancels(self):
+        """The same message as a new booking would be refused. Nothing is
+        allowed to hold up a cancellation, least of all a price nobody is
+        going to be charged."""
+        folio, reservation = self._booked()
+        self._seed_cancellation(rooms=[self._room(days={"2026-11-13": "76.50"})])
+        self._import()
+        self.assertEqual(self._revision("r2").state, "applied")
+        self.assertEqual(reservation.state, "cancel")
+
+    def test_a_modification_that_cancels_every_room_is_a_cancellation(self):
+        """It says the same thing the other way round."""
+        folio, reservation = self._booked()
+        self._cancelation_rule()
+        self._seed_booking(
+            external_id="r2",
+            status="modified",
+            inserted_at="2026-11-12T18:20:00.000000",
+            rooms=[self._room(is_cancelled=True)],
+        )
+        self._import()
+        self.assertEqual(self._revision("r2").state, "applied")
+        self.assertEqual(folio.state, "cancel")
+        self.assertEqual(reservation.cancelled_reason, "late")
+
+    def test_a_stay_already_under_way_is_not_cancelled(self):
+        """pms refuses to cancel a stay the guest is in or has already had, and
+        nobody is taken out of a room by a message: it is reported and a person
+        decides."""
+        folio, reservation = self._booked()
+        reservation.state = "done"
+        self._seed_cancellation()
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(self._revision("r2").state, "error")
+        self.assertEqual(reservation.state, "done")
+        self.assertNotEqual(folio.state, "cancel")
+
+    # -- a booking the hotel does not have ---------------------------------
+
+    def test_a_cancellation_of_a_booking_we_never_saw_still_lands(self):
+        """Its first message was acknowledged before this connector existed, or
+        the job carrying it has not run yet. Either way the hotel has to see the
+        cancellation: we reflect what the OTA sold, we do not decide which
+        bookings existed."""
+        self._seed_cancellation(external_id="r1")
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        binding = self._folios()
+        self.assertEqual(len(binding), 1)
+        self.assertEqual(binding.external_id, "b1")
+        folio = binding.odoo_id
+        self.assertEqual(folio.state, "cancel")
+        self.assertEqual(folio.partner_name, "Channex, User")
+        self.assertEqual(len(folio.reservation_ids), 1)
+        self.assertEqual(folio.reservation_ids.state, "cancel")
+        self.assertEqual(
+            folio.reservation_ids.reservation_line_ids.sorted("date").mapped("price"),
+            [76.5, 76.5],
+        )
+
+    def test_it_lands_even_with_no_prices_at_all(self):
+        """This message is the only account of the booking there will ever be,
+        so it goes in as it came. What pms puts on the nights it does not price
+        is a price nobody will be charged: the stay is not happening."""
+        self._seed_cancellation(external_id="r1", rooms=[self._room(days={})])
+        self.assertEqual(self._import(), {"total": 1, "queued": 1})
+        self.assertEqual(self._revision("r1").state, "applied")
+        folio = self._folios().odoo_id
+        self.assertEqual(folio.state, "cancel")
+        self.assertEqual(len(folio.reservation_ids.reservation_line_ids), 2)
+
+    def test_the_booking_arriving_afterwards_does_not_bring_it_back(self):
+        """Jobs run in any order, so the cancellation can land before the
+        message that sold the booking. The folio carries which message it is at,
+        and the older one is recognised as older."""
+        self._seed_cancellation(external_id="r2")
+        self._import()
+        self._seed_booking()
+        self.assertEqual(self._import(), {"total": 2, "queued": 1})
+        self.assertEqual(self._revision("r1").state, "superseded")
+        folio = self._folios().odoo_id
+        self.assertEqual(folio.state, "cancel")
+        self.assertEqual(len(folio.reservation_ids), 1)
+
+    def test_an_unmapped_room_type_holds_up_a_cancellation_of_an_unknown_booking(self):
+        """The one thing this message does have to be able to do is record the
+        booking, and it cannot."""
+        self._seed_cancellation(
+            external_id="r1", rooms=[self._room(room_type_id="not-mapped")]
+        )
+        self._import()
+        self.assertEqual(self._revision("r1").state, "error")
+        self.assertFalse(self._folios())
+
+    def test_a_cancellation_carrying_no_room_at_all_is_reported(self):
+        self._seed_cancellation(external_id="r1", rooms=[])
+        self._import()
+        self.assertEqual(self._revision("r1").state, "error")
+        self.assertFalse(self._folios())
+
+    # -- money already on paper --------------------------------------------
+
+    def test_an_invoiced_folio_holds_up_the_cancellation(self):
+        """The invoice says the stay was sold, and cancelling under it would
+        leave it saying so. Someone has to issue a credit note."""
+        folio, reservation = self._booked()
+        invoice = self._invoice(folio)
+        invoice.action_post()
+        self._seed_cancellation()
+        self._import()
+        self.assertEqual(self._revision("r2").state, "error")
+        self.assertIn(invoice.name, self._revision("r2").error)
+        self.assertNotEqual(reservation.state, "cancel")
+
+    def test_a_draft_invoice_is_deleted_and_the_cancellation_applied(self):
+        folio, reservation = self._booked()
+        invoice = self._invoice(folio)
+        self.assertEqual(invoice.state, "draft")
+        self._seed_cancellation()
+        self._import()
+        self.assertEqual(self._revision("r2").state, "applied")
+        self.assertFalse(invoice.exists())
+        self.assertEqual(reservation.state, "cancel")
 
 
 @tagged("post_install", "-at_install")
