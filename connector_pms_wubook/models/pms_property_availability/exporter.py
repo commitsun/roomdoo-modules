@@ -25,6 +25,22 @@ class ChannelWubookPmsPropertyAvailabilityExporter(Component):
 
     _apply_on = "channel.wubook.pms.property.availability"
 
-    # def _export_dependencies(self):
-    #     for room_type in self.binding.availability_ids.mapped("room_type_id"):
-    #         self._export_dependency(room_type, "channel.wubook.pms.room.type")
+    def _has_to_skip(self):
+        return any(
+            [
+                self.binding.synced_export,
+            ]
+        )
+
+    def _after_export(self):
+        super()._after_export()
+        if not self.binding:
+            return
+        # The window the mapper expanded has been pushed, so the next export
+        # starts from whatever moves after this one.
+        self.binding.with_context(connector_no_export=True).write(
+            {
+                "wubook_pending_date_from": False,
+                "wubook_pending_date_to": False,
+            }
+        )

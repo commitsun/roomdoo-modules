@@ -12,10 +12,3 @@ class PmsPropertyAvailability(models.Model):
         inverse_name="odoo_id",
         string="Channel Wubook PMS Bindings",
     )
-
-    # TODO: move to pms???
-    availability_ids = fields.One2many(
-        string="Availability",
-        comodel_name="pms.availability",
-        inverse_name="pms_property_id",
-    )

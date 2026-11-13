@@ -214,12 +214,6 @@
                     attrs="{'required':['|', ('avail_date_to', '!=', False),
                                            ('avail_date_from', '!=', False)]}"
                   />
-                                    <field
-                    name="avail_room_type_ids"
-                    nolabel="1"
-                    placeholder="Room types"
-                    widget="many2many_tags"
-                  />
                                     <button
                     name="export_availability"
                     type="object"

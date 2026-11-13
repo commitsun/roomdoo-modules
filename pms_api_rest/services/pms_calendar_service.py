@@ -209,12 +209,22 @@ class PmsCalendarService(Component):
                                 AND l.reservation_id = r.id
                                 AND r.overbooking = false
                     ) l ON l.room_id = dr.room_id AND l.date = dr.date
-                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay,
-                            min_stay_arrival, max_stay, max_stay_arrival,
-                            closed, closed_departure, closed_arrival
-                        FROM pms_availability_plan_rule
-                        WHERE availability_plan_id = %s and pms_property_id = %s
-                    ) ru ON ru.date = dr.date AND ru.room_type_id = dr.room_type_id
+                    -- The restrictions are stored by date range. Overlapping
+                    -- ranges are legal and the one written last wins the
+                    -- nights they share, which is what the ORDER BY picks.
+                    LEFT JOIN LATERAL (
+                        SELECT rule.min_stay, rule.min_stay_arrival,
+                               rule.max_stay, rule.max_stay_arrival,
+                               rule.closed, rule.closed_departure,
+                               rule.closed_arrival
+                        FROM pms_availability_plan_rule rule
+                        WHERE rule.availability_plan_id = %s
+                            AND rule.pms_property_id = %s
+                            AND rule.room_type_id = dr.room_type_id
+                            AND dr.date BETWEEN rule.date_from AND rule.date_to
+                        ORDER BY rule.write_date DESC, rule.id DESC
+                        LIMIT 1
+                    ) ru ON TRUE
                     LEFT OUTER JOIN pms_reservation r ON l.reservation_id = r.id
                     LEFT OUTER JOIN pms_folio f ON r.folio_id = f.id
                     ORDER BY dr.sequence, dr.room_id, dr.date
@@ -381,10 +391,20 @@ class PmsCalendarService(Component):
                     ) rt_r
                 ) dr
                 INNER JOIN product_product pp ON pp.id = dr.product_id
-                LEFT OUTER JOIN pms_availability_plan_rule av ON av.date = dr.date
-                    AND av.room_type_id = dr.room_type_id
-                    AND av.pms_property_id = %s
-                    AND av.availability_plan_id = %s
+                -- Same reading as the inventory below: the restrictions are
+                -- ranges, and the rule written last wins the overlap.
+                LEFT JOIN LATERAL (
+                    SELECT rule.id, rule.min_stay, rule.min_stay_arrival,
+                           rule.max_stay, rule.max_stay_arrival, rule.closed,
+                           rule.closed_departure, rule.closed_arrival
+                    FROM pms_availability_plan_rule rule
+                    WHERE rule.pms_property_id = %s
+                        AND rule.availability_plan_id = %s
+                        AND rule.room_type_id = dr.room_type_id
+                        AND dr.date BETWEEN rule.date_from AND rule.date_to
+                    ORDER BY rule.write_date DESC, rule.id DESC
+                    LIMIT 1
+                ) av ON TRUE
                 -- The commercial inventory left the plan rules. This mirrors
                 -- what pms.inventory.rule resolves at the general scope: the
                 -- rule written last wins the overlap, and with no rule at all
