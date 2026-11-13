@@ -34,6 +34,10 @@ class ChannelChannexPmsRoomTypeListener(Component):
             # also decide whether an agency's cap is any stricter.
             record._channex_stage_availability()
             record._channex_stage_channel_caps()
+        if "default_occupancy" in fields:
+            # The price of the room type is given for it, and every other
+            # number of adults is priced from it.
+            record._channex_stage_restrictions()
         if "active" not in fields:
             return
         if record.active:
