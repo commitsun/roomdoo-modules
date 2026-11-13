@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="channel_channex_booking_revision_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.booking.revision.tree</field>
+        <field name="model">channel.channex.booking.revision</field>
+        <field name="arch" type="xml">
+            <tree
+        string="Channex Booking Revisions"
+        create="false"
+        delete="false"
+        decoration-danger="state == 'error'"
+      >
+                <field name="inserted_at" />
+                <field name="unique_id" />
+                <field name="ota_name" />
+                <field name="status" />
+                <field name="state" />
+                <field name="acknowledged_at" />
+                <field name="error" />
+                <field name="arrival_date" />
+                <field name="departure_date" />
+                <field name="amount" />
+                <field name="currency" />
+                <field name="channel_id" />
+                <field name="ota_reservation_code" optional="hide" />
+                <field name="booking_id" optional="hide" />
+                <field name="external_id" optional="hide" />
+            </tree>
+        </field>
+    </record>
+</odoo>
