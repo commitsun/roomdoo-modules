@@ -43,9 +43,10 @@ class ChannelChannexAriSender(AbstractComponent):
         # count archived records as well -- a board service's old variant, a
         # channel gone from Channex.
         result = self._ari_publish(bindings.with_env(self.env), first, last)
-        # Cleared last and in one go: anything noted while the values were being
-        # worked out wrote to these same rows, and this write clashing with it
-        # is what makes the send start again instead of losing it.
+        # Cleared last and in one go, unless the kind cleared them before its
+        # call: anything noted while the values were being worked out wrote to
+        # these same rows, and this write clashing with it is what makes the
+        # send start again instead of losing it.
         bindings.write(
             {"channex_ari_pending_from": False, "channex_ari_pending_to": False}
         )
@@ -87,6 +88,7 @@ class ChannelChannexAriSender(AbstractComponent):
             warnings = ((body or {}).get("meta") or {}).get("warnings") or []
             if warnings:
                 self._ari_warn(warnings)
+                self._ari_refused(chunk)
 
     @staticmethod
     def _ari_chunks(values):
@@ -101,6 +103,10 @@ class ChannelChannexAriSender(AbstractComponent):
             size += value_size
         if chunk:
             yield chunk
+
+    def _ari_refused(self, values):
+        """Channex refused some of these values, sent in one call. Nothing to
+        do for a kind that keeps no record of what Channex holds."""
 
     def _ari_warn(self, warnings):
         """Keep what Channex refused, for someone to look at."""

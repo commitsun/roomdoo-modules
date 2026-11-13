@@ -119,6 +119,11 @@ class PmsRoomType(models.Model):
             bindings.filtered(lambda b: b.backend_id not in wanted)
         )
         for backend in wanted:
+            if not backend._channex_bound_property_id():
+                # Channex needs the property first, and only connecting it
+                # makes it there: that is where the hotel says whether to take
+                # over the one it may have on Channex already.
+                continue
             if not bindings.filtered(lambda b, bk=backend: b.backend_id == bk):
                 # Pre-created because the master exporters make
                 # ``_force_binding_creation`` a no-op.

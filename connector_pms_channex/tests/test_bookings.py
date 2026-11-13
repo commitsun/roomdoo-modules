@@ -121,15 +121,14 @@ class TestChannexBookingRevisions(ChannexFeedCase):
         self.assertEqual(len(self._revisions()), 5)
         self.assertEqual(len(self.server.calls_to("GET", "booking_revisions")), 3)
 
-    def test_the_read_asks_only_for_what_is_pending_here(self):
-        """One API key reaches every property of its account, and a message
-        already acknowledged is one already dealt with."""
+    def test_the_read_asks_the_feed_of_this_property(self):
+        """One API key reaches every property of its account."""
         self._seed_revision()
         self._import()
-        params = self.server.calls_to("GET", "booking_revisions")[0][3]
-        self.assertEqual(params["filter[property_id]"], self.property_uuid)
-        self.assertEqual(params["filter[acknowledge_status]"], "pending")
-        self.assertEqual(params["order[inserted_at]"], "asc")
+        call = self.server.calls_to("GET", "booking_revisions")[0]
+        self.assertEqual(call[1], "booking_revisions/feed")
+        self.assertEqual(call[3]["filter[property_id]"], self.property_uuid)
+        self.assertEqual(call[3]["order[inserted_at]"], "asc")
 
 
 class ChannexBookingCase(ChannexFeedCase):
@@ -1093,46 +1092,46 @@ class TestChannexBookingAck(ChannexBookingCase):
 
 @tagged("post_install", "-at_install")
 class TestChannexBookingSweep(ChannexBookingCase):
-    """The two readings, and the sweep that runs one of them.
+    """The feed, the sweep that reads it, and the recovery by hand.
 
-    Channex stops offering a message in the feed half an hour after issuing it,
-    acknowledged or not, and keeps it in the listing of unacknowledged ones. So
-    the feed is what to read on notice and the listing is what to sweep with: a
-    connector sweeping the feed would miss exactly the messages a sweep is for.
+    Channex hands bookings over in its feed, and its certification counts a
+    message read any other way as never received. The listing of every
+    unacknowledged message stays as the way back for what the feed might stop
+    offering, which Channex does not say may happen and has been seen to happen.
     """
 
-    def test_a_message_the_feed_no_longer_offers_is_still_taken_in(self):
+    def test_only_the_feed_is_read(self):
+        """The receipts included: one for a message read anywhere else is,
+        for Channex, the receipt of a message it never handed over."""
+        self._seed_booking()
+        self._import(rounds=2)
+        self.assertTrue(self._revision().acknowledged_at)
+        self.assertEqual(
+            {call[1] for call in self.server.calls_to("GET", "booking_revisions")},
+            {"booking_revisions/feed"},
+        )
+
+    def test_what_the_feed_no_longer_offers_is_recovered_by_hand(self):
         self._seed_booking()
         self.server.age_out_of_feed("r1")
-        self.assertEqual(self._import(), {"total": 1, "queued": 1})
-        self.assertEqual(len(self._folios()), 1)
-
-    def test_the_feed_reading_takes_in_what_was_just_issued(self):
-        """The short path, for when Channex tells us something arrived."""
-        self._seed_booking()
+        self.assertEqual(self._import(), {"total": 0, "queued": 0})
         with trap_jobs() as trap:
-            result = self.backend.channex_import_booking_feed()
+            result = self.backend.channex_recover_booking_revisions()
             trap.perform_enqueued_jobs()
         self.assertEqual(result, {"total": 1, "queued": 1})
         self.assertEqual(len(self._folios()), 1)
 
-    def test_the_feed_reading_does_not_see_what_aged_out_of_it(self):
-        self._seed_booking()
-        self.server.age_out_of_feed("r1")
-        with trap_jobs() as trap:
-            result = self.backend.channex_import_booking_feed()
-            trap.perform_enqueued_jobs()
-        self.assertEqual(result, {"total": 0, "queued": 0})
-        self.assertFalse(self._folios())
-
-    def test_a_message_already_acknowledged_is_not_taken_in(self):
+    def test_the_recovery_skips_what_is_already_acknowledged(self):
         """Channex answers a filter it does not know with everything instead of
         refusing it, so the status of each message is checked here as well.
         Without that, the day the filter stops being supported we would take in
         again every booking ever received."""
         self.server.ignore_filter("acknowledge_status")
         self._seed_booking(acknowledge_status="acknowledged")
-        self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertEqual(
+            self.backend.channex_recover_booking_revisions(),
+            {"total": 0, "queued": 0},
+        )
         self.assertFalse(self._folios())
 
     # -- the sweep ---------------------------------------------------------

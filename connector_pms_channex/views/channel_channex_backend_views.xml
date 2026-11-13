@@ -139,6 +139,14 @@
                   class="btn-primary"
                   help="Read the messages Channex is holding for this property and queue one job per message. What became of each one shows up below as its job runs."
                 />
+                                <button
+                  name="action_recover_booking_revisions"
+                  type="object"
+                  string="Recover missing bookings"
+                  class="btn-secondary"
+                  confirm="This reads every message Channex holds unacknowledged for this property, however old. Use it only when bookings are missing after a long outage: Channex does not count a booking read this way as received. Continue?"
+                  help="Read every message Channex holds unacknowledged for this property, including those it no longer offers. Only for bookings missing after a long outage."
+                />
                             </div>
                             <field
                 name="booking_revision_ids"
