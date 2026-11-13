@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 Roomdoo
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo noupdate="1">
+    <!-- Only on install: what the hotel sets afterwards is its own. -->
+    <function model="product.template" name="write">
+        <value eval="[ref('pms.product_template_board_room_only')]" />
+        <value eval="{'channex_meal_type': 'room_only'}" />
+    </function>
+</odoo>
