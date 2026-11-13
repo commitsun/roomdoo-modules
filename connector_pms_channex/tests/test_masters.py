@@ -68,6 +68,23 @@ class TestRoomTypeExport(ChannexConnectorCase):
             .create({"odoo_id": record.id, "backend_id": self.backend.id})
         )
 
+    def _connect_property(self):
+        """What connecting the property does: it is made on Channex."""
+        self._bind(PROPERTY_BINDING, self.pms_property)
+        self.env[PROPERTY_BINDING].export_record(self.backend, self.pms_property)
+
+    def test_a_room_type_waits_for_its_property_to_be_connected(self):
+        """Only connecting the property makes it on Channex, where the hotel
+        says whether to take over the one it may have there already: a room
+        type synced before that sends nothing, and goes once it is."""
+        self.room_type.channex_sync()
+        self.assertFalse(self.server.calls_to("POST", "properties"))
+        self.assertFalse(self.server.calls_to("POST", "room_types"))
+        self._connect_property()
+        self.room_type.channex_sync()
+        self.assertEqual(len(self.server.calls_to("POST", "properties")), 1)
+        self.assertEqual(len(self.server.calls_to("POST", "room_types")), 1)
+
     def test_occupancy_derived_from_the_rooms_of_this_property(self):
         binding = self._bind(ROOM_TYPE_BINDING, self.room_type)
         self.assertEqual(binding.count_of_rooms, 2)
@@ -116,12 +133,10 @@ class TestRoomTypeExport(ChannexConnectorCase):
         self.assertEqual(binding.count_of_rooms, 2)
         self.assertEqual(binding.occ_adults, 2)
 
-    def test_room_type_payload_and_property_exported_first(self):
-        self._bind(PROPERTY_BINDING, self.pms_property)
+    def test_room_type_payload(self):
+        self._connect_property()
         self._bind(ROOM_TYPE_BINDING, self.room_type)
         self.env[ROOM_TYPE_BINDING].export_record(self.backend, self.room_type)
-        # The property has to exist on Channex before its room types.
-        self.assertEqual(len(self.server.calls_to("POST", "properties")), 1)
         posts = self.server.calls_to("POST", "room_types")
         self.assertEqual(len(posts), 1)
         payload = posts[0][2]["room_type"]
@@ -136,7 +151,7 @@ class TestRoomTypeExport(ChannexConnectorCase):
 
     def test_excluded_room_type_class_is_never_sent(self):
         self.backend_type.room_kind_ids.excluded = True
-        self._bind(PROPERTY_BINDING, self.pms_property)
+        self._connect_property()
         self._bind(ROOM_TYPE_BINDING, self.room_type)
         self.env[ROOM_TYPE_BINDING].export_record(self.backend, self.room_type)
         self.assertFalse(self.server.calls_to("POST", "room_types"))
@@ -144,7 +159,7 @@ class TestRoomTypeExport(ChannexConnectorCase):
     def test_default_occupancy_over_adults_is_refused_locally(self):
         binding = self._bind(ROOM_TYPE_BINDING, self.room_type)
         binding.default_occupancy = binding.occ_adults + 1
-        self._bind(PROPERTY_BINDING, self.pms_property)
+        self._connect_property()
         with self.assertRaises(ValidationError):
             self.env[ROOM_TYPE_BINDING].export_record(self.backend, self.room_type)
         self.assertFalse(self.server.calls_to("POST", "room_types"))
@@ -173,6 +188,7 @@ class TestCallBudget(ChannexConnectorCase):
             self.env[model].with_context(connector_no_export=True).create(
                 {"odoo_id": record.id, "backend_id": self.backend.id}
             )
+        self.env[PROPERTY_BINDING].export_record(self.backend, self.pms_property)
         self.env[ROOM_TYPE_BINDING].export_record(self.backend, self.room_type)
         self.env[ROOM_TYPE_BINDING].export_record(self.backend, second_room_type)
         # One property and two room types: three writes, no more.
