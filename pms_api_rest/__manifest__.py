@@ -39,6 +39,9 @@
         "views/pms_api_log_views.xml",
         "views/roomdoo_app_menu_views.xml",
         "views/res_partner_views.xml",
+        "data/pms_neobookings_cron.xml",
+        "views/pms_neobookings_backend_views.xml",
+        "views/pms_neobookings_payment_sync_views.xml",
     ],
     "demo": [
         "demo/pms_api_rest_master_data.xml",
