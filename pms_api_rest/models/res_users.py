@@ -1,24 +1,33 @@
+import logging
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.tools import str2bool
 
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT
 
+_logger = logging.getLogger(__name__)
+
 ONE_TIME_KEY_MAX_AGE = 2 * 60
+
+# While this parameter is off, a refused user is only logged and still let in.
+API_ACCESS_ENFORCE_PARAM = "pms_api_rest.api_access_enforce"
 
 
 class ResUsers(models.Model):
     _inherit = "res.users"
 
+    # No default on purpose: a portal user needs a role to use the PMS APIs, so
+    # anyone who signs up on their own must not be handed one.
     pms_api_user_role = fields.Selection(
-        help="PMS API User Role",
+        help="Role of the user in the PMS. A portal user without a role cannot "
+        "use the PMS APIs, unless it is a PMS API client.",
         selection=[
             ("receptionist", "Receptionist"),
             ("manager", "Manager"),
             ("revenue", "Revenue"),
             ("administration", "Administration"),
         ],
-        default="receptionist",
     )
     availability_rule_field_ids = fields.Many2many(
         string="Availability Rules",
@@ -44,6 +53,42 @@ class ResUsers(models.Model):
     external_public_token = fields.Char(
         help="External Public Token",
     )
+
+    def _pms_api_access_allowed(self):
+        """Whether this user is meant to use the PMS APIs at all.
+
+        Internal users always are. A portal user only when it works at a
+        property, which until there are proper roles is told by having a PMS
+        role, or when it is the account of an API client (channel managers,
+        pre-check-in apps, booking engines...). Any other portal user, such as
+        a customer who signed up on a website, has no business there.
+        """
+        self.ensure_one()
+        return not self.share or bool(self.pms_api_user_role) or self.pms_api_client
+
+    def _pms_api_check_access(self):
+        """Return False when this user has to be turned away from the PMS APIs.
+
+        The refusal is logged either way. Until the enforce parameter is on it
+        is only logged, so that the accounts that still need a role can be
+        found before anybody is locked out.
+        """
+        self.ensure_one()
+        user = self.sudo()
+        if user._pms_api_access_allowed():
+            return True
+        enforce = str2bool(
+            user.env["ir.config_parameter"].get_param(API_ACCESS_ENFORCE_PARAM, "0"),
+            default=False,
+        )
+        _logger.warning(
+            "PMS API access %s for portal user %s (id %s): no PMS role and not "
+            "an API client",
+            "refused" if enforce else "would be refused",
+            user.login,
+            user.id,
+        )
+        return not enforce
 
     def _get_default_avail_rule_fields(self):
         default_avail_rule_fields = self.env["ir.model.fields"].search(
