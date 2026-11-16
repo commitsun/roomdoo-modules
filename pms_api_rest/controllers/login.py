@@ -32,6 +32,8 @@ class LoginPortalToken(http.Controller):
             "one.time.res.users.apikeys"
         ].sudo()._check_credentials_for_uid(scope="ots", key=token, uid=user.id):
             return request.redirect("/")
+        if not user._pms_api_check_access():
+            return request.redirect("/")
 
         request.session.pre_login = login
         request.session.pre_uid = user.id

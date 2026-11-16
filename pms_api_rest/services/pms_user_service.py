@@ -57,7 +57,7 @@ class PmsRoomTypeClassService(Component):
                 "res.partner", user.partner_id.id, "image_1024"
             ),
             availabilityRuleFields=user.availability_rule_field_ids.mapped("name"),
-            userRole=user.pms_api_user_role,
+            userRole=user.pms_api_user_role or None,
         )
 
     @restapi.method(
