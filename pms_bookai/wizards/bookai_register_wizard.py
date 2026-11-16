@@ -34,6 +34,9 @@ class BookaiRegisterWizard(models.TransientModel):
 
     @api.model
     def default_get(self, fields_list):
+        # Default values skip the model's access rights: check them before
+        # loading the stored credentials.
+        self.check_access_rights("create")
         res = super().default_get(fields_list)
         icp = self.env["ir.config_parameter"].sudo()
         res["bookai_base_url"] = icp.get_param("pms_bookai.api_endpoint", "")

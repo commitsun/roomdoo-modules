@@ -11,3 +11,4 @@ from . import test_bookai_register_wizard
 from . import test_bookai_templates_endpoint
 from . import test_bookai_tool
 from . import test_bookai_webhook_mixin
+from . import test_bookai_staff_secrets

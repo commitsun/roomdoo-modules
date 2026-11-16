@@ -34,6 +34,11 @@ class PmsApiBookaiConfigRouterHelper(models.AbstractModel):
         Override this method to implement token exchange or JWT signing.
         Default: returns the instance token directly.
         """
+        # The instance token only goes to staff: internal users, or portal users
+        # with hotels assigned (receptionists). Customers and suppliers get none.
+        user = self.env.user
+        if not (user._is_internal() or user.pms_property_ids):
+            return ""
         icp = self.env["ir.config_parameter"].sudo()
         return icp.get_param("pms_bookai.api_token", "")
 
