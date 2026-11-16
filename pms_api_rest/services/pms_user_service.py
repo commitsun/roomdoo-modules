@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 import tempfile
 from datetime import datetime, timedelta
@@ -6,13 +7,15 @@ from datetime import datetime, timedelta
 import werkzeug.exceptions
 
 from odoo import _
-from odoo.exceptions import AccessDenied, MissingError
+from odoo.exceptions import AccessDenied, AccessError, MissingError
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
 from ..pms_api_rest_utils import url_image_pms_api_rest
+
+_logger = logging.getLogger(__name__)
 
 
 class PmsRoomTypeClassService(Component):
@@ -73,6 +76,11 @@ class PmsRoomTypeClassService(Component):
         auth="jwt_api_pms",
     )
     def get_user(self, user_id):
+        # Share users (portal, public) only read their own user; internal users
+        # read any user, as the front lists colleagues. Checked before the
+        # lookup, so a missing id gets the same answer.
+        if user_id != self.env.uid and not self.env.user._is_internal():
+            raise AccessError(_("You can only view your own user."))
         user = self.env["res.users"].sudo().browse(user_id)
         if not user.exists():
             raise MissingError(_("User not found"))
@@ -102,6 +110,12 @@ class PmsRoomTypeClassService(Component):
         auth="jwt_api_pms",
     )
     def write_user(self, user_id, input_data):
+        # Only the user itself or an access rights manager edits a user.
+        # Checked before the lookup, so a missing id gets the same answer.
+        if user_id != self.env.uid and not self.env.user.has_group(
+            "base.group_erp_manager"
+        ):
+            raise AccessError(_("You can only edit your own user."))
         user = self.env["res.users"].sudo().browse(user_id)
         if not user.exists():
             raise MissingError(_("User not found"))
@@ -148,6 +162,10 @@ class PmsRoomTypeClassService(Component):
         auth="jwt_api_pms",
     )
     def change_password(self, user_id, input_data):
+        # Only the user itself changes its password: res.users.change_password
+        # always applies to the current user anyway.
+        if user_id != self.env.uid:
+            raise AccessError(_("You can only change your own password."))
         user = self.env["res.users"].sudo().browse(user_id)
         if not user.exists():
             raise MissingError(_("User not found"))
@@ -205,13 +223,31 @@ class PmsRoomTypeClassService(Component):
             template = self.env["mail.template"].sudo().browse(template_id)
             if not template:
                 return False
+            app_url = self._get_app_url()
+            if not app_url:
+                return False
             expiration_datetime = datetime.now() + timedelta(minutes=15)
             user.partner_id.sudo().signup_prepare(expiration=expiration_datetime)
-            template.with_context(app_url=input_data.url).send_mail(
-                user.id, force_send=True
-            )
+            template.with_context(app_url=app_url).send_mail(user.id, force_send=True)
             return True
         return False
+
+    def _get_app_url(self):
+        """Origin of this instance's front, where the reset link points.
+
+        The link is built from ``roomdoo_app_url`` only; the ``url`` field of
+        the request is not used. The parameter ships as the literal ``False``
+        until the install hook fills it in, and the backend serves no page at
+        that path, so without an http(s) URL no mail is sent at all.
+        """
+        app_url = self.env["ir.config_parameter"].sudo().get_param("roomdoo_app_url")
+        app_url = (app_url or "").strip().rstrip("/")
+        if app_url.lower().startswith(("http://", "https://")):
+            return app_url
+        _logger.warning(
+            "Password reset mail not sent: roomdoo_app_url is not an http(s) URL"
+        )
+        return None
 
     @restapi.method(
         [

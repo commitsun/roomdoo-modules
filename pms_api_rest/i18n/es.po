@@ -16,6 +16,21 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_user_service.py:0
+msgid "You can only view your own user."
+msgstr "Solo puedes consultar tu propio usuario."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_user_service.py:0
+msgid "You can only edit your own user."
+msgstr "Solo puedes modificar tu propio usuario."
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_user_service.py:0
+msgid "You can only change your own password."
+msgstr "Solo puedes cambiar tu propia contraseña."
+
+#. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_partner_service.py:0
 #, python-format
 msgid ""
