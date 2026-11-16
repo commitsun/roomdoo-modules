@@ -130,6 +130,10 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
 
     def _authenticated_response(self, user_record, device_token):
         """Either a session, or the demand for a second factor."""
+        # Refused before any second factor is asked for, and with the answer of
+        # a wrong password, so that nobody learns which accounts exist.
+        if not user_record._pms_api_check_access():
+            return self._invalid_credentials_response()
         mfa_type = user_record._mfa_type()
         if not mfa_type:
             return self._get_login_response_with_cookies(user_record)
@@ -183,6 +187,9 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
                 _("The code is not valid."),
             )
         challenge.unlink()
+        # The access may have been withdrawn while the code was being typed.
+        if not user_record._pms_api_check_access():
+            return self._invalid_credentials_response()
         response = self._get_login_response_with_cookies(user_record)
         if remember:
             self._remember_device(user_record, response, user_agent)
@@ -263,6 +270,10 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
         )
 
     def _get_login_response_with_cookies(self, user_record):
+        # Last stop for every way of getting a session, including those that
+        # do not go through the login, such as refreshing it.
+        if not user_record._pms_api_check_access():
+            raise AccessDenied()
         validator = (
             self.env["auth.jwt.validator"].sudo()._get_validator_by_name("api_pms")
         )

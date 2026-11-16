@@ -30,3 +30,4 @@ from . import test_logout
 from . import test_login_second_factor
 from . import test_two_factor_setup
 from . import test_contact_user_email
+from . import test_api_access_hotel_users
