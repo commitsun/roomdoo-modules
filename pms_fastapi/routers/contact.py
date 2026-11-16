@@ -323,9 +323,24 @@ class PmsApiContactRouterHelper(models.AbstractModel):
             res.set_fiscal_document_data(data.fiscalIdNumber, data.fiscalIdNumberType)
         return res
 
+    def _check_user_partner_email_change(self, partner, vals):
+        # The email of a user's contact is the key of that user's password reset:
+        # only the user itself, or someone allowed to manage users, may set a new one.
+        new_email = vals.get("email")
+        if not new_email or new_email == partner.email:
+            return
+        users = partner.with_context(active_test=False).user_ids
+        if (
+            users
+            and self.env.uid not in users.ids
+            and not self.env.user.has_group("base.group_erp_manager")
+        ):
+            raise HTTPException(status_code=403)
+
     def update_contact(self, data: ContactUpdate, contact_id: int):
         partner = self.env["res.partner"].sudo().browse(contact_id)
         vals = self._prepare_write_res_partner_vals(data, partner)
+        self._check_user_partner_email_change(partner, vals)
         res = partner.write(vals)
         if data.fiscalIdNumberType or data.fiscalIdNumber:
             partner.set_fiscal_document_data(
