@@ -221,5 +221,10 @@ msgstr "Esta reserva ha quedado con un cargo pendiente de %.2f€. Cuando gestio
 
 #. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_reservation_service.py:0
+msgid "Reservation not found"
+msgstr "Reserva no encontrada"
+
+#. module: pms_api_rest
+#: code:addons/pms_api_rest/services/pms_reservation_service.py:0
 msgid "Reservation ready for checkout. You can check out directly from here."
 msgstr "Reserva lista para el checkout. Marca la salida directamente desde aquí."

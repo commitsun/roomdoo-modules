@@ -19,3 +19,4 @@ from . import test_portal_token_second_factor
 from . import test_dashboard_archived_rooms
 from . import test_channel_lang
 from . import test_user_service_access
+from . import test_user_contact_email
