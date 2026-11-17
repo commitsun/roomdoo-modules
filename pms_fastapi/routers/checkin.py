@@ -8,9 +8,6 @@ from fastapi.responses import Response
 from odoo import _, models
 from odoo.exceptions import AccessDenied, AccessError, UserError
 
-from odoo.addons.pms_api_rest.services.pms_reservation_service import (
-    find_opposite_relationship,
-)
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
 from odoo.addons.pms_fastapi.schemas.checkin import (
@@ -49,7 +46,6 @@ SIMPLE_FIELDS = {
     "lastname": "lastname",
     "lastname2": "lastname2",
     "documentNumber": "document_number",
-    "documentSupportNumber": "support_number",
     "city": "city",
     "street": "street",
     "zipCode": "zip",
@@ -283,7 +279,10 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
     def get_partner_detail(self, folio_id, checkin_partner_id) -> CheckinPartnerDetail:
         folio = self._get_folio(folio_id)
         cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
-        values = {
+        return CheckinPartnerDetail(**self._present(self._partner_detail_values(cp)))
+
+    def _partner_detail_values(self, cp):
+        return {
             "firstname": cp.firstname or None,
             "lastname": cp.lastname or None,
             "lastname2": cp.lastname2 or None,
@@ -293,13 +292,6 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "documentType": self._document_type_id(cp.document_type),
             "documentNumber": cp.document_number or None,
             "documentCountry": self._country_id(cp.document_country_id),
-            "documentSupportNumber": cp.support_number or None,
-            "responsibleCheckinPartnerId": cp.ses_related_checkin_partner_id.id or None,
-            # Stored from the guest's own perspective, exchanged from the
-            # responsible adult's one, as pms_api_rest does.
-            "relationship": find_opposite_relationship(cp.ses_partners_relationship)
-            if cp.ses_partners_relationship
-            else None,
             "country": self._country_id(cp.country_id),
             "state": self._state_id(cp.state_id),
             "city": cp.city or None,
@@ -308,29 +300,30 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "email": cp.email or None,
             "mobile": cp.mobile or None,
         }
-        return CheckinPartnerDetail(**self._present(values))
 
     # Context
 
     def get_context(self, folio_id) -> CheckinContext:
         folio = self._get_folio(folio_id)
+        values = self._context_values(folio)
+        localization = values.pop("localization")
+        return CheckinContext(localization=localization, **self._present(values))
+
+    def _context_values(self, folio):
         pms_property = folio.pms_property_id
         brand = (
             self.env["ir.config_parameter"]
             .sudo()
             .get_param("roomdoo_fastapi.instance_name", default="Roomdoo")
         )
-        values = {
+        country = pms_property.country_id
+        return {
+            "localization": country.code.lower() if country.code else None,
             "hotelName": pms_property.name,
             "arrivalDate": folio.first_checkin or None,
-            "unaccompaniedMinors": bool(folio.ses_unaccompanied_minors),
             "ocrAvailable": bool(pms_property.ocr_checkin_supplier),
             "brandName": brand or None,
         }
-        values = self._present(values)
-        country = pms_property.country_id
-        values["localization"] = country.code.lower() if country.code else None
-        return CheckinContext(**values)
 
     # Update
 
@@ -393,7 +386,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
                 else self._document_type_from_id(category_id).id
             )
         self._prepare_state_vals(cp, data, vals)
-        self._prepare_relationship_vals(folio, cp, data, vals)
+        self._prepare_extra_vals(folio, cp, data, vals)
         if "signature" in data:
             vals["signature"] = self._decode_signature(data["signature"])
         return vals
@@ -406,53 +399,16 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             vals["state_id"] = (
                 False if state_id is None else self._state_from_id(state_id, country).id
             )
-        elif (
-            "country_id" in vals
-            and cp.state_id
-            and cp.state_id.country_id != country
-            and country != self.env.ref("base.es")
-        ):
+        elif "country_id" in vals and self._state_is_stale(cp, country):
             # The residence country changed and the stored state no longer
             # belongs to it.
             vals["state_id"] = False
 
-    def _prepare_relationship_vals(self, folio, cp, data, vals):
-        if "relationship" in data:
-            relationship = data["relationship"]
-            valid_codes = dict(cp._fields["ses_partners_relationship"].selection)
-            if relationship and relationship not in valid_codes:
-                self._raise_problem(
-                    422,
-                    "/errors/unknown-relationship",
-                    _("Unknown relationship"),
-                    _("The relationship code is not valid."),
-                    field="relationship",
-                )
-            # Stored from the guest's own perspective, as pms_api_rest does.
-            vals["ses_partners_relationship"] = (
-                find_opposite_relationship(relationship) if relationship else False
-            )
-        if "responsibleCheckinPartnerId" in data:
-            responsible = self._get_responsible(
-                folio, cp, data["responsibleCheckinPartnerId"]
-            )
-            vals["ses_related_checkin_partner_id"] = responsible.id or False
+    def _state_is_stale(self, cp, country):
+        return bool(cp.state_id and cp.state_id.country_id != country)
 
-    def _get_responsible(self, folio, cp, responsible_id):
-        if not responsible_id:
-            return self.env["pms.checkin.partner"]
-        responsible = folio.checkin_partner_ids.filtered(
-            lambda c: c.id == responsible_id and c != cp
-        )
-        if not responsible:
-            self._raise_problem(
-                422,
-                "/errors/unknown-responsible",
-                _("Unknown responsible"),
-                _("The responsible must be another guest of the same folio."),
-                field="responsibleCheckinPartnerId",
-            )
-        return responsible
+    def _prepare_extra_vals(self, folio, cp, data, vals):
+        """Hook for the values that a localization adds to the payload."""
 
     def _decode_signature(self, signature):
         if not signature:
@@ -511,7 +467,6 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "lastname": result.get("lastname") or None,
             "lastname2": result.get("lastname2") or None,
             "documentNumber": result.get("document_number") or None,
-            "documentSupportNumber": result.get("document_support_number") or None,
             "street": result.get("residence_street") or None,
             "city": result.get("residence_city") or None,
             "zipCode": result.get("zip") or None,

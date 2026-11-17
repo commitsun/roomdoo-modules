@@ -41,7 +41,6 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
                 "lastname": "Lee",
                 "lastname2": "Ray",
                 "document_number": "AB123",
-                "document_support_number": "SUP1",
                 "residence_street": "Main 1",
                 "residence_city": "Madrid",
                 "zip": "28001",
@@ -71,7 +70,6 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
                     "id": self.country_pt.id,
                     "name": self.country_pt.name,
                 },
-                "documentSupportNumber": "SUP1",
                 "country": {
                     "id": self.country_es.id,
                     "name": self.country_es.name,

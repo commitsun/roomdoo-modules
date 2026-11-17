@@ -60,7 +60,6 @@ class CheckinDocumentData(PmsBaseModel):
     documentCountry: CountryId | None = Field(
         None, description="Country that issued the document."
     )
-    documentSupportNumber: str | None = None
     country: CountryId | None = Field(None, description="Residence country.")
     state: CountryStateId | None = Field(None, description="Residence state.")
     city: str | None = Field(None, description="Residence city.")
@@ -71,10 +70,6 @@ class CheckinDocumentData(PmsBaseModel):
 class CheckinPartnerDetail(CheckinDocumentData):
     """Stored guest data. Empty fields are omitted from the response."""
 
-    responsibleCheckinPartnerId: int | None = None
-    relationship: str | None = Field(
-        None, description="Relationship from the responsible adult's perspective."
-    )
     email: str | None = None
     mobile: str | None = None
 
@@ -92,13 +87,6 @@ class CheckinPartnerUpdate(PmsBaseModel):
     documentNumber: str | None = None
     documentCountry: int | None = Field(
         None, description="Country that issued the document."
-    )
-    documentSupportNumber: str | None = None
-    responsibleCheckinPartnerId: int | None = Field(
-        None, description="Check-in partner of the same folio that is responsible."
-    )
-    relationship: str | None = Field(
-        None, description="Relationship from the responsible adult's perspective."
     )
     country: int | None = Field(None, description="Residence country.")
     state: int | None = Field(None, description="Residence state.")
@@ -131,6 +119,5 @@ class CheckinContext(PmsBaseModel):
     )
     hotelName: str
     arrivalDate: date | None = None
-    unaccompaniedMinors: bool
     ocrAvailable: bool
     brandName: str | None = None

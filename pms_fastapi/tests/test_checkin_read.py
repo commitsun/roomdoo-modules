@@ -139,7 +139,6 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
                 "document_type": self.id_category.id,
                 "document_number": "AB123",
                 "document_country_id": self.country_pt.id,
-                "support_number": "SUP1",
                 "country_id": self.country_es.id,
                 "state_id": state.id,
                 "city": "Madrid",
@@ -172,7 +171,6 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
                     "id": self.country_pt.id,
                     "name": self.country_pt.name,
                 },
-                "documentSupportNumber": "SUP1",
                 "country": {
                     "id": self.country_es.id,
                     "name": self.country_es.name,
@@ -186,19 +184,6 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
             },
         )
         self.assertNotIn("signature", response.json())
-
-    def test_partner_detail_inverts_the_stored_relationship(self):
-        responsible, minor = self.checkin_partners
-        minor.write(
-            {
-                "ses_partners_relationship": "HJ",
-                "ses_related_checkin_partner_id": responsible.id,
-            }
-        )
-        response = self._get(self._base_url(checkin_partner=minor))
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
-        self.assertEqual(response.json()["relationship"], "PM")
-        self.assertEqual(response.json()["responsibleCheckinPartnerId"], responsible.id)
 
     def test_partner_of_another_folio_returns_404(self):
         other_folio = self._create_folio()
@@ -214,20 +199,15 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         self.env["ir.config_parameter"].sudo().set_param(
             "roomdoo_fastapi.instance_name", "Acme PMS"
         )
-        self.folio.ses_unaccompanied_minors = True
         response = self._get(f"/folios/{self.folio.id}/checkin-context")
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        body = response.json()
         self.assertEqual(
-            response.json(),
-            {
-                "localization": "es",
-                "hotelName": "Property 1",
-                "arrivalDate": self.folio.first_checkin.isoformat(),
-                "unaccompaniedMinors": True,
-                "ocrAvailable": False,
-                "brandName": "Acme PMS",
-            },
+            {k: body[k] for k in ("localization", "hotelName", "ocrAvailable")},
+            {"localization": "es", "hotelName": "Property 1", "ocrAvailable": False},
         )
+        self.assertEqual(body["arrivalDate"], self.folio.first_checkin.isoformat())
+        self.assertEqual(body["brandName"], "Acme PMS")
 
     def test_context_defaults_brand_and_sends_no_policy_links(self):
         response = self._get(f"/folios/{self.folio.id}/checkin-context")

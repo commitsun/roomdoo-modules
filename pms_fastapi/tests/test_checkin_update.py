@@ -90,7 +90,6 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
                 "documentType": self.id_category.id,
                 "documentNumber": "AB123",
                 "documentCountry": self.country_pt.id,
-                "documentSupportNumber": "SUP1",
                 "country": self.country_es.id,
                 "state": state.id,
                 "city": "Madrid",
@@ -108,7 +107,6 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         self.assertEqual(guest.document_type, self.id_category)
         self.assertEqual(guest.document_number, "AB123")
         self.assertEqual(guest.document_country_id, self.country_pt)
-        self.assertEqual(guest.support_number, "SUP1")
         self.assertEqual(guest.country_id, self.country_es)
         self.assertEqual(guest.state_id, state)
         self.assertEqual(guest.city, "Madrid")
@@ -170,68 +168,6 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         )
         self.assertEqual(self.guest.country_id, self.country_pt)
         self.assertFalse(self.guest.state_id)
-
-    def test_relationship_and_responsible(self):
-        responsible, minor = self.checkin_partners
-        response = self._patch(
-            {"relationship": "PM", "responsibleCheckinPartnerId": responsible.id},
-            checkin_partner=minor,
-        )
-        self.assertEqual(
-            response.status_code, status.HTTP_204_NO_CONTENT, response.text
-        )
-        # Stored from the guest's own perspective, as pms_api_rest does.
-        self.assertEqual(minor.ses_partners_relationship, "HJ")
-        self.assertEqual(minor.ses_related_checkin_partner_id, responsible)
-        # Unlike pms_api_rest, the responsible adult is left untouched.
-        self.assertFalse(responsible.ses_partners_relationship)
-        with self._create_test_client() as test_client:
-            self._login(test_client)
-            detail = test_client.get(self._base_url(checkin_partner=minor))
-        self.assertEqual(detail.json()["relationship"], "PM")
-        self.assertEqual(detail.json()["responsibleCheckinPartnerId"], responsible.id)
-
-    def test_null_clears_relationship_and_responsible(self):
-        responsible, minor = self.checkin_partners
-        minor.write(
-            {
-                "ses_partners_relationship": "HJ",
-                "ses_related_checkin_partner_id": responsible.id,
-            }
-        )
-        response = self._patch(
-            {"relationship": None, "responsibleCheckinPartnerId": None},
-            checkin_partner=minor,
-        )
-        self.assertEqual(
-            response.status_code, status.HTTP_204_NO_CONTENT, response.text
-        )
-        self.assertFalse(minor.ses_partners_relationship)
-        self.assertFalse(minor.ses_related_checkin_partner_id)
-
-    def test_responsible_of_another_folio_is_422(self):
-        other_folio = self._create_folio()
-        other = self._create_reservation(other_folio, self.room2, adults=1)
-        response = self._patch(
-            {"responsibleCheckinPartnerId": other.checkin_partner_ids.id}
-        )
-        self._assert_problem(
-            response, "/errors/unknown-responsible", "responsibleCheckinPartnerId"
-        )
-
-    def test_the_guest_cannot_be_its_own_responsible(self):
-        response = self._patch({"responsibleCheckinPartnerId": self.guest.id})
-        self._assert_problem(response, "/errors/unknown-responsible")
-
-    def test_non_numeric_responsible_is_422(self):
-        response = self._patch({"responsibleCheckinPartnerId": "abc"})
-        self.assertEqual(
-            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
-        )
-
-    def test_unknown_relationship_is_422(self):
-        response = self._patch({"relationship": "XX"})
-        self._assert_problem(response, "/errors/unknown-relationship", "relationship")
 
     def test_signature_is_stored(self):
         response = self._patch({"signature": _png_base64()})
