@@ -3,8 +3,6 @@
 
 from odoo import api, fields, models
 
-from ..common.ari import union_window
-
 ROOM_TYPE_BINDING = "channel.channex.pms.room.type"
 
 
@@ -97,11 +95,11 @@ class ChannelChannexInventoryCap(models.Model):
         them ``None`` to mean every one."""
         resolved = {}
         backends = self.env["channel.channex.backend"]
-        for (property_id, agency_id, room_type_id), window in entries.items():
+        for (property_id, agency_id, room_type_id), ranges in entries.items():
             domain = [("pms_property_id", "=", property_id)] if property_id else []
             for backend in backends.search(domain):
                 for cap in self._channex_caps_of(backend, agency_id, room_type_id):
-                    resolved[cap] = union_window(resolved.get(cap), window)
+                    resolved.setdefault(cap, []).extend(ranges)
         return resolved
 
     @api.model

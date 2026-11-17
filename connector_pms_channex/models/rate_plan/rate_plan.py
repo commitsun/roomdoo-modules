@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 from odoo.addons.connector.exception import IDMissingInBackend
 
 from ...components.adapter import ChannexAPIError
-from ..common.ari import stage_ari, union_window
+from ..common.ari import stage_ari
 from ..common.board import board_child_fee, board_total, board_units
 
 
@@ -94,7 +94,7 @@ class ChannelChannexRatePlan(models.Model):
         one. Only rate plans on Channex and still sold count: one made later
         publishes its whole window as it is made."""
         resolved = {}
-        for key, window in entries.items():
+        for key, ranges in entries.items():
             property_id, pricelist_id, room_type_id, board_service_id = key
             domain = [("external_id", "!=", False), ("channex_to_remove", "=", False)]
             if property_id:
@@ -106,7 +106,7 @@ class ChannelChannexRatePlan(models.Model):
             if board_service_id:
                 domain.append(("board_service_id", "=", board_service_id))
             for rate_plan in self.search(domain):
-                resolved[rate_plan] = union_window(resolved.get(rate_plan), window)
+                resolved.setdefault(rate_plan, []).extend(ranges)
         return resolved
 
     @api.model
