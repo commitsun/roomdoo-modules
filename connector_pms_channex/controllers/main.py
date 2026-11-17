@@ -50,5 +50,7 @@ class ChannexWebhook(http.Controller):
             return request.make_response(
                 "forbidden", status=403, headers=[("Content-Type", "text/plain")]
             )
-        backend.with_delay(identity_key=identity_exact).channex_import_booking_feed()
+        backend.with_delay(
+            identity_key=identity_exact
+        ).channex_import_booking_revisions()
         return request.make_response("queued", headers=[("Content-Type", "text/plain")])

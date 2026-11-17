@@ -466,7 +466,8 @@ class ChannelChannexBackend(models.Model):
     # -- bookings ----------------------------------------------------------
 
     def _channex_booking_revision_feed(self):
-        """What Channex has just issued for this property."""
+        """Every message this property has not acknowledged, as Channex hands
+        them over."""
         self.ensure_one()
         with self.work_on("channel.channex.booking.revision") as work:
             return work.component(usage="backend.adapter").feed(
@@ -474,7 +475,7 @@ class ChannelChannexBackend(models.Model):
             )
 
     def _channex_pending_booking_revisions(self):
-        """Every message this property has left unacknowledged."""
+        """Every message this property has left unacknowledged, however old."""
         self.ensure_one()
         with self.work_on("channel.channex.booking.revision") as work:
             return work.component(usage="backend.adapter").pending(
@@ -484,21 +485,22 @@ class ChannelChannexBackend(models.Model):
     def channex_import_booking_revisions(self):
         """Take in everything Channex is still waiting on for this property.
 
-        Reads the listing of unacknowledged messages and not the feed: the feed
-        stops offering a message half an hour after it was issued, and the ones
-        worth sweeping for are precisely those nobody has dealt with yet.
-        """
-        self.ensure_one()
-        return self._channex_take_in(self._channex_pending_booking_revisions())
-
-    def channex_import_booking_feed(self):
-        """Take in what Channex has just issued for this property.
-
-        The short reading, for when Channex tells us something arrived: it is a
-        page long and it is what Channex means a PMS to read on notice.
+        Reads the feed, whether Channex just called or the sweep came round:
+        it is how Channex hands bookings over, and a message read any other way
+        counts there as never received.
         """
         self.ensure_one()
         return self._channex_take_in(self._channex_booking_revision_feed())
+
+    def channex_recover_booking_revisions(self):
+        """Take in every message this property has left unacknowledged,
+        however old, including what the feed no longer offers.
+
+        Only ever run by hand, for bookings found missing after a long outage:
+        Channex does not count a message read this way as received.
+        """
+        self.ensure_one()
+        return self._channex_take_in(self._channex_pending_booking_revisions())
 
     def _channex_take_in(self, payloads):
         """Queue what to make of each message read, and the receipts pending.
@@ -557,6 +559,13 @@ class ChannelChannexBackend(models.Model):
     def action_import_booking_revisions(self):
         self.ensure_one()
         result = self.channex_import_booking_revisions()
+        return self._notify(
+            _("%(queued)s of %(total)s booking message(s) queued.") % result
+        )
+
+    def action_recover_booking_revisions(self):
+        self.ensure_one()
+        result = self.channex_recover_booking_revisions()
         return self._notify(
             _("%(queued)s of %(total)s booking message(s) queued.") % result
         )

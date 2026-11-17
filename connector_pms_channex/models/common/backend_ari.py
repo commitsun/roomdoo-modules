@@ -91,8 +91,14 @@ class ChannelChannexBackend(models.Model):
         What Channex calls a full sync, and the last step of synchronising
         everything: one call for the availability and one for the rates and
         restrictions, however many room types and rate plans there are.
+
+        Every night goes whole, whatever Channex is thought to hold of it, as
+        this is also how what it holds is put right.
         """
         self.ensure_one()
+        self.env["channel.channex.rate.plan"].search(
+            [("backend_id", "=", self.id)]
+        ).channex_ari_held = False
         property_id = self.pms_property_id.id
         stage_ari(self.env, "availability", (property_id, None))
         # What the agencies have set aside is availability too, by channel. Only

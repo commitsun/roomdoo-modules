@@ -27,11 +27,12 @@ class ChannelChannexBookingRevisionAdapter(Component):
     _server_filters = ("property_id",)
 
     def feed(self, property_id):
-        """What Channex has just issued for this property, oldest first.
+        """Every message this property has not acknowledged, oldest first.
 
-        A page long and always fresh: a revision is offered here only for its
-        first half hour, acknowledged or not. That makes this the reading to do
-        on notice, and not the one to sweep with.
+        The way Channex hands bookings over, and the only reading its
+        certification accepts besides the webhook: a message read any other
+        way counts there as never received, and acknowledging it as
+        acknowledging something never handed over.
         """
         return self._collect(
             f"{self._resource}/feed",
@@ -46,8 +47,10 @@ class ChannelChannexBookingRevisionAdapter(Component):
     def pending(self, property_id):
         """Every message this property has left unacknowledged, however old.
 
-        This listing keeps what the feed drops, which is exactly what a sweep is
-        for: a message nobody could apply half an hour ago is still here.
+        Not a way to receive bookings: Channex's certification takes a message
+        read here as received the wrong way. It is the way back for what the
+        feed no longer offers, which Channex does not say may happen and has
+        been seen to happen.
 
         The status of each row is checked instead of trusted to the query, and
         that is not caution for its own sake: Channex answers a filter it does
