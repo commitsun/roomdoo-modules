@@ -30,7 +30,10 @@ class ChannelChannexPmsRoomTypeListener(Component):
         if not fields:
             return
         if _INVENTORY_DEFAULT_FIELDS & set(fields):
+            # They are the property's cap where no rule says otherwise, so they
+            # also decide whether an agency's cap is any stricter.
             record._channex_stage_availability()
+            record._channex_stage_channel_caps()
         if "active" not in fields:
             return
         if record.active:
