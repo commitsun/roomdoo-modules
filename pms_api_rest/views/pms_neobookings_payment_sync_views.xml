@@ -94,6 +94,26 @@
                         <field name="last_request" />
                         <field name="last_response" />
                     </group>
+                    <separator string="Requests" />
+                    <field name="request_ids" nolabel="1">
+                        <tree
+              decoration-danger="neobookings_duplicate_references"
+              decoration-warning="state == 'review'"
+              decoration-muted="state == 'failed'"
+            >
+                            <field name="create_date" string="Sent On" />
+                            <field name="code" />
+                            <field name="description" />
+                            <field name="quantity" />
+                            <field name="state" />
+                            <field name="neobookings_reference" />
+                            <field name="echo_date" />
+                            <field
+                name="neobookings_duplicate_references"
+                optional="show"
+              />
+                        </tree>
+                    </field>
                 </sheet>
             </form>
         </field>
@@ -107,6 +127,11 @@
                 <field name="payment_name" />
                 <field name="folio_id" />
                 <field name="pms_property_id" />
+                <field
+          name="request_ids"
+          string="Request Code or Neobookings Payment"
+          filter_domain="['|', ('request_ids.code', 'ilike', self), ('request_ids.neobookings_reference', '=', self)]"
+        />
                 <filter
           name="pending"
           string="Pending"
@@ -131,6 +156,12 @@
           name="done"
           string="Done"
           domain="[('state', '=', 'done')]"
+        />
+                <separator />
+                <filter
+          name="duplicated"
+          string="Duplicated in Neobookings"
+          domain="[('request_ids.neobookings_duplicate_references', '!=', False)]"
         />
                 <group expand="0" string="Group By">
                     <filter

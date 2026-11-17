@@ -366,17 +366,23 @@ class PmsNeobookingsBackend(models.Model):
             "Language": self.language,
         }
 
-    def _prepare_order_payment(self, data):
+    def _prepare_order_payment(self, data, code=None):
         # The folio reference may be a Neobookings order or a channel
         # reservation (e.g. Booking.com). Neobookings looks for the value in
         # OrderId first and then in OrderIdOrigin, so both carry it.
         # Removed only marks a payment as not made: it does not cancel a
         # previous one, so it is never used.
+        # The code of the request goes in the description, so that the
+        # payment is recognized when Neobookings sends it back.
+        payment = dict(data["payment"], Removed=False)
+        payment["Description"] = self.env[
+            "pms.neobookings.payment.request"
+        ]._get_description(payment["Description"], code)
         return {
             "Request": self._prepare_request_header(),
             "OrderId": data["order"],
             "OrderIdOrigin": data["order"],
-            "Payment": dict(data["payment"], Removed=False),
+            "Payment": payment,
         }
 
     def _request(self, endpoint, payload):

@@ -19,3 +19,4 @@ from . import ir_http
 from . import account_move
 from . import pms_neobookings_backend
 from . import pms_neobookings_payment_sync
+from . import pms_neobookings_payment_request

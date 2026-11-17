@@ -11,10 +11,13 @@ from odoo.exceptions import ValidationError
 from odoo.tests import tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+from odoo.addons.base_rest.controllers.main import _PseudoCollection
+from odoo.addons.component.core import WorkContext
 from odoo.addons.pms.tests.common import TestPms
 
 REQUESTS_POST = "odoo.addons.pms_api_rest.models.pms_neobookings_backend.requests.post"
 DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+CODE_RE = re.compile(r"^RDP-[A-HJ-NP-Z2-9]{8}$")
 
 OK = (200, {"Response": {"StatusCode": 200, "RequestId": "x", "Success": {}}})
 UNAUTHORIZED = (
@@ -57,7 +60,9 @@ class FakeNeobookings:
     """Answers like the Neobookings API and records every request.
 
     Each request gets the next answer given, and OK when there are no more.
-    An answer is a ``(status, json)`` tuple or an exception to raise.
+    An answer is a ``(status, json)`` tuple, an exception to raise or a
+    function called while the request is in progress, which returns one of
+    them.
     """
 
     def __init__(self, *answers):
@@ -67,6 +72,8 @@ class FakeNeobookings:
     def __call__(self, url, **kwargs):
         self.calls.append({"url": url, **kwargs})
         answer = self.answers.pop(0) if self.answers else OK
+        if callable(answer) and not isinstance(answer, Exception):
+            answer = answer()
         if isinstance(answer, Exception):
             raise answer
         status, data = answer
@@ -87,6 +94,18 @@ class FakeNeobookings:
     @property
     def quantities(self):
         return [body["Payment"]["Quantity"] for body in self.payment_calls]
+
+    @property
+    def descriptions(self):
+        """Descriptions sent, without the code of the request."""
+        return [split_code(body)[1] for body in self.payment_calls]
+
+
+def split_code(body):
+    """Code and description of the payment of a request."""
+    code, description = body["Payment"]["Description"].split(" ", 1)
+    assert CODE_RE.match(code), code
+    return code, description
 
 
 @tagged("post_install", "-at_install")
@@ -242,6 +261,50 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         payment.amount = amount
         payment.action_post()
 
+    def _send_back(self, folio, *transactions, user=None):
+        """Neobookings sends ``folio`` back with ``transactions``, like
+        after any change of the reservation, as the API ``user``."""
+        env = self.env(user=user or self.neo_user)
+        work = WorkContext(
+            model_name="rest.service.registration",
+            collection=_PseudoCollection("pms.services", env),
+        )
+        work.component(usage="folios").compute_transactions(
+            folio.with_env(env).sudo(),
+            [
+                env.datamodels["pms.transaction.info"](
+                    **dict(
+                        {
+                            "date": str(fields.Date.today()),
+                            "journalId": self.bank_journal.id,
+                            "transactionType": "inbound",
+                        },
+                        **transaction,
+                    )
+                )
+                for transaction in transactions
+            ],
+        )
+
+    def _echo(self, body, reference, **values):
+        """Transaction Neobookings sends back for the request ``body``."""
+        quantity = body["Payment"]["Quantity"]
+        return dict(
+            {
+                "amount": abs(quantity),
+                "transactionType": "inbound" if quantity > 0 else "outbound",
+                "reference": reference,
+                "name": body["Payment"]["Description"],
+            },
+            **values,
+        )
+
+    def _neobookings_payments(self, folio):
+        return folio.payment_ids.filtered(
+            lambda payment: payment.create_uid == self.neo_user
+            and payment.state == "posted"
+        )
+
     # Sending
 
     def test_reception_payment_is_sent(self):
@@ -270,7 +333,7 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
                 "Method": "other",
                 "Quantity": 50.0,
                 "Currency": payment.currency_id.name,
-                "Description": payment.name,
+                "Description": f"{sync.request_ids.code} {payment.name}",
                 "Removed": False,
             },
         )
@@ -281,6 +344,12 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         self.assertFalse(sync.inflight_data)
         self.assertEqual(json.loads(sync.sent_data)["order"], "NEO-1")
         self.assertEqual(json.loads(sync.last_request), body)
+        request = sync.request_ids
+        self.assertRegex(request.code, CODE_RE)
+        self.assertEqual(request.state, "done")
+        self.assertEqual(request.quantity, 50.0)
+        self.assertEqual(request.description, payment.name)
+        self.assertEqual(request.folio_id, folio)
 
     def test_payment_method(self):
         cash = self._create_payment(
@@ -304,7 +373,7 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         fake = self._sync()
 
         methods = {
-            body["Payment"]["Description"]: body["Payment"]["Method"]
+            split_code(body)[1]: body["Payment"]["Method"]
             for body in fake.payment_calls
         }
         self.assertEqual(
@@ -356,7 +425,7 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         self.assertEqual(body["OrderId"], "NEO-1")
         reversal = body["Payment"]
         self.assertEqual(reversal["Quantity"], -50.0)
-        self.assertEqual(reversal["Description"], payment.name + " (reversal)")
+        self.assertEqual(split_code(body)[1], payment.name + " (reversal)")
         self.assertEqual(reversal["Method"], sent["payment"]["Method"])
         self.assertEqual(reversal["Currency"], sent["payment"]["Currency"])
         self.assertRegex(reversal["DateCreated"], DATETIME_RE)
@@ -386,8 +455,7 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
 
         self.assertEqual(fake.quantities, [-50.0, 80.0])
         self.assertEqual(
-            [body["Payment"]["Description"] for body in fake.payment_calls],
-            [payment.name + " (reversal)", payment.name],
+            fake.descriptions, [payment.name + " (reversal)", payment.name]
         )
         self.assertFalse(any(body["Payment"]["Removed"] for body in fake.payment_calls))
         sync = self._get_sync(payment)
@@ -455,7 +523,7 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         fake = self._sync()
 
         self.assertEqual(fake.quantities, [amount])
-        self.assertEqual(fake.payment_calls[0]["Payment"]["Description"], payment.name)
+        self.assertEqual(fake.descriptions, [payment.name])
         sent = json.loads(self._get_sync(payment).sent_data)
         self.assertEqual(sent["payment"]["Quantity"], amount)
 
@@ -741,6 +809,188 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         self.assertEqual(payment.state, "posted")
         self.assertFalse(self._get_sync(payment))
 
+    # Neobookings sends the reported payments back with the reservation
+
+    def test_every_request_has_its_own_code(self):
+        payment = self._create_payment(self._create_folio(), amount=50.0)
+        first = self._sync()
+        self._change_amount(payment, 80.0)
+        fake = self._sync()
+
+        bodies = first.payment_calls + fake.payment_calls
+        codes = [split_code(body)[0] for body in bodies]
+        self.assertEqual(len(set(codes)), 3)
+        requests_ = self._get_sync(payment).request_ids.sorted("id")
+        self.assertEqual(requests_.mapped("code"), codes)
+        self.assertEqual(requests_.mapped("quantity"), [50.0, -50.0, 80.0])
+        self.assertEqual(
+            requests_.mapped("description"),
+            [payment.name, payment.name + " (reversal)", payment.name],
+        )
+        self.assertEqual(set(requests_.mapped("state")), {"done"})
+
+    def test_payment_sent_back_is_not_registered(self):
+        folio = self._create_folio()
+        self._create_payment(folio, amount=50.0)
+        body = self._sync().payment_calls[0]
+        request = self.env["pms.neobookings.payment.request"].search(
+            [("code", "=", split_code(body)[0])]
+        )
+
+        self._send_back(folio, self._echo(body, "2058383"))
+
+        self.assertFalse(self._neobookings_payments(folio))
+        self.assertEqual(request.neobookings_reference, "2058383")
+        self.assertTrue(request.echo_date)
+        self.assertFalse(request.neobookings_duplicate_references)
+        # Every later change of the reservation sends it again, and once
+        # linked the id of Neobookings is enough
+        self._send_back(folio, self._echo(body, "2058383"))
+        self._send_back(folio, self._echo(body, "2058383", name=None))
+        self.assertFalse(self._neobookings_payments(folio))
+        self.assertFalse(self._sync().calls, "Nothing changed for Neobookings")
+
+    def test_reversal_sent_back_is_not_registered(self):
+        folio = self._create_folio()
+        payment = self._create_payment(folio, amount=50.0)
+        first = self._sync().payment_calls[0]
+        self._change_amount(payment, 80.0)
+        reversal, new = self._sync().payment_calls
+        self.assertEqual(reversal["Payment"]["Quantity"], -50.0)
+
+        self._send_back(
+            folio,
+            self._echo(first, "N-1"),
+            self._echo(reversal, "N-2"),
+            self._echo(new, "N-3"),
+        )
+
+        self.assertFalse(folio.payment_ids - payment)
+        # Also when Neobookings sends a negative amount as an inbound payment
+        self._send_back(
+            folio, self._echo(reversal, "N-2", amount=-50.0, transactionType="inbound")
+        )
+        self.assertFalse(folio.payment_ids - payment)
+
+    def test_neobookings_charge_is_still_registered(self):
+        folio = self._create_folio()
+        self._create_payment(folio, amount=50.0)
+        body = self._sync().payment_calls[0]
+
+        self._send_back(
+            folio,
+            self._echo(body, "N-1"),
+            {"amount": 30.0, "reference": "N-2", "name": "Neopayments charge"},
+            {"amount": 20.0, "reference": "N-3", "name": "RDP-AAAAAAAA unknown"},
+        )
+
+        self.assertEqual(
+            sorted(self._neobookings_payments(folio).mapped("amount")), [20.0, 30.0]
+        )
+
+    def test_only_the_api_user_sends_payments_back(self):
+        folio = self._create_folio()
+        self._create_payment(folio, amount=50.0)
+        body = self._sync().payment_calls[0]
+        other_api_user = self.env["res.users"].create(
+            {"name": "Other API", "login": "other_api_test"}
+        )
+
+        self._send_back(folio, self._echo(body, "N-1"), user=other_api_user)
+
+        self.assertEqual(
+            folio.payment_ids.filtered(
+                lambda payment: payment.create_uid == other_api_user
+            ).mapped("amount"),
+            [50.0],
+        )
+
+    def test_payment_sent_back_confirms_request_to_review(self):
+        folio = self._create_folio()
+        payment = self._create_payment(folio, amount=50.0)
+        sync = self._get_sync(payment)
+        self._sync(read_timeout())
+        self.assertEqual(sync.state, "review")
+        body = json.loads(sync.inflight_data)["request"]
+
+        self._send_back(folio, self._echo(body, "N-1"))
+
+        self.assertEqual(sync.state, "pending")
+        self.assertFalse(sync.inflight_data)
+        self.assertEqual(json.loads(sync.sent_data)["payment"]["Quantity"], 50.0)
+        self.assertEqual(sync.request_ids.state, "done")
+        self.assertFalse(self._sync().calls)
+        self.assertEqual(sync.state, "done")
+        self.assertFalse(self._neobookings_payments(folio))
+
+    def test_payment_sent_back_before_the_answer_is_lost(self):
+        folio = self._create_folio()
+        payment = self._create_payment(folio, amount=50.0)
+        sync = self._get_sync(payment)
+
+        def send_back_then_time_out():
+            body = json.loads(sync.inflight_data)["request"]
+            self._send_back(folio, self._echo(body, "N-1"))
+            return read_timeout()
+
+        self._sync(send_back_then_time_out)
+
+        self.assertEqual(sync.state, "pending", "Received, not to review")
+        self.assertEqual(sync.request_ids.state, "done")
+        self.assertFalse(self._sync().calls)
+        self.assertEqual(sync.state, "done")
+
+    def test_request_sent_again_keeps_its_code(self):
+        payment = self._create_payment(self._create_folio(), amount=50.0)
+        fake = self._sync(rejected())
+        sync = self._get_sync(payment)
+        self.assertEqual(sync.state, "pending")
+        self.assertEqual(sync.request_ids.state, "failed")
+        fake_2 = self._sync()
+
+        bodies = fake.payment_calls + fake_2.payment_calls
+        self.assertEqual(len(bodies), 2)
+        self.assertEqual(split_code(bodies[0])[0], split_code(bodies[1])[0])
+        self.assertEqual(len(sync.request_ids), 1)
+        self.assertEqual(sync.request_ids.state, "done")
+
+    def test_request_counted_twice_is_flagged(self):
+        folio = self._create_folio()
+        payment = self._create_payment(folio, amount=50.0)
+        sync = self._get_sync(payment)
+        self._sync(SERVER_ERROR)
+        sync.action_mark_not_received()
+        self.assertEqual(sync.request_ids.state, "failed")
+        fake = self._sync()
+        body = fake.payment_calls[0]
+        request = sync.request_ids
+        self.assertEqual(len(request), 1, "Sent again with the same code")
+
+        # Neobookings had got the first one after all
+        self._send_back(folio, self._echo(body, "N-1"), self._echo(body, "N-2"))
+
+        self.assertFalse(self._neobookings_payments(folio))
+        self.assertEqual(request.neobookings_reference, "N-1")
+        self.assertEqual(request.neobookings_duplicate_references, "N-2")
+        self.assertIn(
+            sync,
+            self.env["pms.neobookings.payment.sync"].search(
+                [("request_ids.neobookings_duplicate_references", "!=", False)]
+            ),
+        )
+
+    def test_check_of_payments_sent_back_never_blocks_the_update(self):
+        folio = self._create_folio()
+        request_model = self.registry["pms.neobookings.payment.request"]
+        with mock.patch.object(
+            request_model, "_match_echo", side_effect=ValueError("boom")
+        ), self.assertLogs(
+            "odoo.addons.pms_api_rest.models.pms_neobookings_payment_request",
+            level="ERROR",
+        ):
+            self._send_back(folio, {"amount": 30.0, "reference": "N-1"})
+        self.assertEqual(self._neobookings_payments(folio).mapped("amount"), [30.0])
+
     # Configuration
 
     def test_property_in_one_connection_only(self):
@@ -761,6 +1011,8 @@ class TestNeobookingsPayment(TestPms, AccountTestInvoicingCommon):
         self.assertFalse(sync.sent_data)
         requests_ = json.loads(sync.last_request)
         self.assertEqual(len(requests_), 1)
+        self.assertEqual(split_code(requests_[0])[1], payment.name)
+        self.assertFalse(sync.request_ids, "Nothing sent, nothing to recognize")
         self.assertEqual(requests_[0]["OrderId"], "NEO-1")
         self.assertEqual(requests_[0]["Payment"]["Quantity"], 50.0)
         self.assertFalse(requests_[0]["Payment"]["Removed"])

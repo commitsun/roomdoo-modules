@@ -9,3 +9,4 @@ access_roomdoo_app_menu_url_param_manager,roomdoo.app.menu.urlp.param manager,mo
 pms_api_rest.access_one_time_res_users_apikeys,access_one_time_res_users_apikeys,pms_api_rest.model_one_time_res_users_apikeys,base.group_user,1,1,1,1
 access_pms_neobookings_backend_system,pms.neobookings.backend system,model_pms_neobookings_backend,base.group_system,1,1,1,1
 access_pms_neobookings_payment_sync_system,pms.neobookings.payment.sync system,model_pms_neobookings_payment_sync,base.group_system,1,1,1,1
+access_pms_neobookings_payment_request_system,pms.neobookings.payment.request system,model_pms_neobookings_payment_request,base.group_system,1,1,1,0

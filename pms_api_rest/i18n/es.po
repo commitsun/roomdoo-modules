@@ -270,12 +270,14 @@ msgstr "Conexiones"
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__create_uid
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__create_uid
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__create_uid
 msgid "Created by"
 msgstr "Creado por"
 
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__create_date
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__create_date
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__create_date
 msgid "Created on"
 msgstr "Creado el"
 
@@ -287,6 +289,7 @@ msgstr "Datos en Neobookings"
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__display_name
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__display_name
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
@@ -314,6 +317,7 @@ msgstr "Diarios excluidos"
 
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__folio_id
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__folio_id
 msgid "Folio"
 msgstr "Ficha"
 
@@ -325,6 +329,7 @@ msgstr "Agrupar por"
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__id
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__id
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__id
 msgid "ID"
 msgstr "ID"
 
@@ -341,6 +346,7 @@ msgstr "Último error"
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend____last_update
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync____last_update
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request____last_update
 msgid "Last Modified on"
 msgstr "Última modificación el"
 
@@ -362,12 +368,14 @@ msgstr "Última sincronización"
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__write_uid
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__write_uid
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__write_uid
 msgid "Last Updated by"
 msgstr "Última actualización por"
 
 #. module: pms_api_rest
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_backend__write_date
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__write_date
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__write_date
 msgid "Last Updated on"
 msgstr "Última actualización el"
 
@@ -401,6 +409,7 @@ msgstr "Usuario de la API de Neobookings"
 #. module: pms_api_rest
 #: model:ir.model,name:pms_api_rest.model_pms_neobookings_backend
 #: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__backend_id
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__backend_id
 msgid "Neobookings Connection"
 msgstr "Conexión con Neobookings"
 
@@ -523,6 +532,7 @@ msgstr "Estado"
 
 #. module: pms_api_rest
 #: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_search
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__state
 msgid "Status"
 msgstr "Estado"
 
@@ -600,11 +610,13 @@ msgstr "La petición se enviará de nuevo. Si Neobookings ya la recibió, el pag
 #: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_sync__state__review
 #: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_backend_view_form
 #: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_search
+#: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_request__state__review
 msgid "To Review"
 msgstr "Por revisar"
 
 #. module: pms_api_rest
 #: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_sync__state__sending
+#: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_request__state__sending
 msgid "In Progress"
 msgstr "En curso"
 
@@ -657,3 +669,90 @@ msgstr "Los pagos pendientes se enviarán en un momento."
 #, python-format
 msgid "The request was cut off before its answer arrived; Neobookings may have received it."
 msgstr "La petición se cortó antes de recibir la respuesta; puede que Neobookings la haya recibido."
+
+#. module: pms_api_rest
+#: model:ir.model.constraint,message:pms_api_rest.constraint_pms_neobookings_payment_request_code_unique
+msgid "The code of a Neobookings payment request must be unique."
+msgstr "El código de una petición de pago a Neobookings debe ser único."
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__code
+msgid "Code"
+msgstr "Código"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__description
+msgid "Description"
+msgstr "Descripción"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,help:pms_api_rest.field_pms_neobookings_payment_request__description
+msgid "Description sent to Neobookings, after the code."
+msgstr "Descripción enviada a Neobookings, después del código."
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__neobookings_duplicate_references
+#: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_search
+msgid "Duplicated in Neobookings"
+msgstr "Duplicado en Neobookings"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,help:pms_api_rest.field_pms_neobookings_payment_request__neobookings_reference
+msgid "Id of the payment in Neobookings, known when Neobookings sends the reservation back."
+msgstr "Id del pago en Neobookings, que se conoce cuando Neobookings devuelve la reserva."
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__neobookings_reference
+msgid "Neobookings Payment"
+msgstr "Pago en Neobookings"
+
+#. module: pms_api_rest
+#: model:ir.model,name:pms_api_rest.model_pms_neobookings_payment_request
+msgid "Neobookings Payment Request"
+msgstr "Petición de pago a Neobookings"
+
+#. module: pms_api_rest
+#: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_request__state__failed
+msgid "Not Received"
+msgstr "No recibida"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,help:pms_api_rest.field_pms_neobookings_payment_request__neobookings_duplicate_references
+msgid "Other payments of Neobookings with the code of this request: Neobookings counted it more than once."
+msgstr "Otros pagos de Neobookings con el código de esta petición: Neobookings la contó más de una vez."
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__sync_id
+msgid "Payment Sync"
+msgstr "Sincronización del pago"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__quantity
+msgid "Quantity"
+msgstr "Importe"
+
+#. module: pms_api_rest
+#: model:ir.model.fields.selection,name:pms_api_rest.selection__pms_neobookings_payment_request__state__done
+msgid "Received"
+msgstr "Recibida"
+
+#. module: pms_api_rest
+#: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_search
+msgid "Request Code or Neobookings Payment"
+msgstr "Código de petición o pago en Neobookings"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_sync__request_ids
+#: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_form
+msgid "Requests"
+msgstr "Peticiones"
+
+#. module: pms_api_rest
+#: model:ir.model.fields,field_description:pms_api_rest.field_pms_neobookings_payment_request__echo_date
+msgid "Sent Back On"
+msgstr "Devuelto por Neobookings el"
+
+#. module: pms_api_rest
+#: model_terms:ir.ui.view,arch_db:pms_api_rest.pms_neobookings_payment_sync_view_form
+msgid "Sent On"
+msgstr "Enviada el"

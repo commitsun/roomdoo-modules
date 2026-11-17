@@ -1221,6 +1221,13 @@ class PmsFolioService(Component):
 
     def compute_transactions(self, folio, transactions):
         for transaction in transactions:
+            # Neobookings sends back the payments the PMS reported to it
+            if (
+                self.env["pms.neobookings.payment.request"]
+                .sudo()
+                ._is_neobookings_echo(folio, transaction)
+            ):
+                continue
             reference = folio.name + " - "
             if transaction.reference:
                 reference += transaction.reference

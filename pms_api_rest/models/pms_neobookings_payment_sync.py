@@ -8,6 +8,7 @@ from psycopg2 import OperationalError
 
 from odoo import _, api, fields, models
 from odoo.service.model import PG_CONCURRENCY_ERRORS_TO_RETRY
+from odoo.tools import float_is_zero
 
 from .pms_neobookings_backend import (
     DATETIME_FORMAT,
@@ -42,7 +43,11 @@ class PmsNeobookingsPaymentSync(models.Model):
     Every request is stored in ``inflight_data`` and committed before it is
     sent. When the result is unknown (no answer, server error, process cut
     off) the sync waits in "To Review" until a person tells whether
-    Neobookings got it, because sending it again could count it twice.
+    Neobookings got it, because sending it again could count it twice, or
+    until Neobookings sends the payment back with the reservation.
+
+    Each request is also kept in ``request_ids`` with the unique code sent in
+    its description (see ``pms.neobookings.payment.request``).
     """
 
     _name = "pms.neobookings.payment.sync"
@@ -107,6 +112,12 @@ class PmsNeobookingsPaymentSync(models.Model):
     )
     last_request = fields.Text(readonly=True)
     last_response = fields.Text(readonly=True)
+    request_ids = fields.One2many(
+        comodel_name="pms.neobookings.payment.request",
+        inverse_name="sync_id",
+        string="Requests",
+        readonly=True,
+    )
 
     _sql_constraints = [
         (
@@ -280,16 +291,20 @@ class PmsNeobookingsPaymentSync(models.Model):
                 self._write_result(self._get_done_vals())
                 return
             request_data, sent_data = actions[0]
-            payload = backend._prepare_order_payment(request_data)
-            if not self._claim(payload, sent_data):
+            retried = self._get_retried_request(request_data)
+            code = retried.code or retried._new_code()
+            payload = backend._prepare_order_payment(request_data, code)
+            request = self._claim(payload, sent_data, request_data, code, retried)
+            if not request:
                 return
             try:
                 response = backend._request(PAYMENT_ENDPOINT, payload)
             except NeobookingsUncertainError as error:
-                self._write_result(self._get_review_vals(str(error)))
+                self._write_result(self._get_review_vals(str(error)), request, "review")
+                self._check_sent_back(request)
                 return
             except NeobookingsError as error:
-                self._write_result(self._get_failed_vals(str(error)))
+                self._write_result(self._get_failed_vals(str(error)), request, "failed")
                 return
             self._write_result(
                 {
@@ -301,14 +316,40 @@ class PmsNeobookingsPaymentSync(models.Model):
                     "last_error": False,
                     "last_response": json.dumps(response),
                     "last_sync_date": fields.Datetime.now(),
-                }
+                },
+                request,
+                "done",
             )
 
-    def _claim(self, payload, sent_data):
+    def _get_retried_request(self, request_data):
+        """The request ``request_data`` sends again, if any.
+
+        A request Neobookings did not get is sent again with the same code,
+        so that it shows up as duplicated if Neobookings got it after all.
+        """
+        self.ensure_one()
+        last = self.request_ids.sorted("id", reverse=True)[:1]
+        payment = request_data["payment"]
+        if (
+            last.state == "failed"
+            and last.description == payment["Description"]
+            and float_is_zero(last.quantity - payment["Quantity"], precision_digits=6)
+        ):
+            return last
+        return self.env["pms.neobookings.payment.request"]
+
+    def _get_inflight_request(self):
+        self.ensure_one()
+        return self.request_ids.filtered(
+            lambda request: request.state in ("sending", "review")
+        ).sorted("id", reverse=True)[:1]
+
+    def _claim(self, payload, sent_data, request_data, code, retried):
         """Store the request as in progress and commit it.
 
-        :return: False when another transaction changed the record meanwhile;
-            it stays pending and is computed again on the next run.
+        :return: the ``pms.neobookings.payment.request`` being sent, empty
+            when another transaction changed the record meanwhile; it stays
+            pending and is computed again on the next run.
         """
         self.ensure_one()
         vals = {
@@ -318,19 +359,35 @@ class PmsNeobookingsPaymentSync(models.Model):
         }
         if not self.backend_id._is_auto_commit():
             self.write(vals)
-            return True
+            return self._save_request(request_data, code, retried)
         try:
             self.write(vals)
+            request = self._save_request(request_data, code, retried)
             self.env.cr.commit()  # pylint: disable=invalid-commit
         except OperationalError as error:
             if error.pgcode not in PG_CONCURRENCY_ERRORS_TO_RETRY:
                 raise
             self.env.cr.rollback()
             self.env.invalidate_all()
-            return False
-        return True
+            return self.env["pms.neobookings.payment.request"]
+        return request
 
-    def _write_result(self, vals):
+    def _save_request(self, request_data, code, retried):
+        if retried:
+            retried.state = "sending"
+            return retried
+        payment = request_data["payment"]
+        return self.env["pms.neobookings.payment.request"].create(
+            {
+                "sync_id": self.id,
+                "folio_id": self.folio_id.id,
+                "code": code,
+                "quantity": payment["Quantity"],
+                "description": payment["Description"],
+            }
+        )
+
+    def _write_result(self, vals, request=None, request_state=None):
         """Write and commit ``vals``, retrying on concurrent updates.
 
         The result of a request already sent must not be lost: if it cannot
@@ -339,10 +396,14 @@ class PmsNeobookingsPaymentSync(models.Model):
         self.ensure_one()
         if not self.backend_id._is_auto_commit():
             self.write(vals)
+            if request:
+                request.state = request_state
             return
         for tries in range(1, MAX_WRITE_TRIES + 1):
             try:
                 self.write(vals)
+                if request:
+                    request.state = request_state
                 self.env.cr.commit()  # pylint: disable=invalid-commit
                 return
             except OperationalError as error:
@@ -387,6 +448,37 @@ class PmsNeobookingsPaymentSync(models.Model):
             )
         return vals
 
+    def _get_received_vals(self):
+        """The request without answer reached Neobookings."""
+        self.ensure_one()
+        sent_data = json.loads(self.inflight_data)["sent_data"]
+        return {
+            "sent_data": json.dumps(sent_data) if sent_data else False,
+            "inflight_data": False,
+            "state": "pending",
+            "attempts": 0,
+            "next_attempt_date": fields.Datetime.now(),
+            "last_error": False,
+        }
+
+    def _set_received(self, request):
+        """Neobookings sent back ``request``, which was waiting for review."""
+        self.ensure_one()
+        if self.state == "review" and self.inflight_data:
+            self.write(self._get_received_vals())
+            self.backend_id._trigger_sync()
+        request.write({"state": "done"})
+
+    def _check_sent_back(self, request):
+        """Neobookings may have sent the payment back before its answer
+        was lost: then it got the request."""
+        self.ensure_one()
+        if self.backend_id._is_auto_commit():
+            # The result was committed: read what other transactions stored
+            self.env.invalidate_all()
+        if request.neobookings_reference and self.state == "review":
+            self._write_result(self._get_received_vals(), request, "done")
+
     def _get_review_vals(self, message):
         """The request may have been received: keep it for a person."""
         return {
@@ -410,15 +502,17 @@ class PmsNeobookingsPaymentSync(models.Model):
                     )
                 )
             )
+            sync._get_inflight_request().write({"state": "review"})
 
     def _handle_unexpected_error(self, message):
         """Store an unexpected error after rolling back the transaction."""
         self.ensure_one()
         if self.inflight_data:
-            vals = self._get_review_vals(message)
+            self._write_result(
+                self._get_review_vals(message), self._get_inflight_request(), "review"
+            )
         else:
-            vals = self._get_failed_vals(message)
-        self._write_result(vals)
+            self._write_result(self._get_failed_vals(message))
 
     def _simulate_sync_actions(self, actions):
         """Store the requests that would be sent, without sending them."""
@@ -427,8 +521,9 @@ class PmsNeobookingsPaymentSync(models.Model):
             self.write(self._get_done_vals())
             return
         backend = self.backend_id
+        new_code = self.env["pms.neobookings.payment.request"]._new_code
         payloads = [
-            backend._prepare_order_payment(request_data)
+            backend._prepare_order_payment(request_data, new_code())
             for request_data, _sent_data in actions
         ]
         self.write(
@@ -456,23 +551,18 @@ class PmsNeobookingsPaymentSync(models.Model):
         for sync in self.filtered(
             lambda sync: sync.state == "review" and sync.inflight_data
         ):
-            sent_data = json.loads(sync.inflight_data)["sent_data"]
-            sync.write(
-                {
-                    "sent_data": json.dumps(sent_data) if sent_data else False,
-                    "inflight_data": False,
-                    "state": "pending",
-                    "attempts": 0,
-                    "next_attempt_date": fields.Datetime.now(),
-                    "last_error": False,
-                }
-            )
+            request = sync._get_inflight_request()
+            sync.write(sync._get_received_vals())
+            request.write({"state": "done"})
         self.backend_id._trigger_sync()
         return True
 
     def action_mark_not_received(self):
         """Neobookings did not get the request without answer: send it again."""
-        self.filtered(lambda sync: sync.state == "review").write(
+        syncs = self.filtered(lambda sync: sync.state == "review")
+        for sync in syncs:
+            sync._get_inflight_request().write({"state": "failed"})
+        syncs.write(
             {
                 "inflight_data": False,
                 "state": "pending",
