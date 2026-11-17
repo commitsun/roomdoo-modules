@@ -8,3 +8,4 @@ from . import pms_reservation
 from . import pms_room_type
 from . import product_pricelist
 from . import queue_job
+from . import res_partner
