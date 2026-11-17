@@ -4,4 +4,5 @@
 from . import rate_plan
 from . import adapter
 from . import sync
+from . import ari
 from . import backend
