@@ -51,23 +51,35 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertEqual(
-            response.json(),
+            self._id_names(response.json()),
             {
                 "firstname": "Ann",
                 "lastname": "Lee",
                 "lastname2": "Ray",
                 "gender": "female",
                 "birthdate": "1990-05-17",
-                "nationality": "PT",
-                "documentType": "TST",
+                "nationality": {
+                    "id": self.country_pt.id,
+                    "name": self.country_pt.name,
+                },
+                "documentType": {
+                    "id": self.id_category.id,
+                    "name": self.id_category.name,
+                },
                 "documentNumber": "AB123",
-                "documentCountryId": "PT",
+                "documentCountry": {
+                    "id": self.country_pt.id,
+                    "name": self.country_pt.name,
+                },
                 "documentSupportNumber": "SUP1",
-                "countryId": "ES",
-                "countryState": state.name,
-                "residenceCity": "Madrid",
-                "residenceStreet": "Main 1",
-                "zip": "28001",
+                "country": {
+                    "id": self.country_es.id,
+                    "name": self.country_es.name,
+                },
+                "state": {"id": state.id, "name": state.name},
+                "city": "Madrid",
+                "street": "Main 1",
+                "zipCode": "28001",
             },
         )
         process.assert_called_once_with("ZnJvbnQ=", "YmFjaw==")

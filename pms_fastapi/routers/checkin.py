@@ -18,15 +18,31 @@ from odoo.addons.pms_fastapi.schemas.checkin import (
     CheckinDocumentData,
     CheckinGuest,
     CheckinGuests,
+    CheckinGuestState,
     CheckinPartnerDetail,
     CheckinPartnerUpdate,
     CheckinRoom,
     DocumentScanInput,
 )
+from odoo.addons.pms_fastapi.schemas.contact_id_number import (
+    ContactIdNumberCategoryId,
+)
+from odoo.addons.pms_fastapi.schemas.country import CountryId
+from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 from odoo.addons.pms_fastapi.utils import ApiProblem, build_problem
 
 ORIGIN_INPUT_WIZARD = "wizard"
 GENDERS = ("male", "female", "other")
+# Stored state of a guest -> API state. A cancelled guest is not listed.
+GUEST_STATES = {
+    "dummy": CheckinGuestState.pending,
+    "draft": CheckinGuestState.pending,
+    "precheckin": CheckinGuestState.completed,
+    "onboard": CheckinGuestState.inHouse,
+    "done": CheckinGuestState.checkedOut,
+}
+MAX_DOCUMENT_IMAGE_LENGTH = 1_500_000
+MAX_SIGNATURE_LENGTH = 500_000
 # Payload key -> check-in partner field, for the values written as they come.
 SIMPLE_FIELDS = {
     "firstname": "firstname",
@@ -34,17 +50,17 @@ SIMPLE_FIELDS = {
     "lastname2": "lastname2",
     "documentNumber": "document_number",
     "documentSupportNumber": "support_number",
-    "residenceCity": "city",
-    "residenceStreet": "street",
-    "zip": "zip",
+    "city": "city",
+    "street": "street",
+    "zipCode": "zip",
     "email": "email",
     "mobile": "mobile",
 }
-# Payload key -> check-in partner field, for the ISO country codes.
+# Payload key -> check-in partner field, for the country ids.
 COUNTRY_FIELDS = {
     "nationality": "nationality_id",
-    "documentCountryId": "document_country_id",
-    "countryId": "country_id",
+    "documentCountry": "document_country_id",
+    "country": "country_id",
 }
 
 
@@ -168,34 +184,54 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
     # Value conversions
 
     @staticmethod
-    def _country_code(country):
-        return country.code or None
+    def _country_id(country):
+        return CountryId.from_res_country(country) if country else None
 
-    def _country_from_code(self, code, field):
-        country = self.env["res.country"].search([("code", "=ilike", code)], limit=1)
+    @staticmethod
+    def _state_id(state):
+        return CountryStateId.from_res_country_state(state) if state else None
+
+    @staticmethod
+    def _document_type_id(category):
+        if not category:
+            return None
+        return ContactIdNumberCategoryId.from_res_partner_id_number_category(category)
+
+    def _country_from_id(self, country_id, field):
+        country = self.env["res.country"].browse(country_id).exists()
         if not country:
             self._raise_problem(
                 422,
                 "/errors/unknown-country",
                 _("Unknown country"),
-                _("The country code is not valid."),
+                _("The country is not valid."),
                 field=field,
             )
         return country
 
-    def _document_type_from_code(self, code):
-        category = self.env["res.partner.id_category"].search(
-            [("code", "=", code)], limit=1
-        )
+    def _document_type_from_id(self, category_id):
+        category = self.env["res.partner.id_category"].browse(category_id).exists()
         if not category:
             self._raise_problem(
                 422,
                 "/errors/unknown-document-type",
                 _("Unknown document type"),
-                _("The document type code is not valid."),
+                _("The document type is not valid."),
                 field="documentType",
             )
         return category
+
+    def _state_from_id(self, state_id, country):
+        state = self.env["res.country.state"].browse(state_id).exists()
+        if not state or (country and state.country_id != country):
+            self._raise_problem(
+                422,
+                "/errors/unknown-country-state",
+                _("Unknown state"),
+                _("The state is not valid for the residence country."),
+                field="state",
+            )
+        return state
 
     @staticmethod
     def _date_iso(value):
@@ -205,30 +241,35 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             return value.isoformat()
         return str(value)[:10]
 
+    @staticmethod
+    def _present(values):
+        return {k: v for k, v in values.items() if v not in (None, "")}
+
     # Guests list
 
     def get_guests(self, folio_id) -> CheckinGuests:
         folio = self._get_folio(folio_id)
         rooms = []
-        reservations = folio.reservation_ids.sorted(
-            lambda r: (r.checkin or date.min, r.id)
-        )
+        reservations = folio.reservation_ids.filtered(
+            lambda r: r.state != "cancel"
+        ).sorted(lambda r: (r.checkin or date.min, r.id))
         for reservation in reservations:
             guests = [
                 CheckinGuest(
-                    id=str(cp.id),
-                    state=cp.state,
+                    id=cp.id,
+                    state=GUEST_STATES[cp.state],
                     displayName=cp.name or None,
                     birthdate=cp.birthdate_date or None,
                 )
                 for cp in reservation.checkin_partner_ids.sorted("id")
+                if cp.state in GUEST_STATES
             ]
             if not guests:
                 continue
             room = reservation.preferred_room_id
             rooms.append(
                 CheckinRoom(
-                    id=str(reservation.id),
+                    id=reservation.id,
                     name=room.name
                     if room
                     else (reservation.room_type_id.name or reservation.name),
@@ -243,33 +284,31 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         folio = self._get_folio(folio_id)
         cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
         values = {
-            "firstname": cp.firstname,
-            "lastname": cp.lastname,
-            "lastname2": cp.lastname2,
-            "gender": cp.gender,
-            "birthdate": cp.birthdate_date,
-            "nationality": self._country_code(cp.nationality_id),
-            "documentType": cp.document_type.code,
-            "documentNumber": cp.document_number,
-            "documentCountryId": self._country_code(cp.document_country_id),
-            "documentSupportNumber": cp.support_number,
-            "responsibleCheckinPartnerId": str(cp.ses_related_checkin_partner_id.id)
-            if cp.ses_related_checkin_partner_id
-            else None,
+            "firstname": cp.firstname or None,
+            "lastname": cp.lastname or None,
+            "lastname2": cp.lastname2 or None,
+            "gender": cp.gender or None,
+            "birthdate": cp.birthdate_date or None,
+            "nationality": self._country_id(cp.nationality_id),
+            "documentType": self._document_type_id(cp.document_type),
+            "documentNumber": cp.document_number or None,
+            "documentCountry": self._country_id(cp.document_country_id),
+            "documentSupportNumber": cp.support_number or None,
+            "responsibleCheckinPartnerId": cp.ses_related_checkin_partner_id.id or None,
             # Stored from the guest's own perspective, exchanged from the
             # responsible adult's one, as pms_api_rest does.
             "relationship": find_opposite_relationship(cp.ses_partners_relationship)
             if cp.ses_partners_relationship
             else None,
-            "countryId": self._country_code(cp.country_id),
-            "countryState": cp.state_id.name,
-            "residenceCity": cp.city,
-            "residenceStreet": cp.street,
-            "zip": cp.zip,
-            "email": cp.email,
-            "mobile": cp.mobile,
+            "country": self._country_id(cp.country_id),
+            "state": self._state_id(cp.state_id),
+            "city": cp.city or None,
+            "street": cp.street or None,
+            "zipCode": cp.zip or None,
+            "email": cp.email or None,
+            "mobile": cp.mobile or None,
         }
-        return CheckinPartnerDetail(**{k: v for k, v in values.items() if v})
+        return CheckinPartnerDetail(**self._present(values))
 
     # Context
 
@@ -288,7 +327,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "ocrAvailable": bool(pms_property.ocr_checkin_supplier),
             "brandName": brand or None,
         }
-        values = {k: v for k, v in values.items() if v is not None}
+        values = self._present(values)
         country = pms_property.country_id
         values["localization"] = country.code.lower() if country.code else None
         return CheckinContext(**values)
@@ -313,7 +352,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         folio = self._get_folio(folio_id)
         cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
         self._check_not_read_only(cp)
-        data = payload.model_dump(exclude_unset=True)
+        data = payload.model_dump(mode="json", exclude_unset=True)
         if not data:
             return
         vals = self._prepare_update_vals(folio, cp, data)
@@ -335,20 +374,23 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             if key in data:
                 vals[odoo_field] = data[key] or False
         if "gender" in data:
-            gender = data["gender"]
-            vals["gender"] = getattr(gender, "value", gender) or False
+            vals["gender"] = data["gender"] or False
         if "birthdate" in data:
             vals["birthdate_date"] = data["birthdate"] or False
         for key, odoo_field in COUNTRY_FIELDS.items():
             if key in data:
-                code = data[key]
+                country_id = data[key]
                 vals[odoo_field] = (
-                    self._country_from_code(code, key).id if code else False
+                    False
+                    if country_id is None
+                    else self._country_from_id(country_id, key).id
                 )
         if "documentType" in data:
-            code = data["documentType"]
+            category_id = data["documentType"]
             vals["document_type"] = (
-                self._document_type_from_code(code).id if code else False
+                False
+                if category_id is None
+                else self._document_type_from_id(category_id).id
             )
         self._prepare_state_vals(cp, data, vals)
         self._prepare_relationship_vals(folio, cp, data, vals)
@@ -359,8 +401,11 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
     def _prepare_state_vals(self, cp, data, vals):
         country_id = vals.get("country_id", cp.country_id.id)
         country = self.env["res.country"].browse(country_id)
-        if "countryState" in data:
-            vals["state_id"] = self._state_from_name(data["countryState"], country).id
+        if "state" in data:
+            state_id = data["state"]
+            vals["state_id"] = (
+                False if state_id is None else self._state_from_id(state_id, country).id
+            )
         elif (
             "country_id" in vals
             and cp.state_id
@@ -370,28 +415,6 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             # The residence country changed and the stored state no longer
             # belongs to it.
             vals["state_id"] = False
-
-    def _state_from_name(self, name, country):
-        State = self.env["res.country.state"]
-        if not name:
-            return State
-        domain = [("country_id", "=", country.id)] if country else []
-        state = State.search(domain + [("name", "=ilike", name)], limit=1)
-        if not state:
-            state = State.search(domain + [("code", "=ilike", name)], limit=1)
-        if state:
-            return state
-        # A state unknown for a non-Spanish country is dropped, as in
-        # pms_api_rest (_get_residence_state_id); Spanish residents need it.
-        if country and country != self.env.ref("base.es"):
-            return State
-        self._raise_problem(
-            422,
-            "/errors/unknown-country-state",
-            _("Unknown state"),
-            _("The state is not valid for the residence country."),
-            field="countryState",
-        )
 
     def _prepare_relationship_vals(self, folio, cp, data, vals):
         if "relationship" in data:
@@ -419,7 +442,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         if not responsible_id:
             return self.env["pms.checkin.partner"]
         responsible = folio.checkin_partner_ids.filtered(
-            lambda c: str(c.id) == str(responsible_id) and c != cp
+            lambda c: c.id == responsible_id and c != cp
         )
         if not responsible:
             self._raise_problem(
@@ -483,34 +506,32 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
 
     def _scan_result_values(self, result):
         env = self.env
-        country = env["res.country"]
         values = {
-            "firstname": result.get("firstname"),
-            "lastname": result.get("lastname"),
-            "lastname2": result.get("lastname2"),
-            "documentNumber": result.get("document_number"),
-            "documentSupportNumber": result.get("document_support_number"),
-            "residenceStreet": result.get("residence_street"),
-            "residenceCity": result.get("residence_city"),
-            "zip": result.get("zip"),
+            "firstname": result.get("firstname") or None,
+            "lastname": result.get("lastname") or None,
+            "lastname2": result.get("lastname2") or None,
+            "documentNumber": result.get("document_number") or None,
+            "documentSupportNumber": result.get("document_support_number") or None,
+            "street": result.get("residence_street") or None,
+            "city": result.get("residence_city") or None,
+            "zipCode": result.get("zip") or None,
         }
         for key, scan_key in (
             ("nationality", "nationality"),
-            ("countryId", "country_id"),
-            ("documentCountryId", "document_country_id"),
+            ("country", "country_id"),
+            ("documentCountry", "document_country_id"),
         ):
             if result.get(scan_key):
-                values[key] = country.browse(result[scan_key]).code
+                country = env["res.country"].browse(result[scan_key]).exists()
+                values[key] = self._country_id(country)
         if result.get("document_type"):
-            values["documentType"] = (
-                env["res.partner.id_category"].browse(result["document_type"]).code
-            )
+            category = env["res.partner.id_category"].browse(result["document_type"])
+            values["documentType"] = self._document_type_id(category.exists())
         if result.get("country_state"):
-            values["countryState"] = (
-                env["res.country.state"].browse(result["country_state"]).name
-            )
+            state = env["res.country.state"].browse(result["country_state"])
+            values["state"] = self._state_id(state.exists())
         if result.get("gender") in GENDERS:
             values["gender"] = result["gender"]
         if result.get("birthdate"):
             values["birthdate"] = self._date_iso(result["birthdate"])
-        return {k: v for k, v in values.items() if v}
+        return self._present(values)

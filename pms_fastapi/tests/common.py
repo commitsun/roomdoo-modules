@@ -417,3 +417,14 @@ class CommonTestCheckin(CommonTestPmsApi):
         if checkin_partner is not None:
             url += f"/{checkin_partner.id}"
         return url
+
+    @staticmethod
+    def _id_names(body):
+        """Reduce the references of a body to id and name, which extension
+        modules may enrich with more members."""
+        return {
+            key: {"id": value["id"], "name": value["name"]}
+            if isinstance(value, dict)
+            else value
+            for key, value in body.items()
+        }

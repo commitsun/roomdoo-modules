@@ -20,23 +20,59 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         rooms = response.json()["rooms"]
         self.assertEqual(len(rooms), 2)
         by_id = {room["id"]: room for room in rooms}
-        room = by_id[str(self.reservation.id)]
+        room = by_id[self.reservation.id]
         self.assertEqual(room["name"], "101")
         self.assertEqual(
             [cp["id"] for cp in room["checkinPartners"]],
-            [str(cp.id) for cp in self.checkin_partners],
+            self.checkin_partners.ids,
         )
         first = room["checkinPartners"][0]
         self.assertEqual(first["displayName"], self.guest.name)
         self.assertEqual(first["birthdate"], "1990-05-17")
-        self.assertEqual(first["state"], self.guest.state)
+        self.assertEqual(first["state"], "pending")
         dummy = room["checkinPartners"][1]
-        self.assertEqual(dummy["state"], "dummy")
+        self.assertEqual(dummy["state"], "pending")
         self.assertIsNone(dummy["displayName"])
         self.assertIsNone(dummy["birthdate"])
-        room2 = by_id[str(reservation2.id)]
+        room2 = by_id[reservation2.id]
         self.assertEqual(room2["name"], "102")
         self.assertEqual(len(room2["checkinPartners"]), 1)
+
+    def test_guest_states_are_mapped_to_the_api_states(self):
+        states = {
+            "dummy": "pending",
+            "draft": "pending",
+            "precheckin": "completed",
+            "onboard": "inHouse",
+            "done": "checkedOut",
+        }
+        for stored, expected in states.items():
+            self.guest.state = stored
+            response = self._get(f"/folios/{self.folio.id}/checkin-guests")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            guests = response.json()["rooms"][0]["checkinPartners"]
+            self.assertEqual(guests[0]["state"], expected, stored)
+
+    def test_cancelled_guests_are_not_listed(self):
+        self.guest.state = "cancel"
+        response = self._get(f"/folios/{self.folio.id}/checkin-guests")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        guests = response.json()["rooms"][0]["checkinPartners"]
+        self.assertEqual([g["id"] for g in guests], [self.checkin_partners[1].id])
+
+    def test_cancelled_reservations_are_not_listed(self):
+        folio = self._create_folio()
+        reservation = self._create_reservation(folio, self.room2, adults=1)
+        reservation.action_cancel()
+        response = self._get(f"/folios/{folio.id}/checkin-guests")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.json(), {"rooms": []})
+
+    def test_a_room_left_without_guests_is_dropped(self):
+        self.checkin_partners.write({"state": "cancel"})
+        response = self._get(f"/folios/{self.folio.id}/checkin-guests")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.json(), {"rooms": []})
 
     def test_out_of_service_reservation_has_no_guests(self):
         folio = self._create_folio()
@@ -55,7 +91,7 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         response = self._get(f"/folios/{folio.id}/checkin-guests")
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         room = response.json()["rooms"][0]
-        self.assertEqual(room["id"], str(reservation.id))
+        self.assertEqual(room["id"], reservation.id)
         self.assertEqual(room["name"], self.room_type.name)
 
     def test_guests_unknown_folio_returns_404(self):
@@ -116,23 +152,35 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         response = self._get(self._base_url(checkin_partner=self.guest))
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertEqual(
-            response.json(),
+            self._id_names(response.json()),
             {
                 "firstname": "Ann",
                 "lastname": "Lee",
                 "lastname2": "Ray",
                 "gender": "female",
                 "birthdate": "1990-05-17",
-                "nationality": "PT",
-                "documentType": "TST",
+                "nationality": {
+                    "id": self.country_pt.id,
+                    "name": self.country_pt.name,
+                },
+                "documentType": {
+                    "id": self.id_category.id,
+                    "name": self.id_category.name,
+                },
                 "documentNumber": "AB123",
-                "documentCountryId": "PT",
+                "documentCountry": {
+                    "id": self.country_pt.id,
+                    "name": self.country_pt.name,
+                },
                 "documentSupportNumber": "SUP1",
-                "countryId": "ES",
-                "countryState": state.name,
-                "residenceCity": "Madrid",
-                "residenceStreet": "Main 1",
-                "zip": "28001",
+                "country": {
+                    "id": self.country_es.id,
+                    "name": self.country_es.name,
+                },
+                "state": {"id": state.id, "name": state.name},
+                "city": "Madrid",
+                "street": "Main 1",
+                "zipCode": "28001",
                 "email": "ann@example.org",
                 "mobile": "+34600000000",
             },
@@ -150,9 +198,7 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         response = self._get(self._base_url(checkin_partner=minor))
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertEqual(response.json()["relationship"], "PM")
-        self.assertEqual(
-            response.json()["responsibleCheckinPartnerId"], str(responsible.id)
-        )
+        self.assertEqual(response.json()["responsibleCheckinPartnerId"], responsible.id)
 
     def test_partner_of_another_folio_returns_404(self):
         other_folio = self._create_folio()

@@ -53,7 +53,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
 
     def test_null_clears_a_field(self):
         self.guest.write({"firstname": "Ann", "lastname": "Lee", "city": "Madrid"})
-        response = self._patch({"residenceCity": None})
+        response = self._patch({"city": None})
         self.assertEqual(
             response.status_code, status.HTTP_204_NO_CONTENT, response.text
         )
@@ -78,7 +78,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         )
         self.assertEqual(self.guest.firstname, "Ann")
 
-    def test_maps_iso_codes_and_codes_to_records(self):
+    def test_maps_ids_to_records(self):
         state = self.env["res.country.state"].search(
             [("country_id", "=", self.country_es.id)], limit=1
         )
@@ -86,16 +86,16 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
             {
                 "gender": "male",
                 "birthdate": "1985-03-02",
-                "nationality": "pt",
-                "documentType": "TST",
+                "nationality": self.country_pt.id,
+                "documentType": self.id_category.id,
                 "documentNumber": "AB123",
-                "documentCountryId": "PT",
+                "documentCountry": self.country_pt.id,
                 "documentSupportNumber": "SUP1",
-                "countryId": "ES",
-                "countryState": state.name,
-                "residenceCity": "Madrid",
-                "residenceStreet": "Main 1",
-                "zip": "28001",
+                "country": self.country_es.id,
+                "state": state.id,
+                "city": "Madrid",
+                "street": "Main 1",
+                "zipCode": "28001",
             }
         )
         self.assertEqual(
@@ -128,20 +128,32 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         self.assertFalse(self.guest.document_type)
 
     def test_unknown_country_is_422(self):
-        response = self._patch({"firstname": "Ann", "nationality": "ZZ"})
-        self._assert_problem(response, "/errors/unknown-country", "nationality")
+        for field in ("nationality", "documentCountry", "country"):
+            response = self._patch({"firstname": "Ann", field: 999_999_999})
+            self._assert_problem(response, "/errors/unknown-country", field)
         self.assertFalse(self.guest.firstname)
 
     def test_unknown_document_type_is_422(self):
-        response = self._patch({"documentType": "NOPE"})
+        response = self._patch({"documentType": 999_999_999})
         self._assert_problem(response, "/errors/unknown-document-type", "documentType")
 
-    def test_unknown_spanish_state_is_422(self):
-        response = self._patch({"countryId": "ES", "countryState": "Atlantis"})
-        self._assert_problem(response, "/errors/unknown-country-state", "countryState")
+    def test_unknown_state_is_422(self):
+        response = self._patch({"country": self.country_es.id, "state": 999_999_999})
+        self._assert_problem(response, "/errors/unknown-country-state", "state")
 
-    def test_state_unknown_for_a_foreign_country_is_dropped(self):
-        response = self._patch({"countryId": "PT", "countryState": "Atlantis"})
+    def test_state_of_another_country_is_422(self):
+        state = self.env["res.country.state"].create(
+            {"name": "Test region", "code": "TRG", "country_id": self.country_fr.id}
+        )
+        response = self._patch({"country": self.country_pt.id, "state": state.id})
+        self._assert_problem(response, "/errors/unknown-country-state", "state")
+
+    def test_null_clears_the_state(self):
+        state = self.env["res.country.state"].search(
+            [("country_id", "=", self.country_es.id)], limit=1
+        )
+        self.guest.write({"country_id": self.country_es.id, "state_id": state.id})
+        response = self._patch({"state": None})
         self.assertEqual(
             response.status_code, status.HTTP_204_NO_CONTENT, response.text
         )
@@ -152,7 +164,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
             {"name": "Test region", "code": "TRG", "country_id": self.country_fr.id}
         )
         self.guest.write({"country_id": self.country_fr.id, "state_id": state.id})
-        response = self._patch({"countryId": "PT"})
+        response = self._patch({"country": self.country_pt.id})
         self.assertEqual(
             response.status_code, status.HTTP_204_NO_CONTENT, response.text
         )
@@ -162,7 +174,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
     def test_relationship_and_responsible(self):
         responsible, minor = self.checkin_partners
         response = self._patch(
-            {"relationship": "PM", "responsibleCheckinPartnerId": str(responsible.id)},
+            {"relationship": "PM", "responsibleCheckinPartnerId": responsible.id},
             checkin_partner=minor,
         )
         self.assertEqual(
@@ -177,9 +189,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
             self._login(test_client)
             detail = test_client.get(self._base_url(checkin_partner=minor))
         self.assertEqual(detail.json()["relationship"], "PM")
-        self.assertEqual(
-            detail.json()["responsibleCheckinPartnerId"], str(responsible.id)
-        )
+        self.assertEqual(detail.json()["responsibleCheckinPartnerId"], responsible.id)
 
     def test_null_clears_relationship_and_responsible(self):
         responsible, minor = self.checkin_partners
@@ -203,19 +213,21 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         other_folio = self._create_folio()
         other = self._create_reservation(other_folio, self.room2, adults=1)
         response = self._patch(
-            {"responsibleCheckinPartnerId": str(other.checkin_partner_ids.id)}
+            {"responsibleCheckinPartnerId": other.checkin_partner_ids.id}
         )
         self._assert_problem(
             response, "/errors/unknown-responsible", "responsibleCheckinPartnerId"
         )
 
     def test_the_guest_cannot_be_its_own_responsible(self):
-        response = self._patch({"responsibleCheckinPartnerId": str(self.guest.id)})
+        response = self._patch({"responsibleCheckinPartnerId": self.guest.id})
         self._assert_problem(response, "/errors/unknown-responsible")
 
     def test_non_numeric_responsible_is_422(self):
         response = self._patch({"responsibleCheckinPartnerId": "abc"})
-        self._assert_problem(response, "/errors/unknown-responsible")
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
 
     def test_unknown_relationship_is_422(self):
         response = self._patch({"relationship": "XX"})
@@ -254,14 +266,14 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
                     "lastname": "Lee",
                     "gender": "female",
                     "birthdate": "1990-05-17",
-                    "nationality": "PT",
-                    "documentType": "TST",
+                    "nationality": self.country_pt.id,
+                    "documentType": self.id_category.id,
                     "documentNumber": "AB123",
-                    "documentCountryId": "PT",
-                    "countryId": "PT",
-                    "residenceCity": "Lisbon",
-                    "residenceStreet": "Rua 1",
-                    "zip": "1000",
+                    "documentCountry": self.country_pt.id,
+                    "country": self.country_pt.id,
+                    "city": "Lisbon",
+                    "street": "Rua 1",
+                    "zipCode": "1000",
                 }
             )
             self.assertEqual(
@@ -281,8 +293,8 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         response = self._patch(
             {
                 "firstname": "Ann",
-                "documentType": spanish_only.code,
-                "documentCountryId": "PT",
+                "documentType": spanish_only.id,
+                "documentCountry": self.country_pt.id,
             }
         )
         self._assert_problem(response, "/errors/checkin-partner-invalid")

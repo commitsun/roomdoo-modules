@@ -4,6 +4,11 @@ from enum import Enum
 from pydantic import Field
 
 from odoo.addons.pms_fastapi.schemas.base import PmsBaseModel
+from odoo.addons.pms_fastapi.schemas.contact_id_number import (
+    ContactIdNumberCategoryId,
+)
+from odoo.addons.pms_fastapi.schemas.country import CountryId
+from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 
 
 class CheckinGender(str, Enum):
@@ -12,18 +17,27 @@ class CheckinGender(str, Enum):
     other = "other"
 
 
+class CheckinGuestState(str, Enum):
+    pending = "pending"
+    completed = "completed"
+    inHouse = "inHouse"
+    checkedOut = "checkedOut"
+
+
 class CheckinGuest(PmsBaseModel):
-    id: str
-    state: str = Field(
-        description="Raw state of the check-in partner: dummy, draft, "
-        "precheckin, onboard, done or cancel."
+    id: int
+    state: CheckinGuestState = Field(
+        description="Where the guest is in the check-in: pending (the guest data "
+        "is still to be filled in), completed (the check-in data is complete and "
+        "the guest has not arrived yet), inHouse (the guest is in the property) "
+        "or checkedOut (the guest has left)."
     )
     displayName: str | None = None
     birthdate: date | None = None
 
 
 class CheckinRoom(PmsBaseModel):
-    id: str
+    id: int = Field(description="Id of the reservation the room belongs to.")
     name: str
     checkinPartners: list[CheckinGuest] = Field(default_factory=list)
 
@@ -40,26 +54,24 @@ class CheckinDocumentData(PmsBaseModel):
     lastname2: str | None = None
     gender: CheckinGender | None = None
     birthdate: date | None = None
-    nationality: str | None = Field(None, description="ISO 3166-1 alpha-2 code.")
-    documentType: str | None = Field(None, description="Identity document type code.")
+    nationality: CountryId | None = None
+    documentType: ContactIdNumberCategoryId | None = None
     documentNumber: str | None = None
-    documentCountryId: str | None = Field(
-        None, description="ISO 3166-1 alpha-2 code of the document country."
+    documentCountry: CountryId | None = Field(
+        None, description="Country that issued the document."
     )
     documentSupportNumber: str | None = None
-    countryId: str | None = Field(
-        None, description="ISO 3166-1 alpha-2 code of the residence country."
-    )
-    countryState: str | None = Field(None, description="Residence state name.")
-    residenceCity: str | None = None
-    residenceStreet: str | None = None
-    zip: str | None = None
+    country: CountryId | None = Field(None, description="Residence country.")
+    state: CountryStateId | None = Field(None, description="Residence state.")
+    city: str | None = Field(None, description="Residence city.")
+    street: str | None = Field(None, description="Residence street.")
+    zipCode: str | None = None
 
 
 class CheckinPartnerDetail(CheckinDocumentData):
     """Stored guest data. Empty fields are omitted from the response."""
 
-    responsibleCheckinPartnerId: str | None = None
+    responsibleCheckinPartnerId: int | None = None
     relationship: str | None = Field(
         None, description="Relationship from the responsible adult's perspective."
     )
@@ -75,26 +87,24 @@ class CheckinPartnerUpdate(PmsBaseModel):
     lastname2: str | None = None
     gender: CheckinGender | None = None
     birthdate: date | None = None
-    nationality: str | None = Field(None, description="ISO 3166-1 alpha-2 code.")
-    documentType: str | None = Field(None, description="Identity document type code.")
+    nationality: int | None = None
+    documentType: int | None = None
     documentNumber: str | None = None
-    documentCountryId: str | None = Field(
-        None, description="ISO 3166-1 alpha-2 code of the document country."
+    documentCountry: int | None = Field(
+        None, description="Country that issued the document."
     )
     documentSupportNumber: str | None = None
-    responsibleCheckinPartnerId: str | None = Field(
+    responsibleCheckinPartnerId: int | None = Field(
         None, description="Check-in partner of the same folio that is responsible."
     )
     relationship: str | None = Field(
         None, description="Relationship from the responsible adult's perspective."
     )
-    countryId: str | None = Field(
-        None, description="ISO 3166-1 alpha-2 code of the residence country."
-    )
-    countryState: str | None = Field(None, description="Residence state name.")
-    residenceCity: str | None = None
-    residenceStreet: str | None = None
-    zip: str | None = None
+    country: int | None = Field(None, description="Residence country.")
+    state: int | None = Field(None, description="Residence state.")
+    city: str | None = Field(None, description="Residence city.")
+    street: str | None = Field(None, description="Residence street.")
+    zipCode: str | None = None
     email: str | None = None
     mobile: str | None = None
     signature: str | None = Field(
