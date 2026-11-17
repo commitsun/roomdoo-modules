@@ -4,7 +4,7 @@ from fastapi import status
 
 from odoo import fields
 
-from odoo.addons.pms_fastapi.tests.common import CommonTestPmsApi
+from odoo.addons.pms_fastapi.tests.common import CommonTestCheckin, CommonTestPmsApi
 
 
 class TestFoliosEndpoints(CommonTestPmsApi):
@@ -267,3 +267,22 @@ class TestFoliosEndpoints(CommonTestPmsApi):
                 f"&checkinFrom={target}&checkinTo={target}" f"&preCheckinState=pending",
             )
             self.assertNotIn(folio.id, folio_ids)
+
+
+class TestFolioAccessScope(CommonTestCheckin):
+    def _assert_not_found(self, same_company):
+        self._create_other_property_user(same_company=same_company)
+        with self._create_test_client() as test_client:
+            self._login_other_user(test_client)
+            for suffix in ("", "/sale-lines", "/down-payment-invoices", "/contacts"):
+                response = test_client.get(f"/folios/{self.folio.id}{suffix}")
+                self.assertEqual(
+                    response.status_code, status.HTTP_404_NOT_FOUND, response.text
+                )
+                self.assertEqual(response.json()["detail"], "folio not found")
+
+    def test_folio_of_another_company_is_not_found(self):
+        self._assert_not_found(same_company=False)
+
+    def test_folio_of_another_property_of_the_company_is_not_found(self):
+        self._assert_not_found(same_company=True)

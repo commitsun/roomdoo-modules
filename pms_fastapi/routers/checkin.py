@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from fastapi.responses import Response
 
 from odoo import _, models
-from odoo.exceptions import AccessDenied, AccessError, UserError
+from odoo.exceptions import UserError
 
 from odoo.addons.pms_fastapi.dependencies import AuthenticatedEnv
 from odoo.addons.pms_fastapi.models.fastapi_endpoint import pms_api_router
@@ -153,17 +153,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
     # Scope
 
     def _get_folio(self, folio_id):
-        try:
-            return (
-                self.env["pms_api_folio.folio_router.helper"].new().get_or_404(folio_id)
-            )
-        except (AccessError, AccessDenied) as err:
-            # A folio of a property the user cannot access is reported as not
-            # found, as the company scope of the folio router already does.
-            raise HTTPException(
-                status_code=404,
-                detail=_("folio not found"),
-            ) from err
+        return self.env["pms_api_folio.folio_router.helper"].new().get_or_404(folio_id)
 
     def _get_checkin_partner_or_404(self, folio, checkin_partner_id):
         checkin_partner = folio.checkin_partner_ids.filtered(
