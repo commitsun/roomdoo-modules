@@ -5,7 +5,7 @@ from odoo import fields
 
 from odoo.addons.component.core import Component
 
-from ..common.ari import nights, runs
+from ..common.ari import envelope, range_nights, runs
 
 
 class ChannelChannexPmsRoomTypeAriSender(Component):
@@ -28,21 +28,22 @@ class ChannelChannexPmsRoomTypeAriSender(Component):
     _ari_kind = "availability"
     _ari_resource = "availability"
 
-    def _ari_values(self, bindings, first, last):
-        windows = {}
-        for binding in bindings:
-            if not binding.external_id or not binding.active or binding._is_excluded():
-                continue
-            window = self._ari_window(binding, first, last)
-            if window[0] <= window[1]:
-                windows[binding] = window
-        if not windows:
+    def _ari_values(self, ranges, first, last):
+        """Only the nights pending are worked out and sent, however far apart:
+        the figures are read once for the nights from the first to the last,
+        which costs a query, not a value sent for every night between them."""
+        ranges = {
+            binding: binding_ranges
+            for binding, binding_ranges in ranges.items()
+            if binding.external_id and binding.active and not binding._is_excluded()
+        }
+        if not ranges:
             return []
         backend = self.backend_record
         property_id = backend.pms_property_id.id
-        date_from = min(window[0] for window in windows.values())
-        date_to = max(window[1] for window in windows.values())
-        room_type_ids = [binding.odoo_id.id for binding in windows]
+        date_from = min(envelope(r)[0] for r in ranges.values())
+        date_to = max(envelope(r)[1] for r in ranges.values())
+        room_type_ids = [binding.odoo_id.id for binding in ranges]
         real = self.env["pms.availability"].get_real_avail_map(
             property_id, date_from, date_to, room_type_ids
         )
@@ -51,10 +52,10 @@ class ChannelChannexPmsRoomTypeAriSender(Component):
         )
         property_external_id = backend._channex_bound_property_id()
         values = []
-        for binding, (window_from, window_to) in windows.items():
+        for binding, binding_ranges in ranges.items():
             room_type_id = binding.odoo_id.id
             per_night = []
-            for night in nights(window_from, window_to):
+            for night in range_nights(binding_ranges):
                 available = real[(room_type_id, night)]
                 cap = caps.get((room_type_id, night))
                 if cap is not None:

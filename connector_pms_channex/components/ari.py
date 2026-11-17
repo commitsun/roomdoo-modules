@@ -28,48 +28,42 @@ class ChannelChannexAriSender(AbstractComponent):
 
     def run(self):
         """:return: how many values were sent."""
-        bindings = self.model.with_context(active_test=False).search(
+        pending = self.env["channel.channex.ari.pending"].search(
             [
                 ("backend_id", "=", self.backend_record.id),
-                ("channex_ari_pending_from", "!=", False),
-            ],
-            order="id",
+                ("kind", "=", self._ari_kind),
+            ]
         )
-        if not bindings:
+        if not pending:
             return 0
         first, last = self.backend_record._channex_ari_horizon()
-        # Searched with the archived ones, whose window has to be cleared too,
-        # but worked out without: anything read through these records would
-        # count archived records as well -- a board service's old variant, a
-        # channel gone from Channex.
-        result = self._ari_publish(bindings.with_env(self.env), first, last)
-        # Cleared last and in one go, unless the kind cleared them before its
-        # call: anything noted while the values were being worked out wrote to
-        # these same rows, and this write clashing with it is what makes the
-        # send start again instead of losing it.
-        bindings.write(
-            {"channex_ari_pending_from": False, "channex_ari_pending_to": False}
-        )
+        # Within the window again: it may have moved on since they were noted.
+        by_binding = pending._channex_ranges(first, last)
+        # Archived bindings come too, as they did when they were noted: browsing
+        # filters nothing out. Gone ones are left out, and their rows go anyway.
+        ranges = {
+            binding: by_binding[binding.id]
+            for binding in self.model.browse(list(by_binding)).exists()
+        }
+        result = self._ari_publish(ranges, first, last) if ranges else 0
+        # Only the rows read: anything noted since they were read is in rows of
+        # its own, and is left for the send its commit queued.
+        pending.unlink()
         return result
 
-    def _ari_publish(self, bindings, first, last):
+    def _ari_publish(self, ranges, first, last):
         """Publish what these bindings have pending, in one call.
 
+        :param ranges: ``{binding: [(date_from, date_to)]}``, the nights each
+            binding has pending, merged and within the window.
         :return: how many values were sent.
         """
-        values = self._ari_values(bindings, first, last)
+        values = self._ari_values(ranges, first, last)
         if values:
             self._ari_send(values)
         return len(values)
 
-    def _ari_window(self, binding, first, last):
-        """The nights of this binding still to publish, within the window."""
-        return (
-            max(binding.channex_ari_pending_from, first),
-            min(binding.channex_ari_pending_to, last),
-        )
-
-    def _ari_values(self, bindings, first, last):
+    def _ari_values(self, ranges, first, last):
         """The values to send, as Channex expects them in ``values``."""
         raise NotImplementedError()
 
