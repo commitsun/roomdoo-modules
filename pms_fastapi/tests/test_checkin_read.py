@@ -196,9 +196,6 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
     # checkin-context
 
     def test_context_values(self):
-        self.env["ir.config_parameter"].sudo().set_param(
-            "roomdoo_fastapi.instance_name", "Acme PMS"
-        )
         response = self._get(f"/folios/{self.folio.id}/checkin-context")
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         body = response.json()
@@ -207,15 +204,13 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
             {"localization": "es", "hotelName": "Property 1", "ocrAvailable": False},
         )
         self.assertEqual(body["arrivalDate"], self.folio.first_checkin.isoformat())
-        self.assertEqual(body["brandName"], "Acme PMS")
 
-    def test_context_defaults_brand_and_sends_no_policy_links(self):
+    def test_context_sends_no_policy_links(self):
         response = self._get(f"/folios/{self.folio.id}/checkin-context")
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         body = response.json()
         for key in ("termsUrl", "houseRulesUrl", "privacyPolicyUrl"):
             self.assertNotIn(key, body)
-        self.assertEqual(body["brandName"], "Roomdoo")
 
     def test_context_ocr_and_missing_country(self):
         self._enable_test_ocr_supplier()
@@ -224,4 +219,3 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertTrue(response.json()["ocrAvailable"])
         self.assertIsNone(response.json()["localization"])
-        self.assertEqual(response.json()["brandName"], "Roomdoo")

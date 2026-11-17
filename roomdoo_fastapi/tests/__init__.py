@@ -6,3 +6,4 @@ from . import test_reports
 from . import test_feature_flag
 from . import test_logout
 from . import test_refresh_token
+from . import test_checkin

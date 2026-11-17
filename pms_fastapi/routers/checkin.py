@@ -311,18 +311,12 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
 
     def _context_values(self, folio):
         pms_property = folio.pms_property_id
-        brand = (
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("roomdoo_fastapi.instance_name", default="Roomdoo")
-        )
         country = pms_property.country_id
         return {
             "localization": country.code.lower() if country.code else None,
             "hotelName": pms_property.name,
             "arrivalDate": folio.first_checkin or None,
             "ocrAvailable": bool(pms_property.ocr_checkin_supplier),
-            "brandName": brand or None,
         }
 
     # Update
