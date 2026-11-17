@@ -187,7 +187,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
 
     def test_signature_that_is_not_an_image_is_422(self):
         response = self._patch({"signature": base64.b64encode(b"hello").decode()})
-        self._assert_problem(response, "/errors/checkin-partner-invalid")
+        self._assert_problem(response, "/errors/guest-invalid")
 
     def test_state_is_recomputed_and_the_guest_is_never_boarded(self):
         self.assertEqual(self.guest.state, "dummy")
@@ -233,8 +233,8 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
                 "documentCountry": self.country_pt.id,
             }
         )
-        self._assert_problem(response, "/errors/checkin-partner-invalid")
-        self.assertTrue(response.json()["detail"])
+        self._assert_problem(response, "/errors/guest-invalid")
+        self.assertEqual(response.json()["detail"], "The guest data is not valid.")
         self.assertFalse(self.guest.document_type)
 
     def test_unsupported_fields_are_rejected(self):
@@ -257,6 +257,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
         self._create_reservation(other_folio, self.room2, adults=1)
         response = self._patch({"firstname": "Ann"}, folio=other_folio)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.text)
+        self.assertEqual(response.json()["detail"], "guest not found")
         self.assertFalse(self.guest.firstname)
 
     def test_other_property_user_gets_404(self):
@@ -278,9 +279,7 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
                 self.assertEqual(
                     response.status_code, status.HTTP_409_CONFLICT, response.text
                 )
-                self.assertEqual(
-                    response.json()["type"], "/errors/checkin-partner-read-only"
-                )
+                self.assertEqual(response.json()["type"], "/errors/guest-read-only")
                 self.assertEqual(self.guest.firstname, "Ann")
                 self.assertFalse(self.guest.origin_input_data)
 
@@ -291,6 +290,11 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
 
     def test_oversize_signature_is_422(self):
         response = self._patch({"signature": "A" * 500_001})
-        self.assertEqual(
-            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
-        )
+        self._assert_problem(response, "/errors/image-too-large", "signature")
+        self.assertEqual(response.json()["maxLength"], 500_000)
+        self.assertLess(len(response.text), 1_000)
+        self.assertFalse(self.guest.signature)
+
+    def test_signature_at_the_limit_is_not_too_large(self):
+        response = self._patch({"signature": "A" * 500_000})
+        self._assert_problem(response, "/errors/guest-invalid")

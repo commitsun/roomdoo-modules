@@ -1,5 +1,6 @@
 import base64
 import binascii
+import logging
 from datetime import date, datetime
 
 from fastapi import HTTPException
@@ -27,6 +28,8 @@ from odoo.addons.pms_fastapi.schemas.contact_id_number import (
 from odoo.addons.pms_fastapi.schemas.country import CountryId
 from odoo.addons.pms_fastapi.schemas.country_state import CountryStateId
 from odoo.addons.pms_fastapi.utils import ApiProblem, build_problem
+
+_logger = logging.getLogger(__name__)
 
 ORIGIN_INPUT_WIZARD = "wizard"
 GENDERS = ("male", "female", "other")
@@ -169,7 +172,7 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         if not checkin_partner:
             raise HTTPException(
                 status_code=404,
-                detail=_("checkin partner not found"),
+                detail=_("guest not found"),
             )
         return checkin_partner
 
@@ -327,8 +330,8 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         if cp.state in ("done", "cancel") or cp.reservation_id.state == "cancel":
             self._raise_problem(
                 409,
-                "/errors/checkin-partner-read-only",
-                _("Check-in partner is read-only"),
+                "/errors/guest-read-only",
+                _("Guest is read-only"),
                 _(
                     "A guest that has left or whose reservation is cancelled "
                     "cannot be modified."
@@ -348,11 +351,16 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             with self.env.cr.savepoint():
                 cp.write(vals)
         except UserError as err:
+            _logger.warning(
+                "Check-in data of guest %s rejected: %s",
+                cp.id,
+                err.args[0] if err.args else err,
+            )
             self._raise_problem(
                 422,
-                "/errors/checkin-partner-invalid",
-                _("Check-in data not valid"),
-                err.args[0] if err.args else str(err),
+                "/errors/guest-invalid",
+                _("Guest data not valid"),
+                _("The guest data is not valid."),
             )
 
     def _prepare_update_vals(self, folio, cp, data):
@@ -404,9 +412,21 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
     def _prepare_extra_vals(self, folio, cp, data, vals):
         """Hook for the values that a localization adds to the payload."""
 
+    def _check_image_size(self, image, field, max_length):
+        if image and len(image) > max_length:
+            self._raise_problem(
+                422,
+                "/errors/image-too-large",
+                _("Image too large"),
+                _("The image is too large."),
+                field=field,
+                maxLength=max_length,
+            )
+
     def _decode_signature(self, signature):
         if not signature:
             return False
+        self._check_image_size(signature, "signature", MAX_SIGNATURE_LENGTH)
         try:
             raw = base64.b64decode(signature, validate=True)
         except (binascii.Error, ValueError):
@@ -427,6 +447,8 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         folio = self._get_folio(folio_id)
         cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
         self._check_not_read_only(cp)
+        self._check_image_size(payload.front, "front", MAX_DOCUMENT_IMAGE_LENGTH)
+        self._check_image_size(payload.back, "back", MAX_DOCUMENT_IMAGE_LENGTH)
         pms_property = folio.pms_property_id
         supplier = pms_property.ocr_checkin_supplier
         method_name = f"_{supplier}_document_process"

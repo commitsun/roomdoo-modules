@@ -143,9 +143,9 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
         self.assertEqual(seen, [True])
 
     def test_oversize_images_are_422(self):
-        for payload in (
-            {"front": "A" * 1_500_001},
-            {"front": "ZnJvbnQ=", "back": "A" * 1_500_001},
+        for field, payload in (
+            ("front", {"front": "A" * 1_500_001}),
+            ("back", {"front": "ZnJvbnQ=", "back": "A" * 1_500_001}),
         ):
             response = self._post(payload)
             self.assertEqual(
@@ -153,6 +153,15 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 response.text,
             )
+            body = response.json()
+            self.assertEqual(body["type"], "/errors/image-too-large")
+            self.assertEqual(body["field"], field)
+            self.assertEqual(body["maxLength"], 1_500_000)
+            self.assertLess(len(response.text), 1_000)
+
+    def test_images_at_the_limit_are_not_too_large(self):
+        response = self._post({"front": "A" * 1_500_000, "back": "A" * 1_500_000})
+        self.assertEqual(response.json()["type"], "/errors/ocr-not-available")
 
     def test_read_only_partner_is_409_and_never_reaches_the_supplier(self):
         self._enable_test_ocr_supplier()
@@ -165,7 +174,5 @@ class TestCheckinDocumentScanEndpoint(CommonTestCheckin):
             self.assertEqual(
                 response.status_code, status.HTTP_409_CONFLICT, response.text
             )
-            self.assertEqual(
-                response.json()["type"], "/errors/checkin-partner-read-only"
-            )
+            self.assertEqual(response.json()["type"], "/errors/guest-read-only")
             process.assert_not_called()
