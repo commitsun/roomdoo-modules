@@ -84,13 +84,13 @@ class ChannelChannexBackend(models.Model):
         with self.work_on(ARI_BINDING_MODELS[kind]) as work:
             return work.component(usage="ari.sender").run()
 
-    def action_channex_publish_availability(self):
+    def _channex_publish_everything(self):
         """Publish the availability of every room type and the rates and
         restrictions of every rate plan, for the whole window.
 
-        What Channex calls a full sync: the way to set a property going, or to
-        put it right after it drifted. Not something to schedule -- Channex
-        allows it once a day at most, and only when needed.
+        What Channex calls a full sync, and the last step of synchronising
+        everything: one call for the availability and one for the rates and
+        restrictions, however many room types and rate plans there are.
         """
         self.ensure_one()
         property_id = self.pms_property_id.id
@@ -99,12 +99,6 @@ class ChannelChannexBackend(models.Model):
         # the rules that differ from what Channex has are sent.
         stage_ari(self.env, "channel_caps", (property_id, None, None))
         stage_ari(self.env, "restrictions", (property_id, None, None, None))
-        return self._notify(
-            _(
-                "The availability, rates and restrictions of the property are "
-                "queued for Channex."
-            )
-        )
 
     @api.model
     def channex_cron_ari_horizon(self):
