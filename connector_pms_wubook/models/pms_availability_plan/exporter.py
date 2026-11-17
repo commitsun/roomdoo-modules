@@ -82,9 +82,15 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
 
     def _after_export(self):
         super()._after_export()
-        if self.binding:
-            current_name = self.binding.name
-            if self.binding.wubook_last_synced_name != current_name:
-                self.binding.with_context(connector_no_export=True).write(
-                    {"wubook_last_synced_name": current_name}
-                )
+        if not self.binding:
+            return
+        values = {
+            # The window the mapper expanded has been pushed, so the next
+            # export starts from whatever changes after this one.
+            "wubook_pending_date_from": False,
+            "wubook_pending_date_to": False,
+        }
+        current_name = self.binding.name
+        if self.binding.wubook_last_synced_name != current_name:
+            values["wubook_last_synced_name"] = current_name
+        self.binding.with_context(connector_no_export=True).write(values)

@@ -233,25 +233,29 @@ class ChannelWubookBackend(models.Model):
     # availability
     avail_date_from = fields.Date(string="Availability Date From")
     avail_date_to = fields.Date(string="Availability Date To")
-    # TODO: add logic to control this and filter the rooms by the current property
-    avail_room_type_ids = fields.Many2many(
-        comodel_name="pms.room.type",
-        relation="wubook_backend_avail_room_type_rel",
-        column1="backend_id",
-        column2="room_type_id",
-    )
 
     def export_availability(self):
+        """Push the availability of a window on demand.
+
+        There is one export for the whole property, so asking for a window
+        means staging it as pending and letting that export run. The room
+        types are not a filter any more: what travels is one value per room
+        type the backend sells, and singling some out would leave the others
+        showing whatever Wubook was last told.
+        """
         for rec in self:
             if rec.user_id:
                 rec = rec.with_user(rec.user_id)
             if rec.avail_date_to < rec.avail_date_from:
                 raise UserError(_("Date to must be greater than date from"))
-            rec.env["channel.wubook.pms.availability"].with_delay().export_data(
-                rec,
-                rec.avail_date_from,
-                rec.avail_date_to,
-                rec.avail_room_type_ids,
+            binding = self.env["channel.wubook.pms.property.availability"].search(
+                [("backend_id", "=", rec.id)], limit=1
+            )
+            if not binding:
+                raise UserError(_("The property is not connected to this backend yet"))
+            binding._wubook_stage_pending_window(rec.avail_date_from, rec.avail_date_to)
+            rec.env["channel.wubook.pms.property.availability"].export_data(
+                backend_record=rec
             )
 
     # property availability
