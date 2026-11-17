@@ -453,6 +453,29 @@ class TestChannexRestrictionsChanges(ChannexRestrictionsCase):
             {**NEUTRAL, "min_stay_arrival": 3, "min_stay_through": 3},
         )
 
+    def test_only_the_nights_noted_are_worked_out(self):
+        """Two nights changed far apart are priced, and the nights between them
+        are not: pricing is what a send spends its time on."""
+        self._rule(self.night, min_stay=3)
+        self._rule(self.last, min_stay=3)
+        pricelist_class = type(self.env["product.pricelist"])
+        original = pricelist_class._get_product_price
+        priced = set()
+
+        def pricing(pricelist, *args, consumption_date=None, **kwargs):
+            priced.add(consumption_date)
+            return original(
+                pricelist, *args, consumption_date=consumption_date, **kwargs
+            )
+
+        with mock.patch.object(pricelist_class, "_get_product_price", pricing):
+            self._publish()
+        self.assertEqual(priced, {self.night, self.last})
+        self.assertEqual(
+            {(value["date_from"], value["date_to"]) for value in self._sent()},
+            {(str(self.night), str(self.night)), (str(self.last), str(self.last))},
+        )
+
     def test_nights_that_did_not_change_are_not_sent(self):
         """However wide the window noted: what decides is what Channex holds."""
         self._rate_plans()._channex_stage_restrictions()

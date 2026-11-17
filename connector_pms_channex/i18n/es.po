@@ -477,6 +477,7 @@ msgid "Auto-update availability on modification"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_pending__kind__availability
 #: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_warning__kind__availability
 msgid "Availability"
 msgstr ""
@@ -537,6 +538,7 @@ msgid "Avoid simplified invoice max amount downpayment"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__backend_id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_warning__backend_id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_booking_revision__backend_id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_channel__backend_id
@@ -590,6 +592,11 @@ msgstr ""
 #. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__partner_invoice_ids
 msgid "Billing addresses"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__res_id
+msgid "Binding"
 msgstr ""
 
 #. module: connector_pms_channex
@@ -763,6 +770,7 @@ msgid "Capacity"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_pending__kind__channel_caps
 #: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_warning__kind__channel_caps
 msgid "Caps of the agencies"
 msgstr ""
@@ -796,7 +804,12 @@ msgstr ""
 
 #. module: connector_pms_channex
 #: model:ir.model,name:connector_pms_channex.model_channel_channex_ari_mixin
-msgid "Channel Channex ARI pending window"
+msgid "Channel Channex ARI binding"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model,name:connector_pms_channex.model_channel_channex_ari_pending
+msgid "Channel Channex ARI pending nights"
 msgstr ""
 
 #. module: connector_pms_channex
@@ -1537,8 +1550,18 @@ msgid "Date"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__date_from
+msgid "Date From"
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__date_order
 msgid "Date Order"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__date_to
+msgid "Date To"
 msgstr ""
 
 #. module: connector_pms_channex
@@ -1664,6 +1687,7 @@ msgid "Discount Policy"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__display_name
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_warning__display_name
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend__display_name
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend_type__display_name
@@ -1918,14 +1942,6 @@ msgid "First name"
 msgstr ""
 
 #. module: connector_pms_channex
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_ari_mixin__channex_ari_pending_from
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_inventory_cap__channex_ari_pending_from
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_pms_room_type__channex_ari_pending_from
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_pending_from
-msgid "First night waiting to be published to Channex."
-msgstr ""
-
-#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__fiscal_position_id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_property__property_account_position_id
 msgid "Fiscal Position"
@@ -2158,6 +2174,7 @@ msgid "I have finished connecting"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_warning__id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend__id
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend_type__id
@@ -2618,6 +2635,7 @@ msgid ""
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending__kind
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_warning__kind
 msgid "Kind"
 msgstr ""
@@ -2639,6 +2657,7 @@ msgid "Last Folio Checkout"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_pending____last_update
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_warning____last_update
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend____last_update
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_backend_type____last_update
@@ -2722,14 +2741,6 @@ msgstr ""
 #. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_property__lastname
 msgid "Last name"
-msgstr ""
-
-#. module: connector_pms_channex
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_ari_mixin__channex_ari_pending_to
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_inventory_cap__channex_ari_pending_to
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_pms_room_type__channex_ari_pending_to
-#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_pending_to
-msgid "Last night waiting to be published to Channex."
 msgstr ""
 
 #. module: connector_pms_channex
@@ -3342,22 +3353,6 @@ msgid "Pending Checkin Data"
 msgstr ""
 
 #. module: connector_pms_channex
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_mixin__channex_ari_pending_from
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_inventory_cap__channex_ari_pending_from
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_room_type__channex_ari_pending_from
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_pending_from
-msgid "Pending from"
-msgstr ""
-
-#. module: connector_pms_channex
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_ari_mixin__channex_ari_pending_to
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_inventory_cap__channex_ari_pending_to
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_room_type__channex_ari_pending_to
-#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_pending_to
-msgid "Pending to"
-msgstr ""
-
-#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_property__phone
 msgid "Phone"
 msgstr ""
@@ -3608,6 +3603,7 @@ msgid "Rate plans on Channex"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_pending__kind__restrictions
 #: model:ir.model.fields.selection,name:connector_pms_channex.selection__channel_channex_ari_warning__kind__restrictions
 msgid "Rates and restrictions"
 msgstr ""
@@ -4231,6 +4227,11 @@ msgstr ""
 #. module: connector_pms_channex
 #: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_pms_folio__analytic_account_id
 msgid "The analytic account related to a folio."
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_ari_pending__res_id
+msgid "The binding, of the model its kind publishes."
 msgstr ""
 
 #. module: connector_pms_channex

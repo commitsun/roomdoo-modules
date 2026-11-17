@@ -10,7 +10,7 @@ from odoo.addons.component.core import Component
 from odoo.addons.connector.exception import IDMissingInBackend
 
 from ...components.adapter import ChannexAPIError
-from ..common.ari import nights, runs
+from ..common.ari import envelope, nights, runs
 
 #: The marker ``channel.channex.inventory.cap._channex_marker`` writes.
 MARKER = re.compile(r"\[roomdoo:(\d+):(\d+)\]\s*$")
@@ -57,8 +57,16 @@ class ChannelChannexInventoryCapAriSender(Component):
     _ari_kind = "channel_caps"
     _ari_resource = "channel_availability_rules"
 
-    def _ari_publish(self, caps, first, last):
-        """:return: how many calls were made."""
+    def _ari_publish(self, ranges, first, last):
+        """Bring the rules of each cap in line from its first night pending to
+        its last, whatever lies between.
+
+        Not night by night as the other kinds: a rule is rewritten whole, and
+        one stretching across two of the ranges would be rewritten once for
+        each. Nothing is sent of the nights between that already agree, so
+        what the span costs is working them out.
+
+        :return: how many calls were made."""
         backend = self.backend_record
         property_external_id = backend._channex_bound_property_id()
         if backend.export_disabled or not property_external_id:
@@ -70,10 +78,8 @@ class ChannelChannexInventoryCapAriSender(Component):
             if match:
                 ours[(int(match[1]), int(match[2]))].append(rule)
         calls = 0
-        for cap in caps:
-            window = self._ari_window(cap, first, last)
-            if window[0] > window[1]:
-                continue
+        for cap, cap_ranges in ranges.items():
+            window = envelope(cap_ranges)
             rules = ours[(cap.agency_id.id, cap.room_type_id.id)]
             calls += self._reconcile(adapter, cap, rules, window, (first, last))
         return calls
