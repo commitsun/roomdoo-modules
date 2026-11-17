@@ -3,8 +3,6 @@
 
 from odoo import api, fields, models
 
-from ..common.ari import union_window
-
 
 class ChannelChannexPmsRoomType(models.Model):
     """The room type as Channex knows it.
@@ -134,12 +132,12 @@ class ChannelChannexPmsRoomType(models.Model):
         count: one that is not there yet publishes its whole window the moment
         it gets there."""
         resolved = {}
-        for (property_id, room_type_id), window in entries.items():
+        for (property_id, room_type_id), ranges in entries.items():
             domain = [("external_id", "!=", False)]
             if property_id:
                 domain.append(("backend_id.pms_property_id", "=", property_id))
             if room_type_id:
                 domain.append(("odoo_id", "=", room_type_id))
             for binding in self.search(domain):
-                resolved[binding] = union_window(resolved.get(binding), window)
+                resolved.setdefault(binding, []).extend(ranges)
         return resolved

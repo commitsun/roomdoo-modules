@@ -7,7 +7,7 @@ from odoo import fields
 
 from odoo.addons.component.core import Component
 
-from ..common.ari import nights, runs
+from ..common.ari import envelope, nights, range_nights, runs
 from ..common.board import board_total, board_units
 
 #: What a night of a rate plan carries, in the order ``_night`` gives it.
@@ -55,58 +55,50 @@ class ChannelChannexRatePlanAriSender(Component):
     _ari_kind = "restrictions"
     _ari_resource = "restrictions"
 
-    def _ari_publish(self, rate_plans, first, last):
+    def _ari_publish(self, ranges, first, last):
         """Send what changed of these rate plans since Channex last took them.
 
-        What goes out is recorded, and the window cleared, before the call, and
-        not after it as the other kinds clear theirs: those writes hold these
-        rows until the call is over. A change noted since this send began
-        clashes with them and makes the send start again before anything goes
-        out, and one noted during the call waits for it. Recorded after the
-        call, a clash would undo the record of a call that did go out, and a
-        change undone straight away would then match the record and never reach
-        Channex.
+        What goes out is recorded before the call, and not after it: the write
+        holds these rows until the call is over. Anything else written to them
+        since this send began -- the rate plan exported, a full sync forgetting
+        what Channex holds -- clashes with it and makes the send start again
+        before anything goes out, and anything written during the call waits
+        for it. Recorded after the call, a clash would undo the record of a call
+        that did go out, and a change undone straight away would then match the
+        record and never reach Channex.
 
         Nothing is recorded on a backend with exports disabled, as nothing
         leaves it.
         """
-        values, held = self._ari_changes(rate_plans, first, last)
-        record = not self.backend_record.export_disabled
-        for rate_plan in rate_plans:
-            changes = {
-                "channex_ari_pending_from": False,
-                "channex_ari_pending_to": False,
-            }
-            if record and rate_plan in held:
-                changes["channex_ari_held"] = held[rate_plan]
-            rate_plan.write(changes)
-        rate_plans.flush_recordset()
+        values, held = self._ari_changes(ranges, first, last)
+        if not self.backend_record.export_disabled:
+            for rate_plan, rate_plan_held in held.items():
+                rate_plan.channex_ari_held = rate_plan_held
+            self.model.browse([rate_plan.id for rate_plan in held]).flush_recordset()
         if values:
             self._ari_send(values)
         return len(values)
 
-    def _ari_changes(self, rate_plans, first, last):
+    def _ari_changes(self, ranges, first, last):
         """What to send of these rate plans, and what Channex holds of them
         once it is sent.
 
-        Every night of the window is worked out whole and compared with what
-        Channex holds of it, and only the fields that differ go out: a night
-        that is the same goes nowhere, and nights in a row with the same change
-        go as one range, however else they differ. A night nothing is known
-        Channex holds -- a rate plan just made, a night just in the window, a
-        full sync -- goes whole.
+        Every night pending is worked out whole and compared with what Channex
+        holds of it, and only the fields that differ go out: a night that is
+        the same goes nowhere, and nights in a row with the same change go as
+        one range, however else they differ. A night nothing is known Channex
+        holds -- a rate plan just made, a night just in the window, a full sync
+        -- goes whole.
 
         :return: ``(values, held)``, ``held`` by rate plan.
         """
-        windows = {}
-        for rate_plan in rate_plans:
-            if not rate_plan.external_id or rate_plan.channex_to_remove:
-                continue
-            window = self._ari_window(rate_plan, first, last)
-            if window[0] <= window[1]:
-                windows[rate_plan] = window
+        ranges = {
+            rate_plan: rate_plan_ranges
+            for rate_plan, rate_plan_ranges in ranges.items()
+            if rate_plan.external_id and not rate_plan.channex_to_remove
+        }
         by_pricelist = defaultdict(list)
-        for rate_plan in windows:
+        for rate_plan in ranges:
             by_pricelist[rate_plan.pricelist_id].append(rate_plan)
         # The price of a room or a board service on a night is the same for
         # every rate plan it is part of, so each is worked out once.
@@ -116,8 +108,11 @@ class ChannelChannexRatePlanAriSender(Component):
         values, held = [], {}
         first_night = fields.Date.to_string(first)
         for pricelist, plans in by_pricelist.items():
-            date_from = min(windows[rate_plan][0] for rate_plan in plans)
-            date_to = max(windows[rate_plan][1] for rate_plan in plans)
+            # The rules are read once for the nights from the first to the
+            # last; what is worked out night by night -- the prices -- only for
+            # the nights pending.
+            date_from = min(envelope(ranges[rate_plan])[0] for rate_plan in plans)
+            date_to = max(envelope(ranges[rate_plan])[1] for rate_plan in plans)
             rules, board_rules = self._restrictions(
                 pricelist,
                 date_from,
@@ -133,7 +128,7 @@ class ChannelChannexRatePlanAriSender(Component):
                     if night >= first_night
                 }
                 per_night = []
-                for night in nights(*windows[rate_plan]):
+                for night in range_nights(ranges[rate_plan]):
                     key = fields.Date.to_string(night)
                     now = self._night(rate_plan, night, rules, board_rules)
                     per_night.append((night, self._changes(now, before.get(key))))
