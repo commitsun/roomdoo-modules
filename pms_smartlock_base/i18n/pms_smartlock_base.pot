@@ -433,6 +433,11 @@ msgid "Property Room"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_queue_job
+msgid "Queue Job"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__queue_job_ids
 msgid ""
 "Queue jobs that have synchronised this credential with the vendor. Useful to"
