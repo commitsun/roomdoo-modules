@@ -1,3 +1,4 @@
+import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
@@ -160,6 +161,53 @@ class TestSyncCreate(_SyncTestBase):
         with expect_raises(self, RetryableJobError):
             self.code._sync_create()
 
+    def test_transient_error_retries_after_five_minutes_by_default(self):
+        self.connector.grant_access.side_effect = LockOfflineError("offline")
+        with self.assertRaises(RetryableJobError) as cm:
+            self.code._sync_create()
+        self.assertEqual(cm.exception.seconds, 300)
+
+    def test_vendor_spaces_the_retries_by_attempt(self):
+        """The vendor picks the delay from the error and the attempt that just
+        failed, read from the running job: queue_job has stored two previous
+        runs, so this is the third."""
+        error = LockOfflineError("busy")
+        self.connector.grant_access.side_effect = error
+        QueueJob = self.env["queue.job"].sudo()
+        job = QueueJob.with_context(_job_edit_sentinel=QueueJob.EDIT_SENTINEL).create(
+            {
+                "uuid": uuid.uuid4().hex,
+                "user_id": self.env.user.id,
+                "state": "started",
+                "retry": 2,
+                "model_name": "lock.code",
+                "method_name": "_sync_create",
+            }
+        )
+        with patch.object(
+            self.env.registry["lock.vendor"], "_sync_retry_seconds", return_value=42
+        ) as retry_seconds:
+            with self.assertRaises(RetryableJobError) as cm:
+                self.code.with_context(job_uuid=job.uuid)._sync_create()
+        self.assertEqual(cm.exception.seconds, 42)
+        retry_seconds.assert_called_once_with(error, 3)
+
+    def test_create_passes_the_credential_on_the_context(self):
+        """Vendors that resume an interrupted grant (Omnitec) tag it after
+        the credential, which they read from the connector's context."""
+        self.connector.grant_access.return_value = _grant()
+        vendors = []
+
+        def get_connector(vendor):
+            vendors.append(vendor)
+            return self.connector
+
+        with patch.object(
+            self.env.registry["lock.vendor"], "get_connector", new=get_connector
+        ):
+            self.code._sync_create()
+        self.assertEqual(vendors[0].env.context["smartlock_grant_code"], self.code)
+
     def test_lock_error_persists_failed_and_reraises(self):
         """Non-transient vendor errors persist the failure via
         ``_persist_failed`` (which writes in its own transaction so the flag
@@ -230,6 +278,15 @@ class TestSyncRemove(_SyncTestBase):
             self.code._sync_remove()
         self.assertFalse(self.code.cancelled)
         self.assertFalse(self.code.failed)
+
+    def test_transient_error_asks_the_vendor_for_the_delay(self):
+        self.connector.revoke_access.side_effect = LockOfflineError("busy")
+        with patch.object(
+            self.env.registry["lock.vendor"], "_sync_retry_seconds", return_value=42
+        ):
+            with self.assertRaises(RetryableJobError) as cm:
+                self.code._sync_remove()
+        self.assertEqual(cm.exception.seconds, 42)
 
     def test_lock_error_persists_failed_not_cancelled(self):
         """Non-transient remove failure → ``_persist_failed`` is invoked and

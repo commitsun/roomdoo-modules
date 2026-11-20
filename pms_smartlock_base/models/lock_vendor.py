@@ -3,6 +3,10 @@ import os
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+# Delay before a vendor sync retries after a transient error (vendor API or
+# gateway unreachable, lock offline or busy), unless the vendor sets its own.
+_TRANSIENT_RETRY_SECONDS = 300
+
 
 class LockVendor(models.Model):
     _name = "lock.vendor"
@@ -55,6 +59,12 @@ class LockVendor(models.Model):
         default = self._pin_confirm_key_defaults().get(self.vendor_type)
         if default:
             self.pin_confirm_key = default
+
+    def _sync_retry_seconds(self, exc, attempt):
+        """Seconds before retrying a sync that failed on its ``attempt``-th run
+        (1 for the first) with ``exc``, a transient error. Vendors whose errors
+        call for another spacing override it."""
+        return _TRANSIENT_RETRY_SECONDS
 
     def get_connector(self):
         """Return a connector instance for this vendor.

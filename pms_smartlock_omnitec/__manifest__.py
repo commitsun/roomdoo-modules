@@ -1,6 +1,6 @@
 {
     "name": "PMS Smartlock Omnitec",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "category": "Hotel/PMS",
     "author": "Commitsun",
     "license": "AGPL-3",
@@ -13,6 +13,7 @@
         "python": ["roomdoo_locks_omnitec"],
     },
     "data": [
+        "data/ir_cron.xml",
         "views/lock_vendor_views.xml",
     ],
     "installable": True,

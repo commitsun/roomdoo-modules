@@ -377,6 +377,16 @@ grant, revoke and reveal PIN-based access on Omnitec OsAccess locks.</p>
 <p>Omnitec ships two OsAccess generations (<em>modern</em> and <em>legacy</em>) served by
 different Roomdoo apps; the vendor record selects which generation it talks
 to. The keypad confirm key defaults to <tt class="docutils literal">#</tt>.</p>
+<p>Each guest credential is pushed to every lock of its grant as a passcode named
+after the booking and the credential (e.g. <tt class="docutils literal">F2600001#17</tt>), which is also how
+it shows in the Omnitec app. A grant interrupted halfway (a lock that did not
+answer through its gateway) keeps what it already programmed, and the next retry
+resumes it with the same PIN instead of starting over. If no retry completes it,
+the hourly <em>Smartlocks: Clean up unfinished Omnitec grants</em> job deletes those
+passcodes from the locks.</p>
+<p>When a lock does not complete a command through its gateway (errcode <tt class="docutils literal"><span class="pre">-1</span></tt>),
+the sync is retried after ten seconds twice, as Omnitec advises, and then at
+longer intervals. Other vendors keep the default spacing.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

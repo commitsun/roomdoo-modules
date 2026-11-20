@@ -1,0 +1,102 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pms_smartlock_omnitec
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pms_smartlock_omnitec
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_omnitec.lock_vendor_view_form
+msgid ""
+"Client ID and secret are Roomdoo app credentials, read\n"
+"                        from the deployment environment per OsAccess version\n"
+"                        (OMNITEC_CLIENT_ID / OMNITEC_CLIENT_SECRET, or\n"
+"                        OMNITEC_LEGACY_CLIENT_ID / OMNITEC_LEGACY_CLIENT_SECRET)."
+msgstr ""
+"El ID de cliente y el secreto son credenciales de la app de Roomdoo, que "
+"se leen del entorno de despliegue según la versión de OsAccess "
+"(OMNITEC_CLIENT_ID / OMNITEC_CLIENT_SECRET, u OMNITEC_LEGACY_CLIENT_ID / "
+"OMNITEC_LEGACY_CLIENT_SECRET)."
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model,name:pms_smartlock_omnitec.model_lock_code
+msgid "Lock Code"
+msgstr "Código de cerradura"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model,name:pms_smartlock_omnitec.model_lock_vendor
+msgid "Lock Vendor"
+msgstr "Proveedor de cerradura"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,help:pms_smartlock_omnitec.field_lock_vendor__vendor_type
+msgid "Manufacturer connector used to communicate with the lock."
+msgstr ""
+"Conector del fabricante utilizado para comunicarse con la cerradura."
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields.selection,name:pms_smartlock_omnitec.selection__lock_vendor__vendor_type__omnitec
+msgid "Omnitec / Rent&Pass"
+msgstr "Omnitec / Rent&Pass"
+
+#. module: pms_smartlock_omnitec
+#: model_terms:ir.ui.view,arch_db:pms_smartlock_omnitec.lock_vendor_view_form
+msgid "Omnitec Credentials"
+msgstr "Credenciales de Omnitec"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,field_description:pms_smartlock_omnitec.field_lock_vendor__omnitec_password
+msgid "Omnitec Password"
+msgstr "Contraseña de Omnitec"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,field_description:pms_smartlock_omnitec.field_lock_vendor__omnitec_username
+msgid "Omnitec Username"
+msgstr "Usuario de Omnitec"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields.selection,name:pms_smartlock_omnitec.selection__lock_vendor__omnitec_osaccess__modern
+msgid "OsAccess"
+msgstr "OsAccess"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields.selection,name:pms_smartlock_omnitec.selection__lock_vendor__omnitec_osaccess__legacy
+msgid "OsAccess Legacy"
+msgstr "OsAccess Legacy"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,field_description:pms_smartlock_omnitec.field_lock_vendor__omnitec_osaccess
+msgid "OsAccess Version"
+msgstr "Versión de OsAccess"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,help:pms_smartlock_omnitec.field_lock_vendor__omnitec_osaccess
+msgid ""
+"OsAccess generation of this hotel's installation. Selects which Roomdoo app "
+"credentials (modern or legacy) are used to authenticate; the instance has "
+"both configured in the environment."
+msgstr ""
+"Generación de OsAccess de la instalación del hotel. Determina qué "
+"credenciales de la app de Roomdoo (modernas o legacy) se usan para "
+"autenticarse; la instancia tiene configuradas ambas en el entorno."
+
+#. module: pms_smartlock_omnitec
+#: model:ir.actions.server,name:pms_smartlock_omnitec.cron_purge_omnitec_leftovers_ir_actions_server
+#: model:ir.cron,cron_name:pms_smartlock_omnitec.cron_purge_omnitec_leftovers
+msgid "Smartlocks: Clean up unfinished Omnitec grants"
+msgstr ""
+"Cerraduras inteligentes: Limpiar concesiones de Omnitec sin completar"
+
+#. module: pms_smartlock_omnitec
+#: model:ir.model.fields,field_description:pms_smartlock_omnitec.field_lock_vendor__vendor_type
+msgid "Type"
+msgstr "Tipo"
