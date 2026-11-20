@@ -1,5 +1,8 @@
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from roomdoo_locks_base import LockOfflineError
+from roomdoo_locks_omnitec import GatewayCommandError
 
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase
@@ -41,6 +44,7 @@ class TestOmnitecVendor(TransactionCase):
                 clientSecret="modern-sec",
                 username="user",
                 password="pass",
+                passcode_tag=None,
             )
 
     def test_legacy_reads_legacy_env_pair(self):
@@ -60,7 +64,35 @@ class TestOmnitecVendor(TransactionCase):
                 clientSecret="legacy-sec",
                 username="user",
                 password="pass",
+                passcode_tag=None,
             )
+
+    def test_create_path_tags_the_passcodes(self):
+        """The create path puts the credential on the context; its passcodes
+        are tagged after it so an interrupted grant can be resumed."""
+        code = MagicMock(name="lock.code")
+        code._omnitec_passcode_tag.return_value = "F2600001#17"
+        with patch.dict(
+            os.environ,
+            {"OMNITEC_CLIENT_ID": "modern-cid", "OMNITEC_CLIENT_SECRET": "modern-sec"},
+        ), patch(
+            "odoo.addons.pms_smartlock_omnitec.models.lock_vendor.OmnitecProvider"
+        ) as provider_cls:
+            self.vendor.with_context(smartlock_grant_code=code).get_connector()
+        self.assertEqual(provider_cls.call_args.kwargs["passcode_tag"], "F2600001#17")
+
+    def test_lock_not_answering_is_retried_quickly_first(self):
+        """Errcode -1: two retries after ten seconds, as Omnitec advises, then
+        spaced ones so the sync keeps its usual window."""
+        error = GatewayCommandError("[-1]: An error has ocurred")
+        delays = [self.vendor._sync_retry_seconds(error, n) for n in (1, 2, 3, 4)]
+        self.assertEqual(delays, [10, 10, 600, 600])
+
+    def test_other_transient_errors_keep_the_default_delay(self):
+        self.assertEqual(
+            self.vendor._sync_retry_seconds(LockOfflineError("gateway offline"), 1),
+            300,
+        )
 
     def test_missing_env_raises(self):
         """No app credentials in the environment → fail loudly."""
