@@ -20,6 +20,8 @@ NEUTRAL = {
     "closed_to_departure": False,
     "stop_sell": False,
 }
+#: What every value carries, changed or not: which rate plan and nights.
+WHERE = {"property_id", "rate_plan_id", "date_from", "date_to"}
 
 
 class ChannexRestrictionsCase(ChannexRatePlanCase):
@@ -406,14 +408,129 @@ class TestChannexRestrictionsSend(ChannexRestrictionsCase):
             date_start_consumption=self._days(5),
             date_end_consumption=self._days(5),
         )
+        # Only the two nights changed go out, a value each per rate plan.
         with mock.patch(
-            "odoo.addons.connector_pms_channex.components.ari.MAX_CALL_BYTES", 1000
+            "odoo.addons.connector_pms_channex.components.ari.MAX_CALL_BYTES", 300
         ):
             self._publish()
         calls = self.server.calls_to("POST", RESTRICTIONS)
         self.assertGreater(len(calls), 1)
         self.assertEqual(self._rates(self.room_only_plan, self._days(-5))[2], "150.00")
         self.assertEqual(self._rates(self.room_only_plan, self._days(5))[2], "160.00")
+
+
+@tagged("post_install", "-at_install")
+class TestChannexRestrictionsChanges(ChannexRestrictionsCase):
+    """Only what Channex does not hold yet is sent, as its certification asks:
+    a night sent whole when only its price moved is a snapshot, not a change."""
+
+    def _sent_fields(self, rate_plan=None):
+        return [
+            set(value) - WHERE
+            for value in self._sent()
+            if rate_plan is None or value["rate_plan_id"] == rate_plan.external_id
+        ]
+
+    def test_a_price_changed_sends_only_prices(self):
+        self._item(
+            self.room_type.product_id,
+            150,
+            date_start_consumption=self.night,
+            date_end_consumption=self.night,
+        )
+        self._publish()
+        self.assertEqual(self._sent_fields(), [{"rates"}, {"rates"}])
+
+    def test_a_restriction_changed_sends_only_that_restriction(self):
+        self._rule(self.night, min_stay=3, min_stay_arrival=3)
+        self._publish()
+        self.assertEqual(
+            self._sent_fields(),
+            [{"min_stay_arrival", "min_stay_through"}] * 2,
+        )
+        self.assertEqual(
+            self._restrictions(self.room_only_plan, self.night),
+            {**NEUTRAL, "min_stay_arrival": 3, "min_stay_through": 3},
+        )
+
+    def test_nights_that_did_not_change_are_not_sent(self):
+        """However wide the window noted: what decides is what Channex holds."""
+        self._rate_plans()._channex_stage_restrictions()
+        self._publish()
+        self.assertFalse(self.server.calls_to("POST", RESTRICTIONS))
+
+    def test_a_change_over_nights_otherwise_different_goes_as_one_range(self):
+        """The breakfast stops selling on a night inside the range: that is not
+        what changed, so it does not cut the range."""
+        self.env["pms.availability.plan.board.rule"].create(
+            {
+                "availability_plan_id": self.plan.id,
+                "pms_property_id": self.pms_property.id,
+                "board_service_id": self.breakfast.id,
+                "date_from": self.night,
+                "date_to": self.night,
+            }
+        )
+        self._publish()
+        self.server.calls.clear()
+        self._rule(self._days(-2), self._days(2), min_stay=2, min_stay_arrival=2)
+        self._publish()
+        [value] = [
+            value
+            for value in self._sent()
+            if value["rate_plan_id"] == self.breakfast_plan.external_id
+        ]
+        self.assertEqual(
+            (value["date_from"], value["date_to"]),
+            (str(self._days(-2)), str(self._days(2))),
+        )
+        self.assertTrue(
+            self._restrictions(self.breakfast_plan, self.night)["stop_sell"]
+        )
+
+    def test_a_full_sync_sends_every_night_whole(self):
+        """Whatever Channex is thought to hold: it is how that is put right."""
+        self.backend._channex_publish_everything()
+        self._publish()
+        self.assertEqual(
+            self._sent_fields(), [{"rates", *NEUTRAL}, {"rates", *NEUTRAL}]
+        )
+
+    def test_nights_channex_refused_go_whole_next_time(self):
+        plans = self.server.store["rate_plans"]
+        self.server.store["rate_plans"] = [
+            plan for plan in plans if plan["id"] != self.room_only_plan.external_id
+        ]
+        self._item(
+            self.room_type.product_id,
+            150,
+            date_start_consumption=self.night,
+            date_end_consumption=self.night,
+        )
+        self._publish()
+        self.server.store["rate_plans"] = plans
+        self.server.calls.clear()
+        self._rule(self.night, min_stay=2, min_stay_arrival=2)
+        self._publish()
+        self.assertEqual(self._sent_fields(self.room_only_plan), [{"rates", *NEUTRAL}])
+        self.assertEqual(self._rates(self.room_only_plan, self.night)[2], "150.00")
+
+    def test_nothing_sent_while_exports_are_off_is_taken_as_held(self):
+        """Exports off is usually a copy of a live database: what it worked out
+        never reached Channex, so it has to go out once exports are back on."""
+        self.backend.export_disabled = True
+        self._item(
+            self.room_type.product_id,
+            150,
+            date_start_consumption=self.night,
+            date_end_consumption=self.night,
+        )
+        self._publish()
+        self.assertFalse(self.server.calls_to("POST", RESTRICTIONS))
+        self.backend.export_disabled = False
+        self._rate_plans()._channex_stage_restrictions()
+        self._publish()
+        self.assertEqual(self._rates(self.room_only_plan, self.night)[2], "150.00")
 
 
 @tagged("post_install", "-at_install")

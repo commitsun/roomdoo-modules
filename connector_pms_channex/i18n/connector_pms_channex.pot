@@ -2100,6 +2100,11 @@ msgid "Has Unreconciled Entries"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_held
+msgid "Held on Channex"
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_room_type__heterogeneous_capacity
 msgid "Heterogeneous Capacity"
 msgstr ""
@@ -3608,6 +3613,13 @@ msgstr ""
 #. module: connector_pms_channex
 #: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
 msgid ""
+"Read every message Channex holds unacknowledged for this property, including"
+" those it no longer offers. Only for bookings missing after a long outage."
+msgstr ""
+
+#. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid ""
 "Read the messages Channex is holding for this property and queue one job per"
 " message. What became of each one shows up below as its job runs."
 msgstr ""
@@ -3620,6 +3632,11 @@ msgstr ""
 #. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__user_id
 msgid "Reception Manager"
+msgstr ""
+
+#. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid "Recover missing bookings"
 msgstr ""
 
 #. module: connector_pms_channex
@@ -4561,6 +4578,14 @@ msgid ""
 msgstr ""
 
 #. module: connector_pms_channex
+#: model_terms:ir.ui.view,arch_db:connector_pms_channex.channel_channex_backend_view_form
+msgid ""
+"This reads every message Channex holds unacknowledged for this property, "
+"however old. Use it only when bookings are missing after a long outage: "
+"Channex does not count a booking read this way as received. Continue?"
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.constraint,message:connector_pms_channex.constraint_channel_channex_backend_type_room_kind_room_type_class_uniq
 msgid "This room type class is already mapped for this backend type."
 msgstr ""
@@ -4891,6 +4916,13 @@ msgstr ""
 msgid ""
 "What Channex calls the notification we registered. Kept so the same one is "
 "updated instead of piling up a new one every time."
+msgstr ""
+
+#. module: connector_pms_channex
+#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_rate_plan__channex_ari_held
+msgid ""
+"What Channex holds of this rate plan night by night, as last sent: only what"
+" differs from it is sent."
 msgstr ""
 
 #. module: connector_pms_channex
