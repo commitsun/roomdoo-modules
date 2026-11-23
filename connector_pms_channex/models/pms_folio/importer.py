@@ -64,8 +64,16 @@ class ChannelChannexPmsFolioImporter(Component):
 
     def _after_import(self, binding):
         if _channex_cancels(self.channex_message):
-            return self._channex_cancel_booking(binding)
-        return self._channex_reconfirm(binding)
+            result = self._channex_cancel_booking(binding)
+        else:
+            result = self._channex_reconfirm(binding)
+        # The import runs with exports silenced, so no listener noticed the
+        # nights it took or freed. Every reservation of the folio is published,
+        # whatever its state: the cancelled ones are the nights given back.
+        # Channex already took the booking off its availability, and sending it
+        # the number pms has is what keeps the two from drifting apart.
+        binding.odoo_id.reservation_ids._channex_stage_availability()
+        return result
 
     def _channex_cancel_booking(self, binding):
         """The booking is off at the OTA, so it is off here.
