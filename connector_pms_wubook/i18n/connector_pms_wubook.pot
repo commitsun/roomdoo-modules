@@ -125,6 +125,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_class__active
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__active
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__active
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
 msgid "Active"
 msgstr ""
 
@@ -524,6 +525,8 @@ msgstr ""
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__backend_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__backend_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__backend_id
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
 msgid "Backend"
 msgstr ""
 
@@ -1240,6 +1243,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -1264,6 +1268,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_date
 msgid "Created on"
 msgstr ""
 
@@ -1582,6 +1587,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__display_name
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -2209,6 +2215,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__id
 msgid "ID"
 msgstr ""
 
@@ -2888,6 +2895,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service____last_update
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra____last_update
 msgid "Last Modified on"
 msgstr ""
 
@@ -2948,6 +2956,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -2972,6 +2981,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -3941,6 +3951,7 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__price_round
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_rounding
 msgid "Price Rounding"
 msgstr ""
 
@@ -4086,6 +4097,7 @@ msgstr ""
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__product_variant_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__product_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
 msgid "Product"
 msgstr ""
 
@@ -4199,6 +4211,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation_line__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__pms_property_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__pms_property_id
 msgid "Property"
 msgstr ""
 
@@ -6402,4 +6415,725 @@ msgstr ""
 #. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
 msgid "The board service the price of the room type includes on Wubook"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s now reports %(amount)s paid online, less than the %(registered)s"
+" registered automatically. Refunds are not registered automatically: review "
+"the payments."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online for the whole booking, already "
+"registered on another folio of the same booking (%(folios)s). It has not "
+"been registered again."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online for the whole booking, which "
+"Wubook split in %(parts)s folios. It has not been registered automatically: "
+"register it by hand on the right folio."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online, but the folio is in "
+"%(folio_currency)s. It has not been registered automatically."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(amount)s paid online. The folio already has payments "
+"registered by hand, so it has not been registered automatically to avoid a "
+"duplicate."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s reports %(paid)s paid online: payment of %(amount)s registered "
+"automatically."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"%(channel)s: online payment pending until %(deadline)s. If the guest does "
+"not pay, the channel will cancel the booking."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "%(qty)s units, %(total)s"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#, python-format
+msgid "%(updated)s of %(total)s pending folios updated."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__action
+msgid "Action"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
+msgid ""
+"Amount the channel reports as paid online for the whole booking (last known "
+"value)."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_due_amount
+msgid ""
+"Amount the channel reports as still due for the whole booking (last known "
+"value)."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_tree
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+msgid "Apply to Pending Folios"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.actions.act_window,help:connector_pms_wubook.channel_wubook_backend_extra_action
+msgid "Assign each extra sold by the channels the product it is imported as."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"Booking cancelled in %(channel)s with %(amount)s paid online. The folio is "
+"cancelled, so the payment has not been registered automatically: review the "
+"cancellation penalty and the refund."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"Booking cancelled in %(channel)s with %(amount)s paid online. The payment "
+"registered automatically is kept and no refund has been registered: review "
+"the cancellation penalty and the refund."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_extras
+msgid ""
+"Bookings of this channel bring their extras (parking, cot, breakfast...) as "
+"services of the reservation. Enable it only for channels whose booking "
+"amount does not include the extras."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__channel_extra_name
+msgid "Channel Extra"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__channel_extra_key
+msgid "Channel Extra Key"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_pms_service__wubook_extra_id
+msgid "Channel Extra Mapping"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#: model:ir.actions.act_window,name:connector_pms_wubook.channel_wubook_backend_extra_action
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extra_ids
+#: model:ir.ui.menu,name:connector_pms_wubook.channel_wubook_backend_extra_menu
+#: model:ir.ui.menu,name:connector_pms_wubook.channel_wubook_backend_extra_pms_menu
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+#, python-format
+msgid "Channel Extras"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras
+msgid "Channel Extras Received"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras_state
+msgid "Channel Extras Status"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
+msgid "Channel Notes"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_currency
+msgid "Channel Payment Currency"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_deadline
+msgid "Channel Payment Deadline"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_notes
+msgid "Channel Payment Notes"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_split
+msgid "Channel Payment Split"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_ids
+msgid "Channel Payments"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_backend_extra
+msgid "Channel Wubook Backend Extra Map"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "Channel extra %(extra)s not imported: %(error)s"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"Channel extra %(extra)s not imported: the folio already has %(product)s "
+"added by hand."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "Channel extras could not be imported: %(error)s"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"Channel extras without product, not imported: %(extras)s. Assign them a "
+"product in the channel extras and apply it to the pending folios."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_currency
+msgid "Currency (ISO code) of the amounts reported by the channel."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_deadline
+msgid ""
+"Deadline the channel gave the guest to pay the booking online. It is emptied"
+" when the channel reports the payment."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_due_amount
+msgid "Due at Channel"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__name
+msgid "Extra Name"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form_extras
+msgid "Extras"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras
+msgid "Extras the channel sent with the last version of the booking."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extra_fallback_product_id
+msgid "Fallback Extras Product"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__extras_import_start
+msgid ""
+"Folios created before this moment never get channel extras: staff added them"
+" by hand. Leave it empty to not import channel extras in this backend."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Group By"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_extra__action__ignore
+msgid "Ignore"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__action
+msgid ""
+"Ignore the extras that must not reach the folio, e.g. those the channel "
+"lists at 0 as part of a package."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Ignored"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_extras
+msgid "Import Extras"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__extras_import_start
+msgid "Import Extras From"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_extra__action__service
+msgid "Import as Service"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__service_count
+msgid "Imported Services"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_pms_service__channel_extra_key
+msgid ""
+"Key of the channel extra this service was imported from. The channel import "
+"never touches the services without it, the ones added by hand."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__normalized_name
+msgid ""
+"Key the bookings are matched with: the name without case, accents nor "
+"punctuation."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid "Loyalty club member"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_pms_service__channel_extra_name
+msgid "Name of the extra as the channel sent it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__name
+msgid "Name of the extra exactly as the channel sends it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.actions.act_window,help:connector_pms_wubook.channel_wubook_backend_extra_action
+msgid "No channel extras waiting for a product"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__normalized_name
+msgid "Normalized Name"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/backend_extra.py:0
+#, python-format
+msgid "Only connector managers can move a channel extra to another backend."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/wubook_backend_journal_ota.py:0
+#, python-format
+msgid ""
+"Only one payment mapping per OTA can register the channel payments: %(ota)s "
+"already has one."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
+msgid "Paid at Channel"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_split
+msgid ""
+"Part of the channel booking held by this folio (part/total) when Wubook "
+"split the booking in several folios."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_ids
+msgid ""
+"Payments registered automatically from what the channel reports as paid "
+"online."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
+msgid "Pending"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__extra_fallback_product_id
+msgid ""
+"Product of the channel extras that have no product of their own, so the "
+"folio total matches what the guest pays. Leave it empty to leave those "
+"extras pending and report them on the folio."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__register_channel_payments
+msgid "Register Channel Payments"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_wubook_backend_journal_ota__register_channel_payments
+msgid ""
+"Register automatically, on this journal, the amount the channel reports as "
+"paid online."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_registered
+msgid "Registered from Channel"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
+msgid ""
+"Service the extra is imported as. Leave it empty to keep the extra pending: "
+"it is imported with the fallback product of the backend, if any, and "
+"reported on the folio otherwise."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_pms_service
+msgid "Services and its charges"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_notes
+msgid ""
+"Technical field: last value of every kind of channel payment note posted on "
+"the folio, so that re-imports do not repeat them."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid ""
+"The [Mirai] lines of the internal notes could not be updated. The details "
+"are in the server log."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"The amount %(channel)s reports as paid online could not be registered "
+"automatically (%(error)s). Review the payments of the folio."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_payments.py:0
+#, python-format
+msgid ""
+"The amount paid online (%(amount)s) exceeds the folio total (%(total)s): it "
+"probably includes extras that are not in the folio."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but it is "
+"managed by hand in this folio: review it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but its "
+"service could not be updated: %(error)s"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel changed the extra %(extra)s from %(old)s to %(new)s, but its "
+"service was changed by hand or invoiced, so it was not updated: review it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel extras are in %(currency)s and the folio in %(folio_currency)s, "
+"so they were not imported: %(extras)s."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel moved the stay of the extra %(extra)s, but its service is "
+"invoiced, so it stays on the cancelled room: review it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel moved the stay of the extra %(extra)s: its service is created "
+"again as the channel sends it, without the changes made by hand (%(old)s)."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel removed the extra %(extra)s, but its service was changed by hand"
+" or invoiced, so it was kept: review it."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid ""
+"The channel split this booking into %(count)s folios and each one repeats "
+"the extras of the whole booking, so they were not imported: %(extras)s. Add "
+"them by hand to the folio they belong to."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.constraint,message:connector_pms_wubook.constraint_channel_wubook_backend_extra_backend_normalized_name_uniq
+msgid "This extra is already mapped in this backend."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/common/wubook_backend_journal_ota.py:0
+#, python-format
+msgid ""
+"To register channel payments, the OTA payment mapping needs an OTA and an "
+"incoming payment method."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_registered
+msgid ""
+"Total amount registered automatically on this folio from what the channel "
+"reports as paid online. It never decreases, so payments cancelled or edited "
+"by the staff are never registered again."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding.py:0
+#, python-format
+msgid ""
+"Upselling applied: %(amount)s (according to Mirai, the guest pays it at the "
+"hotel)"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_extras_state
+msgid "What the import did with each channel extra of the folio."
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_type_ota__import_channel_notes
+msgid ""
+"Write in the folio internal notes what the channel passes through for "
+"reception. Only Mirai passes any for now: the loyalty club membership and "
+"the upselling the guest pays at the hotel."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "its price is negative"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/pms_folio/binding_channel_extras.py:0
+#, python-format
+msgid "the taxes of %(product)s are not included in its price"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid ""
+"%(count)s prices not above %(min_price)s, which Wubook rejects, were left "
+"out"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_value
+msgid ""
+"Added to the price of the base room type, as an amount in the currency of "
+"the pricelist or as a percentage of that price. Negative values lower it"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_pricelist_ids
+msgid "Derive in Pricelists"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derived_room_type_ids
+msgid "Derived Room Types"
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid ""
+"Derived room type prices exported: %(date_from)s..%(date_to)s (%(count)s "
+"prices)"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__flatten_window_days
+msgid ""
+"Forward window (in days from today) used when exporting a pricelist marked "
+"as 'Flatten to Daily on Wubook' triggered by a change on its own rules. The "
+"actual end date is capped by the latest dated rule found on the parent "
+"chain. It is also the window of the prices of the room types derived from "
+"another room type pushed to the other pricelists when the derivation changes"
+" or the pricelists are exported, capped by the latest dated rule of the "
+"pricelist."
+msgstr ""
+
+#. module: connector_pms_wubook
+#. odoo-python
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#: code:addons/connector_pms_wubook/models/product_pricelist/binding.py:0
+#, python-format
+msgid "No derived room type prices to export"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_base_room_type_id
+msgid "Price Derived From"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_value
+msgid "Price Variation"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_type
+msgid "Price Variation Type"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_pricelist_ids
+msgid ""
+"Pricelists where the price is derived. Leave it empty to derive it in all of"
+" them"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_base_room_type_id
+msgid ""
+"Room type whose price is the base of this one in the pricelists without a "
+"rule of their own for it"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derived_room_type_ids
+msgid "Room types whose price is derived from this one"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_rounding
+msgid ""
+"Round the prices derived by a percentage to a multiple of this value, e.g. 1"
+" for whole amounts. Zero rounds them to the currency"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_room_type__price_derivation_type
+msgid ""
+"Whether the variation is a fixed amount or a percentage of the price of the "
+"base room type"
 msgstr ""

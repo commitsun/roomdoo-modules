@@ -141,6 +141,7 @@ msgstr "Acción requerida"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_class__active
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__active
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__active
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
 msgid "Active"
 msgstr "Activo"
 
@@ -542,6 +543,8 @@ msgstr "Evitar el anticipo máximo de la factura simplificada"
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__backend_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__backend_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__backend_id
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
 msgid "Backend"
 msgstr "Backend"
 
@@ -1276,6 +1279,7 @@ msgstr "Crear reservas no está soportado por ahora"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_uid
 msgid "Created by"
 msgstr "Creado por"
 
@@ -1300,6 +1304,7 @@ msgstr "Creado por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_date
 msgid "Created on"
 msgstr "Creado el"
 
@@ -1624,6 +1629,7 @@ msgstr "Descuento del precio total en la reserva"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__display_name
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
@@ -2297,6 +2303,7 @@ msgstr "Tiene asientos no conciliados"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__id
 msgid "ID"
 msgstr "ID"
 
@@ -3021,6 +3028,7 @@ msgstr "Última salida de la ficha"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service____last_update
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra____last_update
 msgid "Last Modified on"
 msgstr "Última modificación el"
 
@@ -3081,6 +3089,7 @@ msgstr "Última sincronización (importación)"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_uid
 msgid "Last Updated by"
 msgstr "Última actualización por"
 
@@ -3105,6 +3114,7 @@ msgstr "Última actualización por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_date
 msgid "Last Updated on"
 msgstr "Última actualización el"
 
@@ -4242,6 +4252,7 @@ msgstr "Política de privacidad"
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__product_variant_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__product_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
 msgid "Product"
 msgstr "Producto"
 
@@ -4359,6 +4370,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation_line__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__pms_property_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__pms_property_id
 msgid "Property"
 msgstr "Hotel"
 
@@ -6817,11 +6829,6 @@ msgid "Action"
 msgstr "Acción"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__active
-msgid "Active"
-msgstr "Activo"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_paid_amount
 msgid ""
 "Amount the channel reports as paid online for the whole booking (last known "
@@ -6856,12 +6863,6 @@ msgid "Assign each extra sold by the channels the product it is imported as."
 msgstr ""
 "Asigne a cada extra que venden los canales el producto con el que se "
 "importa."
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__backend_id
-#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
-msgid "Backend"
-msgstr "Backend"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -7009,16 +7010,6 @@ msgstr ""
 "producto en los extras del canal y aplíquelo a las fichas pendientes."
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_uid
-msgid "Created by"
-msgstr "Creado por"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__create_date
-msgid "Created on"
-msgstr "Creado el"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_pms_folio__channel_payment_currency
 msgid "Currency (ISO code) of the amounts reported by the channel."
 msgstr "Moneda (código ISO) de los importes que comunica el canal."
@@ -7031,11 +7022,6 @@ msgid ""
 msgstr ""
 "Plazo que el canal dio al huésped para pagar la reserva online. Se vacía "
 "cuando el canal comunica el pago."
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__display_name
-msgid "Display Name"
-msgstr "Nombre mostrado"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_folio__channel_due_amount
@@ -7076,11 +7062,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_extra_view_search
 msgid "Group By"
 msgstr "Agrupar por"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__id
-msgid "ID"
-msgstr "ID"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields.selection,name:connector_pms_wubook.selection__channel_wubook_backend_extra__action__ignore
@@ -7138,21 +7119,6 @@ msgid ""
 msgstr ""
 "Clave con la que se casan las reservas: el nombre sin mayúsculas, acentos ni"
 " puntuación."
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra____last_update
-msgid "Last Modified on"
-msgstr "Última modificación el"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_uid
-msgid "Last Updated by"
-msgstr "Última actualización por"
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__write_date
-msgid "Last Updated on"
-msgstr "Última actualización el"
 
 #. module: connector_pms_wubook
 #. odoo-python
@@ -7230,11 +7196,6 @@ msgid "Pending"
 msgstr "Pendientes"
 
 #. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__product_id
-msgid "Product"
-msgstr "Producto"
-
-#. module: connector_pms_wubook
 #: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend__extra_fallback_product_id
 msgid ""
 "Product of the channel extras that have no product of their own, so the "
@@ -7244,11 +7205,6 @@ msgstr ""
 "Producto de los extras del canal que no tienen uno propio, para que el total"
 " de la ficha coincida con lo que paga el huésped. Déjelo vacío para dejar "
 "esos extras pendientes y avisar en la ficha."
-
-#. module: connector_pms_wubook
-#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_extra__pms_property_id
-msgid "Property"
-msgstr "Hotel"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__register_channel_payments
