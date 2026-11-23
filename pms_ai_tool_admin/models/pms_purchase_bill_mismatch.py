@@ -182,8 +182,9 @@ class PmsAiTools(models.AbstractModel):
                     "lines linked to each order (shared_bills)."
                 ),
                 _(
-                    "Property: the property of the bills in the period. bills_by_state: "
-                    "vendor bills in draft (pending validation) and posted bills not "
+                    "Property: the property of the bills in the period. "
+                    "bills_by_state: vendor bills in draft (pending validation) and "
+                    "posted bills not "
                     "yet paid or partly paid, up to the end of the period, by company."
                 ),
                 _("Sensitive: accounting data of suppliers."),

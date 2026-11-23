@@ -50,10 +50,14 @@ class PmsAiTools(models.AbstractModel):
         if counterpart.statement_line_id:
             return "bank_statement"
         if counterpart.move_type in INVOICE_TYPES:
-            return "credit_note" if counterpart.move_type.endswith("refund") else (
-                "down_payment_invoice"
-                if counterpart._is_downpayment()
-                else "invoice"
+            return (
+                "credit_note"
+                if counterpart.move_type.endswith("refund")
+                else (
+                    "down_payment_invoice"
+                    if counterpart._is_downpayment()
+                    else "invoice"
+                )
             )
         return "other_entry"
 

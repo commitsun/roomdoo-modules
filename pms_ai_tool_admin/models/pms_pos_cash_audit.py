@@ -183,7 +183,11 @@ class PmsAiTools(models.AbstractModel):
                 }
             )
         rows.sort(
-            key=lambda r: (-abs(r["closing_difference"] or 0), r["opened_at"], r["session_id"])
+            key=lambda r: (
+                -abs(r["closing_difference"] or 0),
+                r["opened_at"],
+                r["session_id"],
+            )
         )
         return {
             "summary": _(
@@ -204,8 +208,8 @@ class PmsAiTools(models.AbstractModel):
                 _(
                     "Sessions: point of sale sessions opened in the period. The "
                     "point of sale has no property: it is taken from its cash "
-                    "journal or, failing that, sales journal; sessions whose journals have no "
-                    "property are listed without one."
+                    "journal or, failing that, sales journal; sessions whose "
+                    "journals have no property are listed without one."
                 ),
                 _(
                     "closing_difference: counted cash minus expected cash of a "
@@ -279,14 +283,20 @@ class PmsAiTools(models.AbstractModel):
 
     def _ai_pos_payments(self, sessions):
         result = defaultdict(list)
-        groups = self.env["pos.payment"].sudo().read_group(
-            [("session_id", "in", sessions.ids)],
-            ["amount:sum"],
-            ["session_id", "payment_method_id"],
-            lazy=False,
+        groups = (
+            self.env["pos.payment"]
+            .sudo()
+            .read_group(
+                [("session_id", "in", sessions.ids)],
+                ["amount:sum"],
+                ["session_id", "payment_method_id"],
+                lazy=False,
+            )
         )
-        methods = self.env["pos.payment.method"].sudo().browse(
-            [g["payment_method_id"][0] for g in groups]
+        methods = (
+            self.env["pos.payment.method"]
+            .sudo()
+            .browse([g["payment_method_id"][0] for g in groups])
         )
         cash = {method.id: method.is_cash_count for method in methods}
         for group in groups:
@@ -306,8 +316,8 @@ class PmsAiTools(models.AbstractModel):
                 "cancelled": 0,
             }
         )
-        orders = self.env["pos.order"].sudo().search(
-            [("session_id", "in", sessions.ids)]
+        orders = (
+            self.env["pos.order"].sudo().search([("session_id", "in", sessions.ids)])
         )
         for order in orders:
             row = result[order.session_id.id]
@@ -339,14 +349,18 @@ class PmsAiTools(models.AbstractModel):
             account = journal.default_account_id
             if not account:
                 continue
-            groups = self.env["account.move.line"].sudo().read_group(
-                [
-                    ("account_id", "=", account.id),
-                    ("parent_state", "=", "posted"),
-                    ("company_id", "=", journal.company_id.id),
-                ],
-                ["balance:sum"],
-                [],
+            groups = (
+                self.env["account.move.line"]
+                .sudo()
+                .read_group(
+                    [
+                        ("account_id", "=", account.id),
+                        ("parent_state", "=", "posted"),
+                        ("company_id", "=", journal.company_id.id),
+                    ],
+                    ["balance:sum"],
+                    [],
+                )
             )
             rows.append(
                 {

@@ -144,8 +144,14 @@ class PmsAiTools(models.AbstractModel):
         if any(not prefix.isalnum() for prefix in prefixes):
             raise UserError(_("Account prefixes must be alphanumeric."))
         domain = self._ai_supplier_invoice_domain(
-            date_from, date_to, property_ids, prefixes, supplier, min_amount,
-            max_amount, text,
+            date_from,
+            date_to,
+            property_ids,
+            prefixes,
+            supplier,
+            min_amount,
+            max_amount,
+            text,
         )
         bills = self.env["account.move"].search(
             domain, order="date, id", limit=MAX_BILLS + 1
@@ -170,11 +176,11 @@ class PmsAiTools(models.AbstractModel):
             if bill_lines:
                 best = max(bill_lines, key=lambda ln: abs(ln.price_subtotal))
                 main_account[bill.id] = best.account_id
-        settlements = (
-            self._ai_move_settlements(bills) if include_payments else {}
-        )
+        settlements = self._ai_move_settlements(bills) if include_payments else {}
         bill_rows = [
-            self._ai_supplier_bill_row(bill, settlements.get(bill.id, []), include_payments)
+            self._ai_supplier_bill_row(
+                bill, settlements.get(bill.id, []), include_payments
+            )
             for bill in bills
         ]
         result = {
@@ -277,7 +283,9 @@ class PmsAiTools(models.AbstractModel):
         groups = defaultdict(lambda: {"untaxed": 0.0, "tax": 0.0, "lines": 0})
         labels = {}
         for ln in lines:
-            key, label = self._ai_supplier_group_key(group_by, ln.move_id, ln.account_id)
+            key, label = self._ai_supplier_group_key(
+                group_by, ln.move_id, ln.account_id
+            )
             labels[key] = label
             group = groups[key]
             group["untaxed"] += ln.price_subtotal
@@ -319,7 +327,11 @@ class PmsAiTools(models.AbstractModel):
         }
         if not include_payments:
             return row
-        paid = [i for i in items if self._ai_settlement_kind(i["counterpart"]) not in NO_PAYMENT_KINDS]
+        paid = [
+            i
+            for i in items
+            if self._ai_settlement_kind(i["counterpart"]) not in NO_PAYMENT_KINDS
+        ]
         credited = [i for i in items if i not in paid]
         paid_total = sum(i["amount"] for i in paid)
         credited_total = sum(i["amount"] for i in credited)

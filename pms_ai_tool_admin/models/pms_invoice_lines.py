@@ -110,7 +110,9 @@ class PmsAiTools(models.AbstractModel):
         invoices = [self._ai_invoice_payload(move) for move in moves]
         first = invoices[0]
         return {
-            "summary": _("%(number)s: %(lines)s lines, total %(total)s, state %(state)s.")
+            "summary": _(
+                "%(number)s: %(lines)s lines, total %(total)s, state %(state)s."
+            )
             % {
                 "number": first["number"],
                 "lines": len(first["lines"]),

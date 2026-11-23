@@ -41,11 +41,15 @@ class TestAccSupplierInvoices(AdminToolsMixin, SupplierBillsMixin, TransactionCa
         self.assertEqual(len(by_account["line_groups"]), 1)
         none = self._tool(account_prefixes=["999"])["result"]
         self.assertEqual(none["totals"]["bills"], 0)
-        self.assertEqual(self._tool(supplier="supplier b")["result"]["totals"]["bills"], 1)
+        self.assertEqual(
+            self._tool(supplier="supplier b")["result"]["totals"]["bills"], 1
+        )
         self.assertEqual(self._tool(min_amount=600)["result"]["totals"]["bills"], 1)
         self.assertEqual(self._tool(max_amount=400)["result"]["totals"]["bills"], 1)
         self.assertEqual(self._tool(text="AI service")["result"]["totals"]["bills"], 3)
-        self.assertEqual(self._tool(text="nothing like this")["result"]["totals"]["bills"], 0)
+        self.assertEqual(
+            self._tool(text="nothing like this")["result"]["totals"]["bills"], 0
+        )
         by_month = self._tool(group_lines_by="month")["result"]["line_groups"]
         self.assertEqual([row["label"] for row in by_month], ["2026-09"])
 
@@ -66,9 +70,7 @@ class TestAccSupplierInvoices(AdminToolsMixin, SupplierBillsMixin, TransactionCa
         self.assertNotIn("real_days_to_last_payment", bills[self.b2.id])
 
     def test_payment_groups(self):
-        groups = {
-            row["label"]: row for row in self._tool()["result"]["payment_groups"]
-        }
+        groups = {row["label"]: row for row in self._tool()["result"]["payment_groups"]}
         supplier = groups["AI Supplier A"]
         self.assertEqual(supplier["paid"], 1000.0)
         self.assertEqual(supplier["pending"], 300.0)

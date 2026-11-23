@@ -33,7 +33,9 @@ class TestPosCashAudit(AdminToolsMixin, TransactionCase):
         )
         cls.card_method = cls._method("AI POS card", bank_journal)
         cls.session = cls._session(
-            "AI POS bar", cls.cash_method, [(100, cls.cash_method), (40, cls.card_method)]
+            "AI POS bar",
+            cls.cash_method,
+            [(100, cls.cash_method), (40, cls.card_method)],
         )
         cls.other_session = cls._session(
             "AI POS other bar", cls.other_cash_method, [(10, cls.other_cash_method)]

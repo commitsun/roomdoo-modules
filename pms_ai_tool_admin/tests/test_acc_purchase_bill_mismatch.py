@@ -7,9 +7,7 @@ PERIOD = {"date_from": "2026-09-01", "date_to": "2026-09-30"}
 
 
 @tagged("post_install", "-at_install")
-class TestAccPurchaseBillMismatch(
-    AdminToolsMixin, SupplierBillsMixin, TransactionCase
-):
+class TestAccPurchaseBillMismatch(AdminToolsMixin, SupplierBillsMixin, TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
