@@ -16,6 +16,7 @@ from . import roomdoo_app_menu
 from . import pms_room
 from . import res_partner
 from . import ir_http
+from . import auth_jwt_validator
 from . import account_move
 from . import pms_neobookings_backend
 from . import pms_neobookings_payment_sync

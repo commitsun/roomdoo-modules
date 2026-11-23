@@ -1,6 +1,8 @@
 # Copyright 2026 Roomdoo
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+from freezegun import freeze_time
+
 from odoo.tests import tagged
 
 from odoo.addons.queue_job.tests.common import trap_jobs
@@ -717,6 +719,10 @@ class TestChannexBookingModification(ChannexBookingCase):
         )
 
 
+# The bookings of these tests arrive on 2026-11-13: once that night is past, the
+# same cancellation is a no-show instead of a late one. Frozen on a day before
+# the arrival, as when they were written.
+@freeze_time("2026-11-09 12:00:00")
 @tagged("post_install", "-at_install")
 class TestChannexBookingCancellation(ChannexBookingCase):
     """A booking called off at the OTA.

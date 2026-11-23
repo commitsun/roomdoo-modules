@@ -31,6 +31,11 @@ msgid "You can only change your own password."
 msgstr "Solo puedes cambiar tu propia contraseña."
 
 #. module: pms_api_rest
+#: model:ir.model.fields,help:pms_api_rest.field_res_users__pms_api_user_role
+msgid "Role of the user in the PMS. A portal user without a role cannot use the PMS APIs, unless it is a PMS API client."
+msgstr "Rol del usuario en el PMS. Un usuario de portal sin rol no puede usar las API del PMS, salvo que sea un cliente de la API del PMS."
+
+#. module: pms_api_rest
 #: code:addons/pms_api_rest/services/pms_partner_service.py:0
 #, python-format
 msgid ""
