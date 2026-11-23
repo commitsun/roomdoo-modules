@@ -6,3 +6,4 @@ from . import pms_channel_mix
 from . import pms_partner_assign_salesperson
 from . import pms_negative_pickup
 from . import pms_channel_agency_outlook
+from . import pms_partner_sales_yoy

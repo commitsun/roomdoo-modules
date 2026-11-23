@@ -402,3 +402,34 @@ msgstr "Cuota: parte de todas las noches de habitación y de los ingresos de hab
 #: code:addons/pms_ai_tool_revenue/models/pms_channel_agency_outlook.py:0
 msgid "Last year at the same time: the same calendar dates one year earlier, counting only the reservations created and not yet cancelled at this same moment a year ago. Prices are the ones recorded today, so later price changes also show."
 msgstr "Año anterior en el mismo momento: las mismas fechas del calendario un año antes, contando solo las reservas creadas y aún no canceladas en este mismo momento de hace un año. Los precios son los registrados hoy, por lo que también se notan cambios de precio posteriores."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
+#, python-format
+msgid "Sales with VAT of %(agencies)s agencies and %(companies)s companies in the years %(years)s."
+msgstr "Ventas con IVA de %(agencies)s agencias y %(companies)s empresas en los años %(years)s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
+msgid "Sales: accommodation + food and beverage + other services, with VAT (final prices as the PMS stores them), assigned to the year of the stay date of each night or service line. Normal reservations only; cancelled reservations carry no sale; pre-reservations count."
+msgstr "Ventas: alojamiento + alimentos y bebidas + otros servicios, con IVA (precios finales tal como los guarda el PMS), asignadas al año de la fecha de estancia de cada noche o línea de servicio. Solo reservas normales; las reservas canceladas no suman venta; las prerreservas cuentan."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
+msgid "Food and beverage: service lines of board services, or of products that are used in some board service of the PMS. The rest of the services are other services."
+msgstr "Alimentos y bebidas: líneas de servicio de regímenes, o de productos que se usan en algún régimen del PMS. El resto de servicios son otros servicios."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
+msgid "Agency: the agency company of the folio. Company: the customer of the folio when it is a company that is not an agency. A folio can count for both."
+msgstr "Agencia: la empresa agencia del folio. Empresa: el cliente del folio cuando es una empresa que no es agencia. Un folio puede contar para ambas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
+msgid "future_current_year: sales of the current year with stay date from tomorrow to 31 December, already on the books (included in the total of the current year)."
+msgstr "future_current_year: ventas del año en curso con fecha de estancia de mañana al 31 de diciembre, ya en cartera (incluidas en el total del año en curso)."
