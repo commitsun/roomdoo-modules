@@ -3,6 +3,8 @@
 
 from . import binding
 from . import backend
+from . import backend_board_service
+from . import backend_board_service_listener
 from . import backend_type
 from . import backend_type_board_service
 from . import backend_type_room_type_class

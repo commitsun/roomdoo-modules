@@ -21,14 +21,6 @@ class ChannelWubookPmsRoomTypeMapperImport(Component):
         ("max_price", "max_price"),
     ]
 
-    children = [
-        (
-            "boards",
-            "board_service_room_type_ids",
-            "channel.wubook.pms.room.type.board.service",
-        ),
-    ]
-
     @only_create
     @mapping
     def backend_id(self, record):
@@ -52,16 +44,3 @@ class ChannelWubookPmsRoomTypeMapperImport(Component):
     @mapping
     def property_id(self, record):
         return {"pms_property_id": self.backend_record.pms_property_id.id}
-
-
-# TODO: import room type with board service changes
-
-# class ChannelWubookPmsRoomTypeBoardServiceChildMapperImport(Component):
-#     _name = "channel.wubook.pms.room.type.board.service.child.mapper.import"
-#     _inherit = "channel.wubook.child.mapper.import"
-#     _apply_on = "channel.wubook.pms.room.type.board.service"
-#
-#     def get_item_values(self, map_record, to_attr, options):
-#         values = super().get_item_values(map_record, to_attr, options)
-#         options.get("binding")
-#         return values

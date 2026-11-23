@@ -52,6 +52,11 @@ class ChannelWubookBackend(models.Model):
         comodel_name="wubook.backend.journal.ota",
         inverse_name="backend_id",
     )
+    board_service_ids = fields.One2many(
+        string="Board Services",
+        comodel_name="channel.wubook.backend.board.service",
+        inverse_name="backend_id",
+    )
     wubook_journal_id = fields.Many2one(
         string="Wubook Payment Journal",
         comodel_name="account.journal",
@@ -170,7 +175,7 @@ class ChannelWubookBackend(models.Model):
             # Search by same jobs pending, if not exists, create a new job
             func_string = (
                 "channel.wubook.product.pricelist().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (rec.id,)
+                f"channel.wubook.backend({rec.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [("func_string", "=", func_string), ("state", "=", "pending")]
@@ -248,7 +253,7 @@ class ChannelWubookBackend(models.Model):
             # Search by same jobs pending, if not, create a new one
             func_string = (
                 "channel.wubook.pms.availability.plan().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (rec.id,)
+                f"channel.wubook.backend({rec.id},))"
             )
             jobs = rec.env["queue.job"].search(
                 [
@@ -293,11 +298,8 @@ class ChannelWubookBackend(models.Model):
             # Search by same jobs pending, if not, create a new one
             func_string = (
                 "channel.wubook.pms.property.availability().export_record(channel."
-                "wubook.backend(%s,), pms.property(%s,))"
-                % (
-                    rec.id,
-                    rec.pms_property_id.id,
-                )
+                f"wubook.backend({rec.id},), "
+                f"pms.property({rec.pms_property_id.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [
@@ -359,7 +361,7 @@ class ChannelWubookBackend(models.Model):
             backend = binding.backend_id
             func_string = (
                 "channel.wubook.pms.property.availability().export_data(backend_record="
-                "channel.wubook.backend(%s,))" % (backend.id,)
+                f"channel.wubook.backend({backend.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [

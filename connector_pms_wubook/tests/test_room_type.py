@@ -2,8 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import logging
 import xmlrpc.client
-
-import mock
+from unittest import mock
 
 from . import common, server
 
@@ -744,21 +743,12 @@ class TestWubookConnectorRoomTypeExport(common.TestWubookConnector):
             adapter = work.component(usage="backend.adapter")
             binder = work.component(usage="binder")
 
-        bs1 = self.env["pms.board.service"].create(
+        bs1 = self.env["product.template"].create(
             {
                 "name": "All included",
                 "default_code": "AI",
-                "board_service_line_ids": [
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": self.env.ref(
-                                "pms.pms_service_0_product_template"
-                            ).id,
-                        },
-                    )
-                ],
+                "type": "service",
+                "is_board_service": True,
             }
         )
         r1_values = {
@@ -767,18 +757,16 @@ class TestWubookConnectorRoomTypeExport(common.TestWubookConnector):
             "default_code": "c1",
             "class_id": self.env.ref("pms.pms_room_type_class_0").id,
             "pms_property_ids": [(6, 0, [p1.id])],
-            "board_service_room_type_ids": [
-                (
-                    0,
-                    0,
-                    {
-                        "pms_board_service_id": bs1.id,
-                    },
-                )
-            ],
             "company_id": False,
         }
         r1 = self.env["pms.room.type"].create(r1_values)
+        self.env["channel.wubook.backend.board.service"].create(
+            {
+                "backend_id": backend.id,
+                "room_type_id": r1.id,
+                "board_service_id": bs1.id,
+            }
+        )
 
         r1w_values = {
             "name": "Room type Diff",

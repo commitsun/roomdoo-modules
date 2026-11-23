@@ -31,3 +31,26 @@ class ChannelWubookPmsRoomTypeImporter(Component):
         )
         for board in external_data["boards"]:
             self._import_dependency(board["id"], "channel.wubook.pms.board.service")
+        self._wubook_boards = external_data["boards"]
+
+    def _after_import(self, binding):
+        """The board services Wubook sells the room type with are set on the
+        backend the first time the room type comes in, at the price of the
+        board service"""
+        backend_boards = self.backend_record.board_service_ids
+        if backend_boards.filtered(lambda b: b.room_type_id == binding.odoo_id):
+            return
+        binder = self.binder_for("channel.wubook.pms.board.service")
+        values = []
+        for board in self._wubook_boards:
+            board_service = binder.to_internal(board["id"], unwrap=True)
+            values.append(
+                {
+                    "backend_id": self.backend_record.id,
+                    "room_type_id": binding.odoo_id.id,
+                    "board_service_id": board_service.id,
+                    "amount": board_service.list_price,
+                    "by_default": bool(board["default"]),
+                }
+            )
+        backend_boards.create(values)

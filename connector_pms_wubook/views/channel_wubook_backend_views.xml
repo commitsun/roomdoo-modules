@@ -305,6 +305,23 @@
                                 <field name="pricelist_external_id" class="oe_inline" />
                             </group>
                         </page>
+                        <page string="Board Services" name="board_services">
+                            <field name="pms_property_id" invisible="1" />
+                            <field name="board_service_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field
+                    name="room_type_id"
+                    domain="['|', ('pms_property_ids', '=', False), ('pms_property_ids', 'in', parent.pms_property_id)]"
+                  />
+                                    <field
+                    name="board_service_id"
+                    domain="[('is_board_service', '=', True), '|', ('pms_property_ids', '=', False), ('pms_property_ids', 'in', parent.pms_property_id)]"
+                  />
+                                    <field name="amount" />
+                                    <field name="by_default" />
+                                </tree>
+                            </field>
+                        </page>
                         <page string="Payments">
                             <group string="Default Wubook Payment">
                                 <group>
