@@ -305,15 +305,14 @@ class TestChannexChannelCapsStaging(ChannexCapsCase):
         return cap
 
     def _pending_cap(self, agency=None, room_type=None):
-        cap = self._cap(agency, room_type)
-        return cap.channex_ari_pending_from, cap.channex_ari_pending_to
+        return self._pending_of("channel_caps", self._cap(agency, room_type))
 
     def test_a_sale_through_any_channel_leaves_the_night_pending(self):
         """The quota of the property is spent by any sale, and it decides
         whether the agency is capped any lower."""
         self._reserve(self.night, room=self.rooms[0])
         self._commit()
-        self.assertEqual(self._pending_cap(), (self.night, self.night))
+        self.assertEqual(self._pending_cap(), [(self.night, self.night)])
 
     def test_synchronising_everything_leaves_every_night_pending(self):
         """Room types are published again as they are brought in line, but what
@@ -321,7 +320,7 @@ class TestChannexChannelCapsStaging(ChannexCapsCase):
         with trap_jobs():
             self.backend.action_channex_sync_all()
         self._commit()
-        self.assertEqual(self._pending_cap(), (self.first, self.last))
+        self.assertEqual(self._pending_cap(), [(self.first, self.last)])
 
     def test_a_cap_of_another_agency_leaves_this_one_alone(self):
         other = self._make_agency("Another agency")
@@ -338,26 +337,26 @@ class TestChannexChannelCapsStaging(ChannexCapsCase):
             }
         )
         self._commit()
-        self.assertEqual(self._pending_cap(other), (self.night, self.night))
-        self.assertEqual(self._pending_cap(), (False, False))
+        self.assertEqual(self._pending_cap(other), [(self.night, self.night)])
+        self.assertEqual(self._pending_cap(), [])
 
     def test_mapping_a_channel_leaves_the_whole_window_pending(self):
         other = self._make_agency("Another agency")
         self._map_channel("chn-2", "Expedia", other)
         self._commit()
-        self.assertEqual(self._pending_cap(other), (self.first, self.last))
+        self.assertEqual(self._pending_cap(other), [(self.first, self.last)])
 
     def test_moving_the_agency_to_another_sale_channel_leaves_it_pending(self):
         self.agency.sale_channel_id = self.env["pms.sale.channel"].create(
             {"name": "Other OTAs", "channel_type": "indirect"}
         )
         self._commit()
-        self.assertEqual(self._pending_cap(), (self.first, self.last))
+        self.assertEqual(self._pending_cap(), [(self.first, self.last)])
 
     def test_the_inventory_a_room_type_falls_back_on_leaves_it_pending(self):
         self.room_type.default_quota = 3
         self._commit()
-        self.assertEqual(self._pending_cap(), (self.first, self.last))
+        self.assertEqual(self._pending_cap(), [(self.first, self.last)])
 
     def test_an_imported_booking_leaves_its_nights_pending(self):
         """A booking from an OTA spends the quota of that very agency, and the
@@ -381,5 +380,5 @@ class TestChannexChannelCapsStaging(ChannexCapsCase):
         self._import()
         self._commit()
         self.assertEqual(
-            self._pending_cap(), (checkin, checkin + datetime.timedelta(days=1))
+            self._pending_cap(), [(checkin, checkin + datetime.timedelta(days=1))]
         )

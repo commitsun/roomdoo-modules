@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import datetime
+from unittest import mock
 
 import odoo
 from odoo.tests import tagged
@@ -63,9 +64,15 @@ class ChannexAvailabilityCase(ChannexBookingCase):
         )
 
     def _pending(self, room_type=None):
-        binding = self._binding(room_type)
-        binding.invalidate_recordset()
-        return binding.channex_ari_pending_from, binding.channex_ari_pending_to
+        """The nights the room type has pending, as merged ranges."""
+        return self._pending_of("availability", self._binding(room_type))
+
+    def _pending_of(self, kind, binding):
+        rows = self.env["channel.channex.ari.pending"].search(
+            [("kind", "=", kind), ("res_id", "=", binding.id)]
+        )
+        ranges = rows._channex_ranges(datetime.date.min, datetime.date.max)
+        return ranges.get(binding.id, [])
 
     def _available(self, night, room_type=None):
         binding = self._binding(room_type)
@@ -123,6 +130,54 @@ class TestChannexAvailabilitySend(ChannexAvailabilityCase):
             ],
         )
 
+    def test_nights_far_apart_go_alone(self):
+        """Tonight and a night at the end of the window, changed in the same
+        few seconds, are two nights to send and not the months between them."""
+        self._reserve(self.night, room=self.rooms[0])
+        self._commit()
+        self._reserve(self.last, room=self.rooms[0])
+        self._publish()
+        posts = self.server.calls_to("POST", "availability")
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(
+            [
+                (value["date_from"], value["date_to"], value["availability"])
+                for value in posts[0][2]["values"]
+            ],
+            [
+                (str(self.night), str(self.night), 1),
+                (str(self.last), str(self.last), 1),
+            ],
+        )
+
+    def test_what_is_noted_during_a_send_waits_for_the_next(self):
+        """A send takes away the nights it read and no other: one noted while
+        it is working out its values stays for the send that follows."""
+        self._reserve(self.night, room=self.rooms[0])
+        self._commit()
+        later = self.night + datetime.timedelta(days=3)
+        availability_class = type(self.env["pms.availability"])
+        original = availability_class.get_real_avail_map
+
+        def noting_meanwhile(model, *args, **kwargs):
+            self.env["channel.channex.ari.pending"].create(
+                {
+                    "backend_id": self.backend.id,
+                    "kind": "availability",
+                    "res_id": self._binding().id,
+                    "date_from": later,
+                    "date_to": later,
+                }
+            )
+            return original(model, *args, **kwargs)
+
+        with mock.patch.object(
+            availability_class, "get_real_avail_map", noting_meanwhile
+        ):
+            self.backend.channex_send_ari("availability")
+        self.assertEqual(self._available(self.night), 1)
+        self.assertEqual(self._pending(), [(later, later)])
+
     def test_every_room_type_goes_in_one_call(self):
         """Channex counts calls per property, and certification wants several
         changes in one: a send is per backend, never per room type."""
@@ -174,7 +229,7 @@ class TestChannexAvailabilitySend(ChannexAvailabilityCase):
     def test_the_send_clears_what_it_published(self):
         self._reserve(self.night, room=self.rooms[0])
         self._publish()
-        self.assertEqual(self._pending(), (False, False))
+        self.assertEqual(self._pending(), [])
 
     def test_with_exports_disabled_nothing_leaves(self):
         """A copy of a live database must not publish to the real Channex. What
@@ -183,7 +238,7 @@ class TestChannexAvailabilitySend(ChannexAvailabilityCase):
         self._reserve(self.night, room=self.rooms[0])
         self._publish()
         self.assertFalse(self.server.calls_to("POST", "availability"))
-        self.assertEqual(self._pending(), (False, False))
+        self.assertEqual(self._pending(), [])
 
     def test_what_channex_refuses_is_kept_and_not_retried(self):
         """Channex answers 200 and lists what it threw away. Sending it again
@@ -196,7 +251,7 @@ class TestChannexAvailabilitySend(ChannexAvailabilityCase):
         self.assertEqual(warning.kind, "availability")
         self.assertEqual(warning.count, 1)
         self.assertIn(self.room_type_uuid, warning.warnings)
-        self.assertEqual(self._pending(), (False, False))
+        self.assertEqual(self._pending(), [])
 
 
 @tagged("post_install", "-at_install")
@@ -216,9 +271,25 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         )
         self.assertTrue(job.eta, "A send waits a moment, so a burst is one call")
         self.assertEqual(job.channel, "root.pms.channex.ari")
+        # Two nights apart, and not the nights between them.
+        later = self.night + datetime.timedelta(days=5)
+        self.assertEqual(self._pending(), [(self.night, self.night), (later, later)])
+
+    def test_nights_next_to_each_other_are_one_range(self):
+        self._reserve(self.night, room=self.rooms[0])
+        self._commit()
+        self._reserve(self.night + datetime.timedelta(days=1), room=self.rooms[0])
+        self._commit()
         self.assertEqual(
-            self._pending(), (self.night, self.night + datetime.timedelta(days=5))
+            self._pending(), [(self.night, self.night + datetime.timedelta(days=1))]
         )
+
+    def test_the_whole_window_takes_in_a_night_noted_apart(self):
+        self._reserve(self.night, room=self.rooms[0])
+        self._commit()
+        self.backend._channex_publish_everything()
+        self._commit()
+        self.assertEqual(self._pending(), [(self.first, self.last)])
 
     def test_nights_outside_the_window_are_left_out(self):
         """A past night is not on sale, and one beyond the window is published
@@ -231,7 +302,7 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
             self.last + datetime.timedelta(days=5),
         )
         self._commit()
-        self.assertEqual(self._pending(), (self.first, self.last))
+        self.assertEqual(self._pending(), [(self.first, self.last)])
 
     def test_nothing_entirely_out_of_the_window_queues_a_send(self):
         stage_ari(
@@ -243,7 +314,7 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         )
         trap = self._commit()
         self.assertFalse(trap.enqueued_jobs)
-        self.assertEqual(self._pending(), (False, False))
+        self.assertEqual(self._pending(), [])
 
     def test_a_cancellation_gives_the_nights_back(self):
         reservation = self._reserve(self.night, nights=2, room=self.rooms[0])
@@ -337,12 +408,12 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
             }
         )
         self._commit()
-        self.assertEqual(self._pending(), (False, False))
+        self.assertEqual(self._pending(), [])
 
     def test_archiving_a_room_publishes_the_whole_window(self):
         self.rooms[0].active = False
         self._commit()
-        self.assertEqual(self._pending(), (self.first, self.last))
+        self.assertEqual(self._pending(), [(self.first, self.last)])
 
     def test_a_room_part_of_another_takes_both_off_sale(self):
         """pms takes the room a reservation occupies off sale, and the room it
@@ -352,12 +423,12 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         self._publish()
         self._reserve(self.night, room=self.rooms[0])
         self._commit()
-        self.assertEqual(self._pending(suite_type), (self.night, self.night))
+        self.assertEqual(self._pending(suite_type), [(self.night, self.night)])
 
     def test_the_inventory_a_room_type_falls_back_on_publishes_its_window(self):
         self.room_type.default_max_avail = 1
         self._commit()
-        self.assertEqual(self._pending(), (self.first, self.last))
+        self.assertEqual(self._pending(), [(self.first, self.last)])
 
     def test_a_room_type_reaching_channex_publishes_its_window(self):
         other_type = self._make_room_type("RT-NEW", "RTNW")
@@ -371,20 +442,20 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         )
         self._bind_and_export(ROOM_TYPE_BINDING, other_type)
         self._commit()
-        self.assertEqual(self._pending(other_type), (self.first, self.last))
+        self.assertEqual(self._pending(other_type), [(self.first, self.last)])
 
     def test_the_full_publication_covers_every_room_type(self):
         other_type, _other_room = self._second_room_type()
         self.backend._channex_publish_everything()
         self._commit()
-        self.assertEqual(self._pending(), (self.first, self.last))
-        self.assertEqual(self._pending(other_type), (self.first, self.last))
+        self.assertEqual(self._pending(), [(self.first, self.last)])
+        self.assertEqual(self._pending(other_type), [(self.first, self.last)])
 
     def test_the_daily_run_publishes_the_nights_entering_the_window(self):
         self.env["channel.channex.backend"].channex_cron_ari_horizon()
         self._commit()
         self.assertEqual(
-            self._pending(), (self.last - datetime.timedelta(days=6), self.last)
+            self._pending(), [(self.last - datetime.timedelta(days=6), self.last)]
         )
 
     def test_an_imported_booking_publishes_its_nights(self):
@@ -408,7 +479,7 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         self._import()
         self._commit()
         self.assertEqual(
-            self._pending(), (checkin, checkin + datetime.timedelta(days=1))
+            self._pending(), [(checkin, checkin + datetime.timedelta(days=1))]
         )
 
 
