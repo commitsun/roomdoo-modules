@@ -358,3 +358,25 @@ class TestWubookBoardServices(TransactionComponentCase, TestPms):
         self._import_room_type_boards()
         self.assertEqual(self.backend.board_service_ids, board)
         self.assertEqual((board.amount, board.by_default), (10.0, False))
+
+    # Import of a board service
+
+    def _import_board(self, wubook_board):
+        self._component(
+            "channel.wubook.pms.board.service", "direct.record.importer"
+        ).run(wubook_board)
+
+    def _count_board_services(self):
+        return self.env["product.template"].search_count(
+            [("is_board_service", "=", True)]
+        )
+
+    def test_board_without_board_service_is_refused(self):
+        """No board service is created for it"""
+        self.backend.backend_type_id.child_id.board_service_ids = [
+            (0, 0, {"wubook_board_service": "fb", "board_service_shortname": "XX"})
+        ]
+        board_services = self._count_board_services()
+        with self.assertRaisesRegex(ValidationError, "internal reference XX"):
+            self._import_board("fb")
+        self.assertEqual(self._count_board_services(), board_services)
