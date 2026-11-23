@@ -52,6 +52,7 @@ class ChannelConnectWizard(models.TransientModel):
         domain="[('id', 'in', available_backend_ids)]",
     )
     binding_model = fields.Char(compute="_compute_binding_model")
+    connects_to_existing = fields.Boolean(compute="_compute_connects_to_existing")
 
     mode = fields.Selection(
         selection=[
@@ -91,6 +92,17 @@ class ChannelConnectWizard(models.TransientModel):
                 else False
             )
 
+    @api.depends("binding_model")
+    def _compute_connects_to_existing(self):
+        for wiz in self:
+            wiz.connects_to_existing = True
+            if not wiz.binding_model:
+                continue
+            with wiz._vendor_backend().work_on(wiz.binding_model) as work:
+                wiz.connects_to_existing = work.component(
+                    usage="connect.candidates"
+                )._connects_to_existing
+
     @api.depends("res_model", "res_id")
     def _compute_record_display_name(self):
         for wiz in self:
@@ -126,6 +138,14 @@ class ChannelConnectWizard(models.TransientModel):
         """A record listed by another backend cannot stay selected."""
         if self.selected_candidate_id.backend_id != self.backend_id:
             self.selected_candidate_id = False
+        self._sync_mode()
+
+    def _sync_mode(self):
+        """With nothing on the channel manager to connect to, the record can
+        only be created there."""
+        for wiz in self:
+            if not wiz.connects_to_existing:
+                wiz.mode = "new"
 
     def action_reload_candidates(self):
         self.reload_candidates()

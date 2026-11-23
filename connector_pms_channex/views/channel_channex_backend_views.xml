@@ -113,6 +113,13 @@
                 nolabel="1"
                 readonly="1"
               />
+                            <separator string="Rate plans" />
+                            <field
+                name="channex_rate_plan_ids"
+                nolabel="1"
+                readonly="1"
+                context="{'tree_view_ref': 'connector_pms_channex.channel_channex_rate_plan_view_tree'}"
+              />
                         </page>
                         <page string="Bookings" name="bookings">
                             <div class="mb-2">
