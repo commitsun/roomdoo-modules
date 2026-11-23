@@ -14,6 +14,14 @@
             string="Test connection"
             class="btn-primary"
           />
+                    <button
+            name="action_channex_sync_all"
+            type="object"
+            string="Synchronise everything"
+            class="btn-secondary"
+            confirm="This sends everything about the property to Channex: the property, its room types, the rate plans of the pricelists sold and every night of availability, rates and restrictions, and then reads the bookings waiting. It is meant for setting a property going or putting it right, and in production Channex takes it once a day at most."
+            help="What Channex calls a full sync. Changes are sent on their own as they happen."
+          />
                 </header>
                 <sheet>
                     <group>
@@ -98,22 +106,23 @@
                             <field name="channel_ids" nolabel="1" readonly="1" />
                         </page>
                         <page string="Availability, rates and restrictions" name="ari">
-                            <div class="mb-2">
-                                <button
-                  name="action_channex_publish_availability"
-                  type="object"
-                  string="Publish everything"
-                  class="btn-secondary"
-                  confirm="This sends the availability of every room type, and the rates and restrictions of every rate plan, for the whole window. Channex allows it once a day at most: it is meant for setting a property going or putting it right, not as a routine."
-                  help="What Channex calls a full sync. Changes are published on their own as they happen."
-                />
-                            </div>
+                            <group>
+                                <field name="channex_full_sync_date" />
+                            </group>
                             <field
                 name="channex_ari_warning_ids"
                 nolabel="1"
                 readonly="1"
               />
                             <separator string="Rate plans" />
+                            <group>
+                                <field
+                  name="channex_pricelist_ids"
+                  widget="many2many_tags"
+                  options="{'no_create': True}"
+                  domain="['|', ('pms_property_ids', '=', False), ('pms_property_ids', 'in', [pms_property_id])]"
+                />
+                            </group>
                             <field
                 name="channex_rate_plan_ids"
                 nolabel="1"

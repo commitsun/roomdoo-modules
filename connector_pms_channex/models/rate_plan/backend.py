@@ -8,6 +8,7 @@ from odoo.addons.queue_job.exception import RetryableJobError
 from ..common.ari import ARI_DELAY
 
 RATE_PLAN_MODEL = "channel.channex.rate.plan"
+PRICELIST_BINDING_MODEL = "channel.channex.product.pricelist"
 
 
 class ChannelChannexBackend(models.Model):
@@ -18,6 +19,55 @@ class ChannelChannexBackend(models.Model):
         inverse_name="backend_id",
         string="Rate plans",
     )
+    channex_pricelist_ids = fields.Many2many(
+        comodel_name="product.pricelist",
+        string="Pricelists sold",
+        compute="_compute_channex_pricelist_ids",
+        inverse="_inverse_channex_pricelist_ids",
+        help="The pricelists sold through Channex. Each one is a rate plan there "
+        "for every room type and every board service it sells in the property.",
+    )
+
+    def _channex_pricelist_bindings(self):
+        self.ensure_one()
+        return self.env[PRICELIST_BINDING_MODEL].search(
+            [("backend_id", "=", self._origin.id)]
+        )
+
+    def _compute_channex_pricelist_ids(self):
+        for backend in self:
+            backend.channex_pricelist_ids = (
+                backend._channex_pricelist_bindings().odoo_id
+            )
+
+    def _inverse_channex_pricelist_ids(self):
+        """Choosing a pricelist here is connecting it, as from the pricelist:
+        the same binding, and its rate plans made there and then, so that
+        whatever Channex refuses is said on saving.
+
+        Only the pricelists shown are compared: an archived one is not, and its
+        connection is left alone.
+        """
+        for backend in self:
+            bindings = backend._channex_pricelist_bindings()
+            wanted = backend.channex_pricelist_ids
+            dropped = bindings.filtered(
+                lambda b, wanted=wanted: b.odoo_id not in wanted
+            )
+            added = wanted - bindings.odoo_id
+            if not (dropped or added):
+                continue
+            # Brought in line below, here and now, rather than queued.
+            dropped.with_context(connector_no_export=True).unlink()
+            self.env[PRICELIST_BINDING_MODEL].with_context(
+                connector_no_export=True
+            ).create(
+                [
+                    {"backend_id": backend.id, "odoo_id": pricelist.id}
+                    for pricelist in added
+                ]
+            )
+            backend.channex_sync_rate_plans()
 
     def _channex_schedule_rate_plans(self):
         """Queue bringing the rate plans of these backends in line, unless one
