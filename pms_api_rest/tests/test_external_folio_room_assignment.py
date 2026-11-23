@@ -60,37 +60,14 @@ class TestExternalFolioRoomAssignment(TestPms):
                 "assignment_sequence": 2,
             }
         )
-        cls.breakfast = cls.env["product.product"].create(
-            {"name": "Breakfast", "list_price": 8.0, "per_person": True}
+        cls.board = cls._create_board_service(
+            "Board BB",
+            default_code="BB_ASG",
+            list_price=8.0,
+            per_person=True,
+            pms_property_ids=[(6, 0, [cls.pms_property1.id])],
         )
-        cls.board = cls.env["pms.board.service"].create(
-            {
-                "name": "Board BB",
-                "default_code": "BB_ASG",
-                "pms_property_ids": [(6, 0, [cls.pms_property1.id])],
-                "board_service_line_ids": [
-                    (
-                        0,
-                        False,
-                        {"product_id": cls.breakfast.id, "amount": 8.0, "adults": True},
-                    ),
-                ],
-            }
-        )
-        cls.env["pms.board.service.room.type"].create(
-            {
-                "pms_board_service_id": cls.board.id,
-                "pms_room_type_id": cls.room_type.id,
-                "pms_property_id": cls.pms_property1.id,
-                "board_service_line_ids": [
-                    (
-                        0,
-                        False,
-                        {"product_id": cls.breakfast.id, "amount": 8.0, "adults": True},
-                    ),
-                ],
-            }
-        )
+        cls.pricelist1.board_service_ids = [(4, cls.board.id)]
         cls.sale_channel = cls.env["pms.sale.channel"].create(
             {"name": "Direct", "channel_type": "direct"}
         )
