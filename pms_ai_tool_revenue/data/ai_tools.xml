@@ -72,4 +72,13 @@
         <field name="function_name">_ai_pms_partner_sales_yoy</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_daily_management_report" model="ai.tool">
+        <field name="name">pms_daily_management_report</field>
+        <field
+      name="description"
+    >Daily management report per property and in total, with three columns (the day, month to date and year to date; default day yesterday): net ADR, gross ADR, occupancy, RevPAR, rooms sold, rooms blocked, average length of stay, cancelled and confirmed reservations, room revenue, food and beverage revenue by service and revenue of other services. Food and beverage are the service lines of board services or of products used in some board service (by product: breakfast, lunch, dinner...); the rest are other services. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_daily_management_report</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

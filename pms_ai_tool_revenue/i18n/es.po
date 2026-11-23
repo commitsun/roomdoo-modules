@@ -433,3 +433,46 @@ msgstr "Agencia: la empresa agencia del folio. Empresa: el cliente del folio cua
 #: code:addons/pms_ai_tool_revenue/models/pms_partner_sales_yoy.py:0
 msgid "future_current_year: sales of the current year with stay date from tomorrow to 31 December, already on the books (included in the total of the current year)."
 msgstr "future_current_year: ventas del año en curso con fecha de estancia de mañana al 31 de diciembre, ya en cartera (incluidas en el total del año en curso)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+#, python-format
+msgid "Day %(day)s: occupancy %(occupancy)s%%, net ADR %(adr)s, RevPAR %(revpar)s, %(sold)s rooms sold."
+msgstr "Día %(day)s: ocupación %(occupancy)s%%, ADR neto %(adr)s, RevPAR %(revpar)s, %(sold)s habitaciones vendidas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Columns: the day, the month to date and the year to date, all of them ending on the report day. Rooms sold are room nights; rooms blocked are nights of out of service blocks."
+msgstr "Columnas: el día, el mes hasta la fecha y el año hasta la fecha, todas terminando en el día del informe. Las habitaciones vendidas son noches de habitación; las bloqueadas, noches de bloqueos de fuera de servicio."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Occupancy: rooms sold / room nights available (capacity minus out of service and staff nights). RevPAR: room revenue without VAT / room nights available."
+msgstr "Ocupación: habitaciones vendidas / noches de habitación disponibles (capacidad menos noches fuera de servicio y de personal). RevPAR: ingresos de habitación sin IVA / noches de habitación disponibles."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Net ADR: room revenue without VAT / room nights, leaving out the nights of folios worth 0. Gross ADR: the same with the final prices as the PMS stores them (with VAT in the Alda configuration)."
+msgstr "ADR neto: ingresos de habitación sin IVA / noches de habitación, sin contar las noches de folios que valen 0. ADR bruto: lo mismo con los precios finales tal como los guarda el PMS (con IVA en la configuración de Alda)."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Average length of stay: nights of the stays that start in the window (not cancelled) / number of those stays."
+msgstr "Estancia media: noches de las estancias que empiezan en la ventana (no canceladas) / número de esas estancias."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Cancelled reservations: normal reservations cancelled in the window (by the cancel date the PMS records), leaving out the ones cancelled only because the booking was modified. Confirmed reservations: normal reservations created in the window that are neither pre-reservations nor cancelled."
+msgstr "Reservas canceladas: reservas normales canceladas en la ventana (por la fecha de cancelación que registra el PMS), sin contar las canceladas solo porque se modificó la reserva. Reservas confirmadas: reservas normales creadas en la ventana que no son prerreservas ni están canceladas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
+msgid "Food and beverage: service lines dated in the window of board services, or of products used in some board service of the PMS, by product (breakfast, lunch, dinner...), without VAT (revenue_incl_vat with it). Other services: the rest of the service lines. Cancelled reservations carry no revenue. Drinks or meals sold as extras with a product that no board service uses are counted as other services."
+msgstr "Alimentos y bebidas: líneas de servicio con fecha en la ventana de regímenes, o de productos usados en algún régimen del PMS, por producto (desayuno, comida, cena...), sin IVA (revenue_incl_vat con IVA). Otros servicios: el resto de líneas de servicio. Las reservas canceladas no tienen ingresos. Las bebidas o comidas vendidas como extra con un producto que ningún régimen usa se cuentan como otros servicios."
