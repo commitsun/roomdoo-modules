@@ -280,6 +280,7 @@ msgstr "Checkout permitido"
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_board_service__amount
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__amount
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__amount
 msgid "Amount"
 msgstr "Importe"
 
@@ -341,6 +342,7 @@ msgstr "Aplicar hasta la noche"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__by_default
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
 msgid "Apply by Default"
 msgstr "Aplicar por defecto"
 
@@ -539,6 +541,7 @@ msgstr "Evitar el anticipo máximo de la factura simplificada"
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__backend_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__backend_id
 msgid "Backend"
 msgstr "Backend"
 
@@ -641,6 +644,7 @@ msgstr "Bloqueado"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__board_service_room_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_board_service_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__board_service_room_type_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__board_service_id
 msgid "Board Service"
 msgstr "Régimen"
 
@@ -700,6 +704,8 @@ msgstr "Régimen incluido en la Habitación"
 #: model:ir.model,name:connector_pms_wubook.model_pms_board_service
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__board_service_room_type_ids
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_type_view_form
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__board_service_ids
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form
 msgid "Board Services"
 msgstr "Regímenes"
 
@@ -1269,6 +1275,7 @@ msgstr "Crear reservas no está soportado por ahora"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_uid
 msgid "Created by"
 msgstr "Creado por"
 
@@ -1292,6 +1299,7 @@ msgstr "Creado por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_date
 msgid "Created on"
 msgstr "Creado el"
 
@@ -1615,6 +1623,7 @@ msgstr "Descuento del precio total en la reserva"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__display_name
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__display_name
 msgid "Display Name"
 msgstr "Nombre mostrado"
 
@@ -2287,6 +2296,7 @@ msgstr "Tiene asientos no conciliados"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__id
 msgid "ID"
 msgstr "ID"
 
@@ -3010,6 +3020,7 @@ msgstr "Última salida de la ficha"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota____last_update
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service____last_update
 msgid "Last Modified on"
 msgstr "Última modificación el"
 
@@ -3069,6 +3080,7 @@ msgstr "Última sincronización (importación)"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_uid
 msgid "Last Updated by"
 msgstr "Última actualización por"
 
@@ -3092,6 +3104,7 @@ msgstr "Última actualización por"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_date
 msgid "Last Updated on"
 msgstr "Última actualización el"
 
@@ -4618,6 +4631,7 @@ msgstr "Usuario responsable"
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Resynchronize (export)"
 msgstr "Resincronizar (exportación)"
 
@@ -4628,6 +4642,7 @@ msgstr "Resincronizar (exportación)"
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Resynchronize (import)"
 msgstr "Resincronizar (importación)"
 
@@ -4655,6 +4670,7 @@ msgstr "Servicios totales de la habitación"
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__room_type_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__room_type_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_room_type_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__room_type_id
 msgid "Room Type"
 msgstr "Tipo de Habitación"
 
@@ -6422,6 +6438,7 @@ msgstr "Formato de cláusula de dominio incorrecto %(domain)s"
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_item_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Wubook"
 msgstr "Wubook"
 
@@ -6651,3 +6668,45 @@ msgid ""
 msgstr ""
 "Indica que algunos campos de contacto de la reserva no corresponden a los "
 "del contacto asociado"
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_backend_board_service
+msgid "Channel Wubook Backend Board Service"
+msgstr "Régimen del backend de Wubook"
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
+msgid "Connectors"
+msgstr "Conectores"
+
+#. module: connector_pms_wubook
+#: code:addons/connector_pms_wubook/models/pms_board_service/importer.py:0
+#, python-format
+msgid ""
+"No board service has the internal reference %(code)s of the Wubook board "
+"%(name)s: bind it to its board service by hand, on the Connectors page of "
+"the board service"
+msgstr ""
+"Ningún régimen tiene la referencia interna %(code)s del régimen %(name)s de "
+"Wubook: vincúlalo a mano a su régimen, en la pestaña Conectores del régimen"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__amount
+msgid "Price of the board service per person and night"
+msgstr "Precio del régimen por persona y noche"
+
+#. module: connector_pms_wubook
+#: code:addons/connector_pms_wubook/models/common/backend_board_service.py:0
+#, python-format
+msgid "Room type %s: only one board service can apply by default"
+msgstr "Habitación %s: solo un régimen puede aplicarse por defecto"
+
+#. module: connector_pms_wubook
+#: model:ir.model.constraint,message:connector_pms_wubook.constraint_channel_wubook_backend_board_service_board_service_uniq
+msgid "The board service is already set for this room type"
+msgstr "El régimen ya está configurado para esta habitación"
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
+msgid "The board service the price of the room type includes on Wubook"
+msgstr "Régimen que incluye el precio de la habitación en Wubook"

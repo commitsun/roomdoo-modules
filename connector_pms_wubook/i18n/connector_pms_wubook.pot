@@ -262,6 +262,7 @@ msgstr ""
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_board_service__amount
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__amount
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__amount
 msgid "Amount"
 msgstr ""
 
@@ -323,6 +324,7 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__by_default
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
 msgid "Apply by Default"
 msgstr ""
 
@@ -521,6 +523,7 @@ msgstr ""
 
 #. module: connector_pms_wubook
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__backend_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__backend_id
 msgid "Backend"
 msgstr ""
 
@@ -617,6 +620,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__board_service_room_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_board_service_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__board_service_room_type_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__board_service_id
 msgid "Board Service"
 msgstr ""
 
@@ -676,6 +680,8 @@ msgstr ""
 #: model:ir.model,name:connector_pms_wubook.model_pms_board_service
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__board_service_room_type_ids
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_type_view_form
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend__board_service_ids
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.channel_wubook_backend_view_form
 msgid "Board Services"
 msgstr ""
 
@@ -1233,6 +1239,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -1256,6 +1263,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__create_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__create_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__create_date
 msgid "Created on"
 msgstr ""
 
@@ -1573,6 +1581,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__display_name
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__display_name
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -2199,6 +2208,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__id
 msgid "ID"
 msgstr ""
 
@@ -2877,6 +2887,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item____last_update
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota____last_update
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service____last_update
 msgid "Last Modified on"
 msgstr ""
 
@@ -2936,6 +2947,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_uid
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_uid
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -2959,6 +2971,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_product_pricelist_item__write_date
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_wubook_backend_journal_ota__write_date
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -4455,6 +4468,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Resynchronize (export)"
 msgstr ""
 
@@ -4465,6 +4479,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Resynchronize (import)"
 msgstr ""
 
@@ -4492,6 +4507,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_reservation__room_type_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type__room_type_id
 #: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_pms_room_type_board_service__pms_room_type_id
+#: model:ir.model.fields,field_description:connector_pms_wubook.field_channel_wubook_backend_board_service__room_type_id
 msgid "Room Type"
 msgstr ""
 
@@ -6128,6 +6144,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.pms_room_type_class_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_item_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_pricelist_view
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
 msgid "Wubook"
 msgstr ""
 
@@ -6345,4 +6362,44 @@ msgstr ""
 msgid ""
 "indicates that some partner fields             on the reservation do not "
 "correspond to that of             the associated partner"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model,name:connector_pms_wubook.model_channel_wubook_backend_board_service
+msgid "Channel Wubook Backend Board Service"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model_terms:ir.ui.view,arch_db:connector_pms_wubook.product_template_board_service_form
+msgid "Connectors"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: code:addons/connector_pms_wubook/models/pms_board_service/importer.py:0
+#, python-format
+msgid ""
+"No board service has the internal reference %(code)s of the Wubook board "
+"%(name)s: bind it to its board service by hand, on the Connectors page of "
+"the board service"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__amount
+msgid "Price of the board service per person and night"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: code:addons/connector_pms_wubook/models/common/backend_board_service.py:0
+#, python-format
+msgid "Room type %s: only one board service can apply by default"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.constraint,message:connector_pms_wubook.constraint_channel_wubook_backend_board_service_board_service_uniq
+msgid "The board service is already set for this room type"
+msgstr ""
+
+#. module: connector_pms_wubook
+#: model:ir.model.fields,help:connector_pms_wubook.field_channel_wubook_backend_board_service__by_default
+msgid "The board service the price of the room type includes on Wubook"
 msgstr ""
