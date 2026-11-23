@@ -65,6 +65,7 @@ class TestHostSso(HostTokens, TransactionCase):
         self.assertTrue(user.active)
         profile = self.env.ref("roomdoo_host_sso.profile_full")
         self.assertTrue(profile.group_ids <= user.groups_id)
+        self.assertTrue(user.has_group("queue_job.group_queue_job_manager"))
         self.assertEqual(user.pms_property_ids, self.env["pms.property"].search([]))
         self.assertEqual(user.company_ids, self.env["res.company"].search([]))
         self.assertAlmostEqual(

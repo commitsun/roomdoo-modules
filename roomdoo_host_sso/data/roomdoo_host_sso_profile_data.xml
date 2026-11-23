@@ -12,6 +12,7 @@
                 ref('base.group_multi_company'),
                 ref('pms.group_pms_manager'),
                 ref('account.group_account_manager'),
+                ref('queue_job.group_queue_job_manager'),
             ])]"
     />
     </record>
