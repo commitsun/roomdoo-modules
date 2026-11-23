@@ -25,6 +25,13 @@ class ChannelChannexProductPricelist(models.Model):
         ondelete="cascade",
     )
 
+    @api.constrains("odoo_id", "backend_id")
+    def _check_channex_sellable(self):
+        """Selling a pricelist through Channex is refused for what Channex has
+        no way to say, as editing one sold there is."""
+        self.odoo_id._channex_check_children_board()
+        self.odoo_id._channex_check_max_stay_arrival()
+
     @api.model_create_multi
     def create(self, vals_list):
         bindings = super().create(vals_list)
