@@ -3,3 +3,4 @@ from . import test_pickup_and_pace
 from . import test_channel_mix
 from . import test_partner_assign_salesperson
 from . import test_negative_pickup
+from . import test_channel_agency_outlook

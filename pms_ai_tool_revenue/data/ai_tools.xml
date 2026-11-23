@@ -54,4 +54,13 @@
         <field name="function_name">_ai_pms_negative_pickup</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_channel_agency_outlook" model="ai.tool">
+        <field name="name">pms_channel_agency_outlook</field>
+        <field
+      name="description"
+    >On-the-books outlook for the coming days (from today, default 90, at most 93) by sales channel and by agency: room nights, room revenue (without VAT), share and ADR, against the same dates last year as they stood on this same moment a year ago (same lead time), with the changes. Top rows by revenue and an other row. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_channel_agency_outlook</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>
