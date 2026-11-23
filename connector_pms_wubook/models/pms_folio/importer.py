@@ -1,6 +1,5 @@
 # Copyright 2021 Eric Antones <eantones@nuobit.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from psycopg2.extensions import AsIs
 
 from odoo import _, fields
 
@@ -65,7 +64,9 @@ class ChannelWubookPmsFolioImporter(Component):
             folio.with_context(confirm_all_reservations=True).action_confirm()
 
         # TODO: move get_all_items action_cancel here
-        # binding.reservation_ids.filtered(lambda x: x['wubook_status'] == '5').action_cancel()
+        # binding.reservation_ids.filtered(
+        #     lambda x: x['wubook_status'] == '5'
+        # ).action_cancel()
 
         # Pre payment Folio
         if binding.payment_gateway_fee > 0:
@@ -188,8 +189,7 @@ class ChannelWubookPmsFolioImporter(Component):
         )
         query = (
             'UPDATE "channel_wubook_pms_availability" '
-            'SET "actual_write_date"=%s WHERE id IN %%s'
-            % (AsIs("(now() at time zone 'UTC')"),)
+            "SET \"actual_write_date\"=(now() at time zone 'UTC') WHERE id IN %s"
         )
         cr = self.env.cr
         for sub_ids in cr.split_for_in_conditions(

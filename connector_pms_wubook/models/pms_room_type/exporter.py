@@ -38,11 +38,13 @@ class ChannelWubookPmsRoomTypeExporter(Component):
             self._export_dependency(board_service, "channel.wubook.pms.board.service")
 
     def _has_to_skip(self):
-        # flake8: noqa: B950
+        room_type_classes = (
+            self.backend_record.backend_type_id.child_id.room_type_class_ids
+        )
         return any(
             [
                 self.binding.class_id.default_code
-                in self.backend_record.backend_type_id.child_id.room_type_class_ids.get_nosync_shortnames(),
+                in room_type_classes.get_nosync_shortnames(),
             ]
         )
 

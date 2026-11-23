@@ -66,9 +66,9 @@ class ChannelWubookProductPricelistItemMapperExport(Component):
                 raise ValidationError(
                     _("Unexpected number of Room Types found %s") % len(room_type)
                 )
-            # If board service default is defined, we need sum the price of the board service
-            # to the price of the room type (wubook does not separate the price of the room
-            # type from the price of the board service in this case)
+            # If board service default is defined, we need sum the price of the board
+            # service to the price of the room type (wubook does not separate the
+            # price of the room type from the price of the board service in this case)
             # Check if a default board service was found
             # Search for the default board service for the room type
             default_board_service = room_type.get_default_board_service(
@@ -79,18 +79,20 @@ class ChannelWubookProductPricelistItemMapperExport(Component):
             if default_board_service:
                 # TODO: get board service price with date context
                 # (view _get_price_unit_line method in pms_service.py)
-                values[
-                    "price"
-                ] += default_board_service.amount * room_type.get_room_type_capacity(
-                    pms_property_id=record.backend_id.pms_property_id.id
+                values["price"] += (
+                    default_board_service.amount
+                    * room_type.get_room_type_capacity(
+                        pms_property_id=record.backend_id.pms_property_id.id
+                    )
                 )
             binder = self.binder_for("channel.wubook.pms.room.type")
             external_id = binder.to_external(room_type, wrap=True)
             if not external_id:
                 raise ValidationError(
                     _(
-                        "External record of Room Type id [%(code)s] %(room)s does not exists. "
-                        "It should be exported in _export_dependencies"
+                        "External record of Room Type id [%(code)s] %(room)s "
+                        "does not exists. It should be exported in "
+                        "_export_dependencies"
                     )
                     % {"code": room_type.default_code, "room": room_type.name}
                 )

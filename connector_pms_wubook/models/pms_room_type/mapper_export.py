@@ -72,7 +72,8 @@ class ChannelWubookPmsRoomTypeMapperExport(Component):
         if len(default_board_service) != 1:
             raise ValidationError(
                 _(
-                    "Room type %s: The number of default Board Services must be exactly 1"
+                    "Room type %s: The number of default Board Services must be "
+                    "exactly 1"
                 )
                 % record.name
             )
@@ -82,8 +83,9 @@ class ChannelWubookPmsRoomTypeMapperExport(Component):
         if not external_id:
             raise ValidationError(
                 _(
-                    "External record of Board Service [%(code)s] %(room)s does not exists. "
-                    "It should be exported in _export_dependencies"
+                    "External record of Board Service [%(code)s] %(room)s "
+                    "does not exists. It should be exported in "
+                    "_export_dependencies"
                 )
                 % {"code": default_board_service.default_code, "room": record.name}
             )
@@ -97,8 +99,9 @@ class ChannelWubookPmsRoomTypeMapperExport(Component):
         if not external_id:
             raise ValidationError(
                 _(
-                    "External record of Room Class [%(code)s] %(room)s does not exists. "
-                    "It should be exported in _export_dependencies"
+                    "External record of Room Class [%(code)s] %(room)s "
+                    "does not exists. It should be exported in "
+                    "_export_dependencies"
                 )
                 % {"code": room_class.id, "room": room_class.name}
             )
