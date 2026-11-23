@@ -162,4 +162,22 @@
         <field name="function_name">_ai_acc_payment_register</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_invoice_reverse" model="ai.tool">
+        <field name="name">acc_invoice_reverse</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Credit note for one posted customer invoice or vendor bill of the user's companies and properties (by number or id), always through the standard credit note wizard of Odoo. Modes: refund (a draft credit note to adjust), cancel (a full credit note, posted and reconciled with the invoice) and modify (a full credit note plus a new draft copy of the invoice; with new_partner_id this is the correct way to change the customer of an invoice). Takes a reason and a date (default today, never in the future). The preview shows what will be created, posted and reconciled, the amounts, the fields added by localization modules and warnings, such as fiscal modules that may report the credit note to the tax authority. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_invoice_reverse</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_payment_order_prepare" model="ai.tool">
+        <field name="name">acc_payment_order_prepare</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Prepare a supplier payment order (needs the payment orders module): either create an outbound payment order for a payment mode (by name) with the open posted vendor bills of the user's companies and properties due up to a date (optionally filtered by company, properties or suppliers), or add given vendor bills (at most 50 ids) to an existing draft order. Optionally confirm the order; the bank file is never generated nor uploaded. The preview lists the order lines (bill, supplier, amount, due date, last digits of the bank account) and the bills left out with the reason (no bank account, already in an order, not due, blocked...). Needs payment order access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_payment_order_prepare</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

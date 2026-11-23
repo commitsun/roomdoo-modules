@@ -16,3 +16,5 @@ from . import acc_vendor_bill_edit
 from . import acc_vendor_bills_post
 from . import acc_reconcile
 from . import acc_payment_register
+from . import acc_invoice_reverse
+from . import acc_payment_order_prepare

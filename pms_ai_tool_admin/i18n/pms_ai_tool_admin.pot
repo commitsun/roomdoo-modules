@@ -1665,3 +1665,347 @@ msgstr ""
 #, python-format
 msgid "Several partners match %s: use the id of the partner."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "No customer invoice or vendor bill found with the id or number %s in your companies and properties."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Several invoices have the number %s: use the id of the invoice."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The Spanish SII module needs the number of the supplier's credit note: give supplier_refund_number."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "supplier_refund_number is only used by the Spanish SII module, which is not installed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The credit note wizard requires fields this tool does not fill (%s): make this credit note in Odoo."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "Give the reason of the credit note."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The invoice %(number)s is not posted (state: %(state)s): only posted invoices can be credited."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The date of the credit note cannot be in the future."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The date of the credit note is earlier than the invoice date."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The date %(date)s is in a locked period (locked up to %(lock)s)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The invoice %s is already paid or credited: only mode=refund (a draft credit note) is possible."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "new_partner_id is only accepted with mode=modify."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Partner %s not found."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "supplier_refund_number is only accepted for vendor bills."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The invoice is partly paid: the credit note settles the pending %(pending)s and keeps %(paid)s open in favour of the partner (to refund or to offset)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "The invoice already has credit notes: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Fiscal modules are installed (%s): once posted, the credit note may be reported to the tax authority and cannot be silently undone."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The new partner has another fiscal position: review the taxes of the new draft invoice before posting it."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Create a draft credit note for the invoice %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Create, post and reconcile a full credit note for the invoice %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Create, post and reconcile a full credit note for the invoice %s and a new draft copy of it."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "Made with the standard credit note wizard of Odoo, as the user. refund: the credit note stays in draft for the whole amount; edit its lines and post it in Odoo. cancel and modify: the credit note is posted and reconciled with the invoice, which is left with nothing pending."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "modify: the new draft invoice copies the lines of the original; it is not posted. fiscal_fields: values of the fields added to the wizard by localization modules."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The invoice is no longer posted; nothing was done."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The credit note did not come out as previewed; nothing was saved. Check the invoice in Odoo."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+#, python-format
+msgid "Credit note %(credit)s created for the invoice %(invoice)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_invoice_reverse.py:0
+msgid "The journal of the invoice is archived: make this credit note in Odoo."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "No outbound payment mode with payment orders named %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "Several payment modes are named %s: give the company_id."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "No single outbound payment order found with the number or id %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "The payment order %(order)s is not in draft (state: %(state)s): bills can only be added to draft orders."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "The order has no bank journal, so it cannot be confirmed here: choose the journal and confirm it in Odoo."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "The bank journal %s has no bank account: it cannot be confirmed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Payment orders are not available: the module account_payment_order is not installed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "This tool needs access to payment orders."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "With order, give only bill_ids: payment_mode, due_date, company_id, property_ids and partner_ids build a new order."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Give the bill_ids to add to the order."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "These ids are not vendor bills of the company of the order in your properties: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "These bills are not posted: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "Nothing is pending on these bills: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Give payment_mode and due_date for a new order, or order and bill_ids to add bills to a draft order."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "bill_ids are only accepted with order."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "No bill can be added to the order. Left out: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Some of the given bills cannot be added: see left_out."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "The bills are in several currencies: amounts are in the company currency."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "Add %(count)s bills (%(total)s) to the payment order %(order)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "Create a payment order with %(count)s bills (%(total)s)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Then confirm it."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Done as the wizard of payment orders does it, as the user: one payment line per open payable line of each vendor bill, for the amount still pending. Bills already in a draft, confirmed or generated order, blocked or not due are left out, and so are bills without a supplier bank account when the payment method needs one."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "Confirming creates the payments of the order but never generates nor uploads the bank file. bank_account shows only the last 4 characters."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "The order is no longer in draft; nothing was done."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+msgid "The payment lines did not come out as previewed; nothing was saved."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_order_prepare.py:0
+#, python-format
+msgid "Payment order %(order)s: %(count)s bills added, state %(state)s."
+msgstr ""
