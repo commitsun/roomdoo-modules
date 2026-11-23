@@ -325,3 +325,59 @@ msgstr ""
 #: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
 msgid "Property: the property of the bills in the period. bills_by_state: vendor bills in draft (pending validation) and posted bills not yet paid or partly paid, up to the end of the period, by company."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "The point of sale module is not installed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "This tool needs accounting access."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+#, python-format
+msgid "%(sessions)s POS sessions from %(from)s to %(to)s: sales %(sales)s, closing differences %(difference)s, %(unposted)s closed without a posted entry."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "Sessions: point of sale sessions opened in the period. The point of sale has no property: it is taken from its cash journal or, failing that, sales journal; sessions whose journals have no property are listed without one."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "closing_difference: counted cash minus expected cash of a closed session (negative: cash missing). The employee is the user responsible for the session."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "sales: paid, posted or invoiced orders (refunds are negative orders and are also shown apart). Cancelled orders are counted apart."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "Payments by method: net amounts of the order payments. card_payments_booked: bank payments created when the session was closed; unreconciled: those not yet matched with a bank statement line."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "entry_not_posted: closed session whose accounting entry is missing or not posted. cash_journals: current balance of the cash journals of the point of sale (cash waiting to be deposited)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+#, python-format
+msgid "Only the first %s sessions of the period were analysed."
+msgstr ""

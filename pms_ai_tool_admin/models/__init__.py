@@ -6,3 +6,4 @@ from . import pms_invoice_lines
 from . import pms_supplier_bills_pending
 from . import pms_supplier_invoices
 from . import pms_purchase_bill_mismatch
+from . import pms_pos_cash_audit

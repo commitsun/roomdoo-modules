@@ -326,3 +326,59 @@ msgstr "Por defecto solo se comparan los pedidos que Odoo considera totalmente f
 #: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
 msgid "Property: the property of the bills in the period. bills_by_state: vendor bills in draft (pending validation) and posted bills not yet paid or partly paid, up to the end of the period, by company."
 msgstr "Alojamiento: el de las facturas del periodo. bills_by_state: facturas de proveedor en borrador (pendientes de validar) y contabilizadas aún sin pagar o pagadas en parte, hasta el final del periodo, por compañía."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "The point of sale module is not installed."
+msgstr "El módulo de punto de venta no está instalado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "This tool needs accounting access."
+msgstr "Esta herramienta necesita acceso a contabilidad."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+#, python-format
+msgid "%(sessions)s POS sessions from %(from)s to %(to)s: sales %(sales)s, closing differences %(difference)s, %(unposted)s closed without a posted entry."
+msgstr "%(sessions)s sesiones de TPV del %(from)s al %(to)s: ventas %(sales)s, diferencias de cierre %(difference)s, %(unposted)s cerradas sin asiento contabilizado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "Sessions: point of sale sessions opened in the period. The point of sale has no property: it is taken from its cash journal or, failing that, sales journal; sessions whose journals have no property are listed without one."
+msgstr "Sesiones: sesiones de punto de venta abiertas en el periodo. El punto de venta no tiene hotel propio: se toma de su diario de caja o, si no, de ventas; las sesiones cuyos diarios no tienen hotel se listan sin él."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "closing_difference: counted cash minus expected cash of a closed session (negative: cash missing). The employee is the user responsible for the session."
+msgstr "closing_difference: efectivo contado menos efectivo esperado de una sesión cerrada (negativo: falta efectivo). El empleado es el usuario responsable de la sesión."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "sales: paid, posted or invoiced orders (refunds are negative orders and are also shown apart). Cancelled orders are counted apart."
+msgstr "sales: pedidos pagados, contabilizados o facturados (los reembolsos son pedidos negativos y se muestran también aparte). Los pedidos cancelados se cuentan aparte."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "Payments by method: net amounts of the order payments. card_payments_booked: bank payments created when the session was closed; unreconciled: those not yet matched with a bank statement line."
+msgstr "Pagos por método: importes netos de los pagos de los pedidos. card_payments_booked: pagos bancarios creados al cerrar la sesión; unreconciled: los que aún no se han casado con una línea de extracto bancario."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+msgid "entry_not_posted: closed session whose accounting entry is missing or not posted. cash_journals: current balance of the cash journals of the point of sale (cash waiting to be deposited)."
+msgstr "entry_not_posted: sesión cerrada cuyo asiento contable falta o no está contabilizado. cash_journals: saldo actual de los diarios de caja del punto de venta (efectivo pendiente de ingresar)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_pos_cash_audit.py:0
+#, python-format
+msgid "Only the first %s sessions of the period were analysed."
+msgstr "Solo se han analizado las primeras %s sesiones del periodo."

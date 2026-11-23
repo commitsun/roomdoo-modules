@@ -63,4 +63,13 @@
         <field name="function_name">_ai_acc_purchase_bill_mismatch</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pos_cash_audit" model="ai.tool">
+        <field name="name">pos_cash_audit</field>
+        <field
+      name="description"
+    >Audit of the point of sale (for example a hotel cafeteria) sessions opened in a period (at most 93 days): open and closed sessions with opening and closing balance, closing differences per session and employee, sales, refunds and cancelled orders, payments by method (cash, card terminal), card payments booked and not yet reconciled with the bank, closed sessions without a posted accounting entry and the balance of the cash journals. Needs the point of sale module; read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pos_cash_audit</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>
