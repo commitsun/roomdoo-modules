@@ -36,39 +36,19 @@ msgstr "<span class=\"o_stat_text\">Configuración</span>"
 
 #. module: connector_pms
 #: model:ir.model.constraint,message:connector_pms.constraint_channel_binding_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_binding_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_rule_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_board_service_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_folio_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_property_availability_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_line_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_board_service_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_class_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_channel_external_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_item_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_binding_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_folio_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_property_channel_external_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_room_type_channel_external_uniq
 msgid "A binding already exists with the same External (Channel) ID."
 msgstr "Ya existe un vínculo con el mismo ID externo (del canal)."
 
 #. module: connector_pms
 #: model:ir.model.constraint,message:connector_pms.constraint_channel_binding_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_binding_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_availability_plan_rule_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_board_service_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_folio_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_property_availability_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_reservation_line_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_board_service_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_pms_room_type_class_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_channel_internal_uniq
-#: model:ir.model.constraint,message:connector_pms.constraint_channel_wubook_product_pricelist_item_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_binding_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_folio_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_property_channel_internal_uniq
+#: model:ir.model.constraint,message:connector_pms.constraint_channel_channex_pms_room_type_channel_internal_uniq
 msgid "A binding already exists with the same Internal (Odoo) ID."
 msgstr "Ya existe un vínculo con el mismo ID interno (de Odoo)."
 
@@ -81,6 +61,13 @@ msgid ""
 msgstr ""
 "Se creará un registro nuevo en el channel manager con los datos de este "
 "registro de Odoo. La conexión se crea automáticamente."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/res_partner.py:0
+#, python-format
+msgid "An OTA rate cannot be decreased by 100% or more."
+msgstr "Una tarifa OTA no se puede reducir en un 100 % o más."
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__arguments
@@ -131,6 +118,7 @@ msgstr "Modelo de vínculo"
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_can_connect
 #: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_can_connect
+#: model:ir.model.fields,field_description:connector_pms.field_pms_property__channel_can_connect
 #: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_can_connect
 #: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_can_connect
 msgid "Can be connected to a channel"
@@ -149,6 +137,7 @@ msgstr "Candidato"
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_connection_state
 #: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_connection_state
+#: model:ir.model.fields,field_description:connector_pms.field_pms_property__channel_connection_state
 #: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_connection_state
 #: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_connection_state
 msgid "Channel"
@@ -219,12 +208,20 @@ msgid "Channel record"
 msgstr "Registro del canal"
 
 #. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/models/res_partner.py:0
+#, python-format
+msgid "Choose the rate logic for the OTA rate value."
+msgstr "Elige la lógica de tarifa para el valor de tarifa OTA."
+
+#. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.channel_connect_wizard_form
 msgid "Connect"
 msgstr "Conectar"
 
 #. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_property_views_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
 msgid "Connect to a channel"
@@ -246,6 +243,7 @@ msgstr "Conectar a un registro existente en el canal"
 #. module: connector_pms
 #: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_mixin__channel_connection_state__connected
 #: model:ir.model.fields.selection,name:connector_pms.selection__pms_availability_plan__channel_connection_state__connected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_property__channel_connection_state__connected
 #: model:ir.model.fields.selection,name:connector_pms.selection__pms_room_type__channel_connection_state__connected
 #: model:ir.model.fields.selection,name:connector_pms.selection__product_pricelist__channel_connection_state__connected
 msgid "Connected"
@@ -256,6 +254,7 @@ msgstr "Conectado"
 #: code:addons/connector_pms/models/common/channel_connect_mixin.py:0
 #: model:ir.model.fields,field_description:connector_pms.field_channel_connect_mixin__channel_backend_ids
 #: model:ir.model.fields,field_description:connector_pms.field_pms_availability_plan__channel_backend_ids
+#: model:ir.model.fields,field_description:connector_pms.field_pms_property__channel_backend_ids
 #: model:ir.model.fields,field_description:connector_pms.field_pms_room_type__channel_backend_ids
 #: model:ir.model.fields,field_description:connector_pms.field_product_pricelist__channel_backend_ids
 #, python-format
@@ -274,6 +273,11 @@ msgstr "Canales conectados"
 #: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
 msgid "Connectors"
 msgstr "Conectores"
+
+#. module: connector_pms
+#: model:ir.model,name:connector_pms.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
 
 #. module: connector_pms
 #. odoo-python
@@ -308,6 +312,16 @@ msgid "Created on"
 msgstr "Creado el"
 
 #. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__res_partner__ota_price_modifier_type__decrease_amount
+msgid "Decrease By Amount"
+msgstr "Reducir en un importe"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__res_partner__ota_price_modifier_type__decrease_percent
+msgid "Decrease By Percent"
+msgstr "Reducir en un porcentaje"
+
+#. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__display_name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_log__display_name
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend_method__display_name
@@ -336,6 +350,7 @@ msgstr "ID externo"
 #. module: connector_pms
 #. odoo-python
 #: code:addons/connector_pms/components_custom/binder.py:0
+#: code:addons/connector_pms/components_custom/binder.py:0
 #, python-format
 msgid "External alternative id '%s' not found in export mapper"
 msgstr ""
@@ -346,9 +361,30 @@ msgstr ""
 #. odoo-python
 #: code:addons/connector_pms/components_custom/mapper.py:0
 #: code:addons/connector_pms/components_custom/mapper.py:0
+#: code:addons/connector_pms/components_custom/mapper.py:0
+#: code:addons/connector_pms/components_custom/mapper.py:0
 #, python-format
 msgid "Field '%s' mapping defined twice"
 msgstr "El mapeo del campo '%s' está definido dos veces"
+
+#. module: connector_pms
+#: model:ir.model.fields,help:connector_pms.field_pms_property__ota_price_modifier_value
+#: model:ir.model.fields,help:connector_pms.field_res_partner__ota_price_modifier_value
+#: model:ir.model.fields,help:connector_pms.field_res_users__ota_price_modifier_value
+msgid ""
+"How much to increase or decrease by. Always positive: the direction is the "
+"rate logic, not the sign."
+msgstr "Cuánto se incrementa o se reduce. Siempre positivo: el sentido lo da la lógica de tarifa, no el signo."
+
+#. module: connector_pms
+#: model:ir.model.fields,help:connector_pms.field_pms_property__ota_price_modifier_type
+#: model:ir.model.fields,help:connector_pms.field_res_partner__ota_price_modifier_type
+#: model:ir.model.fields,help:connector_pms.field_res_users__ota_price_modifier_type
+msgid ""
+"How the price sent to this agency is modified. Only channel managers that "
+"support a per-OTA modifier publish it; Wubook has no such thing in its API "
+"and ignores it."
+msgstr "Cómo se modifica el precio que se envía a esta agencia. Solo lo publican los channel managers que admiten un modificador por OTA; la API de Wubook no lo tiene y lo ignora."
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__id
@@ -363,6 +399,8 @@ msgstr "ID"
 #. module: connector_pms
 #. odoo-python
 #: code:addons/connector_pms/models/common/backend.py:0
+#: code:addons/connector_pms/models/common/backend.py:0
+#: code:addons/connector_pms/models/common/backend_type.py:0
 #: code:addons/connector_pms/models/common/backend_type.py:0
 #, python-format
 msgid ""
@@ -372,7 +410,18 @@ msgstr ""
 "Inconsistencia detectada: hay más de un backend hijo para el mismo padre"
 
 #. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__res_partner__ota_price_modifier_type__increase_amount
+msgid "Increase By Amount"
+msgstr "Incrementar en un importe"
+
+#. module: connector_pms
+#: model:ir.model.fields.selection,name:connector_pms.selection__res_partner__ota_price_modifier_type__increase_percent
+msgid "Increase By Percent"
+msgstr "Incrementar en un porcentaje"
+
+#. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
 #: code:addons/connector_pms/components/adapter.py:0
 #, python-format
 msgid "Key %s does not exist"
@@ -476,6 +525,7 @@ msgstr "Sin exportación"
 #. module: connector_pms
 #. odoo-python
 #: code:addons/connector_pms/components_custom/importer.py:0
+#: code:addons/connector_pms/components_custom/importer.py:0
 #, python-format
 msgid "No Id field (_id) defined on backend"
 msgstr "El backend no tiene definido el campo de ID (_id)"
@@ -494,6 +544,7 @@ msgstr ""
 #. module: connector_pms
 #: model:ir.model.fields.selection,name:connector_pms.selection__channel_connect_mixin__channel_connection_state__disconnected
 #: model:ir.model.fields.selection,name:connector_pms.selection__pms_availability_plan__channel_connection_state__disconnected
+#: model:ir.model.fields.selection,name:connector_pms.selection__pms_property__channel_connection_state__disconnected
 #: model:ir.model.fields.selection,name:connector_pms.selection__pms_room_type__channel_connection_state__disconnected
 #: model:ir.model.fields.selection,name:connector_pms.selection__product_pricelist__channel_connection_state__disconnected
 msgid "Not connected"
@@ -504,9 +555,26 @@ msgstr "No conectado"
 #: code:addons/connector_pms/components_custom/exporter.py:0
 #: code:addons/connector_pms/components_custom/exporter.py:0
 #: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
 #, python-format
 msgid "Nothing to export"
 msgstr "Nada que exportar"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_pms_property__ota_price_modifier_type
+#: model:ir.model.fields,field_description:connector_pms.field_res_partner__ota_price_modifier_type
+#: model:ir.model.fields,field_description:connector_pms.field_res_users__ota_price_modifier_type
+msgid "OTA Rate Logic"
+msgstr "Lógica de tarifa OTA"
+
+#. module: connector_pms
+#: model:ir.model.fields,field_description:connector_pms.field_pms_property__ota_price_modifier_value
+#: model:ir.model.fields,field_description:connector_pms.field_res_partner__ota_price_modifier_value
+#: model:ir.model.fields,field_description:connector_pms.field_res_users__ota_price_modifier_value
+msgid "OTA Rate Value"
+msgstr "Valor de tarifa OTA"
 
 #. module: connector_pms
 #: model:ir.model.fields,field_description:connector_pms.field_pms_reservation__ota_reservation_code
@@ -525,6 +593,7 @@ msgstr "Solo se permite un método con el mismo nombre por tipo de backend"
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
 #: code:addons/connector_pms/components/adapter.py:0
 #, python-format
 msgid "Operator %s not supported"
@@ -588,6 +657,7 @@ msgid "Pricelist"
 msgstr "Tarifa"
 
 #. module: connector_pms
+#: model:ir.model,name:connector_pms.model_pms_property
 #: model:ir.model.fields,field_description:connector_pms.field_channel_backend__pms_property_id
 #: model:ir.model.fields,field_description:connector_pms.field_queue_job__pms_property_id
 #: model_terms:ir.ui.view,arch_db:connector_pms.view_queue_job_search
@@ -614,12 +684,14 @@ msgstr "Nombre del registro"
 #. module: connector_pms
 #. odoo-python
 #: code:addons/connector_pms/components_custom/exporter.py:0
+#: code:addons/connector_pms/components_custom/exporter.py:0
 #, python-format
 msgid "Record exported with ID %s on Backend."
 msgstr "Registro exportado con ID %s en el backend."
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/components_custom/importer.py:0
 #: code:addons/connector_pms/components_custom/importer.py:0
 #, python-format
 msgid "Record with external_id '%s' does not exist in Backend"
@@ -684,6 +756,14 @@ msgstr "Sincronizado (exportación)"
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/models/res_partner.py:0
+#, python-format
+msgid "The OTA rate value must be greater than zero."
+msgstr "El valor de tarifa OTA debe ser mayor que cero."
+
+#. module: connector_pms
+#. odoo-python
+#: code:addons/connector_pms/components_custom/binder.py:0
 #: code:addons/connector_pms/components_custom/binder.py:0
 #, python-format
 msgid ""
@@ -706,6 +786,8 @@ msgstr ""
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/components/adapter.py:0
+#: code:addons/connector_pms/components/adapter.py:0
 #: code:addons/connector_pms/components/adapter.py:0
 #: code:addons/connector_pms/components/adapter.py:0
 #, python-format
@@ -770,6 +852,7 @@ msgstr "Usuario"
 
 #. module: connector_pms
 #: model_terms:ir.ui.view,arch_db:connector_pms.availability_view_form
+#: model_terms:ir.ui.view,arch_db:connector_pms.pms_property_views_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.pms_room_type_view_form
 #: model_terms:ir.ui.view,arch_db:connector_pms.product_pricelist_view
 msgid "View connections"
@@ -782,6 +865,7 @@ msgstr "Asistente"
 
 #. module: connector_pms
 #. odoo-python
+#: code:addons/connector_pms/components_custom/binder.py:0
 #: code:addons/connector_pms/components_custom/binder.py:0
 #, python-format
 msgid ""
