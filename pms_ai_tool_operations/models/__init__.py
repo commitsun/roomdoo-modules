@@ -5,3 +5,4 @@ from . import pms_board_services_forecast
 from . import pms_guest_data_pending
 from . import pms_folio_reception_note
 from . import pms_blocked_rooms_by_room_type
+from . import pms_hot_cold_dates

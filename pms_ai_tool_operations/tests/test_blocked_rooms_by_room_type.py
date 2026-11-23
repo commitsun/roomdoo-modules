@@ -41,8 +41,12 @@ class TestBlockedRoomsByRoomType(OperationsToolsMixin, TransactionCase):
                 "blocked_rooms": 3,
             },
         )
-        self.assertEqual(response["period"], {"date_from": str(TODAY), "date_to": str(TODAY)})
-        self.assertEqual(response["result"]["by_property"][0]["property_id"], self.prop.id)
+        self.assertEqual(
+            response["period"], {"date_from": str(TODAY), "date_to": str(TODAY)}
+        )
+        self.assertEqual(
+            response["result"]["by_property"][0]["property_id"], self.prop.id
+        )
 
     def test_date_defaults_to_today_and_filters_by_id(self):
         response = self._call(TOOL, room_type_id=self.room_type.id)

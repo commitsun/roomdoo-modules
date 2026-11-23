@@ -229,3 +229,31 @@ msgstr "Habitación bloqueada: habitación con un bloqueo de fuera de servicio (
 #, python-format
 msgid "The room type is matched by id or by code; rooms of every room type with that code are counted, in the properties of the user."
 msgstr "El tipo de habitación se busca por id o por código; se cuentan las habitaciones de todos los tipos con ese código, en los hoteles del usuario."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_hot_cold_dates.py:0
+#, python-format
+msgid "%(hot)s hot property nights (opportunity to raise prices) up to %(date_to)s and %(cold)s cold ones (low occupancy) up to %(cold_to)s."
+msgstr "%(hot)s noches calientes de hotel (oportunidad de subir precios) hasta el %(date_to)s y %(cold)s frías (baja ocupación) hasta el %(cold_to)s."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_hot_cold_dates.py:0
+#, python-format
+msgid "Occupancy: occupied nights (normal and staff reservations in active rooms for overnight stays, without pre-reservations nor cancelled ones) over the rooms of the property, as in the occupancy outlook; blocked rooms are not taken out of the denominator."
+msgstr "Ocupación: noches ocupadas (reservas normales y de personal en habitaciones activas para pernoctar, sin prerreservas ni canceladas) sobre las habitaciones del hotel, como en la previsión de ocupación; las habitaciones bloqueadas no se restan del denominador."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_hot_cold_dates.py:0
+#, python-format
+msgid "Hot night: occupancy at the hot threshold (%(hot)s%%) or more, or more rooms used (occupied plus blocked) than the property has, which means overbooking: a chance to raise prices."
+msgstr "Noche caliente: ocupación igual o superior al umbral (%(hot)s%%), o más habitaciones usadas (ocupadas más bloqueadas) de las que tiene el hotel, es decir overbooking: ocasión de subir precios."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_hot_cold_dates.py:0
+#, python-format
+msgid "Cold night: occupancy below the cold threshold (%(cold)s%%) in the first %(days)s days from today only."
+msgstr "Noche fría: ocupación por debajo del umbral (%(cold)s%%) solo en los primeros %(days)s días desde hoy."
