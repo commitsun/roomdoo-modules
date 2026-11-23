@@ -293,7 +293,8 @@ class ChannelWubookBackend(models.Model):
             # Search by same jobs pending, if not, create a new one
             func_string = (
                 "channel.wubook.pms.property.availability().export_record(channel."
-                f"wubook.backend({rec.id},), pms.property({rec.pms_property_id.id},))"
+                f"wubook.backend({rec.id},), "
+                f"pms.property({rec.pms_property_id.id},))"
             )
             jobs = self.env["queue.job"].search(
                 [

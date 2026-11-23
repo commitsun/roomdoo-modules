@@ -47,8 +47,8 @@ class ChannelWubookPmsReservationLineMapperImport(Component):
             binder = self.binder_for("channel.wubook.product.pricelist")
             pricelist = binder.to_internal(record["rate_id"], unwrap=True)
             assert pricelist, (
-                "rate_id %s should have been imported in "
-                "ProductPricelistImporter._import_dependencies" % (record["rate_id"],)
+                f"rate_id {record['rate_id']} should have been imported in "
+                "ProductPricelistImporter._import_dependencies"
             )
             pricelist_id = pricelist.id
         if record["board"] and record["board_included"]:

@@ -14,8 +14,8 @@ def get_room_type(mapper, room_id):
     rt_binder = mapper.binder_for("channel.wubook.pms.room.type")
     room_type = rt_binder.to_internal(room_id, unwrap=True)
     assert room_type, (
-        "room_id %s should have been imported in "
-        "PmsRoomTypeImporter._import_dependencies" % (room_id,)
+        f"room_id {room_id} should have been imported in "
+        "PmsRoomTypeImporter._import_dependencies"
     )
     return room_type
 
@@ -24,9 +24,9 @@ def get_board_service_room_type(mapper, room_type, board, pricelist_id=False):
     bd_binder = mapper.binder_for("channel.wubook.pms.board.service")
     board_service = bd_binder.to_internal(board, unwrap=True)
     assert board_service, (
-        "board_service_id '%s' should've been imported in "
+        f"board_service_id '{board}' should've been imported in "
         "PmsRoomTypeImporter._import_dependencies or "
-        "PmsFolioImporter._import_dependencies.\n" % (board,)
+        "PmsFolioImporter._import_dependencies.\n"
     )
 
     candidates = room_type.board_service_room_type_ids.filtered(
@@ -36,9 +36,7 @@ def get_board_service_room_type(mapper, room_type, board, pricelist_id=False):
     if pricelist_id:
         # First, search for an exact match with the pricelist
         # associated with the board service
-        exact_match = candidates.filtered(
-            lambda x: pricelist_id in x.pricelist_ids.ids
-        )
+        exact_match = candidates.filtered(lambda x: pricelist_id in x.pricelist_ids.ids)
         if exact_match:
             return exact_match[0]
 
@@ -134,9 +132,8 @@ class ChannelWubookPmsReservationMapperImport(Component):
                 binder = self.binder_for("channel.wubook.product.pricelist")
                 pricelist = binder.to_internal(record["rate_id"], unwrap=True)
                 assert pricelist, (
-                    "rate_id %s should have been imported in "
+                    f"rate_id {record['rate_id']} should have been imported in "
                     "ProductPricelistImporter._import_dependencies"
-                    % (record["rate_id"],)
                 )
                 pricelist_id = pricelist.id
             return {
@@ -167,8 +164,8 @@ class ChannelWubookPmsReservationMapperImport(Component):
             binder = self.binder_for("channel.wubook.product.pricelist")
             pricelist = binder.to_internal(record["rate_id"], unwrap=True)
             assert pricelist, (
-                "rate_id %s should have been imported in "
-                "ProductPricelistImporter._import_dependencies" % (record["rate_id"],)
+                f"rate_id {record['rate_id']} should have been imported in "
+                "ProductPricelistImporter._import_dependencies"
             )
             pricelist_id = pricelist.id
 
