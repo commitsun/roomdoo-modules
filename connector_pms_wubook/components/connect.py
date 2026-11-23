@@ -17,13 +17,27 @@ class ChannelWubookConnectHooks(Component):
     _collection = "channel.wubook.backend"
 
     def after_connect(self, record):
+        PricelistBinding = self.env["channel.wubook.product.pricelist"]
+        backend = self.backend_record
+        if record._name == "product.pricelist":
+            # A plan just created in Wubook only got the items of the
+            # pricelist: push the prices of the room types deriving theirs.
+            # Binding an existing plan sends nothing, like for its items.
+            if getattr(self.work, "connect_mode", None) == "new":
+                PricelistBinding.search(
+                    [
+                        ("odoo_id", "=", record.id),
+                        ("backend_id", "=", backend.id),
+                        ("external_id", "!=", False),
+                    ]
+                )._export_derived_prices_delayed()
+            return None
         if record._name != "pms.room.type":
             return None
-        backend = self.backend_record
 
         # A room type deriving its price has no items to export: push its
         # derived prices to the regular plans of the backend
-        self.env["channel.wubook.product.pricelist"].search(
+        PricelistBinding.search(
             [("backend_id", "=", backend.id), ("external_id", "!=", False)]
         )._export_derived_prices_delayed(room_type_ids=record.ids)
 

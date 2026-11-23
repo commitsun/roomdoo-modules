@@ -987,13 +987,13 @@ class TestDerivedPricesListeners(DerivedRoomTypeCase):
             price_derivation_value=50.0,
         )
         self._flush_listeners()
-        wizard = self.env["channel.wubook.connect.wizard"].create(
+        wizard = self.env["channel.connect.wizard"].create(
             {
                 "res_model": "pms.room.type",
                 "res_id": suite.id,
-                "backend_id": self.backend.id,
+                "backend_id": self.backend.parent_id.id,
                 "mode": "manual",
-                "manual_external_id": 444,
+                "manual_external_id": "444",
             }
         )
         with trap_jobs() as trap:
@@ -1011,11 +1011,11 @@ class TestDerivedPricesListeners(DerivedRoomTypeCase):
         )
         self._set_price(self.mother, self.d1, 90.0, pricelist=pricelist)
         self._flush_listeners()
-        wizard = self.env["channel.wubook.connect.wizard"].create(
+        wizard = self.env["channel.connect.wizard"].create(
             {
                 "res_model": "product.pricelist",
                 "res_id": pricelist.id,
-                "backend_id": self.backend.id,
+                "backend_id": self.backend.parent_id.id,
                 "mode": "new",
             }
         )

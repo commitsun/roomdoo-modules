@@ -285,7 +285,11 @@ class ChannelConnectWizard(models.TransientModel):
 
     def _after_connect(self, record):
         self.ensure_one()
-        with self._vendor_backend().work_on(self.binding_model) as work:
+        # The hooks can tell a record just created on the channel manager
+        # (``connect_mode`` "new") from one bound to an existing record
+        with self._vendor_backend().work_on(
+            self.binding_model, connect_mode=self.mode
+        ) as work:
             work.component(usage="connect.hooks").after_connect(record)
 
     def _action_return_to_record(self):
