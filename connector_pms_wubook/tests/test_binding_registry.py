@@ -14,13 +14,13 @@ WUBOOK_BOUND_MODELS = (
     "pms.availability",
     "pms.availability.plan",
     "pms.availability.plan.rule",
-    "pms.board.service",
     "pms.folio",
     "pms.property",
     "pms.room.type",
     "pms.room.type.class",
     "product.pricelist",
     "product.pricelist.item",
+    "product.template",
 )
 
 
