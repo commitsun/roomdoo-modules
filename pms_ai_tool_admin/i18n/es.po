@@ -382,3 +382,231 @@ msgstr "entry_not_posted: sesión cerrada cuyo asiento contable falta o no está
 #, python-format
 msgid "Only the first %s sessions of the period were analysed."
 msgstr "Solo se han analizado las primeras %s sesiones del periodo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "Create and post %(count)s invoice(s) of the folio %(folio)s for a total of %(total)s."
+msgstr "Crear y validar %(count)s factura(s) del folio %(folio)s por un total de %(total)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "Create %(count)s draft invoice(s) of the folio %(folio)s for a total of %(total)s."
+msgstr "Crear %(count)s factura(s) en borrador del folio %(folio)s por un total de %(total)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+msgid "The invoices are created by the invoicing of the folio itself (its Create invoice button): its lines, taxes, journal, fiscal position and down payment deductions. The anonymous customer gets a simplified invoice; any other customer, a full invoice. A negative total becomes a credit note."
+msgstr "Las facturas las crea la propia facturación del folio (su botón Crear factura): sus líneas, impuestos, diario, posición fiscal y descuento de anticipos. El cliente anónimo recibe una factura simplificada; cualquier otro cliente, una factura completa. Un total negativo se convierte en factura rectificativa."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+msgid "Amounts are computed from the taxes of each line; the invoice keeps the rounding of the accounting."
+msgstr "Los importes se calculan con los impuestos de cada línea; la factura mantiene el redondeo de la contabilidad."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+msgid "No invoice was created: you cannot create invoices."
+msgstr "No se ha creado ninguna factura: no puede crear facturas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "%(count)s invoice(s) of the folio %(folio)s created."
+msgstr "%(count)s factura(s) del folio %(folio)s creada(s)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+msgid "The invoices do not match the preview; nothing was saved. Preview the change again."
+msgstr "Las facturas no coinciden con la vista previa; no se ha guardado nada. Vuelva a previsualizar el cambio."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "No folio found with the id or code %s."
+msgstr "No se ha encontrado ningún folio con el id o código %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "Several folios have the code %s: use the id of the folio."
+msgstr "Varios folios tienen el código %s: use el id del folio."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "No customer found with the id %s."
+msgstr "No se ha encontrado ningún cliente con el id %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "The lines %(lines)s are not lines of the folio %(folio)s."
+msgstr "Las líneas %(lines)s no son líneas del folio %(folio)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "The lines %s have nothing to invoice."
+msgstr "Las líneas %s no tienen nada que facturar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+msgid "Leave the invoice in draft (post=false) or fix it first."
+msgstr "Deje la factura en borrador (post=false) o corrija el problema antes."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "The folio %s has nothing to invoice."
+msgstr "El folio %s no tiene nada que facturar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "The invoice for %s would have no lines: choose the lines or the customer to invoice."
+msgstr "La factura para %s quedaría sin líneas: elija las líneas o el cliente a facturar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "%s lacks the tax id or the address that a full invoice needs: the invoice can be created as a draft, but it cannot be posted until the customer data is completed."
+msgstr "A %s le falta el NIF o la dirección que necesita una factura completa: la factura puede crearse en borrador, pero no puede validarse hasta completar los datos del cliente."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "The simplified invoice exceeds the maximum of %s for simplified invoices of the property: it cannot be posted; invoice an identified customer instead."
+msgstr "La factura simplificada supera el máximo de %s para facturas simplificadas del hotel: no puede validarse; facture a un cliente identificado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing.py:0
+#, python-format
+msgid "%s has no VAT number."
+msgstr "%s no tiene NIF."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+msgid "Only payments received from customers can be moved."
+msgstr "Solo se pueden mover pagos recibidos de clientes."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+msgid "The payment and the folios must have the same currency."
+msgstr "El pago y los folios deben tener la misma moneda."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "Move the payment %(payment)s of %(amount)s from the folio %(source)s to the folio %(target)s."
+msgstr "Mover el pago %(payment)s de %(amount)s del folio %(source)s al folio %(target)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+msgid "The folio of the payment is changed as in the payment form: the payment, its accounting entry and the pending amounts of both folios follow. Only posted customer payments of a single folio that are not reconciled can be moved."
+msgstr "Se cambia el folio del pago como en el formulario del pago: el pago, su asiento contable y los importes pendientes de ambos folios se actualizan. Solo se pueden mover pagos de cliente validados, de un único folio y sin conciliar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+msgid "The payment changed since the preview; nothing was saved. Preview the change again."
+msgstr "El pago ha cambiado desde la vista previa; no se ha guardado nada. Vuelva a previsualizar el cambio."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+msgid "The pending amounts of the folios do not match the preview; nothing was saved. Preview the change again."
+msgstr "Los importes pendientes de los folios no coinciden con la vista previa; no se ha guardado nada. Vuelva a previsualizar el cambio."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "Payment %(payment)s moved to the folio %(folio)s."
+msgstr "Pago %(payment)s movido al folio %(folio)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The folio %s has no posted payments."
+msgstr "El folio %s no tiene pagos validados."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The folio %(folio)s has several payments; choose one with payment_id: %(payments)s."
+msgstr "El folio %(folio)s tiene varios pagos; elija uno con payment_id: %(payments)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The payment is already on the folio %s."
+msgstr "El pago ya está en el folio %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The payment %s is shared by several folios: it cannot be moved."
+msgstr "El pago %s está repartido entre varios folios: no se puede mover."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The payment %s is already reconciled (for example with an invoice): undo the reconciliation in the accounting first."
+msgstr "El pago %s ya está conciliado (por ejemplo con una factura): deshaga antes la conciliación en contabilidad."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The folio %s belongs to another company than the payment."
+msgstr "El folio %s pertenece a otra compañía distinta de la del pago."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The payer is not the customer of the folio %s."
+msgstr "El pagador no es el cliente del folio %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The folio %(folio)s will be overpaid by %(amount)s."
+msgstr "El folio %(folio)s quedará pagado de más en %(amount)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_folio_billing_payment.py:0
+#, python-format
+msgid "The payment %(payment)s is not a posted payment of the folio %(folio)s."
+msgstr "El pago %(payment)s no es un pago validado del folio %(folio)s."

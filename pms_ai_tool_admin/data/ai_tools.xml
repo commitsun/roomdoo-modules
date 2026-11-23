@@ -72,4 +72,22 @@
         <field name="function_name">_ai_pos_cash_audit</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_folio_invoice" model="ai.tool">
+        <field name="name">pms_folio_invoice</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Create the invoice of a folio, given its code or id, exactly as its Create invoice button does: the folio's own invoicing chooses the journal (simplified invoice for the anonymous customer, full invoice otherwise), the taxes and the down payment deductions. Options: only some sale lines (at most 50), another customer to invoice, and post the invoices or leave them in draft (default). The preview lists the invoices, their lines and amounts, the customer and the type of invoice, and warns about missing customer data. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_invoice</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_pms_folio_payment_move" model="ai.tool">
+        <field name="name">pms_folio_payment_move</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Move a payment registered on the wrong folio to the right one, given both folio codes or ids (and the payment id when the first folio has several payments). It changes the folio of the payment as its form does, so the accounting entry and the pending amounts of both folios follow. Only posted customer payments of a single folio that are not reconciled can be moved. The preview shows the payment and the pending amount of both folios before and after. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_folio_payment_move</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

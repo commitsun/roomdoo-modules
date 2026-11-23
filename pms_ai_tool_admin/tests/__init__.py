@@ -6,3 +6,5 @@ from . import test_acc_supplier_bills_pending
 from . import test_acc_supplier_invoices
 from . import test_acc_purchase_bill_mismatch
 from . import test_pos_cash_audit
+from . import test_pms_folio_billing
+from . import test_pms_folio_billing_payment
