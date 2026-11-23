@@ -54,4 +54,13 @@
         <field name="function_name">_ai_acc_supplier_invoices</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_purchase_bill_mismatch" model="ai.tool">
+        <field name="name">acc_purchase_bill_mismatch</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Differences above a threshold (default 0.05) between the total of a purchase order and the total of its posted vendor bills, for the bills of a period (at most 93 days): company, property, supplier, bills, order and bills totals and the difference, plus a summary of the vendor bills pending validation (draft) or payment by company. Needs the purchase module; read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_purchase_bill_mismatch</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

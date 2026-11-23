@@ -295,3 +295,34 @@ msgstr "Solo se han analizado las primeras %s facturas del periodo."
 #: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
 msgid "Not paid"
 msgstr "Sin pagar"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "The purchase module is not installed."
+msgstr "El módulo de compras no está instalado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+#, python-format
+msgid "%(count)s purchase orders differ from their vendor bills by more than %(limit)s from %(from)s to %(to)s (net %(net)s)."
+msgstr "%(count)s pedidos de compra difieren de sus facturas de proveedor en más de %(limit)s del %(from)s al %(to)s (neto %(net)s)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "Compared: purchase orders (confirmed) that have a posted vendor bill dated in the period. billed_total: the posted vendor bills of the order (credit notes subtract), in the order currency, including bills outside the period. difference: billed_total minus order_total."
+msgstr "Comparados: pedidos de compra (confirmados) con alguna factura de proveedor contabilizada fechada en el periodo. billed_total: las facturas de proveedor contabilizadas del pedido (las rectificativas restan), en la moneda del pedido, incluidas las de fuera del periodo. difference: billed_total menos order_total."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "By default only the orders Odoo considers fully billed are compared, because a partly billed order differs from its bills on purpose. A bill shared by several orders counts through its lines linked to each order (shared_bills)."
+msgstr "Por defecto solo se comparan los pedidos que Odoo considera totalmente facturados, porque un pedido facturado en parte difiere de sus facturas a propósito. Una factura compartida por varios pedidos cuenta a través de sus líneas vinculadas a cada pedido (shared_bills)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "Property: the property of the bills in the period. bills_by_state: vendor bills in draft (pending validation) and posted bills not yet paid or partly paid, up to the end of the period, by company."
+msgstr "Alojamiento: el de las facturas del periodo. bills_by_state: facturas de proveedor en borrador (pendientes de validar) y contabilizadas aún sin pagar o pagadas en parte, hasta el final del periodo, por compañía."

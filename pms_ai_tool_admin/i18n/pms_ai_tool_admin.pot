@@ -294,3 +294,34 @@ msgstr ""
 #: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
 msgid "Not paid"
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "The purchase module is not installed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+#, python-format
+msgid "%(count)s purchase orders differ from their vendor bills by more than %(limit)s from %(from)s to %(to)s (net %(net)s)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "Compared: purchase orders (confirmed) that have a posted vendor bill dated in the period. billed_total: the posted vendor bills of the order (credit notes subtract), in the order currency, including bills outside the period. difference: billed_total minus order_total."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "By default only the orders Odoo considers fully billed are compared, because a partly billed order differs from its bills on purpose. A bill shared by several orders counts through its lines linked to each order (shared_bills)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_purchase_bill_mismatch.py:0
+msgid "Property: the property of the bills in the period. bills_by_state: vendor bills in draft (pending validation) and posted bills not yet paid or partly paid, up to the end of the period, by company."
+msgstr ""
