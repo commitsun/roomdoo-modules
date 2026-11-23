@@ -19,7 +19,7 @@ class ChannelWubookPmsBoardServiceBinder(Component):
         pms_property_id = values["pms_property_ids"][0][1]
         records = self.env[model_name].search(
             [
-                "&",
+                ("is_board_service", "=", True),
                 ("default_code", "=", values["default_code"]),
                 "|",
                 ("pms_property_ids", "in", pms_property_id),

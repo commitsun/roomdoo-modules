@@ -4,8 +4,8 @@
 from odoo import fields, models
 
 
-class PmsBoardService(models.Model):
-    _inherit = "pms.board.service"
+class ProductTemplate(models.Model):
+    _inherit = "product.template"
 
     channel_wubook_bind_ids = fields.One2many(
         comodel_name="channel.wubook.pms.board.service",

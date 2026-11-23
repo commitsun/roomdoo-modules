@@ -52,6 +52,11 @@ class ChannelWubookBackend(models.Model):
         comodel_name="wubook.backend.journal.ota",
         inverse_name="backend_id",
     )
+    board_service_ids = fields.One2many(
+        string="Board Services",
+        comodel_name="channel.wubook.backend.board.service",
+        inverse_name="backend_id",
+    )
     wubook_journal_id = fields.Many2one(
         string="Wubook Payment Journal",
         comodel_name="account.journal",

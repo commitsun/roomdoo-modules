@@ -22,6 +22,11 @@ class ChannelWubookPmsBoardServiceMapperImport(Component):
     def backend_id(self, record):
         return {"backend_id": self.backend_record.id}
 
+    @only_create
+    @mapping
+    def is_board_service(self, record):
+        return {"is_board_service": True, "detailed_type": "service"}
+
     @mapping
     def property_ids(self, record):
         binding = self.options.get("binding")

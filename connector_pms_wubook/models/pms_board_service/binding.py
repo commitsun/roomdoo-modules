@@ -7,7 +7,7 @@ from odoo import fields, models
 class ChannelWubookPmsBoardServiceBinding(models.Model):
     _name = "channel.wubook.pms.board.service"
     _inherit = "channel.wubook.binding"
-    _inherits = {"pms.board.service": "odoo_id"}
+    _inherits = {"product.template": "odoo_id"}
 
     # override default Integer external ID
     external_id = fields.Char(
@@ -16,7 +16,7 @@ class ChannelWubookPmsBoardServiceBinding(models.Model):
 
     # binding fields
     odoo_id = fields.Many2one(
-        comodel_name="pms.board.service",
+        comodel_name="product.template",
         string="Odoo ID",
         required=True,
         ondelete="cascade",
