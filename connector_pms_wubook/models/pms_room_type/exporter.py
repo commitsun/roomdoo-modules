@@ -29,12 +29,12 @@ class ChannelWubookPmsRoomTypeExporter(Component):
         self._export_dependency(
             self.binding.class_id, "channel.wubook.pms.room.type.class"
         )
-        for board_service in self.binding.board_service_room_type_ids.filtered(
-            lambda b: b.pms_property_id == self.binding.backend_id.pms_property_id
-            and b.pms_board_service_id.channel_wubook_bind_ids.filtered(
-                lambda c: c.backend_id == self.binding.backend_id
+        for board_service in self.backend_record.board_service_ids.filtered(
+            lambda b: b.room_type_id == self.binding.odoo_id
+            and b.board_service_id.channel_wubook_bind_ids.filtered(
+                lambda c: c.backend_id == self.backend_record
             )
-        ).mapped("pms_board_service_id"):
+        ).mapped("board_service_id"):
             self._export_dependency(board_service, "channel.wubook.pms.board.service")
 
     def _has_to_skip(self):

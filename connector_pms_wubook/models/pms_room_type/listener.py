@@ -8,7 +8,8 @@ from odoo.addons.component_event.components.event import skip_if
 # These are the ones consumed by the room type export mapper:
 # ``name``, ``list_price`` -> ``price``, ``default_code`` -> ``shortname``,
 # ``min_price``, ``max_price``, ``default_availability`` -> ``availability``,
-# ``class_id`` -> ``rtype``, ``board_service_room_type_ids`` -> ``boards``.
+# ``class_id`` -> ``rtype``. The board services (``boards``) are set on the
+# backend, and ``channel.wubook.backend.board.service.listener`` follows them.
 # Also ``room_ids.capacity`` (drives the computed ``occupancy``) is
 # relevant, but since ``occupancy`` is stored-and-computed on the binding
 # it surfaces here as a write on the binding model rather than on
@@ -22,7 +23,6 @@ _ROOM_TYPE_RELEVANT_FIELDS = {
     "max_price",
     "default_availability",
     "class_id",
-    "board_service_room_type_ids",
 }
 
 

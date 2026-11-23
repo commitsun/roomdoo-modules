@@ -6,7 +6,6 @@ from . import pms_room
 from . import pms_room_type
 from . import pms_room_type_class
 from . import pms_board_service
-from . import pms_room_type_board_service
 from . import product_pricelist
 from . import product_pricelist_item
 

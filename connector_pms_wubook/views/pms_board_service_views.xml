@@ -2,37 +2,45 @@
 <!-- Copyright 2021 Eric Antones <eantones@nuobit.com>
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
-    <record id="pms_board_service_form" model="ir.ui.view">
-        <field name="name">pms.board.service.wubook.connector.form</field>
-        <field name="model">pms.board.service</field>
-        <field name="inherit_id" ref="connector_pms.pms_board_service_form" />
+    <record id="product_template_board_service_form" model="ir.ui.view">
+        <field name="name">product.template.board.service.wubook.connector.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="pms.product_template_view_form" />
         <field name="arch" type="xml">
-            <xpath expr="//notebook/page[@name='connector']">
+            <xpath expr="//notebook" position="inside">
+                <page
+          string="Connectors"
+          name="connector_wubook"
+          groups="connector.group_connector_manager"
+          attrs="{'invisible': [('is_board_service', '=', False)]}"
+        >
+                <field name="is_board_service" invisible="1" />
                 <separator string="Wubook" />
                 <field name="channel_wubook_bind_ids" nolabel="1">
                     <tree editable="bottom">
                         <field
-                            name="backend_id"
-                            attrs="{'readonly': [('id', '!=', False)]}"
-                        />
+                name="backend_id"
+                attrs="{'readonly': [('id', '!=', False)]}"
+              />
                         <field name="external_id" />
                         <button
-                            type="object"
-                            title="Resynchronize (import)"
-                            name="resync_import"
-                            class="fa fa-download"
-                        />
+                type="object"
+                title="Resynchronize (import)"
+                name="resync_import"
+                class="fa fa-download"
+              />
                         <field name="sync_date" />
                         <button
-                            type="object"
-                            title="Resynchronize (export)"
-                            name="resync_export"
-                            class="fa fa-upload"
-                        />
+                type="object"
+                title="Resynchronize (export)"
+                name="resync_export"
+                class="fa fa-upload"
+              />
                         <field name="synced_export" />
                         <field name="sync_date_export" />
                     </tree>
                 </field>
+                </page>
             </xpath>
         </field>
     </record>

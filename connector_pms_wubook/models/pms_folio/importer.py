@@ -50,8 +50,25 @@ class ChannelWubookPmsFolioImporter(Component):
             "channel.wubook.pms.folio",
         )
 
+    def _price_board_services(self, folio):
+        """Each board service of a stay at the amount the backend sets for it,
+        which is what was taken off the price of the room"""
+        for reservation in folio.reservation_ids.filtered(
+            lambda r: r.state != "cancel"
+        ):
+            backend_board = self.backend_record.board_service_ids.filtered(
+                lambda b, r=reservation: b.room_type_id == r.room_type_id
+                and b.board_service_id == r.board_service_id
+            )
+            if not backend_board:
+                continue
+            reservation.service_ids.filtered(
+                lambda s: s.is_board_service and s.board_guest_type
+            ).service_line_ids.price_unit = backend_board.amount
+
     def _after_import(self, binding):
         folio = binding.odoo_id
+        self._price_board_services(folio)
         # If Wubook status is 7 (Wubook modification) the folio state is not changed
         if binding.wubook_status in ("3", "5", "6") and binding.state != "cancel":
             # If folio has draft invoice, cancel invoices:

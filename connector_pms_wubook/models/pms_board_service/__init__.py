@@ -9,4 +9,4 @@ from . import exporter
 from . import importer
 from . import mapper_export
 from . import mapper_import
-from . import pms_board_service
+from . import product_template
