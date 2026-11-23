@@ -9,3 +9,5 @@ from . import pms_purchase_bill_mismatch
 from . import pms_pos_cash_audit
 from . import pms_folio_billing
 from . import pms_folio_billing_payment
+from . import acc_admin_daily_brief
+from . import acc_record_edit

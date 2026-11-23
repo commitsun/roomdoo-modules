@@ -8,3 +8,5 @@ from . import test_acc_purchase_bill_mismatch
 from . import test_pos_cash_audit
 from . import test_pms_folio_billing
 from . import test_pms_folio_billing_payment
+from . import test_acc_admin_daily_brief
+from . import test_acc_record_edit

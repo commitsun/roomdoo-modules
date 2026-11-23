@@ -90,4 +90,22 @@
         <field name="function_name">_ai_pms_folio_payment_move</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_admin_daily_brief" model="ai.tool">
+        <field name="name">acc_admin_daily_brief</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Administration worklist of the day for the user's companies and properties, optionally one company or some properties: draft vendor bills (count, age of the oldest, the oldest ones), vendor bills flagged to check or drafts missing partner, bill date, account or taxes, probable duplicate vendor bills (same supplier and reference, or same supplier, total and bill date), vendor bills overdue and due in the next 7 days with the pending amounts, overdue customer invoices, posted payments and collections not applied yet and, if the module is installed, draft payment orders. Each section gives counts, at most 10 items and the tools to act on it next. Read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_admin_daily_brief</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_record_edit" model="ai.tool">
+        <field name="name">acc_record_edit</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Small corrections on up to 20 records of one model, with the old and new value of each field in the preview. Closed list: draft invoices and bills (account.move: partner_id, ref, payment_reference, invoice_date, date, invoice_date_due, partner_bank_id, narration, to_check, payment_mode_id), draft payments (account.payment: date, ref, partner_id, partner_bank_id), partners (res.partner: name, vat, email, phone, mobile, street, street2, zip, city, state_id, country_id, property_payment_term_id, property_supplier_payment_term_id) and bank accounts (res.partner.bank: acc_number, bank_id). fields and values are parallel lists; values are text: dates YYYY-MM-DD, true or false, a related record by id or exact name. Refuses other models or fields, posted records and records outside the user's companies and properties; never creates or deletes. Changes data as the user: needs an explicit list of allowed users. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_record_edit</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

@@ -610,3 +610,302 @@ msgstr "El folio %(folio)s quedará pagado de más en %(amount)s."
 #, python-format
 msgid "The payment %(payment)s is not a posted payment of the folio %(folio)s."
 msgstr "El pago %(payment)s no es un pago validado del folio %(folio)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "You have no access to the company %s."
+msgstr "No tienes acceso a la empresa %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "Administration brief of %(date)s: %(drafts)s draft vendor bills (oldest %(oldest)s days), %(review)s to review, %(duplicates)s groups of probable duplicates, %(overdue)s vendor bills overdue (%(overdue_amount)s) and %(due_soon)s due in %(days)s days (%(due_soon_amount)s), %(customer)s customer invoices overdue (%(customer_amount)s), %(payments)s payments not applied (%(payments_amount)s)."
+msgstr "Resumen de administración del %(date)s: %(drafts)s facturas de proveedor en borrador (la más antigua de %(oldest)s días), %(review)s por revisar, %(duplicates)s grupos de probables duplicadas, %(overdue)s facturas de proveedor vencidas (%(overdue_amount)s) y %(due_soon)s que vencen en %(days)s días (%(due_soon_amount)s), %(customer)s facturas de cliente vencidas (%(customer_amount)s), %(payments)s pagos sin aplicar (%(payments_amount)s)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "%s draft payment orders."
+msgstr "%s órdenes de pago en borrador."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "Scope: documents of the user's companies and properties, plus the ones without property when no property is requested. Each section gives its counts, at most %s items and next_tools, the tools to act on it; worklist lists the sections with something pending."
+msgstr "Alcance: documentos de las empresas y hoteles del usuario, más los que no tienen hotel cuando no se pide ningún hotel. Cada sección da sus recuentos, como mucho %s elementos y next_tools, las herramientas con las que actuar; worklist enumera las secciones con algo pendiente."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+msgid "draft_vendor_bills: vendor bills and refunds in draft; age_days counts from the day they were created, oldest first."
+msgstr "draft_vendor_bills: facturas y rectificativas de proveedor en borrador; age_days cuenta desde el día en que se crearon, las más antiguas primero."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+msgid "vendor_bills_to_review: vendor bills flagged to check (draft or posted) and draft ones missing the partner, the bill date, the account or the taxes of a line, or without lines."
+msgstr "vendor_bills_to_review: facturas de proveedor marcadas para revisar (en borrador o contabilizadas) y borradores sin proveedor, sin fecha de factura, sin cuenta o sin impuestos en alguna línea, o sin líneas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "duplicate_vendor_bills: groups of draft or posted vendor bills of the same supplier with the same supplier reference, or with the same total and bill date; drafts and the bills posted in the last %s days are compared, groups with a draft first."
+msgstr "duplicate_vendor_bills: grupos de facturas de proveedor en borrador o contabilizadas del mismo proveedor con la misma referencia del proveedor, o con el mismo total y la misma fecha de factura; se comparan los borradores y las facturas contabilizadas en los últimos %s días, primero los grupos con un borrador."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+#, python-format
+msgid "vendor_bills_to_pay: posted vendor bills (not refunds) with an amount pending, overdue (due before today) or due in the next %s days, by due date."
+msgstr "vendor_bills_to_pay: facturas de proveedor contabilizadas (no rectificativas) con importe pendiente, vencidas (vencimiento anterior a hoy) o que vencen en los próximos %s días, por fecha de vencimiento."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+msgid "customer_invoices_overdue: posted customer invoices with an amount pending and due before today, largest first; individuals (guests) are not named."
+msgstr "customer_invoices_overdue: facturas de cliente contabilizadas con importe pendiente y vencimiento anterior a hoy, las mayores primero; no se dan los nombres de particulares (huéspedes)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+msgid "unapplied_payments: posted payments and collections whose receivable or payable line is still open, not applied to invoices (down payments of future stays included), oldest first. Internal transfers are left out."
+msgstr "unapplied_payments: pagos y cobros contabilizados cuya línea a cobrar o a pagar sigue abierta, sin aplicar a facturas (incluidos los anticipos de estancias futuras), los más antiguos primero. Se excluyen las transferencias internas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_admin_daily_brief.py:0
+msgid "draft_payment_orders: only when the payment order module is installed; filtered by company only."
+msgstr "draft_payment_orders: solo si está instalado el módulo de órdenes de pago; se filtra solo por empresa."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "The model %(model)s cannot be changed. Allowed: %(allowed)s."
+msgstr "El modelo %(model)s no se puede cambiar. Permitidos: %(allowed)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "Each field can appear only once."
+msgstr "Cada campo solo puede aparecer una vez."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "These fields cannot be changed on %(model)s: %(refused)s. Allowed: %(allowed)s."
+msgstr "Estos campos no se pueden cambiar en %(model)s: %(refused)s. Permitidos: %(allowed)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "another company"
+msgstr "otra empresa"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "another property"
+msgstr "otro hotel"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "not in draft"
+msgstr "no está en borrador"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "entry of a payment or bank statement line"
+msgstr "asiento de un pago o de una línea de extracto bancario"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "not an invoice or bill"
+msgstr "no es una factura de cliente ni de proveedor"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "has payment terms, which set the due date"
+msgstr "tiene plazos de pago, que fijan el vencimiento"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "partner of a company of the database"
+msgstr "contacto de una empresa de la base de datos"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "partner of a user"
+msgstr "contacto de un usuario"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "Records of %(model)s not found: %(ids)s."
+msgstr "Registros de %(model)s no encontrados: %(ids)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "These %(model)s records cannot be changed: %(refused)s."
+msgstr "Estos registros de %(model)s no se pueden cambiar: %(refused)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "Several %(model)s records are named %(value)s: give the id."
+msgstr "Varios registros de %(model)s se llaman %(value)s: indica el id."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "No %(model)s record found with the id or name %(value)s."
+msgstr "No se ha encontrado ningún registro de %(model)s con el id o el nombre %(value)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "The field %s cannot be emptied."
+msgstr "El campo %s no se puede vaciar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%s must be a date in YYYY-MM-DD format."
+msgstr "%s debe ser una fecha con el formato AAAA-MM-DD."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%s must be true or false."
+msgstr "%s debe ser true o false."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%s must be a number with a dot as decimal separator."
+msgstr "%s debe ser un número con punto como separador decimal."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%(field)s must be one of: %(keys)s."
+msgstr "%(field)s debe ser uno de: %(keys)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "The field %s cannot be changed."
+msgstr "El campo %s no se puede cambiar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "As in the form, Odoo recomputes what depends on the changed fields: the partner sets the fiscal position, the payment terms and the bank account; the bill date sets the accounting date and the due date. The confirmation lists any other field that changed."
+msgstr "Como en el formulario, Odoo recalcula lo que depende de los campos cambiados: el contacto fija la posición fiscal, los plazos de pago y la cuenta bancaria; la fecha de factura fija la fecha contable y el vencimiento. La confirmación enumera cualquier otro campo que haya cambiado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%(fields)s are kept per company: the value is set for the company %(company)s."
+msgstr "%(fields)s se guardan por empresa: el valor se fija para la empresa %(company)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "fields and values must have the same length."
+msgstr "fields y values deben tener la misma longitud."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "Nothing to change: the records already have these values."
+msgstr "Nada que cambiar: los registros ya tienen estos valores."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%(count)s %(model)s records will change: %(fields)s."
+msgstr "Cambiarán %(count)s registros de %(model)s: %(fields)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "Each record shows the current value (old) and the new one of every field; only the fields that change are written, as the user and in one transaction."
+msgstr "Cada registro muestra el valor actual (old) y el nuevo (new) de cada campo; solo se escriben los campos que cambian, como el usuario y en una sola transacción."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "Only draft invoices, bills and payments of the user's companies and properties, and partners and bank accounts of those companies, can be changed, on a closed list of fields. Partners of users or of companies of the database are refused."
+msgstr "Solo se pueden cambiar facturas de cliente y de proveedor y pagos en borrador de las empresas y hoteles del usuario, y contactos y cuentas bancarias de esas empresas, en una lista cerrada de campos. Se rechazan los contactos de usuarios o de empresas de la base de datos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "To undo it, run the tool again with the old values."
+msgstr "Para deshacerlo, vuelve a ejecutar la herramienta con los valores anteriores."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "The confirmation does not match the model."
+msgstr "La confirmación no coincide con el modelo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "The confirmation does not match the records."
+msgstr "La confirmación no coincide con los registros."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+msgid "The confirmation does not match the fields."
+msgstr "La confirmación no coincide con los campos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "Odoo did not keep the value of %(field)s on the record %(id)s; nothing was saved."
+msgstr "Odoo no ha mantenido el valor de %(field)s en el registro %(id)s; no se ha guardado nada."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%(count)s %(model)s records changed."
+msgstr "%(count)s registros de %(model)s cambiados."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_record_edit.py:0
+#, python-format
+msgid "%(value)s belongs to another company than %(company)s."
+msgstr "%(value)s pertenece a otra empresa distinta de %(company)s."
