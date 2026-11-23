@@ -26,7 +26,7 @@ class BookaiLlmAccount(models.Model):
         ],
         required=True,
     )
-    api_key = fields.Char(string="API Key")
+    api_key = fields.Char(string="API Key", groups="pms_bookai.group_bookai_admin")
     api_base_url = fields.Char(string="API Base URL")
     default_model = fields.Char()
     monthly_token_limit = fields.Integer(default=0, help="0 = unlimited")

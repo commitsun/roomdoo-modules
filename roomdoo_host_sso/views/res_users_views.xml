@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_users_form" model="ir.ui.view">
+        <field name="name">res.users.form.host.sso</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <field name="host_sso_user" invisible="1" />
+                <div
+          class="alert alert-info mb-0"
+          role="alert"
+          attrs="{'invisible': [('host_sso_user', '=', False)]}"
+        >
+                    <span>A person of the Roomdoo team, let in from host.</span>
+                    <span>Archived when the access ends:</span>
+                    <field name="host_sso_until" class="oe_inline" />
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_users_search" model="ir.ui.view">
+        <field name="name">res.users.search.host.sso</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_search" />
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_no_share']" position="after">
+                <filter
+          name="host_sso"
+          string="Roomdoo team (host)"
+          domain="[('host_sso_user', '=', True)]"
+        />
+            </xpath>
+        </field>
+    </record>
+</odoo>

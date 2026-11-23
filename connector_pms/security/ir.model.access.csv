@@ -3,3 +3,5 @@ access_channel_backend_manager,channel backend manager,model_channel_backend,con
 access_channel_backend_type_manager,channel backend type manager,model_channel_backend_type,connector.group_connector_manager,1,1,1,1
 access_channel_backend_method_manager,channel backend method manager,model_channel_backend_method,connector.group_connector_manager,1,1,1,1
 access_channel_backend_log_manager,channel backend log manager,model_channel_backend_log,connector.group_connector_manager,1,1,1,1
+access_channel_connect_wizard_user,channel connect wizard user,model_channel_connect_wizard,base.group_user,1,1,1,1
+access_channel_connect_wizard_candidate_user,channel connect wizard candidate user,model_channel_connect_wizard_candidate,base.group_user,1,1,1,1

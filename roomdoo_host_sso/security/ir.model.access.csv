@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_roomdoo_host_sso_profile_system,roomdoo.host.sso.profile system,model_roomdoo_host_sso_profile,base.group_system,1,1,1,1
+access_roomdoo_host_sso_token_system,roomdoo.host.sso.token system,model_roomdoo_host_sso_token,base.group_system,1,0,0,1

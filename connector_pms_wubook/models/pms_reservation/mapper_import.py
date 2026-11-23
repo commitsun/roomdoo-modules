@@ -92,6 +92,20 @@ class ChannelWubookPmsReservationMapperImport(Component):
         ("lines", "reservation_line_ids", "channel.wubook.pms.reservation.line"),
     ]
 
+    @mapping
+    def external_reference(self, record):
+        # A channel that sends a locator of its own besides the reservation
+        # code looks for it on the invoice, which prints the external
+        # reference. Without one, pms computes it from the reservation code.
+        # Not only on create: a modification of the booking creates new
+        # reservations in the existing folio. The folio child mapper drops it
+        # for the reservations that already exist, so their reference is never
+        # overwritten.
+        locator = record.get("ota_locator")
+        code = record.get("ota_reservation_code")
+        if locator and locator != code:
+            return {"external_reference": f"{code} / {locator}" if code else locator}
+
     @only_create
     @mapping
     def blocked(self, record):

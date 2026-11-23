@@ -92,8 +92,10 @@ class PmsReservation(models.Model):
 
     def _should_have_lock_codes(self):
         """True when the reservation is confirmed and either already has
-        live codes (system is committed) or is within
-        ``_GENERATION_HORIZON`` of checkin."""
+        live codes (system is committed), is within
+        ``_GENERATION_HORIZON`` of checkin, or its checkin time has passed
+        while the stay is still ongoing and no code was ever issued (e.g. a
+        same-day booking made after the property's checkin hour)."""
         self.ensure_one()
         if self.state in ("draft", "cancel", "done"):
             return False
@@ -114,9 +116,17 @@ class PmsReservation(models.Model):
             ):
                 return True
             now = fields.Datetime.now()
+            if not self.checkin_datetime:
+                return False
+            if now < self.checkin_datetime:
+                return self.checkin_datetime <= now + _GENERATION_HORIZON
+            # Checkin time already passed. Only issue codes if none was ever
+            # created: revoked or failed codes of an ongoing stay must not be
+            # re-issued by the hourly cron.
             return bool(
-                self.checkin_datetime
-                and now < self.checkin_datetime <= now + _GENERATION_HORIZON
+                self.checkout_datetime
+                and now < self.checkout_datetime
+                and not self.with_context(active_test=False).lock_code_ids
             )
         return False
 
@@ -131,11 +141,18 @@ class PmsReservation(models.Model):
         enqueue time. Updating them here would write vendor-bound state
         before the vendor confirmed.
 
+        Codes never start in the past: a window that already began (late
+        booking, room change mid-stay) is created or moved from now, and a
+        window that already ended is skipped. When both the live code and
+        its target window already started, the code keeps its start, so the
+        clamped start does not trigger a modify on every sync.
+
         Operates on ``lock.code`` via sudo: ACL restricts mutations to the
         smartlock admin group, but reservation flows must be able to create
         and update codes regardless of the operator's group."""
         self.ensure_one()
         LockCode = self.env["lock.code"].sudo()
+        now = fields.Datetime.now()
         target = {
             room.id: (room, date_from, date_to)
             for room, date_from, date_to in self._build_lock_code_windows()
@@ -154,19 +171,23 @@ class PmsReservation(models.Model):
                     code.cancelled = True
                 continue
             _, new_from, new_to = target[room_id]
+            if new_from <= now:
+                # The window already started: keep the code's own start if
+                # it started too, otherwise start it now, never in the past.
+                new_from = code.date_from if code.date_from <= now else now
             if code.date_from == new_from and code.date_to == new_to:
                 continue
             if code.vendor_grant_ref:
                 code._enqueue_sync("_sync_modify", date_from=new_from, date_to=new_to)
         for room_id, (room, date_from, date_to) in target.items():
-            if room_id in live_by_room:
+            if room_id in live_by_room or date_to <= now:
                 continue
             code = LockCode.create(
                 {
                     "reservation_id": self.id,
                     "room_id": room_id,
                     "vendor_id": room.lock_vendor_id.id,
-                    "date_from": date_from,
+                    "date_from": max(date_from, now),
                     "date_to": date_to,
                 }
             )

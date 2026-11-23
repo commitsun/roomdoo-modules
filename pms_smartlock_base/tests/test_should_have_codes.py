@@ -118,3 +118,28 @@ class TestShouldHaveLockCodes(CommonSmartlock):
         reservation = self._create_reservation()
         self._plant_live_code(reservation, failed=True)
         self.assertFalse(reservation._should_have_lock_codes())
+
+    def test_checkin_passed_without_codes_returns_true(self):
+        """A booking created after its checkin time (e.g. a same-day
+        booking made after the property's checkin hour) never had a
+        code. While the stay is ongoing it must still get one."""
+        reservation = self._create_reservation()
+        frozen_now = reservation.checkin_datetime + timedelta(hours=2)
+        with patch.object(fields.Datetime, "now", return_value=frozen_now):
+            self.assertTrue(reservation._should_have_lock_codes())
+
+    def test_checkin_passed_with_cancelled_code_returns_false(self):
+        """Once a code was issued and later revoked or failed, the
+        hourly cron must not re-issue it during the stay."""
+        reservation = self._create_reservation()
+        self._plant_live_code(reservation, cancelled=True)
+        frozen_now = reservation.checkin_datetime + timedelta(hours=2)
+        with patch.object(fields.Datetime, "now", return_value=frozen_now):
+            self.assertFalse(reservation._should_have_lock_codes())
+
+    def test_checkout_passed_without_codes_returns_false(self):
+        """After checkout time there is no stay left to open doors for."""
+        reservation = self._create_reservation()
+        frozen_now = reservation.checkout_datetime + timedelta(hours=1)
+        with patch.object(fields.Datetime, "now", return_value=frozen_now):
+            self.assertFalse(reservation._should_have_lock_codes())

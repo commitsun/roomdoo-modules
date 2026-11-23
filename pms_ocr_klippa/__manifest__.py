@@ -3,7 +3,7 @@
 
 {
     "name": "OCR Klippa",
-    "version": "16.0.0.1.0",
+    "version": "16.0.0.2.0",
     "author": "Commit [Sun], Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "application": True,
@@ -14,7 +14,7 @@
         "pms_partner_type_residence",
         "pms_partner_identification",
     ],
-    "external_dependencies": {"python": ["thefuzz", "geopy"]},
+    "external_dependencies": {"python": ["thefuzz"]},
     "data": [
         "data/pms_ocr_klippa_data.xml",
         "views/res_partner_id_category_views.xml",

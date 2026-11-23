@@ -131,6 +131,7 @@ class PmsDashboardServices(Component):
                 SELECT COUNT(1) num_total_rooms
                 FROM pms_room
                 WHERE pms_property_id = %s
+                AND active
             ) tr,
             (
                 SELECT COUNT(1) num
@@ -211,6 +212,7 @@ class PmsDashboardServices(Component):
                 LEFT OUTER JOIN (SELECT COUNT(1) num_total_rooms
                                  FROM pms_room
                                  WHERE pms_property_id = %s
+                                 AND active
                 ) total_rooms ON true
                 GROUP BY d.date, num_occupied_rooms, num_out_of_service_rooms, num_total_rooms
                 ORDER BY d.date

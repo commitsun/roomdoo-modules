@@ -118,3 +118,40 @@ class TestRoomTypeDailySummary(TestPms):
         summary = self._summary()
         self.assertEqual(summary["rooms_sold"], 0)
         self.assertAlmostEqual(summary["total_revenue"], 0.0)
+
+    def _set_revenue_with_taxes(self, value):
+        self.env["ir.config_parameter"].sudo().set_param(
+            "spreadsheet_dasbhoard_pms.revenue_with_taxes", value
+        )
+
+    def test_revenue_with_taxes_keeps_price_included_tax(self):
+        """An instance can ask for the revenue with the taxes included in
+        the price, as the dashboards showed it before they were untaxed."""
+        self._set_revenue_with_taxes(True)
+        self._create_reservation(self.rooms[0])
+        summary = self._summary()
+        self.assertAlmostEqual(summary["total_revenue"], 110.0)
+        self.assertAlmostEqual(summary["adr"], 110.0)
+
+    def test_revenue_with_taxes_counts_only_sold_rooms(self):
+        self._set_revenue_with_taxes(True)
+        self._create_reservation(self.rooms[0])
+        self._create_reservation(self.rooms[1], "out")
+        self._create_reservation(self.rooms[2], "staff")
+        summary = self._summary()
+        self.assertEqual(summary["rooms_sold"], 1)
+        self.assertAlmostEqual(summary["adr"], 110.0)
+
+    def test_revenue_with_taxes_applies_line_discount(self):
+        self._set_revenue_with_taxes(True)
+        reservation = self._create_reservation(self.rooms[0])
+        reservation.reservation_line_ids.discount = 50
+        self.assertAlmostEqual(self._summary()["total_revenue"], 55.0)
+
+    def test_revenue_without_taxes_once_the_parameter_is_removed(self):
+        """Removing the parameter, as unticking a setting does, goes back
+        to the untaxed revenue without updating the module."""
+        self._set_revenue_with_taxes(True)
+        self._set_revenue_with_taxes(False)
+        self._create_reservation(self.rooms[0])
+        self.assertAlmostEqual(self._summary()["total_revenue"], 100.0)

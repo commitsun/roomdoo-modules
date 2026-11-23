@@ -1,6 +1,8 @@
 import re
 from datetime import date, datetime, timedelta
 
+import werkzeug.exceptions
+
 from odoo import _
 from odoo.exceptions import MissingError, UserError, ValidationError
 from odoo.osv import expression
@@ -419,7 +421,23 @@ class PmsPartnerService(Component):
             )
 
         if partner:
-            partner.write(self.mapping_partner_values(partner_info))
+            values = self.mapping_partner_values(partner_info)
+            self._check_user_partner_email_change(partner, values)
+            partner.write(values)
+
+    def _check_user_partner_email_change(self, partner, values):
+        # The email of a user's partner is the key of that user's password reset:
+        # only the user itself, or someone allowed to manage users, may set a new one.
+        new_email = values.get("email")
+        if not new_email or new_email == partner.email:
+            return
+        users = partner.with_context(active_test=False).user_ids
+        if (
+            users
+            and self.env.uid not in users.ids
+            and not self.env.user.has_group("base.group_erp_manager")
+        ):
+            raise werkzeug.exceptions.Forbidden()
 
     @restapi.method(
         [

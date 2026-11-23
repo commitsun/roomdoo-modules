@@ -162,6 +162,70 @@ class TestSyncReconcile(CommonSmartlock):
             [c[1] for c in self._enqueue_for(live_after)], ["_sync_create"]
         )
 
+    # Windows that already started (late booking, change mid-stay): codes
+    # never reach the vendor with a start in the past, and the clamped
+    # start does not cause a modify on every sync.
+
+    def _freeze(self, reservation, hours_after_checkin):
+        frozen_now = reservation.checkin_datetime + timedelta(hours=hours_after_checkin)
+        patcher = patch.object(fields.Datetime, "now", return_value=frozen_now)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return frozen_now
+
+    def test_create_starts_now_when_window_started(self):
+        reservation = self._create_reservation()
+        frozen_now = self._freeze(reservation, 2)
+        reservation._sync_lock_codes()
+        code = reservation.lock_code_ids
+        self.assertEqual(len(code), 1)
+        self.assertEqual(code.date_from, frozen_now)
+        self.assertEqual(code.date_to, reservation.checkout_datetime)
+        self.assertEqual(self._enqueue_for(code), [(code.id, "_sync_create", {})])
+
+    def test_create_skipped_when_window_ended(self):
+        reservation = self._create_reservation()
+        self._freeze(reservation, 24 * 4)  # past the 3-night checkout
+        reservation._sync_lock_codes()
+        self.assertFalse(reservation.lock_code_ids)
+        self.assertFalse(self._enqueue_calls)
+
+    def test_modify_skipped_when_both_starts_passed(self):
+        """A code created late starts after ``checkin_datetime``; the
+        next sync must not try to move its start back to checkin."""
+        reservation = self._create_reservation()
+        self._plant_live_code(
+            reservation,
+            date_from=reservation.checkin_datetime + timedelta(hours=1),
+        )
+        self._freeze(reservation, 3)
+        reservation._sync_lock_codes()
+        self.assertFalse(self._enqueue_calls)
+
+    def test_modify_starts_now_when_window_moved_into_the_past(self):
+        """A scheduled code whose window now starts in the past is moved
+        to start now, not at the past checkin time."""
+        reservation = self._create_reservation()
+        live = self._plant_live_code(
+            reservation,
+            date_from=reservation.checkin_datetime + timedelta(hours=5),
+        )
+        frozen_now = self._freeze(reservation, 3)
+        reservation._sync_lock_codes()
+        self.assertEqual(
+            self._enqueue_for(live),
+            [
+                (
+                    live.id,
+                    "_sync_modify",
+                    {
+                        "date_from": frozen_now,
+                        "date_to": reservation.checkout_datetime,
+                    },
+                )
+            ],
+        )
+
 
 class TestBuildLockCodeWindows(CommonSmartlock):
     """``_build_lock_code_windows`` groups the reservation's lines into

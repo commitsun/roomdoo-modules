@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- For the technical user Roomdoo operates the instance with: it may
+         switch feature flags on behalf of host. -->
+    <record id="group_host_link" model="res.groups">
+        <field name="name">Roomdoo host link</field>
+        <field name="category_id" ref="base.module_category_hidden" />
+    </record>
+</odoo>

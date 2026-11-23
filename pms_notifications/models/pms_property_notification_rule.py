@@ -201,6 +201,15 @@ class PmsPropertyNotificationRule(models.Model):
         ),
     )
 
+    scheduled_run_minute = fields.Integer(
+        string="Scheduled Local Minute",
+        default=0,
+        help=(
+            "Used only in 'Date + Local Hour' mode. "
+            "Minute (0-59) of the Scheduled Local Hour at which the window starts."
+        ),
+    )
+
     scheduled_domain = fields.Char(
         string="Scheduled Domain",
         default="[]",
@@ -341,6 +350,7 @@ class PmsPropertyNotificationRule(models.Model):
         "scheduled_domain",
         "scheduled_timing_mode",
         "scheduled_run_hour",
+        "scheduled_run_minute",
         "offset_hours",
     )
     def _check_scheduled_rule_requirements(self):
@@ -361,6 +371,13 @@ class PmsPropertyNotificationRule(models.Model):
             ):
                 raise ValidationError(
                     _("Scheduled Local Hour must be between 0 and 23 " "(rule '%s').")
+                    % rule.name
+                )
+            if rule.scheduled_timing_mode == "date_local_hour" and not (
+                0 <= int(rule.scheduled_run_minute or 0) <= 59
+            ):
+                raise ValidationError(
+                    _("Scheduled Local Minute must be between 0 and 59 (rule '%s').")
                     % rule.name
                 )
             if (
@@ -654,7 +671,9 @@ class PmsPropertyNotificationRule(models.Model):
     def _scheduled_is_inside_local_window(self, local_now):
         self.ensure_one()
         window_minutes = max(1, int(self.time_window_minutes or 60))
-        start_minutes = int(self.scheduled_run_hour or 0) * 60
+        start_minutes = int(self.scheduled_run_hour or 0) * 60 + int(
+            self.scheduled_run_minute or 0
+        )
         now_minutes = local_now.hour * 60 + local_now.minute
 
         if window_minutes >= 24 * 60:

@@ -31,5 +31,11 @@ class BookaiPropertyConfig(BookaiBaseModel):
 class BookaiConfig(BookaiBaseModel):
     bookaiEnabled: bool = False
     bookaiBaseUrl: str = ""
+    # Short-lived token of the user, as /bookai/token returns it
     bookaiToken: str = ""
     properties: list[BookaiPropertyConfig] = Field(default_factory=list)
+
+
+class BookaiUserToken(BookaiBaseModel):
+    token: str
+    expires_in: int

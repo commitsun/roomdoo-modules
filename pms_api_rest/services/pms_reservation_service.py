@@ -5,6 +5,7 @@ import tempfile
 from datetime import datetime, timedelta
 
 import pytz
+import werkzeug.exceptions
 
 from odoo import SUPERUSER_ID, _, fields
 from odoo.exceptions import AccessError, MissingError, ValidationError
@@ -207,8 +208,21 @@ class PmsReservationService(Component):
                 cancelledReason=reservation.cancelled_reason
                 if reservation.cancelled_reason
                 else None,
+                cancelDate=self._get_cancel_date_local(reservation),
             )
         return res
+
+    def _get_cancel_date_local(self, reservation):
+        # cancel_datetime is not cleared when a cancelled reservation is
+        # confirmed again, so only trust it while the reservation is cancelled
+        if reservation.state != "cancel" or not reservation.cancel_datetime:
+            return None
+        property_tz = pytz.timezone(reservation.pms_property_id.tz or "UTC")
+        return (
+            pytz.UTC.localize(reservation.cancel_datetime)
+            .astimezone(property_tz)
+            .isoformat()
+        )
 
     def _create_vals_from_params(
         self, reservation_vals, reservation_data, reservation_id
@@ -939,6 +953,28 @@ class PmsReservationService(Component):
         if pms_search_param.lastUpdateFrom:
             last_update = fields.Datetime.from_string(pms_search_param.lastUpdateFrom)
             domain.append(("write_date", ">=", last_update))
+        if pms_search_param.cancelDateFrom or pms_search_param.cancelDateTo:
+            domain.append(("state", "=", "cancel"))
+        if pms_search_param.cancelDateFrom:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    ">=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateFrom, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
+        if pms_search_param.cancelDateTo:
+            domain.append(
+                (
+                    "cancel_datetime",
+                    "<=",
+                    datetime.strptime(
+                        pms_search_param.cancelDateTo, "%Y-%m-%d %H:%M:%S"
+                    ),
+                )
+            )
 
         reservations = self.env["pms.reservation"].sudo().search(domain)
         pms_api_check_access(user=self.env.user, records=reservations)
@@ -1015,6 +1051,10 @@ class PmsReservationService(Component):
                         else None,
                         priceOnlyServices=round(reservation.price_services, 2),
                         priceOnlyRoom=round(reservation.price_total, 2),
+                        cancelledReason=reservation.cancelled_reason
+                        if reservation.cancelled_reason
+                        else None,
+                        cancelDate=self._get_cancel_date_local(reservation),
                     )
                 )
         return res_reservations
@@ -1191,9 +1231,33 @@ class PmsReservationService(Component):
             return state_id
         return False
 
+    def _check_checkin_partner_user_contact(self, pms_checkin_partner_info, partner_id):
+        # The check-in writes its email onto the linked contact, and the email of a
+        # user's contact is the key of that user's password reset. Only the user
+        # itself, or someone allowed to manage users, may link a guest to an
+        # internal user's contact or change the email of any user's contact.
+        new_partner_id = pms_checkin_partner_info.partnerId
+        target = (
+            self.env["res.partner"].sudo().browse(new_partner_id or partner_id).exists()
+        )
+        users = target.with_context(active_test=False).user_ids
+        if (
+            not users
+            or self.env.uid in users.ids
+            or self.env.user.has_group("base.group_erp_manager")
+        ):
+            return
+        linking = new_partner_id and new_partner_id != partner_id
+        if linking and users.filtered(lambda user: not user.share):
+            raise werkzeug.exceptions.Forbidden()
+        new_email = pms_checkin_partner_info.email
+        if new_email and new_email != target.email:
+            raise werkzeug.exceptions.Forbidden()
+
     def mapping_checkin_partner_values(
         self, pms_checkin_partner_info, partner_id=False
     ):
+        self._check_checkin_partner_user_contact(pms_checkin_partner_info, partner_id)
         vals = {
             "firstname": pms_checkin_partner_info.firstname,
             "lastname": pms_checkin_partner_info.lastname,
@@ -2226,6 +2290,12 @@ class PmsReservationService(Component):
         checkin_partner_record = (
             self.env["pms.checkin.partner"].sudo().browse(checkin_partner_id)
         )
+        # Only the guests of the reservation the token opens can be changed.
+        if (
+            not checkin_partner_record.exists()
+            or checkin_partner_record.reservation_id != reservation_record
+        ):
+            raise MissingError(_("Reservation not found"))
         if pms_checkin_partner_info.partnerId:
             # search partner by api_rest_id
             partner_record = (
@@ -2233,6 +2303,11 @@ class PmsReservationService(Component):
                 .sudo()
                 .browse(pms_checkin_partner_info.partnerId)
             )
+            # A public request never links a guest to an internal user's contact.
+            if partner_record.with_context(active_test=False).user_ids.filtered(
+                lambda user: not user.share
+            ):
+                raise werkzeug.exceptions.Forbidden()
 
         # partner
         if partner_record:
@@ -2305,6 +2380,14 @@ class PmsReservationService(Component):
             checkin_partner_record.street = pms_checkin_partner_info.residenceStreet
         # contact
         if pms_checkin_partner_info.email:
+            # The email of a user's contact is the key of that user's password
+            # reset: a public request cannot set a new one.
+            linked = checkin_partner_record.partner_id
+            if (
+                pms_checkin_partner_info.email != linked.email
+                and linked.with_context(active_test=False).user_ids
+            ):
+                raise werkzeug.exceptions.Forbidden()
             checkin_partner_record.email = pms_checkin_partner_info.email
         if pms_checkin_partner_info.mobile:
             checkin_partner_record.mobile = pms_checkin_partner_info.mobile

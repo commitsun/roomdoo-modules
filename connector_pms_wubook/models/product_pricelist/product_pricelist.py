@@ -9,7 +9,7 @@ from odoo.exceptions import ValidationError
 
 class ProductPricelist(models.Model):
     _name = "product.pricelist"
-    _inherit = ["product.pricelist", "channel.wubook.connect.mixin"]
+    _inherit = "product.pricelist"
 
     channel_wubook_bind_ids = fields.One2many(
         comodel_name="channel.wubook.product.pricelist",
@@ -146,9 +146,7 @@ class ProductPricelist(models.Model):
         dates = [d for d in dates if d]
         return max(dates) if dates else False
 
-    def _compute_flattened_items(
-        self, pms_property, room_types, date_from, date_to
-    ):
+    def _compute_flattened_items(self, pms_property, room_types, date_from, date_to):
         """Compute synthetic 'daily standard' items for this pricelist by
         evaluating the full pricelist chain (parents included) for each
         (room_type, date) pair in the given window.

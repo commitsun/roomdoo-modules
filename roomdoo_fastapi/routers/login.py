@@ -88,5 +88,5 @@ class PmsFastapiLoginEndpoint(models.AbstractModel):
 
     def _refresh_token(self, token):
         user = self.env["res.users"].get_user_by_refresh_token(token)
-        user.invalidate_refresh_token(token)
+        user.retire_refresh_token(token)
         return self._get_login_response_with_cookies(user)

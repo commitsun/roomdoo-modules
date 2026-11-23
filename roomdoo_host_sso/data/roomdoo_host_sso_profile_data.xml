@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- One profile for the whole team to start with; host sends its code. -->
+    <record id="profile_full" model="roomdoo.host.sso.profile">
+        <field name="code">full</field>
+        <field name="name">Full access</field>
+        <field
+      name="group_ids"
+      eval="[(6, 0, [
+                ref('base.group_user'),
+                ref('base.group_system'),
+                ref('base.group_multi_company'),
+                ref('pms.group_pms_manager'),
+                ref('account.group_account_manager'),
+            ])]"
+    />
+    </record>
+</odoo>

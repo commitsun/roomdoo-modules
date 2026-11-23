@@ -1,7 +1,10 @@
-from odoo import fields, models
-from odoo.exceptions import AccessDenied
+from datetime import timedelta
+
+from odoo import api, fields, models
 
 from odoo.addons.base.models.res_users import INDEX_SIZE, KEY_CRYPT_CONTEXT
+
+ONE_TIME_KEY_MAX_AGE = 2 * 60
 
 
 class ResUsers(models.Model):
@@ -54,21 +57,21 @@ class ResUsers(models.Model):
         else:
             return []
 
-    def _check_credentials(self, password, env):
-        try:
-            res = super()._check_credentials(password, env)
-            return res
-        except AccessDenied as e:
-            if (
-                not self.env["one.time.res.users.apikeys"]._check_credentials(
-                    scope="ots", key=password
-                )
-                == self.env.uid
-            ):
-                raise AccessDenied() from e
-
 
 class OneTimeAPIKeys(models.Model):
+    """Keys that open a session for their owner without a password.
+
+    A model of their own, as :class:`auth_totp.device` is, so that a key meant
+    to walk past the second factor on one route is never a credential anywhere
+    else. Only the controller that hands these links out accepts them, and it
+    asks for them by scope and by owner.
+
+    They are spent on arrival, but until then each one stands in for both
+    factors, so the shorter they are alive the less there is to lose. The link
+    they travel in is asked for at the moment it is followed, so seconds are
+    enough and this is already generous.
+    """
+
     _name = "one.time.res.users.apikeys"
     _inherit = "res.users.apikeys"
 
@@ -80,10 +83,23 @@ class OneTimeAPIKeys(models.Model):
             SELECT k.id as id, user_id, key
             FROM {self._table} k INNER JOIN res_users u ON (u.id = user_id)
             WHERE u.active and index = %s AND (scope IS NULL OR scope = %s)
+            AND k.create_date > (NOW() AT TIME ZONE 'UTC'
+                                 - INTERVAL '%s SECONDS')
         """,
-            [index, scope],
+            [index, scope, ONE_TIME_KEY_MAX_AGE],
         )
         for id, user_id, current_key in self.env.cr.fetchall():
             if KEY_CRYPT_CONTEXT.verify(key, current_key):
                 self.sudo().browse(id).unlink()
                 return user_id
+
+    def _check_credentials_for_uid(self, *, scope, key, uid):
+        """Return True when the key is this user's, as `auth_totp.device` does."""
+        assert uid, "uid is required"
+        return self._check_credentials(scope=scope, key=key) == uid
+
+    @api.autovacuum
+    def _gc_spent_keys(self):
+        """What the check above already refuses, dropped so it stops piling up."""
+        expiry = fields.Datetime.now() - timedelta(seconds=ONE_TIME_KEY_MAX_AGE)
+        self.sudo().search([("create_date", "<", expiry)]).unlink()

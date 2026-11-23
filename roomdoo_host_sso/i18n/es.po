@@ -1,0 +1,226 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* roomdoo_host_sso
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-09 15:44+0000\n"
+"PO-Revision-Date: 2026-11-09 15:44+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#. module: roomdoo_host_sso
+#: model_terms:ir.ui.view,arch_db:roomdoo_host_sso.view_users_form
+msgid ""
+"<span>A person of the Roomdoo team, let in from host.</span>\n"
+"                    <span>Archived when the access ends:</span>"
+msgstr "<span>Una persona del equipo de Roomdoo que entra desde host.</span>\n                    <span>Se archiva al acabar el acceso:</span>"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,help:roomdoo_host_sso.field_res_users__host_sso_user
+msgid ""
+"A person of the Roomdoo team, let in from host. The user is archived when "
+"the access ends."
+msgstr "Una persona del equipo de Roomdoo que entra desde host. El usuario se archiva al acabar el acceso."
+
+#. module: roomdoo_host_sso
+#: model:ir.model.constraint,message:roomdoo_host_sso.constraint_roomdoo_host_sso_token_jti_unique
+msgid "A token is only spent once."
+msgstr "Un token solo se usa una vez."
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__code
+msgid "Code"
+msgstr "Código"
+
+#. module: roomdoo_host_sso
+#: model:ir.model,name:roomdoo_host_sso.model_res_partner
+msgid "Contact"
+msgstr "Contacto"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__create_uid
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_res_users__host_sso_user
+msgid "Created by host"
+msgstr "Creado por host"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__create_date
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__display_name
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: roomdoo_host_sso
+#: model:ir.model,name:roomdoo_host_sso.model_roomdoo_host_sso
+msgid "Entry from Roomdoo host"
+msgstr "Entrada desde host de Roomdoo"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__expires_at
+msgid "Expires At"
+msgstr "Caduca el"
+
+#. module: roomdoo_host_sso
+#: model:roomdoo.host.sso.profile,name:roomdoo_host_sso.profile_full
+msgid "Full access"
+msgstr "Acceso completo"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__group_ids
+msgid "Groups"
+msgstr "Grupos"
+
+#. module: roomdoo_host_sso
+#: model:ir.actions.act_window,name:roomdoo_host_sso.roomdoo_host_sso_profile_action
+#: model:ir.ui.menu,name:roomdoo_host_sso.roomdoo_host_sso_profile_menu
+msgid "Host access profiles"
+msgstr "Perfiles de acceso desde host"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_res_users__host_sso_until
+msgid "Host access until"
+msgstr "Acceso desde host hasta"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__id
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__id
+msgid "ID"
+msgstr "ID"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile____last_update
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__write_uid
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__write_date
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_profile__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.constraint,message:roomdoo_host_sso.constraint_roomdoo_host_sso_profile_code_unique
+msgid "Profile codes are unique."
+msgstr "Los códigos de perfil son únicos."
+
+#. module: roomdoo_host_sso
+#: model:ir.model,name:roomdoo_host_sso.model_roomdoo_host_sso_profile
+msgid "Profile of the users host creates"
+msgstr "Perfil de los usuarios que crea host"
+
+#. module: roomdoo_host_sso
+#: model_terms:ir.ui.view,arch_db:roomdoo_host_sso.view_users_search
+msgid "Roomdoo team (host)"
+msgstr "Equipo de Roomdoo (host)"
+
+#. module: roomdoo_host_sso
+#: model:ir.actions.server,name:roomdoo_host_sso.ir_cron_archive_host_access_ir_actions_server
+#: model:ir.cron,cron_name:roomdoo_host_sso.ir_cron_archive_host_access
+msgid "Roomdoo: archive the users of host whose access ended"
+msgstr "Roomdoo: archivar los usuarios de host cuyo acceso ha terminado"
+
+#. module: roomdoo_host_sso
+#: model:ir.model,name:roomdoo_host_sso.model_roomdoo_host_sso_token
+msgid "Spent entry token from host"
+msgstr "Token de entrada desde host ya usado"
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/res_users.py:0
+#, python-format
+msgid "The entry link asks for an unknown profile."
+msgstr "El enlace de entrada pide un perfil desconocido."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/res_users.py:0
+#, python-format
+msgid "The entry link does not say who enters."
+msgstr "El enlace de entrada no dice quién entra."
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,help:roomdoo_host_sso.field_roomdoo_host_sso_profile__code
+msgid "The profile host sends in its tokens."
+msgstr "El perfil que host envía en sus tokens."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/roomdoo_host_sso_token.py:0
+#, python-format
+msgid "This entry link has already been used."
+msgstr "Este enlace de entrada ya se ha usado."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/roomdoo_host_sso.py:0
+#, python-format
+msgid "This entry link is for another door."
+msgstr "Este enlace de entrada es para otra puerta."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/roomdoo_host_sso.py:0
+#, python-format
+msgid "This entry link is not valid."
+msgstr "Este enlace de entrada no es válido."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/res_users.py:0
+#, python-format
+msgid "This instance already has a user %(login)s of its own."
+msgstr "Esta instancia ya tiene un usuario %(login)s propio."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/controllers/main.py:0
+#, python-format
+msgid "This instance has no app address."
+msgstr "Esta instancia no tiene dirección de la app."
+
+#. module: roomdoo_host_sso
+#. odoo-python
+#: code:addons/roomdoo_host_sso/models/roomdoo_host_sso.py:0
+#, python-format
+msgid "This instance is not linked to host."
+msgstr "Esta instancia no está enlazada con host."
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_roomdoo_host_sso_token__jti
+msgid "Token ID"
+msgstr "ID del token"
+
+#. module: roomdoo_host_sso
+#: model:ir.model,name:roomdoo_host_sso.model_res_users
+msgid "User"
+msgstr "Usuario"
