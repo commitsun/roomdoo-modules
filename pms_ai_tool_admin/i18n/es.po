@@ -132,3 +132,53 @@ msgstr "Los folios listados son los de mayor importe; las cifras por hotel los i
 #, python-format
 msgid "%(folios)s folios with an amount to invoice (%(amount)s without taxes) have their last checkout in the period but reservations not checked out in the PMS (for example no-shows or delayed departures), so they are not counted until the hotel closes them."
 msgstr "%(folios)s folios con importe a facturar (%(amount)s sin impuestos) tienen su última salida en el periodo, pero reservas sin salida hecha en el PMS (por ejemplo, no-shows o salidas retrasadas), así que no se cuentan hasta que el hotel las cierre."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Give the number or the id of the invoice."
+msgstr "Indique el número o el id de la factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "No invoice or credit note found for that number."
+msgstr "No se ha encontrado ninguna factura ni rectificativa con ese número."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+#, python-format
+msgid "%(number)s: %(lines)s lines, total %(total)s, state %(state)s."
+msgstr "%(number)s: %(lines)s líneas, total %(total)s, estado %(state)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Lines: the product lines of the document, with the untaxed amount, the tax and the total of each one. Section and note lines are not listed."
+msgstr "Líneas: las líneas de producto del documento, con la base imponible, el impuesto y el total de cada una. Las líneas de sección y de nota no se listan."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "reverses: the invoice a credit note was created from. reversed_by: the credit notes created from an invoice."
+msgstr "reverses: la factura de la que se creó una rectificativa. reversed_by: las rectificativas creadas a partir de una factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "applied_payments: the reconciliations of the document, dated by the accounting date of the counterpart entry. kind says what was applied: a payment, a bank statement line, a down payment invoice, a credit note or another entry."
+msgstr "applied_payments: las conciliaciones del documento, fechadas con la fecha contable del apunte contrapartida. kind indica qué se aplicó: un pago, una línea de extracto bancario, una factura de anticipo, una rectificativa u otro asiento."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Sensitive: accounting data."
+msgstr "Sensible: datos contables."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+#, python-format
+msgid "Several documents share that number: only %s are shown."
+msgstr "Varios documentos comparten ese número: solo se muestran %s."

@@ -27,4 +27,13 @@
         <field name="function_name">_ai_pms_cash_session_differences</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_invoice_lines" model="ai.tool">
+        <field name="name">pms_invoice_lines</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Lines of an invoice or credit note given its number or id: description, untaxed amount, tax and total of each line; the invoice a credit note reverses and the credit notes of an invoice; and the payments, bank statement lines, down payments or credit notes applied to it with their dates. Read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_invoice_lines</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

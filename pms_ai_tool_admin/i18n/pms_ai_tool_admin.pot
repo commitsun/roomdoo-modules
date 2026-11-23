@@ -131,3 +131,53 @@ msgstr ""
 #, python-format
 msgid "%(folios)s folios with an amount to invoice (%(amount)s without taxes) have their last checkout in the period but reservations not checked out in the PMS (for example no-shows or delayed departures), so they are not counted until the hotel closes them."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Give the number or the id of the invoice."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "No invoice or credit note found for that number."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+#, python-format
+msgid "%(number)s: %(lines)s lines, total %(total)s, state %(state)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Lines: the product lines of the document, with the untaxed amount, the tax and the total of each one. Section and note lines are not listed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "reverses: the invoice a credit note was created from. reversed_by: the credit notes created from an invoice."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "applied_payments: the reconciliations of the document, dated by the accounting date of the counterpart entry. kind says what was applied: a payment, a bank statement line, a down payment invoice, a credit note or another entry."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+msgid "Sensitive: accounting data."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_invoice_lines.py:0
+#, python-format
+msgid "Several documents share that number: only %s are shown."
+msgstr ""
