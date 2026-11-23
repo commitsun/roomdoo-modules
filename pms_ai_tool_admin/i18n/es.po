@@ -182,3 +182,54 @@ msgstr "Sensible: datos contables."
 #, python-format
 msgid "Several documents share that number: only %s are shown."
 msgstr "Varios documentos comparten ese número: solo se muestran %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "%(bills)s vendor bills with %(pending)s pending payment on %(cutoff)s."
+msgstr "%(bills)s facturas de proveedor con %(pending)s pendiente de pago a %(cutoff)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "Pending bill: posted vendor bill (credit notes are not counted) with an accounting date on or before the cutoff and an amount not yet settled on that date."
+msgstr "Factura pendiente: factura de proveedor contabilizada (no se cuentan las rectificativas) con fecha contable igual o anterior al corte y un importe aún no saldado en esa fecha."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "paid_at_cutoff: sum of the reconciliations of the bill whose counterpart entry (payment, bank statement line or credit note) is dated on or before the cutoff, so partial payments count by their own date. pending_at_cutoff: the bill total minus that amount, in the company currency."
+msgstr "paid_at_cutoff: suma de las conciliaciones de la factura cuyo apunte contrapartida (pago, línea de extracto bancario o rectificativa) tiene fecha igual o anterior al corte, de modo que los pagos parciales cuentan por su propia fecha. pending_at_cutoff: el total de la factura menos ese importe, en la moneda de la compañía."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "The state of the bill is the current one: a bill posted or a reconciliation undone after the cutoff is not reconstructed. Property: the property of the bill; bills without property are grouped apart."
+msgstr "El estado de la factura es el actual: no se reconstruye una factura contabilizada ni una conciliación deshecha después del corte. Alojamiento: el de la factura; las facturas sin alojamiento se agrupan aparte."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "drafts: vendor bills still in draft (pending validation) dated up to the cutoff, by company."
+msgstr "drafts: facturas de proveedor aún en borrador (pendientes de validar) con fecha hasta el corte, por compañía."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "Sensitive: accounting data of suppliers."
+msgstr "Sensible: datos contables de proveedores."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Only the oldest %s candidate bills were analysed."
+msgstr "Solo se han analizado las %s facturas candidatas más antiguas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Only the %(shown)s suppliers with the most pending are listed."
+msgstr "Solo se listan los %(shown)s proveedores con más pendiente."

@@ -128,3 +128,91 @@ class AdminToolsMixin:
         self.assertEqual(record.guard_mode, "read")
         annotations = record._get_tool_definition()["annotations"]
         self.assertTrue(annotations["readOnlyHint"])
+
+
+class SupplierBillsMixin:
+    """Vendor bills and payments with fictitious data."""
+
+    @classmethod
+    def _setup_bills(cls):
+        Partner = cls.env["res.partner"]
+        cls.supplier_a = Partner.create({"name": "AI Supplier A", "is_company": True})
+        cls.supplier_b = Partner.create({"name": "AI Supplier B", "is_company": True})
+        cls.env.cr.execute(
+            "UPDATE account_move SET state = 'cancel' "
+            "WHERE move_type = 'in_invoice' AND state IN ('posted', 'draft')"
+        )
+        cls.env.invalidate_all()
+
+    @classmethod
+    def _bill(cls, partner, price, date, due, prop, post=True, label="AI service"):
+        move = cls.env["account.move"].create(
+            {
+                "move_type": "in_invoice",
+                "partner_id": partner.id,
+                "invoice_date": date,
+                "date": date,
+                "invoice_date_due": due,
+                "invoice_payment_term_id": False,
+                "ref": f"AI-{partner.id}-{price}",
+                "invoice_line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": label,
+                            "quantity": 1,
+                            "price_unit": price,
+                            "tax_ids": [(6, 0, [])],
+                        },
+                    )
+                ],
+            }
+        )
+        if post:
+            move.action_post()
+        cls.env.cr.execute(
+            "UPDATE account_move SET pms_property_id = %s WHERE id = %s",
+            [prop.id, move.id],
+        )
+        move.invalidate_recordset()
+        return move
+
+    @classmethod
+    def _pay_bill(cls, bill, value, date):
+        journal = cls.env["account.journal"].search(
+            [("type", "=", "bank"), ("company_id", "=", cls.env.company.id)], limit=1
+        )
+        payment = cls.env["account.payment"].create(
+            {
+                "payment_type": "outbound",
+                "partner_type": "supplier",
+                "partner_id": bill.partner_id.id,
+                "amount": value,
+                "journal_id": journal.id,
+                "date": date,
+            }
+        )
+        payment.action_post()
+        (bill.line_ids + payment.move_id.line_ids).filtered(
+            lambda line: line.account_id.account_type == "liability_payable"
+        ).reconcile()
+        return payment
+
+    @classmethod
+    def _bill_fixture(cls):
+        cls._setup_bills()
+        cls.b1 = cls._bill(cls.supplier_a, 1000, "2026-09-10", "2026-10-10", cls.prop)
+        cls._pay_bill(cls.b1, 400, "2026-09-25")
+        cls._pay_bill(cls.b1, 300, "2026-11-05")
+        cls.b2 = cls._bill(cls.supplier_b, 500, "2026-09-15", "2026-09-30", cls.prop)
+        cls.b3 = cls._bill(
+            cls.supplier_a, 200, "2026-09-12", "2026-10-12", cls.other_prop
+        )
+        cls.b4 = cls._bill(cls.supplier_a, 90, "2026-10-20", "2026-11-20", cls.prop)
+        cls.b5 = cls._bill(cls.supplier_a, 300, "2026-09-12", "2026-10-12", cls.prop)
+        cls._pay_bill(cls.b5, 300, "2026-09-20")
+        cls.draft = cls._bill(
+            cls.supplier_b, 80, "2026-09-18", "2026-10-18", cls.prop, post=False
+        )
+        cls.env.invalidate_all()

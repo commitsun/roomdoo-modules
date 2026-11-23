@@ -181,3 +181,54 @@ msgstr ""
 #, python-format
 msgid "Several documents share that number: only %s are shown."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "%(bills)s vendor bills with %(pending)s pending payment on %(cutoff)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "Pending bill: posted vendor bill (credit notes are not counted) with an accounting date on or before the cutoff and an amount not yet settled on that date."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "paid_at_cutoff: sum of the reconciliations of the bill whose counterpart entry (payment, bank statement line or credit note) is dated on or before the cutoff, so partial payments count by their own date. pending_at_cutoff: the bill total minus that amount, in the company currency."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "The state of the bill is the current one: a bill posted or a reconciliation undone after the cutoff is not reconstructed. Property: the property of the bill; bills without property are grouped apart."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "drafts: vendor bills still in draft (pending validation) dated up to the cutoff, by company."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "Sensitive: accounting data of suppliers."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Only the oldest %s candidate bills were analysed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Only the %(shown)s suppliers with the most pending are listed."
+msgstr ""
