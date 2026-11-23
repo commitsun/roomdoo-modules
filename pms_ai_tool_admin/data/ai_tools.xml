@@ -45,4 +45,13 @@
         <field name="function_name">_ai_acc_supplier_bills_pending</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_supplier_invoices" model="ai.tool">
+        <field name="name">acc_supplier_invoices</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Posted vendor bills of the user's properties in a period (at most 93 days), filtered by account code prefixes (601, 62...), supplier, amount or text; the posted lines (account, label, untaxed, tax) grouped by supplier, account, month or property; and a payment analysis (real method and journal, payment dates, split payments, paid and pending, days from bill date to payment and delay against the due date, weighted average real days and share paid late) grouped by supplier, property, method, account or month. Bills reconciled directly with a bank statement line are flagged: only the journal type is known. Read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_supplier_invoices</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

@@ -232,3 +232,65 @@ msgstr ""
 #, python-format
 msgid "Only the %(shown)s suppliers with the most pending are listed."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "Account prefixes must be alphanumeric."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+#, python-format
+msgid "%(bills)s posted vendor bills from %(from)s to %(to)s, %(untaxed)s untaxed in the analysed lines."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "Bills: posted vendor bills (credit notes are not included) with an accounting date in the period, of the properties in scope; bills without property are included. When account prefixes are given, only the lines on those accounts are analysed, but the bill totals are the whole bill."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "Lines: the product lines of the bills, with untaxed amount and tax, grouped by supplier, account, month or property."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "Payments: the reconciliations of the bill, dated by the accounting date of the payment. The real method is the payment method and journal type of the payment. When the bill was reconciled directly with a bank statement line there is no payment record: only the journal type is known and the method is reported as not identified."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "real_days: days from the bill date to the payment date, weighted by the amount of each payment. late_pct: share of the paid amount settled after the due date. delay_days of a payment: its date minus the due date (negative: early). Credit notes applied to a bill are shown apart and are not payments. Account of a bill in the payment analysis: the account of its largest analysed line."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "paid and pending are as of today, not at the end of the period. Attachments (PDF) are not read."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "No account"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+#, python-format
+msgid "Only the first %s bills of the period were analysed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_invoices.py:0
+msgid "Not paid"
+msgstr ""
