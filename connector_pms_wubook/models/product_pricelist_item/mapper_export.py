@@ -70,8 +70,7 @@ class ChannelWubookProductPricelistItemMapperExport(Component):
             # to the price of the room type (wubook does not separate the price of the room
             # type from the price of the board service in this case)
             values["price"] += room_type._get_wubook_board_service_amount(
-                record.backend_id.pms_property_id,
-                pricelist_id=record.base_pricelist_id.id,
+                record.backend_id
             )
             binder = self.binder_for("channel.wubook.pms.room.type")
             external_id = binder.to_external(room_type, wrap=True)

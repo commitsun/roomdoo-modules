@@ -494,7 +494,7 @@ class ChannelWubookProductPriceBinding(models.Model):
             for base in chain:
                 products |= base.product_id
         board_service_amounts = {
-            room_type: room_type._get_wubook_board_service_amount(pms_property)
+            room_type: room_type._get_wubook_board_service_amount(self.backend_id)
             for room_type in room_types
         }
         item_days = self._get_item_days(room_types, date_from, date_to)

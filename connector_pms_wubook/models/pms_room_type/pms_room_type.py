@@ -24,29 +24,22 @@ class PmsRoomType(models.Model):
         """
         return "price_base_room_type_id" in self._fields
 
-    def _get_wubook_board_service_amount(self, pms_property, pricelist_id=False):
+    def _get_wubook_board_service_amount(self, backend):
         """Amount of the default board service in the Wubook prices.
 
         Wubook does not separate the price of the room type from the price
         of its default board service: the prices pushed to Wubook add the
-        amount of the default board service of the room type in the
-        property, if any, for every guest of its capacity.
-
-        :param pricelist_id: id of the pricelist the default board service
-            may be restricted to (see ``get_default_board_service``)
+        amount of the board service the backend applies by default to the
+        room type, if any, for every guest of its capacity.
         """
         self.ensure_one()
-        default_board_service = self.get_default_board_service(
-            pms_property_id=pms_property.id,
-            pricelist_id=pricelist_id,
-            room_type_id=self.id,
+        default_board = backend.board_service_ids.filtered(
+            lambda board: board.room_type_id == self and board.by_default
         )
-        if not default_board_service:
+        if not default_board:
             return 0.0
-        # TODO: get board service price with date context
-        # (view _get_price_unit_line method in pms_service.py)
-        return default_board_service.amount * self.get_room_type_capacity(
-            pms_property_id=pms_property.id
+        return default_board.amount * self.get_room_type_capacity(
+            pms_property_id=backend.pms_property_id.id
         )
 
     # def get_binding(self, backend):

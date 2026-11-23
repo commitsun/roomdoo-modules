@@ -141,7 +141,7 @@ class DerivedRoomTypeCase(TransactionComponentCase):
             self.env.cr.precommit.run()
 
     def _set_default_board_service(self, room_type, amount, capacity):
-        """Give the room type a default board service in the property and a
+        """Give the room type a default board service on the backend and a
         room of the given capacity, so Wubook prices add amount x capacity."""
         with trap_jobs():
             self.env["pms.room"].create(
@@ -152,32 +152,20 @@ class DerivedRoomTypeCase(TransactionComponentCase):
                     "capacity": capacity,
                 }
             )
-            breakfast = self.env["product.product"].create(
-                {"name": "Breakfast", "type": "service", "list_price": amount}
-            )
-            board_service = self.env["pms.board.service"].create(
+            board_service = self.env["product.template"].create(
                 {
                     "name": "Bed and breakfast",
-                    "default_code": "BB",
-                    "pms_property_ids": [(6, 0, self.pms_property.ids)],
-                    "board_service_line_ids": [
-                        (
-                            0,
-                            0,
-                            {
-                                "product_id": breakfast.id,
-                                "amount": amount,
-                                "adults": True,
-                            },
-                        )
-                    ],
+                    "type": "service",
+                    "is_board_service": True,
+                    "list_price": amount,
                 }
             )
-            self.env["pms.board.service.room.type"].create(
+            self.env["channel.wubook.backend.board.service"].create(
                 {
-                    "pms_board_service_id": board_service.id,
-                    "pms_room_type_id": room_type.id,
-                    "pms_property_id": self.pms_property.id,
+                    "backend_id": self.backend.id,
+                    "room_type_id": room_type.id,
+                    "board_service_id": board_service.id,
+                    "amount": amount,
                     "by_default": True,
                 }
             )
