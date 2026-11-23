@@ -26,6 +26,13 @@ class TestAccRecordEdit(AdminToolsMixin, SupplierBillsMixin, TransactionCase):
             pms_property_ids=[(6, 0, cls.prop.ids)],
             pms_property_id=cls.prop.id,
         )
+        # With account_payment_order installed, bank accounts can only be
+        # changed by the payments group, as the accountants have it.
+        payments_group = cls.env.ref(
+            "account_payment_order.group_account_payment", raise_if_not_found=False
+        )
+        if payments_group:
+            cls.editor.groups_id = [(4, payments_group.id)]
         cls.draft = cls._bill(
             cls.supplier_a, 100, "2026-10-01", "2026-10-31", cls.prop, post=False
         )
