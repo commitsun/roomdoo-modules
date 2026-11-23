@@ -48,6 +48,20 @@ class ChannelChannexOta(models.Model):
         ),
     ]
 
+    def write(self, vals):
+        if "agency_id" in vals:
+            # The agency it leaves stops getting rules on these channels, and
+            # the one it gets starts. Every property sharing the code is told.
+            # The agency left is read off the code and not off its channels:
+            # when the change comes from a channel, the channel already holds
+            # the new one by the time it gets here.
+            for ota in self:
+                ota.channel_ids._channex_stage_channel_caps(ota.agency_id)
+        result = super().write(vals)
+        if "agency_id" in vals:
+            self.channel_ids._channex_stage_channel_caps()
+        return result
+
     @api.model
     def _channex_of_code(self, code):
         """The row for a code, created if this is the first time it turns up.
