@@ -350,3 +350,30 @@ msgstr "%s noches de estancias que valen 0 (cortesías o facturadas fuera del PM
 #, python-format
 msgid "%s nights belong to reservations with no taxes: their price is taken as already without VAT."
 msgstr "%s noches pertenecen a reservas sin impuestos: su precio se toma como ya sin IVA."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_negative_pickup.py:0
+#, python-format
+msgid "%(count)s properties with negative net pickup on %(day)s: %(nights)s net nights (%(revenue)s without VAT) for stays from %(from)s to %(to)s."
+msgstr "%(count)s hoteles con pickup neto negativo el %(day)s: %(nights)s noches netas (%(revenue)s sin IVA) para estancias del %(from)s al %(to)s."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_negative_pickup.py:0
+msgid "A property is listed when its net pickup is negative (at least min_net_nights lost); negative_months are the stay months where it is negative. Nights and revenue of the cancelled ones are valued at the price before the cancellation, without VAT."
+msgstr "Un hotel aparece cuando su pickup neto es negativo (al menos min_net_nights noches perdidas); negative_months son los meses de estancia donde es negativo. Las noches e ingresos de las canceladas se valoran al precio previo a la cancelación, sin IVA."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_negative_pickup.py:0
+#, python-format
+msgid "%s nights belong to cancelled reservations with no cancel date that were changed on the booking day: they may be cancellations of that day that cannot be dated, so the cancelled figures may be understated."
+msgstr "%s noches pertenecen a reservas canceladas sin fecha de cancelación que se modificaron el día de la reserva: pueden ser cancelaciones de ese día que no se pueden fechar, por lo que las cifras de canceladas pueden quedarse cortas."
+
+#. module: pms_ai_tool_revenue
+#. odoo-python
+#: code:addons/pms_ai_tool_revenue/models/pms_negative_pickup.py:0
+#, python-format
+msgid "Net pickup of a booking day: room nights of the reservations created that day and still on the books, minus those of reservations booked earlier and cancelled that day, as in the pickup tool. Stays are the ones from the booking day to the end of the horizon; the day is taken in the time zone %s."
+msgstr "Pickup neto de un día de reserva: noches de las reservas creadas ese día y que siguen vigentes, menos las de reservas hechas antes y canceladas ese día, como en la herramienta de pickup. Las estancias son las que van del día de reserva al final del horizonte; el día se toma en la zona horaria %s."

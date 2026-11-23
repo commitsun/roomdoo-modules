@@ -45,4 +45,13 @@
         <field name="function_name">_ai_pms_partner_assign_salesperson</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_negative_pickup" model="ai.tool">
+        <field name="name">pms_negative_pickup</field>
+        <field
+      name="description"
+    >Properties with a negative net pickup on a booking day (default yesterday): more room nights cancelled than booked that day, with the net nights and net room revenue (without VAT) in total and for each stay month where it is negative, for the stays of the next months (default 6, at most 12). Optional minimum of net nights lost. Same pickup definition as pms_pickup. Read only; aggregated figures, no guest data.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_negative_pickup</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>
