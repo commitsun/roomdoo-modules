@@ -1261,3 +1261,408 @@ msgstr "%(posted)s facturas contabilizadas, %(failed)s fallidas."
 #, python-format
 msgid "Bill %(bill)s was not posted: %(error)s"
 msgstr "La factura %(bill)s no se ha contabilizado: %(error)s"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "No posted entry found with the id or number %s in your companies and properties."
+msgstr "No se ha encontrado ningún asiento publicado con el id o número %s en tus compañías y propiedades."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Several entries have the number %s: use the id."
+msgstr "Varios asientos tienen el número %s: usa el id."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The VAT %s is too short."
+msgstr "El NIF %s es demasiado corto."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "No partner found with the id or VAT %s."
+msgstr "No se ha encontrado ninguna empresa con el id o NIF %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Give either a partner or an invoice, not both."
+msgstr "Indica un cliente o proveedor o una factura, no ambos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The entry %s has nothing open to reconcile."
+msgstr "El asiento %s no tiene nada pendiente de conciliar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The entry %s has no partner."
+msgstr "El asiento %s no tiene empresa."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Only the %s oldest open items were analysed."
+msgstr "Solo se han analizado las %s partidas abiertas más antiguas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Only the first %s proposals are shown."
+msgstr "Solo se muestran las primeras %s propuestas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%(partner)s: %(documents)s open invoices or bills, %(credits)s open payments or credit notes and %(proposals)s proposals."
+msgstr "%(partner)s: %(documents)s facturas abiertas, %(credits)s pagos o abonos abiertos y %(proposals)s propuestas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Open items: posted receivable or payable journal items with an open amount in your companies and properties. documents: invoices and bills; credits: payments, advances and credit notes. Amounts and residuals in the currency of the item."
+msgstr "Partidas abiertas: apuntes contables publicados de cuentas a cobrar o a pagar con importe pendiente en tus compañías y propiedades. documents: facturas de cliente y de proveedor; credits: pagos, anticipos y abonos. Importes y pendientes en la moneda del apunte."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Proposals: one invoice or bill matching one payment or credit note exactly, or up to 4 items adding up exactly, with the same partner, account and currency. Proposals may share items: pick one per item. Pass its move_line_ids to acc_reconcile."
+msgstr "Propuestas: una factura que casa exactamente con un pago o abono, o hasta 4 apuntes que suman exactamente lo mismo, con la misma empresa, cuenta y moneda. Varias propuestas pueden compartir apuntes: elige una por apunte. Pasa sus move_line_ids a acc_reconcile."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Give at least two journal items to reconcile."
+msgstr "Indica al menos dos apuntes contables para conciliar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Journal items not found in your companies and properties: %s."
+msgstr "Apuntes contables no encontrados en tus compañías y propiedades: %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s is not posted."
+msgstr "%s no está publicado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s is not a receivable or payable item."
+msgstr "%s no es un apunte a cobrar ni a pagar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s is already reconciled."
+msgstr "%s ya está conciliado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s has no partner."
+msgstr "%s no tiene empresa."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The journal items belong to different companies."
+msgstr "Los apuntes contables son de compañías distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The journal items belong to different partners."
+msgstr "Los apuntes contables son de empresas distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The journal items are on different accounts."
+msgstr "Los apuntes contables están en cuentas distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The journal items are in different currencies: reconcile them in Odoo."
+msgstr "Los apuntes contables están en monedas distintas: concílialos en Odoo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Nothing to reconcile: give items on both sides (an invoice or bill and a payment or credit note)."
+msgstr "No hay nada que conciliar: indica apuntes de ambos lados (una factura y un pago o abono)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Reconcile %(count)s journal items of %(partner)s on the account %(account)s."
+msgstr "Conciliar %(count)s apuntes contables de %(partner)s en la cuenta %(account)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "entries: each invoice, bill, payment or credit note involved with its open amount before and after (paid or partially paid). left_open: items that keep an open amount. Amounts in the currency of the items."
+msgstr "entries: cada factura, pago o abono afectado con su importe pendiente antes y después (pagado o pagado en parte). left_open: apuntes que siguen con importe pendiente. Importes en la moneda de los apuntes."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The journal items changed since the preview: preview again."
+msgstr "Los apuntes contables han cambiado desde la vista previa: vuelve a previsualizar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Odoo would leave different open amounts than the preview; nothing was changed. Reconcile these items in Odoo."
+msgstr "Odoo dejaría importes pendientes distintos de los de la vista previa; no se ha cambiado nada. Concilia estos apuntes en Odoo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s journal items reconciled."
+msgstr "%s apuntes contables conciliados."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The entry %s has no reconciliations."
+msgstr "El asiento %s no tiene conciliaciones."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The reconciliations %(ids)s are not of the entry %(move)s."
+msgstr "Las conciliaciones %(ids)s no son del asiento %(move)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "Some counterparts are outside your companies and properties: you cannot undo these reconciliations."
+msgstr "Algunas contrapartidas están fuera de tus compañías y propiedades: no puedes deshacer estas conciliaciones."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s is a bank statement line: it becomes pending to reconcile again."
+msgstr "%s es una línea de extracto bancario: vuelve a quedar pendiente de conciliar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "The exchange difference entry %s will be reversed."
+msgstr "Se revertirá el asiento de diferencia de cambio %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Undo %(count)s reconciliations of %(move)s."
+msgstr "Deshacer %(count)s conciliaciones de %(move)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "reconciliations: each partial reconciliation that will be removed, with its counterpart entry, the amount in the company currency and its date. The open amounts of both sides grow back by that amount."
+msgstr "reconciliations: cada conciliación parcial que se eliminará, con su asiento de contrapartida, el importe en la moneda de la compañía y su fecha. Los importes pendientes de ambos lados vuelven a aumentar en ese importe."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The reconciliations changed since the preview: preview again."
+msgstr "Las conciliaciones han cambiado desde la vista previa: vuelve a previsualizar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%(count)s reconciliations of %(move)s undone."
+msgstr "%(count)s conciliaciones de %(move)s deshechas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "Some invoices are given twice."
+msgstr "Algunas facturas están repetidas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "Give only customer invoices or only vendor bills (no credit notes or other entries)."
+msgstr "Indica solo facturas de cliente o solo facturas de proveedor (ni abonos ni otros asientos)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The invoices belong to different partners."
+msgstr "Las facturas son de empresas distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The invoices belong to different companies."
+msgstr "Las facturas son de compañías distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The invoices are in different currencies."
+msgstr "Las facturas están en monedas distintas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "Already paid: %s."
+msgstr "Ya pagadas: %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The invoices use different accounts or bank accounts: register their payments separately."
+msgstr "Las facturas usan cuentas contables o bancarias distintas: registra sus pagos por separado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "No single bank or cash journal with the code %(code)s in the company %(company)s."
+msgstr "No hay un único diario de banco o caja con el código %(code)s en la compañía %(company)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "The journal %s is not one of your properties."
+msgstr "El diario %s no es de tus propiedades."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "The journal %s has no payment method for this kind of payment."
+msgstr "El diario %s no tiene método de pago para este tipo de pago."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The amount must be greater than zero."
+msgstr "El importe debe ser mayor que cero."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "Several invoices are paid for their whole open amount (%s): a different amount needs a single invoice."
+msgstr "Varias facturas se pagan por todo su importe pendiente (%s): un importe distinto requiere una sola factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "The amount is greater than the open amount (%s)."
+msgstr "El importe es mayor que el importe pendiente (%s)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The payment date is in the future."
+msgstr "La fecha del pago es futura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "collection"
+msgstr "cobro"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "payment"
+msgstr "pago"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "Register a %(kind)s of %(amount)s %(currency)s from %(partner)s in the journal %(journal)s on %(date)s for %(count)s invoices."
+msgstr "Registrar un %(kind)s de %(amount)s %(currency)s de %(partner)s en el diario %(journal)s el %(date)s para %(count)s facturas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "One posted payment is created for all the invoices, as the Register Payment button does with Group Payments, and reconciled with them. invoices: open amount before and after the payment, in the currency of the invoices."
+msgstr "Se crea un único pago publicado para todas las facturas, como hace el botón Registrar pago con Agrupar pagos, y se concilia con ellas. invoices: importe pendiente antes y después del pago, en la moneda de las facturas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "The invoices changed since the preview: preview again."
+msgstr "Las facturas han cambiado desde la vista previa: vuelve a previsualizar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+msgid "Odoo would register a different payment than the preview; nothing was changed. Register it in Odoo."
+msgstr "Odoo registraría un pago distinto del de la vista previa; no se ha cambiado nada. Regístralo en Odoo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "Payment %(payment)s registered for %(count)s invoices."
+msgstr "Pago %(payment)s registrado para %(count)s facturas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_payment_register.py:0
+#, python-format
+msgid "The payment date must be after the lock date %s."
+msgstr "La fecha del pago debe ser posterior a la fecha de bloqueo %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+msgid "The items are in a foreign currency: Odoo may post an exchange difference entry."
+msgstr "Los apuntes están en moneda extranjera: Odoo puede publicar un asiento de diferencia de cambio."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "%s is the id of an entry and the number of another one."
+msgstr "%s es el id de un asiento y el número de otro."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_reconcile.py:0
+#, python-format
+msgid "Several partners match %s: use the id of the partner."
+msgstr "Varias empresas coinciden con %s: usa el id de la empresa."

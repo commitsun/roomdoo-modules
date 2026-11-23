@@ -126,4 +126,40 @@
         <field name="function_name">_ai_acc_vendor_bills_post</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_reconcile_suggest" model="ai.tool">
+        <field name="name">acc_reconcile_suggest</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Reconciliation proposals for a customer or supplier (numeric id or VAT) or for one invoice, bill or credit note (number or id): the open posted receivable and payable journal items of the user's companies and properties, split into invoices and bills on one side and payments, advances and credit notes on the other, with their journal item id (move_line_id), date, due date, account, amount and open amount; and proposals of items that settle each other exactly: one against one, or combinations of up to 4 items with the same partner, account and currency (at most 20 proposals). Pass the move_line_ids of a proposal to acc_reconcile. Read only; needs accounting access.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_reconcile_suggest</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_reconcile" model="ai.tool">
+        <field name="name">acc_reconcile</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Reconciles 2 to 20 journal items (move_line_id from acc_reconcile_suggest) as the Reconcile action of Odoo does. They must be posted, not reconciled yet, receivable or payable, of the same company, commercial partner, account and currency, with items on both sides. The preview shows what each invoice, bill or payment becomes (paid or partially paid, with its open amount) and which items stay open; the change is refused if Odoo would leave other amounts. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_reconcile</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_unreconcile" model="ai.tool">
+        <field name="name">acc_unreconcile</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Undoes the reconciliations of one posted invoice, bill, credit note or payment entry (number or id), as the Unreconcile action of Odoo does: all of them, or only the ones given in partial_ids (at most 20). The preview lists each reconciliation with its id, counterpart entry, amount and date, and warns when the counterpart is a bank statement line (it becomes pending to reconcile again) or when an exchange difference entry will be reversed. Refused when a counterpart is outside the user's companies and properties. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_unreconcile</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_payment_register" model="ai.tool">
+        <field name="name">acc_payment_register</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Registers one payment (vendor bills) or collection (customer invoices) for 1 to 20 posted invoices of the same partner, type, company and currency, through the Register Payment wizard of Odoo with Group Payments: one posted payment in a bank or cash journal (by its code) on the payment date (default today), reconciled with the invoices. The amount defaults to the whole open amount; a smaller amount is allowed only for a single invoice, which stays partially paid. Refused for paid invoices, credit notes and journals of other companies. The preview shows the payment and the open amount of each invoice before and after. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_payment_register</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

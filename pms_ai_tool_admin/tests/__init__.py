@@ -12,3 +12,5 @@ from . import test_acc_admin_daily_brief
 from . import test_acc_record_edit
 from . import test_acc_vendor_bill_edit
 from . import test_acc_vendor_bills_post
+from . import test_acc_reconcile
+from . import test_acc_payment_register
