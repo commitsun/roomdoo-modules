@@ -909,3 +909,355 @@ msgstr "%(count)s registros de %(model)s cambiados."
 #, python-format
 msgid "%(value)s belongs to another company than %(company)s."
 msgstr "%(value)s pertenece a otra empresa distinta de %(company)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_common.py:0
+#, python-format
+msgid "Several vendor bills match %(bill)s: %(matches)s. Call again with the id of the right one."
+msgstr "Varias facturas de proveedor coinciden con %(bill)s: %(matches)s. Vuelve a llamar con el id de la correcta."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give the bill to edit: bill_id, or bill with its number or supplier reference."
+msgstr "Indica la factura a editar: bill_id, o bill con su número o referencia del proveedor."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No vendor bill or vendor credit note %s was found within your companies and properties."
+msgstr "No se ha encontrado la factura o factura rectificativa de proveedor %s en tus compañías y hoteles."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bill %(bill)s is not in draft (state: %(state)s); only draft bills can be edited."
+msgstr "La factura %(bill)s no está en borrador (estado: %(state)s); solo se pueden editar facturas en borrador."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give partner_id or partner_vat, not both."
+msgstr "Indica partner_id o partner_vat, no ambos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No active partner %s was found for the company of the bill."
+msgstr "No se ha encontrado ningún contacto activo %s para la compañía de la factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Several partners match %(vat)s: %(matches)s. Use partner_id."
+msgstr "Varios contactos coinciden con %(vat)s: %(matches)s. Usa partner_id."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bank account %(number)s is not one of the accounts of %(partner)s. Their accounts: %(accounts)s."
+msgstr "La cuenta bancaria %(number)s no es una de las cuentas de %(partner)s. Sus cuentas: %(accounts)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Payment modes are not installed in this database (module account_payment_partner): payment_mode cannot be changed."
+msgstr "Los modos de pago no están instalados en esta base de datos (módulo account_payment_partner): no se puede cambiar payment_mode."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The payment mode %(name)s must match exactly one: %(matches)s."
+msgstr "El modo de pago %(name)s debe coincidir exactamente con uno: %(matches)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The payment mode %(name)s is not for %(type)s payments."
+msgstr "El modo de pago %(name)s no es para pagos de tipo %(type)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No active account with code %s exists in the company of the bill."
+msgstr "No existe ninguna cuenta activa con código %s en la compañía de la factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The account %s cannot be used on the lines of a vendor bill."
+msgstr "La cuenta %s no se puede usar en las líneas de una factura de proveedor."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The purchase tax %(name)s must match exactly one tax of the company of the bill: %(matches)s."
+msgstr "El impuesto de compra %(name)s debe coincidir exactamente con un impuesto de la compañía de la factura: %(matches)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Give the lines to change (lines). The lines of this bill are: %s."
+msgstr "Indica las líneas a cambiar (lines). Las líneas de esta factura son: %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The lines %(lines)s are not product lines of the bill %(bill)s."
+msgstr "Las líneas %(lines)s no son líneas de producto de la factura %(bill)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The new partner would normally use the fiscal position %(new)s; the bill keeps %(old)s and its taxes are not remapped: review them."
+msgstr "El nuevo contacto usaría normalmente la posición fiscal %(new)s; la factura mantiene %(old)s y sus impuestos no se remapean: revísalos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bill has the payment term %s: its due date is computed from it and cannot be set."
+msgstr "La factura tiene el plazo de pago %s: su fecha de vencimiento se calcula a partir de él y no se puede fijar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give the change for the lines: account, taxes, label, quantity or price_unit."
+msgstr "Indica el cambio para las líneas: account, taxes, label, quantity o price_unit."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "quantity and price_unit can only be changed on a single line."
+msgstr "quantity y price_unit solo se pueden cambiar en una única línea."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Nothing to change: the bill already has these values."
+msgstr "Nada que cambiar: la factura ya tiene estos valores."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bank account %s is not trusted for outgoing payments."
+msgstr "La cuenta bancaria %s no es de confianza para pagos salientes."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "After the change the total is not positive."
+msgstr "Tras el cambio el total no es positivo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Bill %(bill)s: %(header)s header changes and %(lines)s changed lines; total %(old)s -> %(new)s."
+msgstr "Factura %(bill)s: %(header)s cambios de cabecera y %(lines)s líneas cambiadas; total %(old)s -> %(new)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Only draft vendor bills and vendor credit notes of your companies and properties can be edited. The change is saved with your user, so Odoo's access rules and lock dates apply."
+msgstr "Solo se pueden editar facturas y facturas rectificativas de proveedor en borrador de tus compañías y hoteles. El cambio se guarda con tu usuario, así que se aplican las reglas de acceso y las fechas de bloqueo de Odoo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "When the partner changes, the bill takes the partner's supplier payment term, payment mode and first trusted bank account, as in Odoo; the due date follows the payment term and the accounting date follows the invoice date."
+msgstr "Cuando cambia el contacto, la factura toma el plazo de pago de proveedor, el modo de pago y la primera cuenta bancaria de confianza del contacto, como en Odoo; la fecha de vencimiento sigue al plazo de pago y la fecha contable sigue a la fecha de factura."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "totals_after is computed from the new line values without saving; if the saved result differs from this preview, nothing is saved."
+msgstr "totals_after se calcula con los nuevos valores de las líneas sin guardar; si el resultado guardado difiere de esta vista previa, no se guarda nada."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "The bill is no longer in draft; nothing was changed."
+msgstr "La factura ya no está en borrador; no se ha cambiado nada."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Nothing was saved: once applied, the bill would differ from the preview in %s. Review it in Odoo."
+msgstr "No se ha guardado nada: una vez aplicado, la factura diferiría de la vista previa en %s. Revísala en Odoo."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Bill %(bill)s changed; total %(old)s -> %(new)s."
+msgstr "Factura %(bill)s cambiada; total %(old)s -> %(new)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Give either bill_ids or bills, or a date range, not both."
+msgstr "Indica bill_ids o bills, o un rango de fechas, no ambos."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Give the bills to post (bill_ids or bills) or an accounting date range (date_from and date_to)."
+msgstr "Indica las facturas a contabilizar (bill_ids o bills) o un rango de fechas contables (date_from y date_to)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(count)s draft bills match; at most %(limit)s can be posted at once. Narrow the dates or the properties."
+msgstr "%(count)s facturas en borrador coinciden; se pueden contabilizar como máximo %(limit)s a la vez. Acota las fechas o los hoteles."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "These bills were not found within your companies and properties: %s."
+msgstr "Estas facturas no se han encontrado en tus compañías y hoteles: %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "At most %s bills can be posted at once."
+msgstr "Se pueden contabilizar como máximo %s facturas a la vez."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "not in draft (%s)"
+msgstr "no está en borrador (%s)"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no partner"
+msgstr "sin contacto"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no invoice date"
+msgstr "sin fecha de factura"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no lines"
+msgstr "sin líneas"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "lines without account"
+msgstr "líneas sin cuenta"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "lines without taxes"
+msgstr "líneas sin impuestos"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "total is not positive"
+msgstr "el total no es positivo"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "flagged to check"
+msgstr "marcada para revisar"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "probable duplicate of %s"
+msgstr "probable duplicado de %s"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "No draft vendor bill matches."
+msgstr "Ninguna factura de proveedor en borrador coincide."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "probable duplicate of the bill %s in this selection"
+msgstr "probable duplicado de la factura %s en esta selección"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(ready)s of %(count)s bills are ready to post (total %(total)s); %(not_ready)s are not."
+msgstr "%(ready)s de %(count)s facturas están listas para contabilizar (total %(total)s); %(not_ready)s no lo están."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Ready: a draft vendor bill or credit note with partner, invoice date, an account and at least one tax on every line, a positive total, not flagged to check and not a probable duplicate."
+msgstr "Lista: factura o factura rectificativa de proveedor en borrador con contacto, fecha de factura, una cuenta y al menos un impuesto en cada línea, total positivo, no marcada para revisar y que no es un probable duplicado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Probable duplicate: another posted bill of the same supplier with the same supplier reference, or with the same total and invoice date (also within the selection)."
+msgstr "Probable duplicado: otra factura contabilizada del mismo proveedor con la misma referencia del proveedor, o con el mismo total y la misma fecha de factura (también dentro de la selección)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Only the ready bills are posted, each on its own and with your user; a bill that fails is reported with its error and the others are still posted."
+msgstr "Solo se contabilizan las facturas listas, cada una por separado y con tu usuario; una factura que falla se informa con su error y las demás se contabilizan igualmente."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "No bill is ready: confirming would post nothing."
+msgstr "Ninguna factura está lista: confirmar no contabilizaría nada."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Internal error; it has been logged."
+msgstr "Error interno; se ha registrado."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(posted)s bills posted, %(failed)s failed."
+msgstr "%(posted)s facturas contabilizadas, %(failed)s fallidas."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "Bill %(bill)s was not posted: %(error)s"
+msgstr "La factura %(bill)s no se ha contabilizado: %(error)s"

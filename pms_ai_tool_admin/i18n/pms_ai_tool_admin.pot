@@ -908,3 +908,355 @@ msgstr ""
 #, python-format
 msgid "%(value)s belongs to another company than %(company)s."
 msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_common.py:0
+#, python-format
+msgid "Several vendor bills match %(bill)s: %(matches)s. Call again with the id of the right one."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give the bill to edit: bill_id, or bill with its number or supplier reference."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No vendor bill or vendor credit note %s was found within your companies and properties."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bill %(bill)s is not in draft (state: %(state)s); only draft bills can be edited."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give partner_id or partner_vat, not both."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No active partner %s was found for the company of the bill."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Several partners match %(vat)s: %(matches)s. Use partner_id."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bank account %(number)s is not one of the accounts of %(partner)s. Their accounts: %(accounts)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Payment modes are not installed in this database (module account_payment_partner): payment_mode cannot be changed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The payment mode %(name)s must match exactly one: %(matches)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The payment mode %(name)s is not for %(type)s payments."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "No active account with code %s exists in the company of the bill."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The account %s cannot be used on the lines of a vendor bill."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The purchase tax %(name)s must match exactly one tax of the company of the bill: %(matches)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Give the lines to change (lines). The lines of this bill are: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The lines %(lines)s are not product lines of the bill %(bill)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The new partner would normally use the fiscal position %(new)s; the bill keeps %(old)s and its taxes are not remapped: review them."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bill has the payment term %s: its due date is computed from it and cannot be set."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Give the change for the lines: account, taxes, label, quantity or price_unit."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "quantity and price_unit can only be changed on a single line."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Nothing to change: the bill already has these values."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "The bank account %s is not trusted for outgoing payments."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "After the change the total is not positive."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Bill %(bill)s: %(header)s header changes and %(lines)s changed lines; total %(old)s -> %(new)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "Only draft vendor bills and vendor credit notes of your companies and properties can be edited. The change is saved with your user, so Odoo's access rules and lock dates apply."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "When the partner changes, the bill takes the partner's supplier payment term, payment mode and first trusted bank account, as in Odoo; the due date follows the payment term and the accounting date follows the invoice date."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "totals_after is computed from the new line values without saving; if the saved result differs from this preview, nothing is saved."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+msgid "The bill is no longer in draft; nothing was changed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Nothing was saved: once applied, the bill would differ from the preview in %s. Review it in Odoo."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bill_edit.py:0
+#, python-format
+msgid "Bill %(bill)s changed; total %(old)s -> %(new)s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Give either bill_ids or bills, or a date range, not both."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Give the bills to post (bill_ids or bills) or an accounting date range (date_from and date_to)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(count)s draft bills match; at most %(limit)s can be posted at once. Narrow the dates or the properties."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "These bills were not found within your companies and properties: %s."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "At most %s bills can be posted at once."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "not in draft (%s)"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no partner"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no invoice date"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "no lines"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "lines without account"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "lines without taxes"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "total is not positive"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "flagged to check"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "probable duplicate of %s"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "No draft vendor bill matches."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "probable duplicate of the bill %s in this selection"
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(ready)s of %(count)s bills are ready to post (total %(total)s); %(not_ready)s are not."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Ready: a draft vendor bill or credit note with partner, invoice date, an account and at least one tax on every line, a positive total, not flagged to check and not a probable duplicate."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Probable duplicate: another posted bill of the same supplier with the same supplier reference, or with the same total and invoice date (also within the selection)."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Only the ready bills are posted, each on its own and with your user; a bill that fails is reported with its error and the others are still posted."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "No bill is ready: confirming would post nothing."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+msgid "Internal error; it has been logged."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "%(posted)s bills posted, %(failed)s failed."
+msgstr ""
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_vendor_bills_post.py:0
+#, python-format
+msgid "Bill %(bill)s was not posted: %(error)s"
+msgstr ""

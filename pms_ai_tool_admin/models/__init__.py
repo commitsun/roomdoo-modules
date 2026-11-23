@@ -11,3 +11,6 @@ from . import pms_folio_billing
 from . import pms_folio_billing_payment
 from . import acc_admin_daily_brief
 from . import acc_record_edit
+from . import acc_vendor_bill_common
+from . import acc_vendor_bill_edit
+from . import acc_vendor_bills_post

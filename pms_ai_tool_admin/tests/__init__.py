@@ -10,3 +10,5 @@ from . import test_pms_folio_billing
 from . import test_pms_folio_billing_payment
 from . import test_acc_admin_daily_brief
 from . import test_acc_record_edit
+from . import test_acc_vendor_bill_edit
+from . import test_acc_vendor_bills_post

@@ -108,4 +108,22 @@
         <field name="function_name">_ai_acc_record_edit</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_acc_vendor_bill_edit" model="ai.tool">
+        <field name="name">acc_vendor_bill_edit</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Edit ONE draft vendor bill or vendor credit note of the user's companies and properties, given by id or by its number or supplier reference. Header: partner (id or VAT), supplier reference, payment reference, invoice date, accounting date, due date (not when a payment term computes it), bank account (one of the partner's), payment mode and the "to check" flag. Lines: give up to 20 line ids plus the change for all of them: account code, purchase taxes (replace the current ones) or label; quantity and unit price only for a single line. Changing the partner also brings its payment term, payment mode and bank account, as Odoo does. The preview shows old and new values and the new totals; the change is saved with the user's rights and aborted if the result differs from the preview. Posted bills are refused. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_vendor_bill_edit</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_vendor_bills_post" model="ai.tool">
+        <field name="name">acc_vendor_bills_post</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). Post (validate) up to 50 draft vendor bills or vendor credit notes of the user's companies and properties, given by ids, by numbers or supplier references, or by properties and an accounting date range (at most 93 days). The preview lists the bills ready to post and the others with their reasons: missing partner or invoice date, lines without account or taxes, total not positive, flagged to check, or a probable duplicate (a posted bill of the same supplier with the same supplier reference, or the same total and invoice date). Only the ready bills are posted, one by one with the user's rights; the result lists the posted bills and those that failed with the error. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_acc_vendor_bills_post</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>
