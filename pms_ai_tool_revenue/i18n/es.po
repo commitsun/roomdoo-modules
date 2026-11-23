@@ -456,8 +456,8 @@ msgstr "Ocupación: habitaciones vendidas / noches de habitación disponibles (c
 #. module: pms_ai_tool_revenue
 #. odoo-python
 #: code:addons/pms_ai_tool_revenue/models/pms_daily_management_report.py:0
-msgid "Net ADR: room revenue without VAT / room nights, leaving out the nights of folios worth 0. Gross ADR: the same with the final prices as the PMS stores them (with VAT in the Alda configuration)."
-msgstr "ADR neto: ingresos de habitación sin IVA / noches de habitación, sin contar las noches de folios que valen 0. ADR bruto: lo mismo con los precios finales tal como los guarda el PMS (con IVA en la configuración de Alda)."
+msgid "Net ADR: room revenue without VAT / room nights, leaving out the nights of folios worth 0. Gross ADR: the same with the final prices as the PMS stores them (VAT included when prices are set with taxes included)."
+msgstr "ADR neto: ingresos de habitación sin IVA / noches de habitación, sin contar las noches de folios que valen 0. ADR bruto: lo mismo con los precios finales tal como los guarda el PMS (con IVA cuando los precios se configuran con impuestos incluidos)."
 
 #. module: pms_ai_tool_revenue
 #. odoo-python

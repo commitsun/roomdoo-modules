@@ -266,8 +266,8 @@ class PmsAiTools(models.AbstractModel):
                 _(
                     "Net ADR: room revenue without VAT / room nights, leaving out "
                     "the nights of folios worth 0. Gross ADR: the same with the "
-                    "final prices as the PMS stores them (with VAT in the Alda "
-                    "configuration)."
+                    "final prices as the PMS stores them (VAT included when prices "
+                    "are set with taxes included)."
                 ),
                 _(
                     "Average length of stay: nights of the stays that start in "
