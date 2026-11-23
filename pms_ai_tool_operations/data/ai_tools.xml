@@ -45,4 +45,13 @@
         <field name="function_name">_ai_pms_folio_reception_note</field>
         <field name="kind">generic</field>
     </record>
+    <record id="ai_tool_pms_blocked_rooms_by_room_type" model="ai.tool">
+        <field name="name">pms_blocked_rooms_by_room_type</field>
+        <field
+      name="description"
+    >Rooms of a room type (filter by room_type_id or by code, e.g. OUTS) with an active out of service block on a date (default today): blocked rooms and rooms of the type per property, and totals with the number of properties that have blocks. Read only; aggregated figures.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field name="function_name">_ai_pms_blocked_rooms_by_room_type</field>
+        <field name="kind">generic</field>
+    </record>
 </odoo>

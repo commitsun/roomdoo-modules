@@ -201,3 +201,31 @@ msgstr "Marca alta: ocupación del %s%% o más. Marca overbooking: más habitaci
 #, python-format
 msgid "%s has no rooms for overnight stays."
 msgstr "%s no tiene habitaciones para pernoctar."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_blocked_rooms_by_room_type.py:0
+#, python-format
+msgid "No room type matches the filter."
+msgstr "Ningún tipo de habitación coincide con el filtro."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_blocked_rooms_by_room_type.py:0
+#, python-format
+msgid "%(rooms)s rooms blocked in %(properties)s properties on %(date)s."
+msgstr "%(rooms)s habitaciones bloqueadas en %(properties)s hoteles el %(date)s."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_blocked_rooms_by_room_type.py:0
+#, python-format
+msgid "Blocked room: a room with an out of service block (not cancelled) that includes the night of the date."
+msgstr "Habitación bloqueada: habitación con un bloqueo de fuera de servicio (no cancelado) que incluye la noche de la fecha."
+
+#. module: pms_ai_tool_operations
+#. odoo-python
+#: code:addons/pms_ai_tool_operations/models/pms_blocked_rooms_by_room_type.py:0
+#, python-format
+msgid "The room type is matched by id or by code; rooms of every room type with that code are counted, in the properties of the user."
+msgstr "El tipo de habitación se busca por id o por código; se cuentan las habitaciones de todos los tipos con ese código, en los hoteles del usuario."
