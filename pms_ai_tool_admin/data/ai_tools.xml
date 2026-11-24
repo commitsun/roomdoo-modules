@@ -40,9 +40,20 @@
         <field name="name">acc_supplier_bills_pending</field>
         <field
       name="description"
-    >SENSITIVE (accounting data). Vendor bills pending payment at a cutoff date: posted bills with an accounting date up to the cutoff and the amount still pending on that date according to the dates of the payments (partial payments count by their own date), by company, property and supplier, with the bill list (due date, total, paid and pending at the cutoff) and a summary of the bills still in draft. Read only; needs accounting access.</field>
+    >SENSITIVE (accounting data). Vendor bills pending payment at a cutoff date: posted bills with an accounting date up to the cutoff and the amount still pending on that date according to the dates of the payments (partial payments count by their own date), by company, property and supplier (the max_suppliers with the most pending, default 30), with the bill list (supplier id and VAT, payable account, journal, due date, total, paid and pending at the cutoff, date of the last payment) and a summary of the bills still in draft. Filters: company_ids, property_ids, supplier (partner id or VAT) and min_pending. The bill list comes in pages (offset and limit, at most the row limit of the AI tools): page gives the total number of bills and next_offset while there are more; for the whole list as an XLSX or CSV file use acc_supplier_bills_pending_export. Warns that the list is incomplete when more than 10000 bills may be pending. Read only; needs accounting access.</field>
         <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
         <field name="function_name">_ai_acc_supplier_bills_pending</field>
+        <field name="kind">generic</field>
+    </record>
+    <record id="ai_tool_acc_supplier_bills_pending_export" model="ai.tool">
+        <field name="name">acc_supplier_bills_pending_export</field>
+        <field
+      name="description"
+    >SENSITIVE (accounting data). The complete list of vendor bills pending payment at a cutoff date, computed as acc_supplier_bills_pending does and with the same filters (company_ids, property_ids, supplier, min_pending), saved as a file instead of returned in the chat: XLSX (default; typed numbers and dates and a totals row) or CSV (semicolons, decimal comma, UTF-8 with BOM, as a Spanish Excel opens it). One row per bill, the most pending first: bill, supplier reference, dates, company, property, journal, supplier id, name and VAT, payable account, total, paid and pending at the cutoff, overdue flag, number of payments and date of the last payment. The preview shows the number of bills, the total pending, the columns, the file name and the first 10 rows; the confirmation is refused if the bills or their pending amounts changed since the preview. The file is saved as an attachment that only the user who exports it (and the administrators) can open; the result gives its download link, which needs that user's Odoo session. Needs accounting access. Two steps: confirm=false previews; only after the user's approval, confirm=true with the token.</field>
+        <field name="model_id" ref="pms_ai_tool.model_pms_ai_tools" />
+        <field
+      name="function_name"
+    >_ai_acc_supplier_bills_pending_export</field>
         <field name="kind">generic</field>
     </record>
     <record id="ai_tool_acc_supplier_invoices" model="ai.tool">

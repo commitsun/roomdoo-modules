@@ -211,28 +211,247 @@ msgstr "El estado de la factura es el actual: no se reconstruye una factura cont
 #. module: pms_ai_tool_admin
 #. odoo-python
 #: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
-msgid "drafts: vendor bills still in draft (pending validation) dated up to the cutoff, by company."
-msgstr "drafts: facturas de proveedor aún en borrador (pendientes de validar) con fecha hasta el corte, por compañía."
+#, python-format
+msgid "You have no access to the companies %s."
+msgstr "No tienes acceso a las empresas %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "INCOMPLETE LIST: more than %(limit)s posted vendor bills may be pending at the cutoff and only the oldest %(limit)s were analysed, so the bills, totals and summaries miss the rest. Narrow it with company_ids, property_ids or supplier."
+msgstr "LISTADO INCOMPLETO: puede haber más de %(limit)s facturas de proveedor contabilizadas pendientes al corte y solo se han analizado las %(limit)s más antiguas, así que a las facturas, los totales y los resúmenes les falta el resto. Acótalo con company_ids, property_ids o supplier."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "last_payment_date: date of the last of those reconciliations, empty when nothing was paid by the cutoff. supplier_id, supplier and supplier_vat: the commercial partner of the bill (the company, not its contact). payable_account: code of the payable account of the bill. journal: code of its journal."
+msgstr "last_payment_date: fecha de la última de esas conciliaciones, vacía si no se había pagado nada al corte. supplier_id, supplier y supplier_vat: la empresa comercial de la factura (la empresa, no su contacto). payable_account: código de la cuenta a pagar de la factura. journal: código de su diario."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "Filters: company_ids, property_ids, supplier (the bills of its commercial partner) and min_pending (the bills with at least that amount pending at the cutoff). drafts: vendor bills still in draft (pending validation) dated up to the cutoff, by company, with the same filters except min_pending."
+msgstr "Filtros: company_ids, property_ids, supplier (las facturas de su empresa comercial) y min_pending (las facturas con al menos ese importe pendiente al corte). drafts: facturas de proveedor aún en borrador (pendientes de validar) con fecha hasta el corte, por compañía, con los mismos filtros salvo min_pending."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Bills %(first)s to %(last)s of %(total)s are listed: call again with offset=%(next)s for the next ones, or export the whole list to a file with acc_supplier_bills_pending_export."
+msgstr "Se listan las facturas %(first)s a %(last)s de %(total)s: vuelve a llamar con offset=%(next)s para las siguientes o exporta el listado completo a un fichero con acc_supplier_bills_pending_export."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "offset %(offset)s is past the last bill (%(total)s bills)."
+msgstr "offset %(offset)s está más allá de la última factura (%(total)s facturas)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+#, python-format
+msgid "Only the %(shown)s of %(total)s suppliers with the most pending are listed (max_suppliers, at most %(limit)s)."
+msgstr "Solo se listan los %(shown)s de %(total)s proveedores con más pendiente (max_suppliers, como máximo %(limit)s)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
+msgid "bills: one page of the pending bills, the most pending first; page gives its offset, the total number of bills and next_offset while there are more. totals, by_company, by_property and by_supplier cover every bill that passes the filters. complete: false when the list is cut (see the warnings)."
+msgstr "bills: una página de las facturas pendientes, primero las de más pendiente; page da su offset, el número total de facturas y next_offset mientras haya más. totals, by_company, by_property y by_supplier cubren todas las facturas que pasan los filtros. complete: false cuando el listado está cortado (ver los avisos)."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_export.py:0
+#, python-format
+msgid "Unknown file format %s."
+msgstr "Formato de fichero desconocido: %s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_export.py:0
+msgid "XLSX files cannot be created here: use csv."
+msgstr "Aquí no se pueden crear ficheros XLSX: usa csv."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_export.py:0
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Total"
+msgstr "Total"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_export.py:0
+msgid "Yes"
+msgstr "Sí"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_export.py:0
+msgid "No"
+msgstr "No"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Bill id"
+msgstr "Id de factura"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Bill"
+msgstr "Factura"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Supplier reference"
+msgstr "Referencia del proveedor"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Accounting date"
+msgstr "Fecha contable"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Due date"
+msgstr "Fecha de vencimiento"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Company"
+msgstr "Compañía"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Property"
+msgstr "Hotel"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Journal"
+msgstr "Diario"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Supplier id"
+msgstr "Id del proveedor"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Supplier"
+msgstr "Proveedor"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Supplier VAT"
+msgstr "NIF del proveedor"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Payable account"
+msgstr "Cuenta a pagar"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Paid at cutoff"
+msgstr "Pagado al corte"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Pending at cutoff"
+msgstr "Pendiente al corte"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Overdue at cutoff"
+msgstr "Vencida al corte"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Payments at cutoff"
+msgstr "Pagos al corte"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "Last payment date"
+msgstr "Fecha del último pago"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+#, python-format
+msgid "No vendor bill is pending payment on %s with these filters: there is nothing to export."
+msgstr "Ninguna factura de proveedor está pendiente de pago a %s con estos filtros: no hay nada que exportar."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "supplier_bills_pending"
+msgstr "facturas_proveedor_pendientes"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+#, python-format
+msgid "Export %(rows)s vendor bills with %(pending)s pending payment on %(cutoff)s to the file %(file)s."
+msgstr "Exportar %(rows)s facturas de proveedor con %(pending)s pendiente de pago a %(cutoff)s al fichero %(file)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "The file has a row per pending bill, the most pending first, with the columns listed; sample shows its first rows. It is saved as an attachment that only you (and the administrators) can open: the link needs your Odoo session. The confirmation is refused if the bills or their pending amounts change in the meantime."
+msgstr "El fichero tiene una fila por factura pendiente, primero las de más pendiente, con las columnas listadas; sample muestra sus primeras filas. Se guarda como un adjunto que solo puedes abrir tú (y los administradores): el enlace necesita tu sesión de Odoo. La confirmación se rechaza si las facturas o sus importes pendientes cambian entretanto."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "The data changed since the preview: preview the export again."
+msgstr "Los datos han cambiado desde la vista previa: vuelve a previsualizar la exportación."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+#, python-format
+msgid "Exported by the AI tool acc_supplier_bills_pending_export: vendor bills pending payment on %(cutoff)s, %(rows)s bills, %(pending)s pending. Filters: %(filters)s."
+msgstr "Exportado por la herramienta de IA acc_supplier_bills_pending_export: facturas de proveedor pendientes de pago a %(cutoff)s, %(rows)s facturas, %(pending)s pendiente. Filtros: %(filters)s."
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+msgid "none"
+msgstr "ninguno"
+
+#. module: pms_ai_tool_admin
+#. odoo-python
+#: code:addons/pms_ai_tool_admin/models/acc_supplier_bills_pending_export.py:0
+#, python-format
+msgid "%(rows)s vendor bills with %(pending)s pending payment on %(cutoff)s exported to %(file)s (attachment %(id)s)."
+msgstr "%(rows)s facturas de proveedor con %(pending)s pendiente de pago a %(cutoff)s exportadas a %(file)s (adjunto %(id)s)."
 
 #. module: pms_ai_tool_admin
 #. odoo-python
 #: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
 msgid "Sensitive: accounting data of suppliers."
 msgstr "Sensible: datos contables de proveedores."
-
-#. module: pms_ai_tool_admin
-#. odoo-python
-#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
-#, python-format
-msgid "Only the oldest %s candidate bills were analysed."
-msgstr "Solo se han analizado las %s facturas candidatas más antiguas."
-
-#. module: pms_ai_tool_admin
-#. odoo-python
-#: code:addons/pms_ai_tool_admin/models/pms_supplier_bills_pending.py:0
-#, python-format
-msgid "Only the %(shown)s suppliers with the most pending are listed."
-msgstr "Solo se listan los %(shown)s proveedores con más pendiente."
 
 #. module: pms_ai_tool_admin
 #. odoo-python
