@@ -30,3 +30,5 @@ class PmsRoomTypeInfo(Datamodel):
     priceDerivationPricelistIds = fields.List(
         fields.Integer(), required=False, allow_none=True
     )
+    maxOccupancy = fields.Integer(required=False, allow_none=True)
+    defaultOccupancy = fields.Integer(required=False, allow_none=True)

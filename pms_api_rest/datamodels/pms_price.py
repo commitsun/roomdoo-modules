@@ -35,6 +35,10 @@ class PmsPriceSearchParam(Datamodel):
     partnerId = fields.Integer(required=False, allow_none=True)
     isAdults = fields.Boolean(required=False, allow_none=True)
     isChildren = fields.Boolean(required=False, allow_none=True)
+    # Optional, room types only: without them the price is the one for the
+    # default occupancy of the room type
+    adults = fields.Integer(required=False, allow_none=True)
+    children = fields.Integer(required=False, allow_none=True)
 
 
 class PmsPriceInfo(Datamodel):
