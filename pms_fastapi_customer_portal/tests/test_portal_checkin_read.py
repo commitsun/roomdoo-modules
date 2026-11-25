@@ -273,3 +273,25 @@ class TestPortalCheckinHelper(CommonTestCustomerPortalApi):
 
         self.assertIsInstance(portal, type(staff))
         self.assertNotEqual(portal._name, staff._name)
+
+    def test_localization_fields_reach_the_portal(self):
+        """With the Spanish localization of the staff API, the portal reads
+        and writes its fields too."""
+        localization = self.env["ir.module.module"].search(
+            [("name", "=", "pms_fastapi_l10n_es"), ("state", "=", "installed")]
+        )
+        if not localization:
+            self.skipTest("pms_fastapi_l10n_es is not installed")
+        folio = self._create_folio([(self.double, 3, 2, 1, 0)])
+        guest = folio.checkin_partner_ids
+        url = f"/portal/{folio.access_token}/checkin-partners/{guest.id}"
+
+        response = self._request("PATCH", url, json={"documentSupportNumber": "SUP1"})
+
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertEqual(guest.support_number, "SUP1")
+        self.assertEqual(self._get(url).json()["documentSupportNumber"], "SUP1")
+        context = self._get(f"/portal/{folio.access_token}/checkin-context").json()
+        self.assertIs(context["unaccompaniedMinors"], False)
