@@ -460,15 +460,41 @@ class PmsNotificationTemplate(models.Model):
             },
         }
 
+    def bookai_sync_languages(self):
+        """Odoo language codes a sync sends to BookAI for this template.
+
+        The source text (en_US) and every active language the body has its
+        own text in. Any other active language would only carry the English
+        fallback, and BookAI registers a language it has no Meta id for as a
+        new language of the template in Meta. Public, so that tools can show
+        it before syncing; an empty recordset answers [] (it tells a tool that
+        the instance already follows this rule).
+        """
+        if not self:
+            return []
+        self.ensure_one()
+        self.flush_recordset(["body"])
+        self.env.cr.execute(
+            "SELECT body FROM pms_notification_template WHERE id = %s", [self.id]
+        )
+        row = self.env.cr.fetchone()
+        own = set(row[0]) if row and isinstance(row[0], dict) else set()
+        active = self.env["res.lang"].search([("active", "=", True)]).mapped("code")
+        return [code for code in active if code == "en_US" or code in own]
+
     def _sync_translations_from_i18n(self):
         """Auto-create/update translations from body i18n.
 
         Creates one translation record per (language × WA account) for
-        each WABA linked to the properties of this template.
+        each WABA linked to the properties of this template, for the
+        languages of bookai_sync_languages() only.
         """
         self.ensure_one()
         Translation = self.env["bookai.whatsapp.translation"]
-        active_langs = self.env["res.lang"].search([("active", "=", True)])
+        synced = set(self.bookai_sync_languages())
+        active_langs = self.env["res.lang"].search(
+            [("active", "=", True), ("code", "in", list(synced))]
+        )
 
         # Collect WA accounts from associated properties
         wa_accounts = self.env["bookai.wa.account"]

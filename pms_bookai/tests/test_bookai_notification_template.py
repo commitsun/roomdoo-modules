@@ -91,6 +91,42 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
         translations = self.bookai_template.bookai_translation_ids
         self.assertTrue(translations)
 
+    def test_sync_skips_languages_without_their_own_text(self):
+        self.env["res.lang"]._activate_lang("es_ES")
+        self.env["res.lang"]._activate_lang("gl_ES")
+        self.bookai_template.with_context(lang="es_ES").write(
+            {"body": "Hola {{ guest_name }}"}
+        )
+        stale_gl = self.env["bookai.whatsapp.translation"].create(
+            {"template_id": self.bookai_template.id, "language": "gl"}
+        )
+        self.assertEqual(
+            sorted(self.bookai_template.bookai_sync_languages()), ["en_US", "es_ES"]
+        )
+        self.bookai_template._sync_translations_from_i18n()
+        stale_gl.invalidate_recordset()
+        self.assertFalse(stale_gl.active)
+        payload = self.bookai_template._build_bookai_template_payload()
+        self.assertEqual(
+            sorted({t["language"] for t in payload["translations"]}), ["en", "es"]
+        )
+
+    def test_sync_keeps_a_language_with_its_own_text(self):
+        self.env["res.lang"]._activate_lang("gl_ES")
+        self.bookai_template.with_context(lang="gl_ES").write(
+            {"body": "Ola {{ guest_name }}"}
+        )
+        self.assertIn("gl_ES", self.bookai_template.bookai_sync_languages())
+        self.bookai_template._sync_translations_from_i18n()
+        self.assertIn(
+            "gl", self.bookai_template.bookai_translation_ids.mapped("language")
+        )
+
+    def test_sync_languages_of_no_template_is_empty(self):
+        self.assertEqual(
+            self.env["pms.notification.template"].bookai_sync_languages(), []
+        )
+
     def test_sync_translations_deactivates_stale(self):
         trans = self.env["bookai.whatsapp.translation"].create(
             {
