@@ -54,6 +54,13 @@ When the document belongs to an existing contact, the guest keeps the data
 sent but is left without a contact, for the reception to link it; otherwise
 it gets a new contact as usual.
 
+Nor does the answer tell whether a document number belongs to someone. A
+guest that already has a contact copies its document to it only when no other
+contact holds the number (``%`` and ``_`` match any characters in that check);
+otherwise the guest keeps the document sent, its contact keeps the one it had,
+and the update answers ``204`` as it does for any other number. The reception
+check-in still rejects such a number.
+
 Each guest may ask for 5 document scans from the portal. Every scan of a
 guest that can be modified counts, whether the document is read or not, and
 the count is kept on the guest (*Portal document scans*). Once it is reached,

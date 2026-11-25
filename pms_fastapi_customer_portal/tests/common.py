@@ -1,10 +1,13 @@
 import datetime
+import json
 from functools import partial
 
 from odoo import fields
 
 from odoo.addons.extendable_fastapi.tests.common import FastAPITransactionCase
 from odoo.addons.fastapi.dependencies import fastapi_endpoint
+
+MERGE_PATCH = "application/merge-patch+json"
 
 
 class CommonTestCustomerPortalApi(FastAPITransactionCase):
@@ -161,3 +164,69 @@ class CommonTestCustomerPortalApi(FastAPITransactionCase):
         self.assertEqual(body["type"], type_)
         self.assertEqual(body["status"], status_code)
         return body
+
+
+class CommonTestPortalCheckinUpdate(CommonTestCustomerPortalApi):
+    """A confirmed folio whose guests are written through the portal PATCH."""
+
+    def setUp(self):
+        super().setUp()
+        self.folio = self._create_folio([(self.double, 3, 2, 2, 0)])
+        self.guest = self.folio.checkin_partner_ids.sorted("id")[0]
+        self.spain = self.env.ref("base.es")
+        self.portugal = self.env.ref("base.pt")
+        self.category = self.env["res.partner.id_category"].create(
+            {"name": "Portal document", "code": "PDOC"}
+        )
+
+    def _url(self, guest=None, folio=None):
+        folio = folio or self.folio
+        guest = guest or self.guest
+        return f"/portal/{folio.access_token}/checkin-partners/{guest.id}"
+
+    def _patch(self, payload, guest=None, folio=None):
+        return self._request(
+            "PATCH",
+            self._url(guest, folio),
+            content=json.dumps(payload),
+            headers={"Content-Type": MERGE_PATCH},
+        )
+
+    def _complete_data(self, document_number):
+        return {
+            "firstname": "Ann",
+            "lastname": "Lee",
+            "gender": "female",
+            "birthdate": "1990-05-17",
+            "nationality": self.portugal.id,
+            "documentType": self.category.id,
+            "documentNumber": document_number,
+            "documentCountry": self.portugal.id,
+            "country": self.portugal.id,
+            "city": "Lisbon",
+            "street": "Rua 1",
+            "zipCode": "1000",
+        }
+
+    def _create_contact_with_document(
+        self, document_number, company=None, category=None
+    ):
+        return self.env["res.partner"].create(
+            {
+                "firstname": "Mallory",
+                "lastname": "Stranger",
+                "email": "mallory@example.org",
+                "company_id": company.id if company else False,
+                "id_numbers": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": document_number,
+                            "category_id": (category or self.category).id,
+                            "country_id": self.portugal.id,
+                        },
+                    )
+                ],
+            }
+        )

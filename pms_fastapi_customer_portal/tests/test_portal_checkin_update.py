@@ -1,74 +1,11 @@
-import json
-
 from fastapi import status
 
 from odoo.addons.pms_fastapi.tests.common import CommonTestCheckin
 
-from .common import CommonTestCustomerPortalApi
-
-MERGE_PATCH = "application/merge-patch+json"
+from .common import CommonTestPortalCheckinUpdate
 
 
-class TestPortalCheckinUpdate(CommonTestCustomerPortalApi):
-    def setUp(self):
-        super().setUp()
-        self.folio = self._create_folio([(self.double, 3, 2, 2, 0)])
-        self.guest = self.folio.checkin_partner_ids.sorted("id")[0]
-        self.spain = self.env.ref("base.es")
-        self.portugal = self.env.ref("base.pt")
-        self.category = self.env["res.partner.id_category"].create(
-            {"name": "Portal document", "code": "PDOC"}
-        )
-
-    def _url(self, guest=None, folio=None):
-        folio = folio or self.folio
-        guest = guest or self.guest
-        return f"/portal/{folio.access_token}/checkin-partners/{guest.id}"
-
-    def _patch(self, payload, guest=None, folio=None):
-        return self._request(
-            "PATCH",
-            self._url(guest, folio),
-            content=json.dumps(payload),
-            headers={"Content-Type": MERGE_PATCH},
-        )
-
-    def _complete_data(self, document_number):
-        return {
-            "firstname": "Ann",
-            "lastname": "Lee",
-            "gender": "female",
-            "birthdate": "1990-05-17",
-            "nationality": self.portugal.id,
-            "documentType": self.category.id,
-            "documentNumber": document_number,
-            "documentCountry": self.portugal.id,
-            "country": self.portugal.id,
-            "city": "Lisbon",
-            "street": "Rua 1",
-            "zipCode": "1000",
-        }
-
-    def _create_contact_with_document(self, document_number):
-        return self.env["res.partner"].create(
-            {
-                "firstname": "Mallory",
-                "lastname": "Stranger",
-                "email": "mallory@example.org",
-                "id_numbers": [
-                    (
-                        0,
-                        0,
-                        {
-                            "name": document_number,
-                            "category_id": self.category.id,
-                            "country_id": self.portugal.id,
-                        },
-                    )
-                ],
-            }
-        )
-
+class TestPortalCheckinUpdate(CommonTestPortalCheckinUpdate):
     def test_merge_patch_writes_and_clears(self):
         response = self._patch({"firstname": "Ann", "lastname": "Lee", "city": "Porto"})
 
@@ -265,3 +202,48 @@ class TestStaffCheckinLinksTheContactOfADocument(CommonTestCheckin):
         )
         self.assertEqual(self.guest.partner_id, contact)
         self.assertEqual(self.guest.firstname, "Mallory")
+
+    def test_staff_update_reports_the_document_of_another_contact(self):
+        """The staff check-in still rejects a document number held by another
+        contact when the guest already has its own."""
+        self.env["res.partner"].create(
+            {
+                "firstname": "Mallory",
+                "lastname": "Stranger",
+                "id_numbers": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": "AB123",
+                            "category_id": self.id_category.id,
+                            "country_id": self.country_pt.id,
+                        },
+                    )
+                ],
+            }
+        )
+        own_contact = self.env["res.partner"].create(
+            {"firstname": "Ann", "lastname": "Lee"}
+        )
+        self.guest.write(
+            {
+                "partner_id": own_contact.id,
+                "document_type": self.id_category.id,
+                "document_number": "OWN-1",
+                "document_country_id": self.country_pt.id,
+            }
+        )
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                self._base_url(checkin_partner=self.guest),
+                json={"documentNumber": "AB123"},
+            )
+
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertEqual(response.json()["type"], "/errors/guest-invalid")
+        self.assertEqual(self.guest.document_number, "OWN-1")
+        self.assertEqual(own_contact.id_numbers.mapped("name"), ["OWN-1"])
