@@ -295,6 +295,9 @@ class ChannelWubookPmsFolioAdapter(Component):
                     guests_children = room.get("ancillary", {}).get("guests_children")
                     if guests_children:
                         children = guests_children
+                if not board:
+                    # Mirai and other channels send the board of each night
+                    board = self._get_roomdays_board(room)
                 if not occupancy:
                     occupancy = self._get_default_occupancy(room_id)
                 if id_channel == 43:  # AirBnb
@@ -356,6 +359,15 @@ class ChannelWubookPmsFolioAdapter(Component):
                 )
             value["reservations"] = reservations
         return values
+
+    def _get_roomdays_board(self, room):
+        """Board of the room when every night carries the same one."""
+        codes = {day.get("board_code") for day in room.get("roomdays") or []}
+        codes.discard(None)
+        if len(codes) != 1:
+            return None
+        code = codes.pop()
+        return code if code != "nb" else None
 
     def _get_default_occupancy(self, room_id):
         """The adults of a room the channel did not say who stays in.
