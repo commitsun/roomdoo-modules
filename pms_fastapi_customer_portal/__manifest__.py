@@ -9,6 +9,7 @@
     "license": "AGPL-3",
     "depends": [
         "pms_fastapi",
+        "pms_partner_identification",
     ],
     "data": [
         "data/res_users.xml",

@@ -25,6 +25,7 @@ CHECKIN_REQUESTS = [
     ("GET", "countries", {}),
     ("GET", "country-states", {}),
     ("GET", "id-number-categories", {}),
+    ("PATCH", "checkin-partners/{guest}", {"json": {"firstname": "Mallory"}}),
 ]
 
 

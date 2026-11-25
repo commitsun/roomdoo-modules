@@ -1,3 +1,5 @@
+from fastapi.responses import Response
+
 from odoo import _, models
 
 from odoo.addons.pms_fastapi.dependencies import PublicEnv
@@ -10,6 +12,7 @@ from odoo.addons.pms_fastapi.schemas.checkin import (
     CheckinContext,
     CheckinGuests,
     CheckinPartnerDetail,
+    CheckinPartnerUpdate,
 )
 from odoo.addons.pms_fastapi.schemas.contact_id_number import (
     ContactIdNumberCategorySummary,
@@ -21,6 +24,7 @@ from odoo.addons.pms_fastapi_customer_portal.models.fastapi_endpoint import (
     customer_portal_router,
 )
 
+from ..models.pms_checkin_partner import PORTAL_CHECKIN_CONTEXT
 from .portal import HELPER as PORTAL_HELPER
 
 CHECKIN_HELPER = "pms_fastapi_customer_portal.checkin_router.helper"
@@ -66,6 +70,28 @@ async def get_portal_checkin_partner(
         return env[CHECKIN_HELPER].new().get_partner_detail(token, checkin_partner_id)
     except ApiProblem as problem:
         return problem.response
+
+
+@customer_portal_router.patch(
+    "/portal/{token}/checkin-partners/{checkin_partner_id}",
+    status_code=204,
+    response_class=Response,
+)
+async def update_portal_checkin_partner(
+    env: PublicEnv,
+    token: str,
+    checkin_partner_id: int,
+    payload: CheckinPartnerUpdate,
+) -> Response:
+    """Update a guest with merge-patch semantics.
+
+    An absent field is left untouched and a null one is cleared. Only data is
+    written: the guest is never boarded."""
+    try:
+        env[CHECKIN_HELPER].new().update_partner(token, checkin_partner_id, payload)
+    except ApiProblem as problem:
+        return problem.response
+    return Response(status_code=204)
 
 
 # The catalogs the check-in refers to by id, as the staff API serves them.
@@ -150,3 +176,15 @@ class CustomerPortalCheckinRouterHelper(models.AbstractModel):
                 _("The guest is not part of this booking."),
             )
         return guest
+
+    # Update
+
+    def update_partner(self, token, checkin_partner_id, payload):
+        """Write the guest as the staff check-in does, as a portal write.
+
+        The portal context keeps the guest from being linked to the contact
+        that holds its document number."""
+        helper = self.with_context(**{PORTAL_CHECKIN_CONTEXT: True})
+        return super(CustomerPortalCheckinRouterHelper, helper).update_partner(
+            token, checkin_partner_id, payload
+        )
