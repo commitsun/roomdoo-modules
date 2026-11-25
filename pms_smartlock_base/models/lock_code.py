@@ -390,6 +390,10 @@ class LockCode(models.Model):
     def _sync_modify(self, date_from, date_to):
         self.ensure_one()
         self = self.sudo()
+        # A reservation moved again within seconds enqueues the revoke of this
+        # same code, which can run first: nothing is left to modify.
+        if self.cancelled:
+            return
         if not self._try_lock_gateways(self.target_ids.mapped("lock_device_id")):
             self._raise_gateway_busy()
         try:

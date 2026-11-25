@@ -255,6 +255,18 @@ class TestSyncModify(_SyncTestBase):
                 )
         persist.assert_called_once()
 
+    def test_already_cancelled_skips_connector(self):
+        """The code was revoked while the modify waited in queue (the
+        reservation moved again) → no vendor call, the code is not failed."""
+        self.connector.modify_access.return_value = _grant()
+        self.code.cancelled = True
+        self.code._sync_modify(
+            date_from=datetime(2026, 6, 2, 13, 0),
+            date_to=datetime(2026, 6, 5, 10, 0),
+        )
+        self.connector.modify_access.assert_not_called()
+        self.assertFalse(self.code.failed)
+
 
 class TestSyncRemove(_SyncTestBase):
     def test_happy_path_revokes_and_marks_cancelled(self):
