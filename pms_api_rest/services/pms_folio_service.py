@@ -633,6 +633,7 @@ class PmsFolioService(Component):
                             if payment.partner_id
                             else None,
                             reference=payment.ref if payment.ref else None,
+                            paymentReference=payment.payment_reference or "",
                             isReconcilied=payment.is_matched,
                             downPaymentInvoiceId=downpayment_invoice.id
                             if downpayment_invoice

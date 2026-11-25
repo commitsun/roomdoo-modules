@@ -136,6 +136,12 @@ class PmsApiCustomerPaymentRouterHelper(models.AbstractModel):
                     payment = self._create_simple_payment(
                         payload, line, partner, "inbound", "customer"
                     )
+                if payload.paymentReference:
+                    # The payment is already posted (and possibly reconciled):
+                    # store the reference without rewriting its journal items.
+                    payment.with_context(skip_account_move_synchronization=True).write(
+                        {"payment_reference": payload.paymentReference}
+                    )
         except PaymentProblem as problem:
             return problem.response
         return CustomerPaymentDetail.from_account_payment(payment)
@@ -358,6 +364,12 @@ class PmsApiCustomerPaymentRouterHelper(models.AbstractModel):
             )
         )
         refund.action_post()
+        if payload.paymentReference:
+            # Same as on payment creation: stored apart, without rewriting the
+            # journal items of the posted refund.
+            refund.with_context(skip_account_move_synchronization=True).write(
+                {"payment_reference": payload.paymentReference}
+            )
         return refund
 
     def _receivable_line(self, payment):

@@ -121,6 +121,35 @@ class TestCustomerPaymentEndpoints(CommonTestPmsApiPayment):
         # ... and the folio link is the computed one (via the reconciled invoice).
         self.assertIn(folio.id, payment.folio_ids.ids)
 
+    def test_payment_reference_on_create(self):
+        """paymentReference is stored apart from reference, on every creation
+        path, and defaults to empty."""
+        folio = self._confirmed_folio()
+        invoice = self._invoice_for_folio(folio)
+        contexts = [{}, {"folioId": folio.id}, {"invoiceId": invoice.id}]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            for context in contexts:
+                response = test_client.post(
+                    "/customer-payments",
+                    json=self._payment_body(
+                        reference="ref", paymentReference="TPV-0001", **context
+                    ),
+                )
+                self.assertEqual(
+                    response.status_code, status.HTTP_201_CREATED, response.text
+                )
+                body = response.json()
+                self.assertEqual(body["paymentReference"], "TPV-0001")
+                payment = self.env["account.payment"].browse(body["id"])
+                self.assertEqual(payment.payment_reference, "TPV-0001")
+                self.assertEqual(payment.state, "posted")
+            response = test_client.post("/customer-payments", json=self._payment_body())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.text)
+        self.assertEqual(response.json()["paymentReference"], "")
+        payment = self.env["account.payment"].browse(response.json()["id"])
+        self.assertFalse(payment.payment_reference)
+
     def test_payment_from_invoice_full_marks_paid(self):
         """Paying the full invoice residual marks it as paid."""
         folio = self._confirmed_folio()
@@ -350,6 +379,28 @@ class TestCustomerPaymentEndpoints(CommonTestPmsApiPayment):
         self.assertEqual(body["reference"], "new ref")
         self.assertEqual(payment.partner_id, other_customer)
         self.assertEqual(payment.ref, "new ref")
+
+    def test_update_payment_reference(self):
+        """paymentReference is editable and independent of reference; omitting
+        it leaves it untouched."""
+        payment = self._create_payment(amount=100.0, ref="old")
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            response = test_client.patch(
+                f"/customer-payments/{payment.id}",
+                json={"paymentReference": "TPV-0002"},
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["paymentReference"], "TPV-0002")
+            self.assertEqual(response.json()["reference"], "old")
+            response = test_client.patch(
+                f"/customer-payments/{payment.id}", json={"amount": 90.0}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(response.json()["paymentReference"], "TPV-0002")
+        self.assertEqual(payment.payment_reference, "TPV-0002")
+        self.assertEqual(payment.ref, "old")
+        self.assertEqual(payment.state, "posted")
 
     def test_update_keeps_the_same_id(self):
         """A PATCH never re-registers the payment, so the id is stable."""

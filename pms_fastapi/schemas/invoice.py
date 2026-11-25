@@ -284,6 +284,7 @@ class ReconcilablePayment(PmsBaseModel):
     availableAmountCompany: float = Field(alias="availableAmountCompany")
     companyCurrency: CurrencySummary = Field(alias="companyCurrency")
     ref: str = ""
+    paymentReference: str = ""
 
     @classmethod
     def from_account_payment(
@@ -315,6 +316,7 @@ class ReconcilablePayment(PmsBaseModel):
             "availableAmountCompany": company_currency.round(available_company),
             "companyCurrency": CurrencySummary.from_res_currency(company_currency),
             "ref": payment.ref or "",
+            "paymentReference": payment.payment_reference or "",
         }
         if payment.journal_id:
             data["journal"] = JournalSummary.from_account_journal(payment.journal_id)

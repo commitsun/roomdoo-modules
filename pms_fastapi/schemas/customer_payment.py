@@ -118,6 +118,11 @@ class CustomerPaymentInput(PmsBaseModel):
         None, description="Invoice context. Mutually exclusive with folioId."
     )
     reference: str = ""
+    paymentReference: str = Field(
+        "",
+        description="Free payment reference, e.g. the card terminal operation "
+        "number. Stored apart from `reference`.",
+    )
 
 
 class CustomerPaymentUpdate(PmsBaseModel):
@@ -137,6 +142,7 @@ class CustomerPaymentUpdate(PmsBaseModel):
     date: datetime.date | None = Field(None, description="New payment date.")
     partnerId: int | None = Field(None, description="New contact of the payment.")
     reference: str | None = Field(None, description="New reference.")
+    paymentReference: str | None = Field(None, description="New payment reference.")
 
 
 class PaymentRefundLine(PmsBaseModel):
@@ -169,4 +175,9 @@ class PaymentRefundInput(PmsBaseModel):
         min_length=1,
         description="Payments to refund with the amount per payment. Minimum 1 "
         "item; all payments must belong to the same folio.",
+    )
+    paymentReference: str = Field(
+        "",
+        description="Free payment reference of the refund, e.g. the card "
+        "terminal operation number.",
     )

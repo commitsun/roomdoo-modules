@@ -34,6 +34,7 @@ class PmsTransactionInfo(Datamodel):
     folioId = fields.Integer(required=False, allow_none=True)
     destinationJournalId = fields.Integer(required=False, allow_none=True)
     reference = fields.String(required=False, allow_none=True)
+    paymentReference = fields.String(required=False, allow_none=True)
     pmsPropertyId = fields.Integer(required=False, allow_none=True)
     createUid = fields.Integer(required=False, allow_none=True)
     transactionType = fields.String(required=False, allow_none=True)

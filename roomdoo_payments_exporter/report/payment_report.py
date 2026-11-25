@@ -58,6 +58,7 @@ class PaymentReportMixin(models.AbstractModel):
                     "journal_name": payment.journal_id.name or "",
                     "folio_name": ", ".join(payment.folio_ids.mapped("name")),
                     "ref": payment.ref or "",
+                    "payment_reference": payment.payment_reference or "",
                     "created_by": payment.create_uid.name or "",
                     "amount": abs(payment.amount),
                     "currency": currency,

@@ -528,9 +528,17 @@ class PmsApiPaymentRouterHelper(models.AbstractModel):
         resource a PATCH is supposed to be editing. Such a correction is a
         cancellation plus a new registration, and the API says so."""
         vals = self._partner_payment_update_vals(payment, payload)
-        if not vals:
-            return
-        self._ensure_open_cash_session(payment.journal_id)
-        payment.action_draft()
-        payment.write(vals)
-        payment.action_post()
+        if vals:
+            self._ensure_open_cash_session(payment.journal_id)
+            payment.action_draft()
+            payment.write(vals)
+            payment.action_post()
+        payment_reference = getattr(payload, "paymentReference", None)
+        if payment_reference is not None and payment_reference != (
+            payment.payment_reference or ""
+        ):
+            # Same as on create: stored apart, without reposting the payment
+            # nor rewriting its journal items.
+            payment.with_context(skip_account_move_synchronization=True).write(
+                {"payment_reference": payment_reference}
+            )

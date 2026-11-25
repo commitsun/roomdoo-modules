@@ -425,6 +425,8 @@ class InvoicePaymentXlsx(models.AbstractModel):
                     if payment_rec.ref
                     else payment_rec.name or ""
                 )
+                if payment_rec.payment_reference:
+                    ref = " · ".join(filter(None, [ref, payment_rec.payment_reference]))
 
             lines.append(
                 {

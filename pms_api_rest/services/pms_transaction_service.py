@@ -70,6 +70,7 @@ class PmsTransactionService(Component):
                 subdomains = [
                     [("name", "ilike", search)],
                     [("ref", "ilike", search)],
+                    [("payment_reference", "ilike", search)],
                     [("partner_id.display_name", "ilike", search)],
                 ]
                 domain_filter.append(expression.OR(subdomains))
@@ -209,6 +210,7 @@ class PmsTransactionService(Component):
                     if transaction.partner_id
                     else None,
                     reference=transaction.ref if transaction.ref else None,
+                    paymentReference=transaction.payment_reference or "",
                     createUid=transaction.create_uid
                     if transaction.create_uid
                     else None,
@@ -266,6 +268,7 @@ class PmsTransactionService(Component):
             partnerId=transaction.partner_id.id if transaction.partner_id else None,
             partnerName=transaction.partner_id.name if transaction.partner_id else None,
             reference=transaction.ref if transaction.ref else None,
+            paymentReference=transaction.payment_reference or "",
             createUid=transaction.create_uid.id if transaction.create_uid else None,
             transactionType=transaction.pms_api_transaction_type or None,
             isReconcilied=transaction.is_matched,
@@ -737,7 +740,11 @@ class PmsTransactionService(Component):
                 "amount": record.amount
                 if record.payment_type == "inbound"
                 else -record.amount,
-                "payment_ref": record.ref,
+                "payment_ref": " · ".join(
+                    filter(None, [record.ref, record.payment_reference])
+                )
+                if record.payment_reference
+                else record.ref,
                 "partner_id": record.partner_id.id,
                 "pms_property_id": record.pms_property_id.id,
                 "statement_id": statement.id,

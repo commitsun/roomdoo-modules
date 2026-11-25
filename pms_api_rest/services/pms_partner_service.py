@@ -487,6 +487,7 @@ class PmsPartnerService(Component):
                     partnerId=payment.partner_id.id if payment.partner_id else None,
                     partnerName=payment.partner_id.name if payment.partner_id else None,
                     reference=payment.ref if payment.ref else None,
+                    paymentReference=payment.payment_reference or "",
                     createUid=payment.create_uid.id if payment.create_uid else None,
                     transactionType=payment.pms_api_transaction_type or None,
                     isReconcilied=payment.is_matched,

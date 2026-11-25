@@ -109,6 +109,37 @@ class TestPaymentsLedgerEndpoints(CommonTestPmsApiPayment):
         self.assertIn(match.id, items)
         self.assertNotIn(other.id, items)
 
+    def _payment_with_payment_reference(self, payment_reference, ref=""):
+        payment = self._create_payment(ref=ref, post=False)
+        payment.payment_reference = payment_reference
+        payment.action_post()
+        return payment
+
+    def test_payment_reference_output_and_search(self):
+        """paymentReference is exposed, and both the reference filter and the
+        global search also match it."""
+        match = self._payment_with_payment_reference("TPV-UNIQUE-77", ref="R1")
+        other = self._create_payment(ref="somethingelse")
+        base = f"/payments?pmsPropertyId={self.test_property.id}"
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            listed = self._items_by_id(test_client.get(base))
+            by_reference = self._items_by_id(
+                test_client.get(f"{base}&reference=TPV-UNIQUE-77")
+            )
+            by_global = self._items_by_id(
+                test_client.get(f"{base}&globalSearch=TPV-UNIQUE-77")
+            )
+            detail = test_client.get(f"/payments/{match.id}").json()
+        self.assertEqual(listed[match.id]["paymentReference"], "TPV-UNIQUE-77")
+        self.assertEqual(listed[match.id]["reference"], "R1")
+        self.assertEqual(listed[other.id]["paymentReference"], "")
+        self.assertEqual(detail["paymentReference"], "TPV-UNIQUE-77")
+        self.assertIn(match.id, by_reference)
+        self.assertNotIn(other.id, by_reference)
+        self.assertIn(match.id, by_global)
+        self.assertNotIn(other.id, by_global)
+
     def test_invalid_date_range_returns_422(self):
         """dateTo earlier than dateFrom is rejected with 422."""
         with self._create_test_client(raise_server_exceptions=False) as test_client:

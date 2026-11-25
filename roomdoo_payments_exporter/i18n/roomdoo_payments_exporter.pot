@@ -24,6 +24,13 @@ msgstr ""
 #. module: roomdoo_payments_exporter
 #. odoo-python
 #: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Concept"
+msgstr ""
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
 #: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
 #, python-format
 msgid "Contact"
@@ -94,6 +101,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
 #, python-format
 msgid "Payment Method"
+msgstr ""
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Payment Reference"
 msgstr ""
 
 #. module: roomdoo_payments_exporter

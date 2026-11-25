@@ -241,7 +241,11 @@ class AccountBankStatement(models.Model):
                         "amount": payment.amount
                         if payment.payment_type == "inbound"
                         else -payment.amount,
-                        "payment_ref": payment.ref,
+                        "payment_ref": " · ".join(
+                            filter(None, [payment.ref, payment.payment_reference])
+                        )
+                        if payment.payment_reference
+                        else payment.ref,
                         "partner_id": payment.partner_id.id,
                         "pms_property_id": payment.pms_property_id.id,
                         "statement_id": self.id,

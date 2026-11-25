@@ -118,6 +118,7 @@ class PaymentBase(PmsBaseModel):
     name: str = ""
     date: date
     ref: str = Field("", alias="reference")
+    paymentReference: str = ""
     createdBy: UserId | None = None
     paymentType: PaymentTypeEnum
     amount: CurrencyAmount = 0.0
@@ -131,6 +132,7 @@ class PaymentBase(PmsBaseModel):
             "name": payment.name or "",
             "date": payment.date,
             "ref": payment.ref or "",
+            "paymentReference": payment.payment_reference or "",
             "paymentType": PaymentTypeEnum.from_account_payment(payment),
             "amount": abs(payment.amount),
         }
@@ -214,8 +216,8 @@ class PaymentSearch(BaseSearch):
         globalSearch: Annotated[
             SearchText,
             Query(
-                description="Free-text search across reference, contact "
-                "and created by.",
+                description="Free-text search across reference, payment "
+                "reference, contact and created by.",
             ),
         ] = None,
         dateFrom: Annotated[
@@ -249,7 +251,7 @@ class PaymentSearch(BaseSearch):
         reference: Annotated[
             SearchText,
             Query(
-                description="Filter exclusively by reference.",
+                description="Filter by reference or payment reference.",
             ),
         ] = None,
         contact: Annotated[
@@ -344,7 +346,9 @@ class PaymentSearch(BaseSearch):
                     [
                         "|",
                         "|",
+                        "|",
                         ("ref", "ilike", self.globalSearch),
+                        ("payment_reference", "ilike", self.globalSearch),
                         ("partner_id.display_name", "ilike", self.globalSearch),
                         ("create_uid.name", "ilike", self.globalSearch),
                     ],
@@ -367,7 +371,16 @@ class PaymentSearch(BaseSearch):
                 [domain, [("payment_method_line_id", "in", self.paymentMethod)]]
             )
         if self.reference:
-            domain = expression.AND([domain, [("ref", "ilike", self.reference)]])
+            domain = expression.AND(
+                [
+                    domain,
+                    [
+                        "|",
+                        ("ref", "ilike", self.reference),
+                        ("payment_reference", "ilike", self.reference),
+                    ],
+                ]
+            )
         if self.contact:
             domain = expression.AND(
                 [domain, [("partner_id.display_name", "ilike", self.contact)]]

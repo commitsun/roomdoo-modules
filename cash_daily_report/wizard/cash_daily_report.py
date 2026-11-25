@@ -80,21 +80,23 @@ class CashDailyReportWizard(models.TransientModel):
         worksheet = workbook.add_worksheet(_("Cash Daily Report"))
 
         worksheet.write("A1", _("Usuario"), xls_cell_format_header)
-        worksheet.write("B1", _("Referencia"), xls_cell_format_header)
-        worksheet.write("C1", _("Cliente/Prov."), xls_cell_format_header)
-        worksheet.write("D1", _("Fecha"), xls_cell_format_header)
-        worksheet.write("E1", _("Diario"), xls_cell_format_header)
-        worksheet.write("F1", _("Cantidad"), xls_cell_format_header)
-        worksheet.write("G1", _("Tipo"), xls_cell_format_header)
+        worksheet.write("B1", _("Concepto"), xls_cell_format_header)
+        worksheet.write("C1", _("Referencia"), xls_cell_format_header)
+        worksheet.write("D1", _("Cliente/Prov."), xls_cell_format_header)
+        worksheet.write("E1", _("Fecha"), xls_cell_format_header)
+        worksheet.write("F1", _("Diario"), xls_cell_format_header)
+        worksheet.write("G1", _("Cantidad"), xls_cell_format_header)
+        worksheet.write("H1", _("Tipo"), xls_cell_format_header)
         # worksheet.write('G1', _('Tipo'), xls_cell_format_header)
 
         worksheet.set_column("A:A", 15)
         worksheet.set_column("B:B", 15)
         worksheet.set_column("C:C", 15)
-        worksheet.set_column("D:D", 11)
-        worksheet.set_column("E:E", 10)
-        worksheet.set_column("F:F", 12)
-        worksheet.set_column("G:G", 10)
+        worksheet.set_column("D:D", 15)
+        worksheet.set_column("E:E", 11)
+        worksheet.set_column("F:F", 10)
+        worksheet.set_column("G:G", 12)
+        worksheet.set_column("H:H", 10)
 
         account_payments_obj = self.env["account.payment"]
         account_payments = account_payments_obj.search(
@@ -221,10 +223,12 @@ class CashDailyReportWizard(models.TransientModel):
 
             worksheet.write(k_payment + offset, 0, v_payment.create_uid.login)
             worksheet.write(k_payment + offset, 1, v_payment.ref or "")
-            worksheet.write(k_payment + offset, 2, where)
-            worksheet.write(k_payment + offset, 3, v_payment.date, xls_cell_format_date)
-            worksheet.write(k_payment + offset, 4, v_payment.journal_id.name)
-            worksheet.write(k_payment + offset, 5, amount, xls_cell_format_money)
+            # As text: the workbook turns numeric-looking strings into numbers (000980 -> 980)
+            worksheet.write_string(k_payment + offset, 2, v_payment.payment_reference or "")
+            worksheet.write(k_payment + offset, 3, where)
+            worksheet.write(k_payment + offset, 4, v_payment.date, xls_cell_format_date)
+            worksheet.write(k_payment + offset, 5, v_payment.journal_id.name)
+            worksheet.write(k_payment + offset, 6, amount, xls_cell_format_money)
             if v_payment.is_internal_transfer:
                 tipo_operacion = "Interna"
             elif v_payment.partner_type == "customer":
@@ -232,7 +236,7 @@ class CashDailyReportWizard(models.TransientModel):
             elif v_payment.partner_type == "supplier":
                 tipo_operacion = "Proveedor"
 
-            worksheet.write(k_payment + offset, 6, tipo_operacion)
+            worksheet.write(k_payment + offset, 7, tipo_operacion)
             total_account_payment_amount += amount
         offset += len(account_payments)
         line = offset
@@ -305,17 +309,17 @@ class CashDailyReportWizard(models.TransientModel):
 
         # # TOTALS
         line += 1
-        worksheet.write(line, 3, _("TOTAL"), xls_cell_format_header)
+        worksheet.write(line, 4, _("TOTAL"), xls_cell_format_header)
         worksheet.write(
             line,
-            5,
+            6,
             total_account_payment - total_account_expenses,
             xls_cell_format_header,
         )
         for journal in result_journals:
             line += 1
-            worksheet.write(line, 3, _(journal))
-            worksheet.write(line, 5, result_journals[journal], xls_cell_format_money)
+            worksheet.write(line, 4, _(journal))
+            worksheet.write(line, 6, result_journals[journal], xls_cell_format_money)
 
         # line += 1
         # worksheet.write(line, 1, _('FECHA:'))

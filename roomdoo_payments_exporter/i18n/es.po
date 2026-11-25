@@ -25,6 +25,13 @@ msgstr "Importe"
 #. module: roomdoo_payments_exporter
 #. odoo-python
 #: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Concept"
+msgstr "Concepto"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
 #: model_terms:ir.ui.view,arch_db:roomdoo_payments_exporter.report_payments
 #, python-format
 msgid "Contact"
@@ -96,6 +103,13 @@ msgstr "Número"
 #, python-format
 msgid "Payment Method"
 msgstr "Forma de pago"
+
+#. module: roomdoo_payments_exporter
+#. odoo-python
+#: code:addons/roomdoo_payments_exporter/report/payment_xlsx.py:0
+#, python-format
+msgid "Payment Reference"
+msgstr "Referencia"
 
 #. module: roomdoo_payments_exporter
 #. odoo-python
