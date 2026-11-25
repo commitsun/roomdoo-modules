@@ -21,7 +21,8 @@ UNREACHABLE_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0")
 
 API_PATH = "/api/v1"
 STAGING_URL = "https://staging.channex.io" + API_PATH
-PRODUCTION_URL = "https://channex.io" + API_PATH
+# The bare domain is the public website: it answers the API with a 404.
+PRODUCTION_URL = "https://app.channex.io" + API_PATH
 
 # Languages the embedded Channex UI ships. Anything else falls back to English,
 # which is what Channex does anyway, only without leaving a wrong hint in the URL.
