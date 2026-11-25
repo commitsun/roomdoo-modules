@@ -10,6 +10,9 @@ from odoo.addons.pms_fastapi_customer_portal.schemas.portal_folio import (
     PortalFolio,
     PortalSaleLine,
 )
+from odoo.addons.pms_fastapi_customer_portal.schemas.portal_property import (
+    PortalProperty,
+)
 
 HELPER = "pms_fastapi_customer_portal.portal_router.helper"
 
@@ -22,6 +25,14 @@ class _PortalProblem(ApiProblem):
 async def get_portal_folio(env: PublicEnv, token: str) -> PortalFolio:
     try:
         return env[HELPER].new().get_folio(token)
+    except _PortalProblem as problem:
+        return problem.response
+
+
+@customer_portal_router.get("/portal/{token}/property")
+async def get_portal_property(env: PublicEnv, token: str) -> PortalProperty:
+    try:
+        return env[HELPER].new().get_property(token)
     except _PortalProblem as problem:
         return problem.response
 
@@ -59,6 +70,11 @@ class CustomerPortalRouterHelper(models.AbstractModel):
                 )
             )
         return folio
+
+    # Property
+
+    def get_property(self, token) -> PortalProperty:
+        return PortalProperty.from_pms_property(self._get_folio(token).pms_property_id)
 
     # Folio
 

@@ -10,6 +10,8 @@ Routes:
 
 * ``GET /portal/{token}/folio``: the folio, its customer, the stay and the
   sale lines aggregated for display.
+* ``GET /portal/{token}/property``: the property of that folio, with its
+  address, location, contact, logo, images and default hours.
 
 A token that matches no folio, or a folio that is still a quotation or has no
 reservation, answers ``404`` with an ``application/problem+json`` body of type
