@@ -79,6 +79,11 @@ class TestPortalCheckinCors(CommonTestCustomerPortalApi):
         self.assertEqual(response.headers["access-control-allow-origin"], PORTAL_URL)
         self.assertEqual(self._preflight("PATCH", OTHER_URL).status_code, 400)
 
+    def test_preflight_allows_the_document_scan(self):
+        response = self._assert_preflight_allowed("POST", OTHER_URL)
+
+        self.assertEqual(response.headers["access-control-allow-origin"], "*")
+
     def test_preflight_refuses_other_methods(self):
         for method in ("PUT", "DELETE"):
             with self.subTest(method=method):

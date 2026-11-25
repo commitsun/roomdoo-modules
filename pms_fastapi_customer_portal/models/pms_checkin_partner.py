@@ -1,4 +1,4 @@
-from odoo import models
+from odoo import fields, models
 
 # Context key of the guest writes that come from the customer portal.
 PORTAL_CHECKIN_CONTEXT = "customer_portal_checkin"
@@ -6,6 +6,16 @@ PORTAL_CHECKIN_CONTEXT = "customer_portal_checkin"
 
 class PmsCheckinPartner(models.Model):
     _inherit = "pms.checkin.partner"
+
+    # Counted with SQL by the portal: no default, so a NULL counts as none.
+    portal_document_scan_count = fields.Integer(
+        string="Portal document scans",
+        readonly=True,
+        copy=False,
+        help="Identity documents scanned for this guest from the customer "
+        "portal, read or not. The portal scans no more once the limit is "
+        "reached.",
+    )
 
     def set_partner_id(self):
         """Never link a guest written from the portal to the contact that

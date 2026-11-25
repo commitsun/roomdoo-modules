@@ -127,7 +127,14 @@ class CommonTestCustomerPortalApi(FastAPITransactionCase):
         folio.with_context(confirm_all_reservations=True).action_confirm()
         return folio
 
+    def _cold_cache(self):
+        """Start a request with an empty cache, as in production: a cached
+        value is read without checking the access rights of the portal user."""
+        self.env.flush_all()
+        self.env.invalidate_all()
+
     def _get(self, path):
+        self._cold_cache()
         with self._create_test_client() as test_client:
             return test_client.get(path)
 
@@ -143,6 +150,7 @@ class CommonTestCustomerPortalApi(FastAPITransactionCase):
         self.property.ocr_checkin_supplier = "test"
 
     def _request(self, method, path, **kwargs):
+        self._cold_cache()
         with self._create_test_client() as test_client:
             return test_client.request(method, path, **kwargs)
 

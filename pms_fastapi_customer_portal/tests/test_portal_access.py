@@ -13,6 +13,7 @@ PORTAL_PATHS = {
     "/portal/{token}/checkin-guests",
     "/portal/{token}/checkin-context",
     "/portal/{token}/checkin-partners/{checkin_partner_id}",
+    "/portal/{token}/checkin-partners/{checkin_partner_id}/document-scan",
     "/portal/{token}/countries",
     "/portal/{token}/country-states",
     "/portal/{token}/id-number-categories",
@@ -26,6 +27,7 @@ CHECKIN_REQUESTS = [
     ("GET", "country-states", {}),
     ("GET", "id-number-categories", {}),
     ("PATCH", "checkin-partners/{guest}", {"json": {"firstname": "Mallory"}}),
+    ("POST", "checkin-partners/{guest}/document-scan", {"json": {"front": "ZnJvbnQ="}}),
 ]
 
 
@@ -154,6 +156,7 @@ class TestPortalCheckinTokenAccess(CommonTestCustomerPortalApi):
                 )
                 self.assertEqual(response.json(), self.unknown.json())
         self.assertFalse(guest.firstname)
+        self.assertEqual(guest.portal_document_scan_count, 0)
 
     def test_unknown_tokens_are_not_found(self):
         guest = self._create_folio([(self.double, 3, 2, 1, 0)]).checkin_partner_ids

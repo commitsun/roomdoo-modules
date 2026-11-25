@@ -40,7 +40,7 @@ class FastapiEndpoint(models.Model):
             app.add_middleware(
                 CORSMiddleware,
                 allow_origins=[portal_url] if portal_url else ["*"],
-                allow_methods=["GET", "PATCH"],
+                allow_methods=["GET", "PATCH", "POST"],
                 allow_headers=["*"],
             )
         return app

@@ -1,6 +1,7 @@
 from . import test_portal_access
 from . import test_portal_app
 from . import test_portal_checkin_read
+from . import test_portal_checkin_scan
 from . import test_portal_checkin_update
 from . import test_portal_folio
 from . import test_portal_property

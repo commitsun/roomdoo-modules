@@ -10,9 +10,11 @@ from odoo.addons.pms_fastapi.routers.country import get_server_countries
 from odoo.addons.pms_fastapi.routers.country_state import get_country_states
 from odoo.addons.pms_fastapi.schemas.checkin import (
     CheckinContext,
+    CheckinDocumentData,
     CheckinGuests,
     CheckinPartnerDetail,
     CheckinPartnerUpdate,
+    DocumentScanInput,
 )
 from odoo.addons.pms_fastapi.schemas.contact_id_number import (
     ContactIdNumberCategorySummary,
@@ -30,6 +32,8 @@ from .portal import HELPER as PORTAL_HELPER
 CHECKIN_HELPER = "pms_fastapi_customer_portal.checkin_router.helper"
 # Folio states whose guests may be checked in from the portal.
 CHECKIN_FOLIO_STATES = ("confirm",)
+# Document scans a guest may ask for from the portal.
+MAX_PORTAL_DOCUMENT_SCANS = 5
 
 # The check-in routes of the staff API, with the folio of the token in place of
 # the folio id. Every problem of the check-in helper, its own and the staff
@@ -92,6 +96,26 @@ async def update_portal_checkin_partner(
     except ApiProblem as problem:
         return problem.response
     return Response(status_code=204)
+
+
+@customer_portal_router.post(
+    "/portal/{token}/checkin-partners/{checkin_partner_id}/document-scan",
+    response_model_exclude_unset=True,
+)
+async def scan_portal_checkin_partner_document(
+    env: PublicEnv,
+    token: str,
+    checkin_partner_id: int,
+    payload: DocumentScanInput,
+) -> CheckinDocumentData:
+    """Read an identity document with the property OCR. Nothing is saved but
+    the count of scans of the guest, which has a limit."""
+    try:
+        return (
+            env[CHECKIN_HELPER].new().scan_document(token, checkin_partner_id, payload)
+        )
+    except ApiProblem as problem:
+        return problem.response
 
 
 # The catalogs the check-in refers to by id, as the staff API serves them.
@@ -188,3 +212,53 @@ class CustomerPortalCheckinRouterHelper(models.AbstractModel):
         return super(CustomerPortalCheckinRouterHelper, helper).update_partner(
             token, checkin_partner_id, payload
         )
+
+    # Document scan
+
+    def scan_document(self, token, checkin_partner_id, payload):
+        """Scan as the staff check-in does, within the scan limit of the guest.
+
+        Every scan asked for a guest that may be modified counts, read or not,
+        and the count is kept when the scan answers a problem.
+        """
+        folio = self._get_folio(token)
+        cp = self._get_checkin_partner_or_404(folio, checkin_partner_id)
+        self._check_not_read_only(cp)
+        self._count_document_scan(cp)
+        return super().scan_document(token, checkin_partner_id, payload)
+
+    def _count_document_scan(self, cp):
+        """Count a scan of the guest, or answer 429 when it has no scans left.
+
+        The count is written with SQL: the ORM write of a guest would also run
+        its partner and tourist tax side effects, the partner one without the
+        portal context. The update locks the guest until the request ends, so
+        concurrent scans of a guest are counted one after the other.
+        """
+        cp.flush_recordset(["portal_document_scan_count"])
+        self.env.cr.execute(
+            """
+            UPDATE pms_checkin_partner
+            SET portal_document_scan_count =
+                COALESCE(portal_document_scan_count, 0) + 1
+            WHERE id = %s AND COALESCE(portal_document_scan_count, 0) < %s
+            RETURNING id
+            """,
+            (cp.id, MAX_PORTAL_DOCUMENT_SCANS),
+        )
+        counted = self.env.cr.fetchone()
+        cp.invalidate_recordset(["portal_document_scan_count"])
+        if not counted:
+            self._raise_problem(
+                429,
+                "/errors/document-scan-limit",
+                _("Document scan limit reached"),
+                _("No more documents can be scanned for this guest."),
+                maxScans=MAX_PORTAL_DOCUMENT_SCANS,
+            )
+
+    def _scan_result_values(self, result):
+        # The portal user may not read the document types a result refers to.
+        return super(
+            CustomerPortalCheckinRouterHelper, self.sudo()
+        )._scan_result_values(result)
