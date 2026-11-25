@@ -596,6 +596,27 @@ class TestFolioInvoicing(CommonTestPmsApi):
         self.assertEqual(response.json()["type"], "/errors/duplicate-downpayment-lines")
 
     # ------------------------------------------------------------------
+    # GET /invoices/{id} — detail
+    # ------------------------------------------------------------------
+    def test_get_invoice_detail_lists_folios_of_all_lines(self):
+        folio_a = self._confirmed_folio()
+        folio_b = self._confirmed_folio(days_ahead=30)
+        payload = self._create_payload(
+            self._room_line(folio_a), customer_id=self.customer.id
+        )
+        payload["lines"] += self._create_payload(self._room_line(folio_b))["lines"]
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            created = self._post_invoice(test_client, payload)
+            self.assertEqual(created.status_code, status.HTTP_201_CREATED, created.text)
+            response = test_client.get(f"/invoices/{created.json()['id']}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertCountEqual(
+            [folio["id"] for folio in response.json()["folios"]],
+            (folio_a | folio_b).ids,
+        )
+
+    # ------------------------------------------------------------------
     # PUT /invoices/{id} — edit
     # ------------------------------------------------------------------
     def _create_draft_invoice(self, test_client, folio, qty=1):
