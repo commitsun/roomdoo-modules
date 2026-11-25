@@ -30,6 +30,11 @@ def _flush_availability_buffer(env):
                 f"wubook_export_property_avail:{binding.backend_id.id}:{binding.odoo_id.id}"
             )
         ).export_record(binding.backend_id, binding.odoo_id)
+    # A precommit hook runs after the transaction was flushed, so the windows
+    # staged here have to be flushed here: a commit that flushes only once (a
+    # queue job, the shell) would drop them, and the export would find the
+    # binding in sync and push nothing.
+    env.flush_all()
 
 
 def _window(date_from, date_to):
