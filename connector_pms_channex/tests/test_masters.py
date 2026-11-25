@@ -133,6 +133,24 @@ class TestRoomTypeExport(ChannexConnectorCase):
         self.assertEqual(binding.count_of_rooms, 2)
         self.assertEqual(binding.occ_adults, 2)
 
+    def test_archived_rooms_are_not_counted(self):
+        """Not even when the bindings are read with the archived ones, as the
+        full sync does to find the room types it carries."""
+        self.env["pms.room"].create(
+            {
+                "name": "CHX-ARCHIVED",
+                "pms_property_id": self.pms_property.id,
+                "room_type_id": self.room_type.id,
+                "capacity": 1,
+                "active": False,
+            }
+        )
+        binding = self._bind(ROOM_TYPE_BINDING, self.room_type)
+        binding = binding.with_context(active_test=False)
+        binding._compute_from_rooms()
+        self.assertEqual(binding.count_of_rooms, 2)
+        self.assertEqual(binding.occ_adults, 2)
+
     def test_room_type_payload(self):
         self._connect_property()
         self._bind(ROOM_TYPE_BINDING, self.room_type)
