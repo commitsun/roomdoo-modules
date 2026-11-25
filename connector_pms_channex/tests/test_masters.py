@@ -133,6 +133,17 @@ class TestRoomTypeExport(ChannexConnectorCase):
         self.assertEqual(binding.count_of_rooms, 2)
         self.assertEqual(binding.occ_adults, 2)
 
+    def test_children_places_derived_from_the_rooms(self):
+        """The places only children sleep in, as many as every room of the
+        type has: a room with none leaves the room type with none."""
+        binding = self._bind(ROOM_TYPE_BINDING, self.room_type)
+        self.assertEqual(binding.occ_children, 0)
+        rooms = self.room_type.room_ids
+        rooms[0].children_capacity = 2
+        self.assertEqual(binding.occ_children, 0)
+        rooms[1].children_capacity = 1
+        self.assertEqual(binding.occ_children, 1)
+
     def test_room_type_payload(self):
         self._connect_property()
         self._bind(ROOM_TYPE_BINDING, self.room_type)

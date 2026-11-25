@@ -42,7 +42,15 @@ class ChannelChannexPmsRoomType(models.Model):
         store=True,
         readonly=False,
     )
-    occ_children = fields.Integer(string="Children")
+    occ_children = fields.Integer(
+        string="Children",
+        compute="_compute_occ_children",
+        store=True,
+        readonly=False,
+        help="Places where only children can sleep, such as child bunk beds: "
+        "children also sleep in the places of adults. Defaults to the smallest "
+        "number of them among the rooms of this type.",
+    )
     occ_infants = fields.Integer(string="Infants")
     room_kind = fields.Selection(
         selection=[
@@ -93,6 +101,23 @@ class ChannelChannexPmsRoomType(models.Model):
             # causes an overbooking, while underselling only loses inventory.
             rec.occ_adults = min(capacities) if capacities else 0
             rec.default_occupancy = rec.occ_adults
+
+    @api.depends(
+        "odoo_id",
+        "backend_id",
+        "backend_id.pms_property_id",
+        "odoo_id.room_ids",
+        "odoo_id.room_ids.active",
+        "odoo_id.room_ids.children_capacity",
+        "odoo_id.room_ids.pms_property_id",
+    )
+    def _compute_occ_children(self):
+        for rec in self:
+            # A room with no places of this kind counts: the smallest is the
+            # one every room of the type has.
+            rec.occ_children = min(
+                rec._backend_rooms().mapped("children_capacity"), default=0
+            )
 
     @api.depends("odoo_id", "backend_id")
     def _compute_room_kind(self):

@@ -134,6 +134,15 @@ class TestChannexRoomTypeLifecycle(ChannexConnectorCase):
         self.assertEqual(len(puts), 1)
         self.assertEqual(puts[0][2]["room_type"]["count_of_rooms"], 3)
 
+    def test_children_places_of_its_rooms_update_the_room_type(self):
+        with trap_jobs() as trap:
+            self.env[BINDING].export_record(self.backend, self.room_type)
+            self.room_type.room_ids.children_capacity = 1
+            self._run_jobs(trap)
+        puts = self.server.calls_to("PUT", "room_types")
+        self.assertEqual(len(puts), 1)
+        self.assertEqual(puts[0][2]["room_type"]["occ_children"], 1)
+
     # -- removal -----------------------------------------------------------
 
     def _export_base_room_type(self):

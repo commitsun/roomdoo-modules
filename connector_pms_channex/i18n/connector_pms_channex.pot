@@ -3351,6 +3351,14 @@ msgid "Pick or create the agency"
 msgstr ""
 
 #. module: connector_pms_channex
+#: model:ir.model.fields,help:connector_pms_channex.field_channel_channex_pms_room_type__occ_children
+msgid ""
+"Places where only children can sleep, such as child bunk beds: children also"
+" sleep in the places of adults. Defaults to the smallest number of them "
+"among the rooms of this type."
+msgstr ""
+
+#. module: connector_pms_channex
 #: model:ir.model.fields,field_description:connector_pms_channex.field_channel_channex_pms_folio__access_url
 msgid "Portal Access URL"
 msgstr ""
