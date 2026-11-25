@@ -154,6 +154,10 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
             self.assertEqual(
                 t["property_ids"], sorted([self.pms_property1.id, other.id])
             )
+        self.assertEqual(
+            self.bookai_template.bookai_bound_property_ids(),
+            sorted([self.pms_property1.id, other.id]),
+        )
 
     def test_build_payload_ignores_archived_and_other_codes(self):
         self.bookai_template.pms_property_ids = [(6, 0, [self.pms_property1.id])]

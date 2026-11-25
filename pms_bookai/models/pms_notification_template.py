@@ -543,7 +543,7 @@ class PmsNotificationTemplate(models.Model):
         if stale:
             stale.write({"active": False})
 
-    def _bookai_bound_property_ids(self):
+    def bookai_bound_property_ids(self):
         """Odoo property ids BookAI must bind to this template's code.
 
         Several templates may share one BookAI code: one per hotel, with the
@@ -551,7 +551,8 @@ class PmsNotificationTemplate(models.Model):
         the bindings of a code with the ones each sync sends, so syncing one
         of them must send the hotels of all the active ones, or the others
         would be unbound. Read as superuser: a hotel user may not see the
-        templates of the other hotels, and they must not be dropped.
+        templates of the other hotels, and they must not be dropped. Public, so
+        that tools can show which hotels a sync will bind before running it.
         """
         self.ensure_one()
         me = self.sudo()
@@ -566,7 +567,7 @@ class PmsNotificationTemplate(models.Model):
     def _build_bookai_template_payload(self):
         self.ensure_one()
         param_keys = [p.key for p in self.bookai_param_ids.sorted("sequence")]
-        property_ids = self._bookai_bound_property_ids()
+        property_ids = self.bookai_bound_property_ids()
         translations = []
         for trans in self.bookai_translation_ids.filtered("active"):
             lang_code = trans.language
