@@ -93,6 +93,11 @@ def _flush_pending_plan_rules(env):
                 continue
             binding._wubook_stage_pending_window(*window)
             _buffer_plan_export_at(env, binding)
+    # A precommit hook runs after the transaction was flushed, so the windows
+    # staged here have to be flushed here: a commit that flushes only once (a
+    # queue job, the shell) would drop them, and the export would find the
+    # plan in sync and push nothing.
+    env.flush_all()
 
 
 def _buffer_plan_export_at(env, plan_binding):
