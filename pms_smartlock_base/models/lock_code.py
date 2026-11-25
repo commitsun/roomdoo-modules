@@ -478,6 +478,40 @@ class LockCode(models.Model):
             ]
         ).write({"failed": True})
 
+    @api.model
+    def _cron_revoke_expired_codes(self):
+        """Revoke the credentials whose window ended and that nothing revoked.
+
+        A credential is revoked when its reservation is checked out or
+        cancelled. A reservation whose guest is never checked in stays in
+        ``arrival_delayed`` for good, and a failed credential is skipped by
+        that flow, so their passcodes would stay on the locks: past their
+        window they no longer open, but they still take a slot and block their
+        PIN for anyone else.
+
+        A credential whose revoke was already enqueued, whatever came of it, is
+        left alone, so one that keeps failing is not retried on every run."""
+        codes = (
+            self.sudo()
+            .with_context(active_test=False)
+            .search(
+                [
+                    ("vendor_grant_ref", "!=", False),
+                    ("cancelled", "=", False),
+                    ("date_to", "<=", fields.Datetime.now()),
+                ]
+            )
+            .filtered(
+                lambda c: not any(
+                    job.method_name == "_sync_remove"
+                    or job.state in _SYNCING_JOB_STATES
+                    for job in c.queue_job_ids
+                )
+            )
+        )
+        for code in codes:
+            code._enqueue_sync("_sync_remove")
+
     def action_reveal_pin(self):
         """Audited PIN reveal for non-admin operators. The ``pin`` field has
         ``groups=group_smartlock_admin``, so only admins see it via direct

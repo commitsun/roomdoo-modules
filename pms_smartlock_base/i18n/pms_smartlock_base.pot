@@ -578,6 +578,12 @@ msgid "Smartlocks: Purge old PIN access logs"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.actions.server,name:pms_smartlock_base.cron_revoke_expired_codes_ir_actions_server
+#: model:ir.cron,cron_name:pms_smartlock_base.cron_revoke_expired_codes
+msgid "Smartlocks: Revoke expired lock codes"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__target_ids
 msgid ""
 "Snapshot of the locks this credential's grant covers (room door + shared "
