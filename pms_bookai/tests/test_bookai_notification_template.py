@@ -114,6 +114,65 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
         ]
         self.assertTrue(found)
 
+    def _hotel_template(self, name, code=None):
+        """A per-hotel copy of the common template: same BookAI code."""
+        prop = self.env["pms.property"].create(
+            {
+                "name": name,
+                "company_id": self.company1.id,
+                "default_pricelist_id": self.pricelist1.id,
+            }
+        )
+        tmpl = self.env["pms.notification.template"].create(
+            {
+                "name": f"BookAI template {name}",
+                "code": f"test_bookai_{name.lower().replace(' ', '_')}",
+                "model_id": self.folio_model.id,
+                "bookai_template_code": code
+                or self.bookai_template.bookai_template_code,
+                "pms_property_ids": [(6, 0, [prop.id])],
+            }
+        )
+        self.env["pms.notification.template.bookai.param"].create(
+            {
+                "template_id": tmpl.id,
+                "key": "guest_name",
+                "value_type": "literal",
+                "value_literal": name,
+            }
+        )
+        tmpl.write({"body": "Hello {{ guest_name }}"})
+        return prop, tmpl
+
+    def test_build_payload_binds_every_hotel_sharing_the_code(self):
+        self.bookai_template.pms_property_ids = [(6, 0, [self.pms_property1.id])]
+        other, other_tmpl = self._hotel_template("Second Hotel")
+        other_tmpl._sync_translations_from_i18n()
+        payload = other_tmpl._build_bookai_template_payload()
+        self.assertTrue(payload["translations"])
+        for t in payload["translations"]:
+            self.assertEqual(
+                t["property_ids"], sorted([self.pms_property1.id, other.id])
+            )
+
+    def test_build_payload_ignores_archived_and_other_codes(self):
+        self.bookai_template.pms_property_ids = [(6, 0, [self.pms_property1.id])]
+        _archived, archived_tmpl = self._hotel_template("Archived Hotel")
+        archived_tmpl.active = False
+        self._hotel_template("Other Code", code="another_v1")
+        self.bookai_template._sync_translations_from_i18n()
+        payload = self.bookai_template._build_bookai_template_payload()
+        self.assertTrue(payload["translations"])
+        for t in payload["translations"]:
+            self.assertEqual(t["property_ids"], [self.pms_property1.id])
+
+    def test_build_payload_of_a_lone_global_template_binds_nothing(self):
+        self.bookai_template.pms_property_ids = [(5, 0, 0)]
+        self.bookai_template._sync_translations_from_i18n()
+        payload = self.bookai_template._build_bookai_template_payload()
+        for t in payload["translations"]:
+            self.assertEqual(t["property_ids"], [])
+
     def test_build_payload_skips_empty_meta_template_id(self):
         self.bookai_template._sync_translations_from_i18n()
         payload = self.bookai_template._build_bookai_template_payload()
