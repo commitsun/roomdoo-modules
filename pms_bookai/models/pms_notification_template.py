@@ -463,24 +463,52 @@ class PmsNotificationTemplate(models.Model):
     def bookai_sync_languages(self):
         """Odoo language codes a sync sends to BookAI for this template.
 
-        The source text (en_US) and every active language the body has its
-        own text in. Any other active language would only carry the English
-        fallback, and BookAI registers a language it has no Meta id for as a
-        new language of the template in Meta. Public, so that tools can show
-        it before syncing; an empty recordset answers [] (it tells a tool that
-        the instance already follows this rule).
+        While the code is not in Meta yet, every active language, as always.
+        Once it is (a template sharing the code has a translation with a Meta
+        id or under review), only the source (en_US), the languages the body
+        has its own text in and the languages already in Meta: any other
+        active language would carry the English fallback, and BookAI
+        registers a language it has no Meta id for as a new language of the
+        approved template. Public, so that tools can show it before syncing;
+        an empty recordset answers [] (it tells a tool that the instance
+        already follows this rule).
         """
         if not self:
             return []
         self.ensure_one()
+        active_langs = self.env["res.lang"].search([("active", "=", True)])
+        me = self.sudo()
+        siblings = me | me.search(
+            [("bookai_template_code", "=", me.bookai_template_code)]
+        )
+        in_meta = set(
+            self.env["bookai.whatsapp.translation"]
+            .sudo()
+            .search(
+                [
+                    ("template_id", "in", siblings.ids),
+                    "|",
+                    ("meta_template_id", "!=", False),
+                    ("meta_status", "in", ("pending", "approved")),
+                ]
+            )
+            .mapped("language")
+        )
+        if not in_meta:
+            return active_langs.mapped("code")
         self.flush_recordset(["body"])
         self.env.cr.execute(
             "SELECT body FROM pms_notification_template WHERE id = %s", [self.id]
         )
         row = self.env.cr.fetchone()
         own = set(row[0]) if row and isinstance(row[0], dict) else set()
-        active = self.env["res.lang"].search([("active", "=", True)]).mapped("code")
-        return [code for code in active if code == "en_US" or code in own]
+        return [
+            lang.code
+            for lang in active_langs
+            if lang.code == "en_US"
+            or lang.code in own
+            or (lang.iso_code or lang.code.split("_")[0]) in in_meta
+        ]
 
     def _sync_translations_from_i18n(self):
         """Auto-create/update translations from body i18n.

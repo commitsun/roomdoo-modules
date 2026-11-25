@@ -91,12 +91,20 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
         translations = self.bookai_template.bookai_translation_ids
         self.assertTrue(translations)
 
-    def test_sync_skips_languages_without_their_own_text(self):
+    def _in_meta(self, *languages):
+        for language in languages:
+            self.env["bookai.whatsapp.translation"].create(
+                {
+                    "template_id": self.bookai_template.id,
+                    "language": language,
+                    "meta_template_id": f"meta-{language}",
+                }
+            )
+
+    def test_a_code_in_meta_does_not_sync_a_language_it_has_no_text_in(self):
         self.env["res.lang"]._activate_lang("es_ES")
         self.env["res.lang"]._activate_lang("gl_ES")
-        self.bookai_template.with_context(lang="es_ES").write(
-            {"body": "Hola {{ guest_name }}"}
-        )
+        self._in_meta("en", "es")  # es is in Meta although the body has no es text
         stale_gl = self.env["bookai.whatsapp.translation"].create(
             {"template_id": self.bookai_template.id, "language": "gl"}
         )
@@ -111,16 +119,23 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
             sorted({t["language"] for t in payload["translations"]}), ["en", "es"]
         )
 
-    def test_sync_keeps_a_language_with_its_own_text(self):
+    def test_a_code_in_meta_syncs_a_language_with_its_own_text(self):
         self.env["res.lang"]._activate_lang("gl_ES")
+        self._in_meta("en")
         self.bookai_template.with_context(lang="gl_ES").write(
             {"body": "Ola {{ guest_name }}"}
         )
         self.assertIn("gl_ES", self.bookai_template.bookai_sync_languages())
-        self.bookai_template._sync_translations_from_i18n()
-        self.assertIn(
-            "gl", self.bookai_template.bookai_translation_ids.mapped("language")
-        )
+
+    def test_a_code_not_in_meta_yet_syncs_every_active_language(self):
+        self.env["res.lang"]._activate_lang("gl_ES")
+        self.assertIn("gl_ES", self.bookai_template.bookai_sync_languages())
+
+    def test_another_hotels_template_puts_the_code_in_meta(self):
+        self.env["res.lang"]._activate_lang("gl_ES")
+        self._in_meta("en")
+        _prop, other = self._hotel_template("Third Hotel")
+        self.assertNotIn("gl_ES", other.bookai_sync_languages())
 
     def test_sync_languages_of_no_template_is_empty(self):
         self.assertEqual(
