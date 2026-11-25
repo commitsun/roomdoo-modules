@@ -31,3 +31,4 @@ from . import test_folio_mapper_lang
 from . import test_board_services
 from . import test_folio_channel_extras
 from . import test_room_type_occupancy
+from . import test_roomdays_board
