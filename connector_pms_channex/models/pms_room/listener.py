@@ -12,6 +12,7 @@ from .pms_room import AVAILABILITY_FIELDS
 _ROOM_RELEVANT_FIELDS = {
     "active",
     "capacity",
+    "children_capacity",
     "pms_property_id",
     "room_type_id",
 }
