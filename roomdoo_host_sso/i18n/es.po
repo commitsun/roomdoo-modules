@@ -224,3 +224,38 @@ msgstr "ID del token"
 #: model:ir.model,name:roomdoo_host_sso.model_res_users
 msgid "User"
 msgstr "Usuario"
+
+#. module: roomdoo_host_sso
+#: model_terms:ir.ui.view,arch_db:roomdoo_host_sso.view_users_form
+msgid ""
+"<span>The portal user of a person of the Roomdoo team.</span>\n"
+"                    <span>While host lets them in, it is an internal user until:</span>"
+msgstr ""
+"<span>El usuario de portal de una persona del equipo de Roomdoo.</span>\n"
+"                    <span>Mientras host le deja entrar, es un usuario interno hasta:</span>"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_res_users__host_sso_adopted
+msgid "Portal user taken over by host"
+msgstr "Usuario de portal tomado por host"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,help:roomdoo_host_sso.field_res_users__host_sso_adopted
+msgid ""
+"The person's own portal user of this instance. During an access from host it"
+" is an internal user that only host lets in; when the access ends it is given"
+" back as it was, password included."
+msgstr ""
+"El usuario de portal propio de la persona en esta instancia. Durante un "
+"acceso desde host es un usuario interno al que solo deja entrar host; al "
+"acabar el acceso se le devuelve como estaba, contraseña incluida."
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,field_description:roomdoo_host_sso.field_res_users__host_sso_portal_state
+msgid "Host Sso Portal State"
+msgstr "Estado de portal antes del acceso desde host"
+
+#. module: roomdoo_host_sso
+#: model:ir.model.fields,help:roomdoo_host_sso.field_res_users__host_sso_portal_state
+msgid "What the portal user had before the access, to give it back."
+msgstr "Lo que tenía el usuario de portal antes del acceso, para devolvérselo."

@@ -7,13 +7,25 @@
         <field name="arch" type="xml">
             <xpath expr="//sheet" position="before">
                 <field name="host_sso_user" invisible="1" />
+                <field name="host_sso_adopted" invisible="1" />
                 <div
           class="alert alert-info mb-0"
           role="alert"
-          attrs="{'invisible': [('host_sso_user', '=', False)]}"
+          attrs="{'invisible': ['|', ('host_sso_user', '=', False), ('host_sso_adopted', '=', True)]}"
         >
                     <span>A person of the Roomdoo team, let in from host.</span>
                     <span>Archived when the access ends:</span>
+                    <field name="host_sso_until" class="oe_inline" />
+                </div>
+                <div
+          class="alert alert-info mb-0"
+          role="alert"
+          attrs="{'invisible': [('host_sso_adopted', '=', False)]}"
+        >
+                    <span
+          >The portal user of a person of the Roomdoo team.</span>
+                    <span
+          >While host lets them in, it is an internal user until:</span>
                     <field name="host_sso_until" class="oe_inline" />
                 </div>
             </xpath>

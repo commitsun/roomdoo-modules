@@ -145,6 +145,85 @@ class TestHostSso(HostTokens, TransactionCase):
         self.assertTrue(user.partner_id.signup_token)
         self.assertFalse(user.partner_id.signup_valid)
 
+    def _portal_of_the_team(self):
+        """The person's own portal user, with one hotel and one company."""
+        self.env["ir.config_parameter"].sudo().set_param(
+            "roomdoo_host_sso.adoptable_domains", "roomdoo.example"
+        )
+        plan = self.env["pms.availability.plan"].create({"name": "Plan"})
+        pricelist = self.env["product.pricelist"].create(
+            {"name": "Rates", "availability_plan_id": plan.id}
+        )
+        hotel, _other = self.env["pms.property"].create(
+            [
+                {
+                    "name": name,
+                    "company_id": self.env.company.id,
+                    "default_pricelist_id": pricelist.id,
+                }
+                for name in ("Hotel One", "Hotel Two")
+            ]
+        )
+        user = new_test_user(
+            self.env, login=WHO, name="Agent at the front", groups="base.group_portal"
+        )
+        user.write(
+            {"pms_property_ids": [(6, 0, hotel.ids)], "pms_property_id": hotel.id}
+        )
+        return user
+
+    def _end_access(self, user):
+        user.host_sso_until = fields.Datetime.now() - timedelta(minutes=1)
+        self.env["res.users"]._cron_archive_host_access()
+
+    def test_a_portal_user_of_the_team_is_taken_over_and_given_back(self):
+        portal = self._portal_of_the_team()
+        before = {
+            "groups": portal.groups_id,
+            "companies": portal.company_ids,
+            "hotels": portal.pms_property_ids,
+            "name": portal.name,
+        }
+        user = self.sso._enter(self._token(), "back")
+        self.assertEqual(user, portal)
+        self.assertTrue(user.host_sso_adopted)
+        self.assertTrue(user.has_group("base.group_user"))
+        self.assertEqual(user.pms_property_ids, self.env["pms.property"].search([]))
+        self.assertTrue(user._host_sso_in_access())
+        with self.assertRaises(AccessDenied):
+            user.with_user(user)._check_credentials("anything", {"interactive": True})
+
+        self._end_access(user)
+        self.assertTrue(user.active)
+        self.assertTrue(user.share)
+        self.assertEqual(user.groups_id, before["groups"])
+        self.assertEqual(user.company_ids, before["companies"])
+        self.assertEqual(user.pms_property_ids, before["hotels"])
+        self.assertEqual(user.name, before["name"])
+        self.assertFalse(user._host_sso_in_access())
+        user.partner_id.signup_prepare()
+        self.assertTrue(user.partner_id.signup_valid)
+
+    def test_the_next_entry_takes_the_portal_side_as_it_is_then(self):
+        portal = self._portal_of_the_team()
+        self.sso._enter(self._token(), "back")
+        self._end_access(portal)
+        hotels = self.env["pms.property"].search([])
+        portal.write({"pms_property_ids": [(6, 0, hotels.ids)]})
+        self.sso._enter(self._token(), "back")
+        self.assertFalse(portal.share)
+        self._end_access(portal)
+        self.assertTrue(portal.share)
+        self.assertEqual(portal.pms_property_ids, hotels)
+
+    def test_only_portal_users_of_the_team_domains_are_taken_over(self):
+        self._portal_of_the_team()
+        self.env["ir.config_parameter"].sudo().set_param(
+            "roomdoo_host_sso.adoptable_domains", "roomdoo.com"
+        )
+        with self.assertRaises(AccessDenied):
+            self.sso._enter(self._token(), "back")
+
     def test_the_cron_archives_whoever_is_done(self):
         done = self.sso._enter(self._token(), "back")
         stays = self.sso._enter(self._token(sub="other@roomdoo.example"), "back")

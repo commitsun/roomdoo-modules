@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import pytz
@@ -8,6 +9,19 @@ from odoo.fields import Command
 
 # Whatever host asks for, nobody of the team stays in longer than this.
 MAX_HOURS = 24
+# Logins whose portal user of this instance host may take over for an access
+# and give back when it ends (comma separated e-mail domains).
+PARAM_ADOPTABLE = "roomdoo_host_sso.adoptable_domains"
+DEFAULT_ADOPTABLE = "roomdoo.com"
+# What an adopted portal user had, to give it back as it was.
+PORTAL_FIELDS = ("name", "email", "lang", "tz", "active")
+PORTAL_RELATIONS = (
+    "groups_id",
+    "company_ids",
+    "company_id",
+    "pms_property_ids",
+    "pms_property_id",
+)
 
 
 def _utc(epoch):
@@ -25,13 +39,79 @@ class ResUsers(models.Model):
         "archived when the access ends.",
     )
     host_sso_until = fields.Datetime("Host access until", readonly=True, copy=False)
+    host_sso_adopted = fields.Boolean(
+        "Portal user taken over by host",
+        readonly=True,
+        copy=False,
+        help="The person's own portal user of this instance. During an access "
+        "from host it is an internal user that only host lets in; when the "
+        "access ends it is given back as it was, password included.",
+    )
+    host_sso_portal_state = fields.Text(
+        readonly=True,
+        copy=False,
+        groups="base.group_system",
+        help="What the portal user had before the access, to give it back.",
+    )
+
+    def _host_sso_in_access(self):
+        """True while host is the only way in for this user."""
+        self.ensure_one()
+        return self.host_sso_user and not (self.host_sso_adopted and self.share)
 
     def _check_credentials(self, password, env):
         # The Roomdoo team only comes in through host: never with a password,
-        # a key or anything else other modules may accept.
-        if self.env.user.sudo().host_sso_user:
+        # a key or anything else other modules may accept. An adopted portal
+        # user is back to its own credentials once the access has ended.
+        if self.env.user.sudo()._host_sso_in_access():
             raise AccessDenied()
         return super()._check_credentials(password, env)
+
+    def _host_sso_adoptable(self):
+        """A portal user of a team login: host may take it over for an access."""
+        self.ensure_one()
+        if not self.share or self.has_group("base.group_user"):
+            return False
+        domains = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param(PARAM_ADOPTABLE, DEFAULT_ADOPTABLE)
+        )
+        allowed = {d.strip().lower() for d in (domains or "").split(",") if d.strip()}
+        domain = (self.login or "").rpartition("@")[2].lower()
+        return bool(domain) and domain in allowed
+
+    def _host_sso_keep_portal_state(self):
+        """Write down what the portal user has now, to give it back later."""
+        self.ensure_one()
+        state = {name: self[name] for name in PORTAL_FIELDS}
+        for name in PORTAL_RELATIONS:
+            state[name] = self[name].ids
+        self.sudo().write(
+            {
+                "host_sso_user": True,
+                "host_sso_adopted": True,
+                "host_sso_portal_state": json.dumps(state),
+            }
+        )
+
+    def _host_sso_give_back(self):
+        """Back to the portal user it was before the access."""
+        for user in self.sudo():
+            state = json.loads(user.host_sso_portal_state or "{}")
+            if not state:
+                continue
+            values = {name: state[name] for name in PORTAL_FIELDS if name in state}
+            for name in PORTAL_RELATIONS:
+                comodel = user._fields[name].comodel_name
+                records = (
+                    self.env[comodel].sudo().browse(state.get(name) or []).exists()
+                )
+                if user._fields[name].type == "many2one":
+                    values[name] = records[:1].id or False
+                else:
+                    values[name] = [Command.set(records.ids)]
+            user.with_context(active_test=False).write(values)
 
     @api.model
     def _host_sso_provision(self, claims):
@@ -42,9 +122,17 @@ class ResUsers(models.Model):
         users = self.sudo().with_context(active_test=False, no_reset_password=True)
         user = users.search([("login", "=", login)], limit=1)
         if user and not user.host_sso_user:
-            raise AccessDenied(
-                _("This instance already has a user %(login)s of its own.", login=login)
-            )
+            if not user._host_sso_adoptable():
+                raise AccessDenied(
+                    _(
+                        "This instance already has a user %(login)s of its own.",
+                        login=login,
+                    )
+                )
+            user._host_sso_keep_portal_state()
+        elif user and user.host_sso_adopted and user.share:
+            # Back from a previous access: its portal side may have changed.
+            user._host_sso_keep_portal_state()
         profile = (
             self.env["roomdoo.host.sso.profile"]
             .sudo()
@@ -88,5 +176,7 @@ class ResUsers(models.Model):
                 ("host_sso_until", "<", fields.Datetime.now()),
             ]
         )
-        ended.write({"active": False})
+        adopted = ended.filtered("host_sso_adopted")
+        adopted.filtered(lambda u: not u.share)._host_sso_give_back()
+        (ended - adopted).write({"active": False})
         return ended
