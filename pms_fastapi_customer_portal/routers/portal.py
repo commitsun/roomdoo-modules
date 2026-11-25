@@ -58,7 +58,8 @@ class CustomerPortalRouterHelper(models.AbstractModel):
         so a token cannot be used to probe which folios exist.
         """
         folio = self.env["pms.folio"]
-        if token:
+        # PostgreSQL rejects a NUL in a string: such a token matches nothing.
+        if token and "\x00" not in token:
             folio = folio.sudo().search(self._portal_folio_domain(token), limit=1)
         if not folio:
             raise _PortalProblem(
