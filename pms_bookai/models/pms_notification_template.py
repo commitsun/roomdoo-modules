@@ -385,14 +385,25 @@ class PmsNotificationTemplate(models.Model):
         base_url, headers = self._get_bookai_headers()
         payload = self._build_bookai_template_payload()
         endpoint = base_url.rstrip("/") + "/api/v1/whatsapp/templates"
+        bindings_only = any("body_text" not in t for t in payload["translations"])
         try:
-            resp = requests.post(
-                endpoint,
-                data=json.dumps(payload),
-                headers=headers,
-                timeout=self._SYNC_TIMEOUT,
-            )
-            if resp.status_code == 409:
+            if bindings_only:
+                # Creating a template needs its text: entries without it can
+                # only update the bindings of a template BookAI already has.
+                resp = requests.patch(
+                    f"{endpoint}/{self.bookai_template_code}",
+                    data=json.dumps({"translations": payload["translations"]}),
+                    headers=headers,
+                    timeout=self._SYNC_TIMEOUT,
+                )
+            else:
+                resp = requests.post(
+                    endpoint,
+                    data=json.dumps(payload),
+                    headers=headers,
+                    timeout=self._SYNC_TIMEOUT,
+                )
+            if not bindings_only and resp.status_code == 409:
                 patch_url = f"{endpoint}/{self.bookai_template_code}"
                 resp = requests.patch(
                     patch_url,
@@ -477,23 +488,7 @@ class PmsNotificationTemplate(models.Model):
             return []
         self.ensure_one()
         active_langs = self.env["res.lang"].search([("active", "=", True)])
-        me = self.sudo()
-        siblings = me | me.search(
-            [("bookai_template_code", "=", me.bookai_template_code)]
-        )
-        in_meta = set(
-            self.env["bookai.whatsapp.translation"]
-            .sudo()
-            .search(
-                [
-                    ("template_id", "in", siblings.ids),
-                    "|",
-                    ("meta_template_id", "!=", False),
-                    ("meta_status", "in", ("pending", "approved")),
-                ]
-            )
-            .mapped("language")
-        )
+        in_meta = self._bookai_meta_languages()
         if not in_meta:
             return active_langs.mapped("code")
         self.flush_recordset(["body"])
@@ -509,6 +504,50 @@ class PmsNotificationTemplate(models.Model):
             or lang.code in own
             or (lang.iso_code or lang.code.split("_")[0]) in in_meta
         ]
+
+    def _bookai_meta_languages(self):
+        """Languages (es, en…) the code is in Meta in, via any template sharing it."""
+        self.ensure_one()
+        me = self.sudo()
+        siblings = me | me.search(
+            [("bookai_template_code", "=", me.bookai_template_code)]
+        )
+        return set(
+            self.env["bookai.whatsapp.translation"]
+            .sudo()
+            .search(
+                [
+                    ("template_id", "in", siblings.ids),
+                    "|",
+                    ("meta_template_id", "!=", False),
+                    ("meta_status", "in", ("pending", "approved")),
+                ]
+            )
+            .mapped("language")
+        )
+
+    def bookai_sync_preview(self):
+        """What a sync would send, per language, without writing anything.
+
+        [{"language": "es", "with_text": True}, ...]. A language without text
+        in this template goes as bindings only when the code is already in
+        Meta in it (the text lives in Meta and BookAI); otherwise it is not
+        sent. Public, so that tools can show it before syncing.
+        """
+        if not self:
+            return []
+        self.ensure_one()
+        in_meta = self._bookai_meta_languages()
+        langs = self.env["res.lang"].search(
+            [("code", "in", self.bookai_sync_languages())]
+        )
+        preview = []
+        for lang in langs:
+            short_code = lang.iso_code or lang.code.split("_")[0]
+            has_text = bool((self.with_context(lang=lang.code).body or "").strip())
+            if has_text or short_code in in_meta:
+                preview.append({"language": short_code, "with_text": has_text})
+        return preview
 
     def _sync_translations_from_i18n(self):
         """Auto-create/update translations from body i18n.
@@ -534,11 +573,13 @@ class PmsNotificationTemplate(models.Model):
             wa_accounts = self.env["bookai.wa.account"]
 
         found_keys = set()  # (language, wa_account_id)
+        in_meta = self._bookai_meta_languages()
         for lang in active_langs:
-            body = self.with_context(lang=lang.code).body
-            if not body or not body.strip():
-                continue
             short_code = lang.iso_code or lang.code.split("_")[0]
+            body = self.with_context(lang=lang.code).body
+            # Without text, a language already in Meta still syncs its bindings.
+            if (not body or not body.strip()) and short_code not in in_meta:
+                continue
 
             accounts_to_process = wa_accounts or self.env["bookai.wa.account"]
             if not accounts_to_process:
@@ -622,6 +663,7 @@ class PmsNotificationTemplate(models.Model):
         self.ensure_one()
         param_keys = [p.key for p in self.bookai_param_ids.sorted("sequence")]
         property_ids = self.bookai_bound_property_ids()
+        in_meta = self._bookai_meta_languages()
         translations = []
         for trans in self.bookai_translation_ids.filtered("active"):
             lang_code = trans.language
@@ -629,6 +671,13 @@ class PmsNotificationTemplate(models.Model):
             tmpl_lang = self.with_context(lang=odoo_lang)
             body_text = (tmpl_lang.body or "").strip()
             if not body_text:
+                if lang_code in in_meta:
+                    # The text lives only in Meta and BookAI: send the bindings
+                    # alone, so that nothing about the text changes there.
+                    entry = {"language": lang_code, "property_ids": property_ids}
+                    if trans.wa_account_id:
+                        entry["waba_id"] = trans.wa_account_id.waba_id
+                    translations.append(entry)
                 continue
             entry = {
                 "language": lang_code,

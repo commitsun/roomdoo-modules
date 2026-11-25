@@ -137,6 +137,58 @@ class TestBookaiNotificationTemplate(TestBookaiCommon):
         _prop, other = self._hotel_template("Third Hotel")
         self.assertNotIn("gl_ES", other.bookai_sync_languages())
 
+    def _textless_copy(self):
+        """Another hotel's copy of a code already in Meta, with no text in Odoo."""
+        self.env["res.lang"]._activate_lang("es_ES")
+        self._in_meta("en", "es")
+        self.bookai_template.pms_property_ids = [(6, 0, [self.pms_property1.id])]
+        other_prop, other = self._hotel_template("Textless Hotel")
+        other.with_context(lang="en_US").write({"body": False})
+        return other_prop, other
+
+    def test_a_textless_copy_of_a_code_in_meta_syncs_its_bindings_only(self):
+        other_prop, other = self._textless_copy()
+        self.assertEqual(
+            sorted(p["language"] for p in other.bookai_sync_preview()), ["en", "es"]
+        )
+        self.assertFalse(any(p["with_text"] for p in other.bookai_sync_preview()))
+        other._sync_translations_from_i18n()
+        payload = other._build_bookai_template_payload()
+        self.assertEqual(
+            sorted(t["language"] for t in payload["translations"]), ["en", "es"]
+        )
+        for t in payload["translations"]:
+            self.assertNotIn("body_text", t)
+            self.assertEqual(
+                t["property_ids"], sorted([self.pms_property1.id, other_prop.id])
+            )
+
+    def test_a_bindings_only_sync_patches_and_never_posts(self):
+        _other_prop, other = self._textless_copy()
+        ok = MagicMock(status_code=200, raise_for_status=MagicMock())
+        ok.json.return_value = {"translations": []}
+        with patch(
+            "odoo.addons.pms_bookai.models.pms_notification_template.requests.post"
+        ) as mock_post, patch(
+            "odoo.addons.pms_bookai.models.pms_notification_template.requests.patch",
+            return_value=ok,
+        ) as mock_patch:
+            other.action_sync_to_bookai()
+        posted = [c.args[0] for c in mock_post.call_args_list if c.args]
+        self.assertFalse(
+            [u for u in posted if u.endswith("/api/v1/whatsapp/templates")]
+        )
+        sent = json.loads(mock_patch.call_args.kwargs["data"])
+        self.assertTrue(sent["translations"])
+        self.assertFalse(any("body_text" in t for t in sent["translations"]))
+
+    def test_a_textless_template_of_a_new_code_sends_nothing(self):
+        self.bookai_template.with_context(lang="en_US").write({"body": False})
+        self.assertEqual(self.bookai_template.bookai_sync_preview(), [])
+        self.bookai_template._sync_translations_from_i18n()
+        payload = self.bookai_template._build_bookai_template_payload()
+        self.assertEqual(payload["translations"], [])
+
     def test_sync_languages_of_no_template_is_empty(self):
         self.assertEqual(
             self.env["pms.notification.template"].bookai_sync_languages(), []
