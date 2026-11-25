@@ -12,6 +12,7 @@ No new dependency: ``responses`` or ``vcr`` would only replay, and neither
 counts calls nor validates a payload the way Channex does.
 """
 
+import datetime
 import json
 import uuid
 from unittest import mock
@@ -54,7 +55,44 @@ class FakeChannexServer:
             "occ_adults",
             "default_occupancy",
         ),
+        "channel_availability_rules": ("property_id", "title", "type", "start_date"),
+        "rate_plans": (
+            "property_id",
+            "room_type_id",
+            "title",
+            "currency",
+            "sell_mode",
+            "rate_mode",
+            "options",
+        ),
     }
+    RULE_TYPES = ("close_out", "availability_offset", "max_availability")
+    #: every meal type Channex knows, spelt as it spells them
+    MEAL_TYPES = (
+        "none",
+        "all_inclusive",
+        "breakfast",
+        "lunch",
+        "dinner",
+        "american",
+        "bed_and_breakfast",
+        "buffet_breakfast",
+        "carribean_breakfast",
+        "continental_breakfast",
+        "english_breakfast",
+        "european_plan",
+        "family_plan",
+        "full_board",
+        "full_breakfast",
+        "half_board",
+        "room_only",
+        "self_catering",
+        "bermuda",
+        "dinner_bed_and_breakfast_plan",
+        "family_american",
+        "breakfast_and_lunch",
+        "lunch_and_dinner",
+    )
 
     def __init__(self):
         self.store = {}
@@ -63,6 +101,14 @@ class FakeChannexServer:
         self._counter = 0
         self._ignored_filters = set()
         self._aged_out = set()
+        #: what Channex holds as availability, by (room type id, night)
+        self.availability = {}
+        #: what Channex holds as rates and restrictions, by (rate plan id,
+        #: night): the restrictions by name, and ``rates`` by occupancy
+        self.restrictions = {}
+        self._refused_room_types = set()
+        self._mapped_rate_plans = set()
+        self._refused_rate_plans = set()
 
     # -- test helpers ------------------------------------------------------
 
@@ -71,13 +117,34 @@ class FakeChannexServer:
 
     def age_out_of_feed(self, external_id):
         """Drop a revision from the feed while leaving it unacknowledged, which
-        is what Channex does to one half an hour after issuing it."""
+        Channex does not say it does and has been seen doing."""
         self._aged_out.add(external_id)
 
     def ignore_filter(self, field):
         """Answer a filter on this field with everything, which is what Channex
         does with a filter it does not know."""
         self._ignored_filters.add(field)
+
+    def refuse_room_type(self, external_id):
+        """Throw away every ARI value of this room type, the way Channex
+        throws away the values it finds invalid: in ``warnings``, inside an
+        answer that is otherwise a success."""
+        self._refused_room_types.add(str(external_id))
+
+    def map_rate_plan(self, external_id, mapped=True):
+        """Have a channel mapped to this rate plan, or no longer, which is what
+        decides whether Channex lets it be removed."""
+        if mapped:
+            self._mapped_rate_plans.add(str(external_id))
+        else:
+            self._mapped_rate_plans.discard(str(external_id))
+
+    def refuse_rate_plan(self, title, refused=True):
+        """Refuse to make a rate plan with this title."""
+        if refused:
+            self._refused_rate_plans.add(title)
+        else:
+            self._refused_rate_plans.discard(title)
 
     def fail_next(self, status_code, payload=None, headers=None):
         self._next_failures.append((status_code, payload, headers))
@@ -118,6 +185,10 @@ class FakeChannexServer:
                 headers,
             )
 
+        if method == "POST" and path == "availability":
+            return self._availability(json)
+        if method == "POST" and path == "restrictions":
+            return self._restrictions(json)
         if method == "POST" and path == "auth/one_time_token":
             return self._one_time_token(json)
         if method == "POST" and path.startswith("booking_revisions/"):
@@ -154,6 +225,202 @@ class FakeChannexServer:
             )
         self._counter += 1
         return FakeResponse(200, {"data": {"token": _uuid(self._counter)}})
+
+    # -- ARI -----------------------------------------------------------------
+
+    @staticmethod
+    def _nights(value):
+        """The nights a value covers, from ``date`` or ``date_from``/``date_to``."""
+        if value.get("date"):
+            return [datetime.date.fromisoformat(value["date"])]
+        first = datetime.date.fromisoformat(value["date_from"])
+        last = datetime.date.fromisoformat(value["date_to"])
+        return [
+            first + datetime.timedelta(days=offset)
+            for offset in range((last - first).days + 1)
+        ]
+
+    @staticmethod
+    def _date_problems(value):
+        if value.get("date"):
+            return {}
+        if not value.get("date_from") or not value.get("date_to"):
+            return {"date": ["can't be blank"]}
+        if value["date_from"] > value["date_to"]:
+            return {"date_to": ["must be on or after date_from"]}
+        return {}
+
+    def _availability_problems(self, value):
+        problems = {
+            field: ["Should be a non null value or not existed field"]
+            for field, item in value.items()
+            if item is None
+        }
+        for field in ("property_id", "room_type_id"):
+            if not value.get(field):
+                problems.setdefault(field, ["can't be blank"])
+        available = value.get("availability")
+        if not isinstance(available, int) or isinstance(available, bool):
+            problems.setdefault("availability", ["is invalid"])
+        elif available < 0:
+            problems["availability"] = ["must be greater than or equal to 0"]
+        if str(value.get("room_type_id")) in self._refused_room_types:
+            problems.setdefault("room_type_id", ["is invalid"])
+        problems.update(self._date_problems(value))
+        return problems
+
+    def _availability(self, body):
+        """Applies what is valid and lists what is not, answering 200 either
+        way, which is what Channex does with an ARI call."""
+        values = (body or {}).get("values")
+        if not isinstance(values, list) or not values:
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation_error",
+                        "title": "Validation Error",
+                        "details": {"values": ["can't be blank"]},
+                    }
+                },
+            )
+        warnings, applied = [], 0
+        for value in values:
+            problems = self._availability_problems(value)
+            if problems:
+                warnings.append({**value, "warning": problems})
+                continue
+            for night in self._nights(value):
+                self.availability[(str(value["room_type_id"]), night)] = value[
+                    "availability"
+                ]
+            applied += 1
+        self._counter += 1
+        data = [{"id": _uuid(self._counter), "type": "task"}] if applied else []
+        return FakeResponse(
+            200, {"data": data, "meta": {"message": "Success", "warnings": warnings}}
+        )
+
+    #: what a value of ``POST /restrictions`` can set, and what each takes
+    RESTRICTION_KINDS = {
+        "min_stay_arrival": "positive",
+        "min_stay_through": "positive",
+        "max_stay": "non_negative",
+        "closed_to_arrival": "boolean",
+        "closed_to_departure": "boolean",
+        "stop_sell": "boolean",
+    }
+
+    @staticmethod
+    def _rate_problem(rate):
+        """A rate is a decimal string, or an integer in cents, above 0."""
+        if isinstance(rate, bool):
+            return ["is invalid"]
+        if isinstance(rate, int):
+            amount = rate / 100
+        elif isinstance(rate, str):
+            try:
+                amount = float(rate)
+            except ValueError:
+                return ["is invalid"]
+        else:
+            return ["is invalid"]
+        return [] if amount > 0 else ["must be greater than 0"]
+
+    def _restriction_problems(self, value):
+        problems = {
+            field: ["Should be a non null value or not existed field"]
+            for field, item in value.items()
+            if item is None
+        }
+        for field in ("property_id", "rate_plan_id"):
+            if not value.get(field):
+                problems.setdefault(field, ["can't be blank"])
+        plan = next(
+            (
+                plan
+                for plan in self.store.get("rate_plans", [])
+                if str(plan["id"]) == str(value.get("rate_plan_id"))
+            ),
+            None,
+        )
+        if value.get("rate_plan_id") and plan is None:
+            problems.setdefault("rate_plan_id", ["is invalid"])
+        problems.update(self._restriction_field_problems(value))
+        problems.update(self._rate_problems(value, plan))
+        if not set(value) & {"rate", "rates", *self.RESTRICTION_KINDS}:
+            problems["base"] = ["at least one restriction should be present"]
+        problems.update(self._date_problems(value))
+        return problems
+
+    def _restriction_field_problems(self, value):
+        problems = {}
+        for field, kind in self.RESTRICTION_KINDS.items():
+            if field not in value or value[field] is None:
+                continue
+            item = value[field]
+            if kind == "boolean":
+                if item not in (True, False, 0, 1):
+                    problems[field] = ["is invalid"]
+            elif not isinstance(item, int) or isinstance(item, bool):
+                problems[field] = ["is invalid"]
+            elif kind == "positive" and item < 1:
+                problems[field] = ["must be greater than or equal to 1"]
+            elif kind == "non_negative" and item < 0:
+                problems[field] = ["must be greater than or equal to 0"]
+        return problems
+
+    def _rate_problems(self, value, plan):
+        problems = {}
+        if value.get("rate") is not None:
+            problem = self._rate_problem(value["rate"])
+            if problem:
+                problems["rate"] = problem
+        occupancies = {o["occupancy"] for o in (plan or {}).get("options") or ()}
+        for rate in value.get("rates") or ():
+            problem = self._rate_problem(rate.get("rate"))
+            if problem:
+                problems["rates"] = problem
+            elif plan is not None and rate.get("occupancy") not in occupancies:
+                problems["rates"] = ["occupancy is invalid"]
+        return problems
+
+    def _restrictions(self, body):
+        """Applies what is valid and lists what is not, answering 200 either
+        way, which is what Channex does with an ARI call."""
+        values = (body or {}).get("values")
+        if not isinstance(values, list) or not values:
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation_error",
+                        "title": "Validation Error",
+                        "details": {"values": ["can't be blank"]},
+                    }
+                },
+            )
+        warnings, applied = [], 0
+        for value in values:
+            problems = self._restriction_problems(value)
+            if problems:
+                warnings.append({**value, "warning": problems})
+                continue
+            for night in self._nights(value):
+                held = self.restrictions.setdefault(
+                    (str(value["rate_plan_id"]), night), {"rates": {}}
+                )
+                for field in self.RESTRICTION_KINDS:
+                    if field in value:
+                        held[field] = value[field]
+                for rate in value.get("rates") or ():
+                    held["rates"][rate["occupancy"]] = rate["rate"]
+            applied += 1
+        self._counter += 1
+        data = [{"id": _uuid(self._counter), "type": "task"}] if applied else []
+        return FakeResponse(
+            200, {"data": data, "meta": {"message": "Success", "warnings": warnings}}
+        )
 
     def _ack(self, external_id):
         """Acknowledging marks the revision, it does not delete it.
@@ -193,11 +460,26 @@ class FakeChannexServer:
             "room_types": "room_type",
             "channels": "channel",
             "webhooks": "webhook",
+            "channel_availability_rules": "channel_availability_rule",
+            "rate_plans": "rate_plan",
         }.get(resource, resource)
 
+    #: what Channex hands back among the relationships of a resource, and not
+    #: among its attributes, though it takes them among the attributes
+    RELATIONSHIPS = {
+        "rate_plans": {"room_type_id": "room_type", "property_id": "property"}
+    }
+
     def _wrap(self, resource, record):
-        attributes = {k: v for k, v in record.items() if k != "id"}
-        return {"id": record["id"], "type": resource, "attributes": attributes}
+        related = self.RELATIONSHIPS.get(resource, {})
+        attributes = {k: v for k, v in record.items() if k != "id" and k not in related}
+        wrapped = {"id": record["id"], "type": resource, "attributes": attributes}
+        if related:
+            wrapped["relationships"] = {
+                name: {"data": {"id": record.get(field), "type": name}}
+                for field, name in related.items()
+            }
+        return wrapped
 
     @staticmethod
     def _matches(record, field, value):
@@ -255,12 +537,68 @@ class FakeChannexServer:
                     "code": "validation",
                     "title": "default_occupancy cannot exceed occ_adults",
                 }
-        title = values.get("title")
-        if title and any(r.get("title") == title for r in self.store.get(resource, [])):
+        if resource == "channel_availability_rules":
+            error = self._rule_problem(values)
+            if error:
+                return error
+        if resource == "rate_plans":
+            error = self._rate_plan_problem(values)
+            if error:
+                return error
+        if self._title_taken(resource, values):
             return {
                 "code": "validation",
                 "title": "Title already taken",
                 "details": {"title": ["has already been taken"]},
+            }
+        return None
+
+    def _title_taken(self, resource, values, external_id=None):
+        """Titles are unique per resource, and a rate plan's only within its
+        room type."""
+        title = values.get("title")
+        if not title:
+            return False
+        return any(
+            record.get("title") == title
+            and str(record["id"]) != str(external_id)
+            and (
+                resource != "rate_plans"
+                or record.get("room_type_id") == values.get("room_type_id")
+            )
+            for record in self.store.get(resource, [])
+        )
+
+    def _rate_plan_problem(self, values):
+        """What Channex checks of a rate plan: its occupancies are within the
+        room type and one of them is the primary."""
+        details = {}
+        if values.get("sell_mode") not in ("per_room", "per_person"):
+            details["sell_mode"] = ["is invalid"]
+        if values.get("meal_type", "none") not in self.MEAL_TYPES:
+            details["meal_type"] = ["is invalid"]
+        if values.get("title") in self._refused_rate_plans:
+            details["title"] = ["is invalid"]
+        room_type = next(
+            (
+                record
+                for record in self.store.get("room_types", [])
+                if str(record["id"]) == str(values.get("room_type_id"))
+            ),
+            None,
+        )
+        options = values.get("options") or []
+        if room_type is None:
+            details["room_type_id"] = ["is invalid"]
+        elif any(o["occupancy"] > room_type["occ_adults"] for o in options):
+            details["options"] = ["occupancy exceeds the room type"]
+        if len([o for o in options if o.get("is_primary")]) != 1:
+            details.setdefault("options", []).append("needs one primary")
+        if details:
+            return {
+                "code": "validation_error",
+                "title": "Validation Error",
+                "details": details,
             }
         return None
 
@@ -270,6 +608,13 @@ class FakeChannexServer:
         if error:
             return FakeResponse(422, {"errors": error})
         self._counter += 1
+        if resource == "rate_plans":
+            values = {
+                "meal_type": "none",
+                "children_fee": "0.00",
+                "infant_fee": "0.00",
+                **values,
+            }
         record = {**values, "id": _uuid(self._counter)}
         self.store.setdefault(resource, []).append(record)
         return FakeResponse(201, {"data": self._wrap(resource, record)})
@@ -307,6 +652,27 @@ class FakeChannexServer:
                     }
         return None
 
+    def _rule_problem(self, values):
+        """Channex drops a channel it does not know without a word, and then
+        finds the rule has none."""
+        known = {str(channel["id"]) for channel in self.store.get("channels", [])}
+        details = {}
+        if not [c for c in values.get("affected_channels") or () if str(c) in known]:
+            details["affected_channels"] = ["can't be blank"]
+        if not values.get("affected_room_types"):
+            details["affected_room_types"] = ["can't be blank"]
+        if values.get("type") not in self.RULE_TYPES:
+            details["type"] = ["is invalid"]
+        elif values["type"] != "close_out" and values.get("value") is None:
+            details["value"] = ["can't be blank"]
+        if details:
+            return {
+                "code": "validation_error",
+                "title": "Validation Error",
+                "details": details,
+            }
+        return None
+
     def _update(self, resource, external_id, body):
         values = (body or {}).get(self._payload_root(resource)) or {}
         if resource == "channels":
@@ -315,13 +681,62 @@ class FakeChannexServer:
                 return FakeResponse(422, {"errors": error})
         for record in self.store.get(resource, []):
             if str(record["id"]) == str(external_id):
+                if resource == "channel_availability_rules":
+                    error = self._rule_problem({**record, **values})
+                    if error:
+                        return FakeResponse(422, {"errors": error})
+                if resource == "rate_plans":
+                    error = self._rate_plan_change_problem(record, values)
+                    if error:
+                        return FakeResponse(422, {"errors": error})
+                    # Channex keeps the occupancies in line with the room type
+                    # and takes no others: it answers 200 and ignores them.
+                    values = {k: v for k, v in values.items() if k != "options"}
                 record.update(values)
                 return FakeResponse(200, {"data": self._wrap(resource, record)})
         return FakeResponse(
             404, {"errors": {"code": "not_found", "title": "Not found"}}
         )
 
+    def _rate_plan_change_problem(self, record, values):
+        details = {}
+        if "sell_mode" in values and values["sell_mode"] != record["sell_mode"]:
+            details["sell_mode"] = ["can't be changed"]
+        primary = [
+            o["occupancy"] for o in values.get("options") or () if o["is_primary"]
+        ]
+        current = [o["occupancy"] for o in record["options"] if o["is_primary"]]
+        if primary and primary != current:
+            details["options"] = ["primary occupancy can't be changed"]
+        if self._title_taken("rate_plans", {**record, **values}, record["id"]):
+            details["title"] = ["has already been taken"]
+        if details:
+            return {
+                "code": "validation_error",
+                "title": "Validation Error",
+                "details": details,
+            }
+        return None
+
     def _delete(self, resource, external_id):
+        if resource == "rate_plans" and str(external_id) in self._mapped_rate_plans:
+            return FakeResponse(
+                422,
+                {
+                    "errors": {
+                        "code": "validation_error",
+                        "title": "Validation Error",
+                        "details": {"base": ["rate plan is mapped to a channel"]},
+                    }
+                },
+            )
+        if resource == "room_types":
+            # Its rate plans go with it.
+            self.store["rate_plans"] = [
+                plan
+                for plan in self.store.get("rate_plans", [])
+                if str(plan.get("room_type_id")) != str(external_id)
+            ]
         records = self.store.get(resource, [])
         self.store[resource] = [r for r in records if str(r["id"]) != str(external_id)]
         return FakeResponse(200, {"data": None})

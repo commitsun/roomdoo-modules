@@ -5,6 +5,8 @@ from odoo import fields, models
 
 from odoo.addons.queue_job.job import identity_exact
 
+from ..common.ari import stage_ari
+
 BINDING_MODEL = "channel.channex.pms.room.type"
 
 
@@ -55,6 +57,26 @@ class PmsRoomType(models.Model):
             .search([("odoo_id", "=", self.id)])
         )
 
+    def _channex_stage_availability(self):
+        """Publish the availability of these room types again, in every
+        property and for the whole window."""
+        for record in self:
+            stage_ari(self.env, "availability", (None, record.id))
+
+    def _channex_stage_channel_caps(self):
+        """Publish again what agencies have set aside of these room types, in
+        every property and for the whole window."""
+        for record in self:
+            stage_ari(self.env, "channel_caps", (None, None, record.id))
+
+    def _channex_stage_restrictions(self, pms_property_id=None):
+        """Publish again the rates and restrictions of the rate plans of these
+        room types, in one property or in every one, for the whole window."""
+        for record in self:
+            stage_ari(
+                self.env, "restrictions", (pms_property_id, None, record.id, None)
+            )
+
     def _channex_schedule_sync(self):
         """Queue the reconciliation of this room type."""
         for record in self:
@@ -75,10 +97,13 @@ class PmsRoomType(models.Model):
                 continue
             record._channex_reconcile()
 
-    def _channex_reconcile(self):
+    def _channex_reconcile(self, backends=None):
         """Both directions, so one method serves a creation, a room being added
         or moved, and an unarchive: the backends that should carry this room type
         get it created or updated, and the ones that should not lose it.
+
+        Only on ``backends`` when given: synchronising one property leaves the
+        others alone.
         """
         self.ensure_one()
         bindings = self._channex_bindings()
@@ -87,10 +112,18 @@ class PmsRoomType(models.Model):
                 self.class_id
             )
         )
+        if backends is not None:
+            bindings = bindings.filtered(lambda b: b.backend_id in backends)
+            wanted &= backends
         self._channex_remove_from_channel(
             bindings.filtered(lambda b: b.backend_id not in wanted)
         )
         for backend in wanted:
+            if not backend._channex_bound_property_id():
+                # Channex needs the property first, and only connecting it
+                # makes it there: that is where the hotel says whether to take
+                # over the one it may have on Channex already.
+                continue
             if not bindings.filtered(lambda b, bk=backend: b.backend_id == bk):
                 # Pre-created because the master exporters make
                 # ``_force_binding_creation`` a no-op.

@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector Wubook",
     "summary": "Channel PMS connector Wubook",
-    "version": "16.0.1.6.0",
+    "version": "16.0.1.7.0",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",
@@ -30,7 +30,6 @@
         "views/product_pricelist_views.xml",
         "views/product_pricelist_item_views.xml",
         "views/pms_availability_plan_views.xml",
-        "views/pms_availability_plan_rule_views.xml",
         "views/pms_reservation_views.xml",
         "views/channel_wubook_backend_extra_views.xml",
         "views/pms_service_views.xml",

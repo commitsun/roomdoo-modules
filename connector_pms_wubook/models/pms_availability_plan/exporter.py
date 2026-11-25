@@ -45,15 +45,17 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
         backend = binding.backend_id
         prop = backend.pms_property_id
 
+        # The whole inheritance chain, not just the plan: what it inherits
+        # is exported too, so those room types have to be connected as well.
         self.env.cr.execute(
             """
             SELECT DISTINCT r.room_type_id
             FROM pms_availability_plan_rule r
-            WHERE r.availability_plan_id = %s
+            WHERE r.availability_plan_id IN %s
               AND (r.pms_property_id = %s OR r.pms_property_id IS NULL)
               AND r.room_type_id IS NOT NULL
             """,
-            (binding.odoo_id.id, prop.id),
+            (tuple(binding.odoo_id._inheritance_chain()), prop.id),
         )
         ref_room_type_ids = [row[0] for row in self.env.cr.fetchall()]
         if not ref_room_type_ids:
@@ -82,9 +84,15 @@ class ChannelWubookPmsAvailabilityPlanExporter(Component):
 
     def _after_export(self):
         super()._after_export()
-        if self.binding:
-            current_name = self.binding.name
-            if self.binding.wubook_last_synced_name != current_name:
-                self.binding.with_context(connector_no_export=True).write(
-                    {"wubook_last_synced_name": current_name}
-                )
+        if not self.binding:
+            return
+        values = {
+            # The window the mapper expanded has been pushed, so the next
+            # export starts from whatever changes after this one.
+            "wubook_pending_date_from": False,
+            "wubook_pending_date_to": False,
+        }
+        current_name = self.binding.name
+        if self.binding.wubook_last_synced_name != current_name:
+            values["wubook_last_synced_name"] = current_name
+        self.binding.with_context(connector_no_export=True).write(values)

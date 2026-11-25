@@ -14,7 +14,7 @@ class ChannelChannexPmsRoomType(models.Model):
     """
 
     _name = "channel.channex.pms.room.type"
-    _inherit = "channel.channex.binding"
+    _inherit = ["channel.channex.binding", "channel.channex.ari.mixin"]
     _inherits = {"pms.room.type": "odoo_id"}
     _description = "Channel Channex PMS Room Type"
 
@@ -124,3 +124,20 @@ class ChannelChannexPmsRoomType(models.Model):
         return self.backend_id.backend_type_id.child_id._is_excluded_class(
             self.odoo_id.class_id
         )
+
+    @api.model
+    def _channex_ari_resolve(self, entries):
+        """Availability is noted per ``(property_id, room_type_id)``, either of
+        them ``None`` to mean every one. Only room types already on Channex
+        count: one that is not there yet publishes its whole window the moment
+        it gets there."""
+        resolved = {}
+        for (property_id, room_type_id), ranges in entries.items():
+            domain = [("external_id", "!=", False)]
+            if property_id:
+                domain.append(("backend_id.pms_property_id", "=", property_id))
+            if room_type_id:
+                domain.append(("odoo_id", "=", room_type_id))
+            for binding in self.search(domain):
+                resolved.setdefault(binding, []).extend(ranges)
+        return resolved

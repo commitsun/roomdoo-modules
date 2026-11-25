@@ -189,9 +189,8 @@ class PmsCalendarService(Component):
                             r_rt_rtc.room_type_class_id,
                             r_rt_rtc.sequence
                      FROM (SELECT (CURRENT_DATE + date ) date
-                        FROM generate_series(
-                            date %s- CURRENT_DATE, date %s - CURRENT_DATE
-                        ) date
+                        FROM generate_series(date %s- CURRENT_DATE,
+                                             date %s - CURRENT_DATE) date
                      ) dates,
                     (SELECT r.id room_id, r.capacity, rt.id room_type_id,
                         rtc.id room_type_class_id, r.sequence
@@ -210,12 +209,22 @@ class PmsCalendarService(Component):
                                 AND l.reservation_id = r.id
                                 AND r.overbooking = false
                     ) l ON l.room_id = dr.room_id AND l.date = dr.date
-                    LEFT OUTER JOIN (SELECT date, room_type_id, min_stay,
-                            min_stay_arrival, max_stay, max_stay_arrival, closed,
-                            closed_departure, closed_arrival
-                        FROM pms_availability_plan_rule
-                        WHERE availability_plan_id = %s and pms_property_id = %s
-                    ) ru ON ru.date = dr.date AND ru.room_type_id = dr.room_type_id
+                    -- The restrictions are stored by date range. Overlapping
+                    -- ranges are legal and the one written last wins the
+                    -- nights they share, which is what the ORDER BY picks.
+                    LEFT JOIN LATERAL (
+                        SELECT rule.min_stay, rule.min_stay_arrival,
+                               rule.max_stay, rule.max_stay_arrival,
+                               rule.closed, rule.closed_departure,
+                               rule.closed_arrival
+                        FROM pms_availability_plan_rule rule
+                        WHERE rule.availability_plan_id = %s
+                            AND rule.pms_property_id = %s
+                            AND rule.room_type_id = dr.room_type_id
+                            AND dr.date BETWEEN rule.date_from AND rule.date_to
+                        ORDER BY rule.write_date DESC, rule.id DESC
+                        LIMIT 1
+                    ) ru ON TRUE
                     LEFT OUTER JOIN pms_reservation r ON l.reservation_id = r.id
                     LEFT OUTER JOIN pms_folio f ON r.folio_id = f.id
                     ORDER BY dr.sequence, dr.room_id, dr.date
@@ -329,8 +338,8 @@ class PmsCalendarService(Component):
                 dr.date date,
                 it.id pricelist_item_id,
                 av.id availability_plan_rule_id,
-                COALESCE(av.max_avail, dr.default_max_avail) max_avail,
-                COALESCE(av.quota, dr.default_quota) quota,
+                COALESCE(inv.max_avail, dr.default_max_avail) max_avail,
+                COALESCE(inv.quota, dr.default_quota) quota,
                 COALESCE(av.closed, FALSE) closed,
                 COALESCE(av.closed_arrival, FALSE) closed_arrival,
                 COALESCE(av.closed_Departure, FALSE) closed_departure,
@@ -364,9 +373,8 @@ class PmsCalendarService(Component):
                     FROM
                     (
                         SELECT (CURRENT_DATE + date) date
-                        FROM generate_series(
-                            date %s- CURRENT_DATE, date %s - CURRENT_DATE
-                        ) date
+                        FROM generate_series(date %s- CURRENT_DATE,
+                                             date %s - CURRENT_DATE) date
                     ) dates,
                     (
                         SELECT  rt.id room_type_id,
@@ -383,10 +391,38 @@ class PmsCalendarService(Component):
                     ) rt_r
                 ) dr
                 INNER JOIN product_product pp ON pp.id = dr.product_id
-                LEFT OUTER JOIN pms_availability_plan_rule av ON av.date = dr.date
-                    AND av.room_type_id = dr.room_type_id
-                    AND av.pms_property_id = %s
-                    AND av.availability_plan_id = %s
+                -- Same reading as the inventory below: the restrictions are
+                -- ranges, and the rule written last wins the overlap.
+                LEFT JOIN LATERAL (
+                    SELECT rule.id, rule.min_stay, rule.min_stay_arrival,
+                           rule.max_stay, rule.max_stay_arrival, rule.closed,
+                           rule.closed_departure, rule.closed_arrival
+                    FROM pms_availability_plan_rule rule
+                    WHERE rule.pms_property_id = %s
+                        AND rule.availability_plan_id = %s
+                        AND rule.room_type_id = dr.room_type_id
+                        AND dr.date BETWEEN rule.date_from AND rule.date_to
+                    ORDER BY rule.write_date DESC, rule.id DESC
+                    LIMIT 1
+                ) av ON TRUE
+                -- The commercial inventory left the plan rules. This mirrors
+                -- what pms.inventory.rule resolves at the general scope: the
+                -- rule written last wins the overlap, and with no rule at all
+                -- the room type defaults apply (the COALESCE above). The
+                -- declared value is what the calendar edits, so the quota is
+                -- NOT reduced here by what the scope already sold.
+                LEFT JOIN LATERAL (
+                    SELECT ir.quota, ir.max_avail
+                    FROM pms_inventory_rule ir
+                    WHERE ir.pms_property_id = %s
+                        AND ir.room_type_id = dr.room_type_id
+                        AND ir.sale_channel_id IS NULL
+                        AND ir.agency_id IS NULL
+                        AND ir.active
+                        AND dr.date BETWEEN ir.date_from AND ir.date_to
+                    ORDER BY ir.write_date DESC, ir.id DESC
+                    LIMIT 1
+                ) inv ON TRUE
                 LEFT OUTER JOIN product_pricelist_item it
                     ON it.date_start_consumption = dr.date
                     AND it.date_end_consumption = dr.date
@@ -406,6 +442,7 @@ class PmsCalendarService(Component):
                 calendar_search_param.pmsPropertyId,
                 calendar_search_param.pmsPropertyId,
                 calendar_search_param.availabilityPlanId,
+                calendar_search_param.pmsPropertyId,
                 calendar_search_param.pricelistId,
                 calendar_search_param.pmsPropertyId,
             ),

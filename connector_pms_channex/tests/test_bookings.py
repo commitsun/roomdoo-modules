@@ -123,19 +123,19 @@ class TestChannexBookingRevisions(ChannexFeedCase):
         self.assertEqual(len(self._revisions()), 5)
         self.assertEqual(len(self.server.calls_to("GET", "booking_revisions")), 3)
 
-    def test_the_read_asks_only_for_what_is_pending_here(self):
-        """One API key reaches every property of its account, and a message
-        already acknowledged is one already dealt with."""
+    def test_the_read_asks_the_feed_of_this_property(self):
+        """One API key reaches every property of its account."""
         self._seed_revision()
         self._import()
-        params = self.server.calls_to("GET", "booking_revisions")[0][3]
-        self.assertEqual(params["filter[property_id]"], self.property_uuid)
-        self.assertEqual(params["filter[acknowledge_status]"], "pending")
-        self.assertEqual(params["order[inserted_at]"], "asc")
+        call = self.server.calls_to("GET", "booking_revisions")[0]
+        self.assertEqual(call[1], "booking_revisions/feed")
+        self.assertEqual(call[3]["filter[property_id]"], self.property_uuid)
+        self.assertEqual(call[3]["order[inserted_at]"], "asc")
 
 
 class ChannexBookingCase(ChannexFeedCase):
-    """A property with one mapped room type, and messages to feed it."""
+    """A property with one mapped room type, sold room only, and messages to
+    feed it."""
 
     def setUp(self):
         super().setUp()
@@ -145,6 +145,22 @@ class ChannexBookingCase(ChannexFeedCase):
         )
         self.property_uuid = self.server.store["properties"][0]["id"]
         self.room_type_uuid = self.room_type_binding.external_id
+        self._sell_room_only()
+
+    def _sell_room_only(self):
+        """The rate plan the rooms of the messages are sold under: the room and
+        nothing else, so what the OTA sold is what the room costs."""
+        return self.env["channel.channex.rate.plan"].create(
+            {
+                "backend_id": self.backend.id,
+                "pricelist_id": self.pricelist.id,
+                "board_service_id": self.env.ref(
+                    "pms.product_template_board_room_only"
+                ).id,
+                "room_type_binding_id": self.room_type_binding.id,
+                "external_id": "rp-1",
+            }
+        )
 
     def _bind_and_export(self, model, record):
         binding = (
@@ -320,6 +336,19 @@ class TestChannexBookingImport(ChannexBookingCase):
             [str(line.date) for line in lines], ["2026-11-13", "2026-11-14"]
         )
         self.assertEqual(lines.mapped("price"), [76.5, 76.5])
+
+    def test_the_ages_of_the_children_are_kept_as_the_channel_declares_them(self):
+        self._seed_booking(
+            rooms=[
+                self._room(
+                    occupancy={"adults": 2, "children": 1, "infants": 1, "ages": [7, 1]}
+                )
+            ]
+        )
+        self._import()
+        reservation = self._folios().odoo_id.reservation_ids
+        self.assertEqual(reservation.children, 1)
+        self.assertEqual(reservation.children_ages, [7, 1])
 
     def test_a_breakdown_that_does_not_cover_the_stay_is_not_applied(self):
         """No price is ever derived here: what the OTA sold is what gets
@@ -569,6 +598,17 @@ class TestChannexBookingModification(ChannexBookingCase):
         self.assertEqual(binding.revision_external_id, "r2")
         self.assertEqual(str(binding.revision_inserted_at), "2026-11-12 18:20:00")
         self.assertEqual(self._revision("r2").state, "applied")
+
+    def test_new_ages_of_the_children_are_written(self):
+        self._seed_modification(
+            rooms=[
+                self._room(
+                    occupancy={"adults": 2, "children": 1, "infants": 0, "ages": [9]}
+                )
+            ]
+        )
+        self._import()
+        self.assertEqual(self.reservation.children_ages, [9])
 
     def test_a_new_guest_name_is_written(self):
         self._seed_modification(
@@ -1058,46 +1098,46 @@ class TestChannexBookingAck(ChannexBookingCase):
 
 @tagged("post_install", "-at_install")
 class TestChannexBookingSweep(ChannexBookingCase):
-    """The two readings, and the sweep that runs one of them.
+    """The feed, the sweep that reads it, and the recovery by hand.
 
-    Channex stops offering a message in the feed half an hour after issuing it,
-    acknowledged or not, and keeps it in the listing of unacknowledged ones. So
-    the feed is what to read on notice and the listing is what to sweep with: a
-    connector sweeping the feed would miss exactly the messages a sweep is for.
+    Channex hands bookings over in its feed, and its certification counts a
+    message read any other way as never received. The listing of every
+    unacknowledged message stays as the way back for what the feed might stop
+    offering, which Channex does not say may happen and has been seen to happen.
     """
 
-    def test_a_message_the_feed_no_longer_offers_is_still_taken_in(self):
+    def test_only_the_feed_is_read(self):
+        """The receipts included: one for a message read anywhere else is,
+        for Channex, the receipt of a message it never handed over."""
+        self._seed_booking()
+        self._import(rounds=2)
+        self.assertTrue(self._revision().acknowledged_at)
+        self.assertEqual(
+            {call[1] for call in self.server.calls_to("GET", "booking_revisions")},
+            {"booking_revisions/feed"},
+        )
+
+    def test_what_the_feed_no_longer_offers_is_recovered_by_hand(self):
         self._seed_booking()
         self.server.age_out_of_feed("r1")
-        self.assertEqual(self._import(), {"total": 1, "queued": 1})
-        self.assertEqual(len(self._folios()), 1)
-
-    def test_the_feed_reading_takes_in_what_was_just_issued(self):
-        """The short path, for when Channex tells us something arrived."""
-        self._seed_booking()
+        self.assertEqual(self._import(), {"total": 0, "queued": 0})
         with trap_jobs() as trap:
-            result = self.backend.channex_import_booking_feed()
+            result = self.backend.channex_recover_booking_revisions()
             trap.perform_enqueued_jobs()
         self.assertEqual(result, {"total": 1, "queued": 1})
         self.assertEqual(len(self._folios()), 1)
 
-    def test_the_feed_reading_does_not_see_what_aged_out_of_it(self):
-        self._seed_booking()
-        self.server.age_out_of_feed("r1")
-        with trap_jobs() as trap:
-            result = self.backend.channex_import_booking_feed()
-            trap.perform_enqueued_jobs()
-        self.assertEqual(result, {"total": 0, "queued": 0})
-        self.assertFalse(self._folios())
-
-    def test_a_message_already_acknowledged_is_not_taken_in(self):
+    def test_the_recovery_skips_what_is_already_acknowledged(self):
         """Channex answers a filter it does not know with everything instead of
         refusing it, so the status of each message is checked here as well.
         Without that, the day the filter stops being supported we would take in
         again every booking ever received."""
         self.server.ignore_filter("acknowledge_status")
         self._seed_booking(acknowledge_status="acknowledged")
-        self.assertEqual(self._import(), {"total": 0, "queued": 0})
+        self.assertEqual(
+            self.backend.channex_recover_booking_revisions(),
+            {"total": 0, "queued": 0},
+        )
         self.assertFalse(self._folios())
 
     # -- the sweep ---------------------------------------------------------

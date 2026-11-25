@@ -13,16 +13,18 @@
                         <field name="res_id" invisible="1" />
                         <field name="binding_model" invisible="1" />
                         <field name="available_backend_ids" invisible="1" />
+                        <field name="connects_to_existing" invisible="1" />
                         <field
               name="record_display_name"
               readonly="1"
               string="Odoo record"
             />
+                        <field name="backend_id" options="{'no_create': True}" />
                         <field
-              name="backend_id"
-              options="{'no_create': True}"
+              name="mode"
+              widget="radio"
+              attrs="{'invisible': [('connects_to_existing', '=', False)]}"
             />
-                        <field name="mode" widget="radio" />
                     </group>
                     <group attrs="{'invisible': [('mode', '!=', 'existing')]}">
                         <!-- Not required in the view: the reload button saves the
@@ -66,11 +68,7 @@
             string="Connect"
             class="btn-primary"
           />
-                    <button
-            string="Cancel"
-            special="cancel"
-            class="btn-secondary"
-          />
+                    <button string="Cancel" special="cancel" class="btn-secondary" />
                 </footer>
             </form>
         </field>

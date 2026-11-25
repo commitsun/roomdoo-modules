@@ -14,6 +14,14 @@
             string="Test connection"
             class="btn-primary"
           />
+                    <button
+            name="action_channex_sync_all"
+            type="object"
+            string="Synchronise everything"
+            class="btn-secondary"
+            confirm="This sends everything about the property to Channex: the property, its room types, the rate plans of the pricelists sold and every night of availability, rates and restrictions, and then reads the bookings waiting. It is meant for setting a property going or putting it right, and in production Channex takes it once a day at most."
+            help="What Channex calls a full sync. Changes are sent on their own as they happen."
+          />
                 </header>
                 <sheet>
                     <group>
@@ -97,6 +105,31 @@
                             </div>
                             <field name="channel_ids" nolabel="1" readonly="1" />
                         </page>
+                        <page string="Availability, rates and restrictions" name="ari">
+                            <group>
+                                <field name="channex_full_sync_date" />
+                            </group>
+                            <field
+                name="channex_ari_warning_ids"
+                nolabel="1"
+                readonly="1"
+              />
+                            <separator string="Rate plans" />
+                            <group>
+                                <field
+                  name="channex_pricelist_ids"
+                  widget="many2many_tags"
+                  options="{'no_create': True}"
+                  domain="['|', ('pms_property_ids', '=', False), ('pms_property_ids', 'in', [pms_property_id])]"
+                />
+                            </group>
+                            <field
+                name="channex_rate_plan_ids"
+                nolabel="1"
+                readonly="1"
+                context="{'tree_view_ref': 'connector_pms_channex.channel_channex_rate_plan_view_tree'}"
+              />
+                        </page>
                         <page string="Bookings" name="bookings">
                             <div class="mb-2">
                                 <button
@@ -106,6 +139,14 @@
                   class="btn-primary"
                   help="Read the messages Channex is holding for this property and queue one job per message. What became of each one shows up below as its job runs."
                 />
+                                <button
+                  name="action_recover_booking_revisions"
+                  type="object"
+                  string="Recover missing bookings"
+                  class="btn-secondary"
+                  confirm="This reads every message Channex holds unacknowledged for this property, however old. Use it only when bookings are missing after a long outage: Channex does not count a booking read this way as received. Continue?"
+                  help="Read every message Channex holds unacknowledged for this property, including those it no longer offers. Only for bookings missing after a long outage."
+                />
                             </div>
                             <field
                 name="booking_revision_ids"
@@ -114,6 +155,33 @@
               />
                         </page>
                     </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="channel_channex_ari_warning_view_tree" model="ir.ui.view">
+        <field name="name">channel.channex.ari.warning.tree</field>
+        <field name="model">channel.channex.ari.warning</field>
+        <field name="arch" type="xml">
+            <tree string="Refused by Channex" create="false">
+                <field name="create_date" string="Sent" />
+                <field name="kind" />
+                <field name="count" />
+            </tree>
+        </field>
+    </record>
+    <record id="channel_channex_ari_warning_view_form" model="ir.ui.view">
+        <field name="name">channel.channex.ari.warning.form</field>
+        <field name="model">channel.channex.ari.warning</field>
+        <field name="arch" type="xml">
+            <form string="Refused by Channex" create="false">
+                <sheet>
+                    <group>
+                        <field name="create_date" string="Sent" />
+                        <field name="kind" />
+                        <field name="count" />
+                    </group>
+                    <field name="warnings" />
                 </sheet>
             </form>
         </field>

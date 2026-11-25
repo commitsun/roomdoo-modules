@@ -205,12 +205,13 @@ class ChannelChannexAdapter(AbstractComponent):
         with exports disabled is usually a copy of a live one, and letting a
         bodiless write through would reach the real Channex.
         """
-        from .call_control import ChannexCallControl
+        from .call_control import SKIPPED, ChannexCallControl
 
         control = ChannexCallControl(self, funcname, {"params": params})
         if self.backend_record.export_disabled and method != "GET":
-            control.add_result("skipped", "Export disabled on this backend")
+            control.add_result(SKIPPED, "Export disabled on this backend")
             return None
+        control.check()
         return control
 
     # -- CRUD contract -----------------------------------------------------

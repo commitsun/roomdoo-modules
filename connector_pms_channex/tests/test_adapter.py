@@ -5,7 +5,10 @@
 of failure is classified. Getting that wrong either fills the queue with jobs
 that can never succeed, or silently drops updates that only needed a retry."""
 
+from unittest.mock import patch
+
 from odoo.tests.common import tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.connector.exception import IDMissingInBackend
 from odoo.addons.connector_pms_channex.components.adapter import ChannexAPIError
@@ -159,3 +162,86 @@ class TestChannexAdapter(ChannexConnectorCase):
         self._adapter(PROPERTIES).search_read([])
         with self.assertRaises(RetryableJobError):
             self._adapter(PROPERTIES).search_read([])
+
+    def test_being_paced_does_not_spend_a_retry(self):
+        """Over the limit is "not yet", not a failure. And the jobs refused in
+        the same window are spread out, or they would all wake up at once for a
+        single free slot."""
+        self.env["channel.backend.method"].create(
+            {
+                "name": "GET /properties",
+                "backend_type_id": self.backend.backend_type_id.id,
+                "max_calls": 1,
+                "time_window": 60,
+            }
+        )
+        self._adapter(PROPERTIES).search_read([])
+        with self.assertRaises(RetryableJobError) as caught:
+            self._adapter(PROPERTIES).search_read([])
+        self.assertTrue(caught.exception.ignore_retry)
+        low, high = caught.exception.seconds
+        self.assertLess(low, high)
+        self.assertLessEqual(low, 61)
+
+    def test_the_ari_endpoints_are_paced_from_their_first_call(self):
+        """Channex allows ten calls a minute to each ARI endpoint, and checks it
+        in certification: the limit is there before anyone configures it."""
+        self._adapter(PROPERTIES).request(
+            "POST",
+            "availability",
+            payload={
+                "values": [
+                    {
+                        "property_id": "p-1",
+                        "room_type_id": "rt-1",
+                        "date": "2030-01-01",
+                        "availability": 1,
+                    }
+                ]
+            },
+        )
+        method = self.env["channel.backend.method"].search(
+            [
+                ("name", "=", "POST /availability"),
+                ("backend_type_id", "=", self.backend.backend_type_id.id),
+            ]
+        )
+        self.assertEqual((method.max_calls, method.time_window), (10, 60))
+
+    def test_a_call_that_never_left_neither_counts_nor_is_refused(self):
+        """With exports disabled nothing reaches Channex, so nothing is spent
+        of the limit, and nothing is held back by it either."""
+        self.env["channel.backend.method"].create(
+            {
+                "name": "POST /properties",
+                "backend_type_id": self.backend.backend_type_id.id,
+                "max_calls": 1,
+                "time_window": 60,
+            }
+        )
+        self.backend.export_disabled = True
+        for _attempt in range(3):
+            self.assertIsNone(self._adapter(PROPERTIES).create({"title": "New"}))
+        self.backend.export_disabled = False
+        self.assertTrue(
+            self._adapter(PROPERTIES).create({"title": "New", "currency": "EUR"})
+        )
+
+    def test_losing_the_race_to_start_the_accounting_retries_the_call(self):
+        """Another job made the endpoint's row after this one started: the row
+        is in the table, but not in what this transaction can read."""
+        Method = self.env["channel.backend.method"]
+        Method.create(
+            {
+                "name": "GET /properties",
+                "backend_type_id": self.backend.backend_type_id.id,
+            }
+        )
+        with patch.object(
+            type(Method), "search", return_value=Method.browse()
+        ), mute_logger("odoo.sql_db"), self.assertRaises(RetryableJobError) as caught:
+            self._adapter(PROPERTIES).search_read([])
+        self.assertTrue(caught.exception.ignore_retry)
+        self.assertFalse(self.server.calls_to("GET"))
+        # Only the insert was undone: the transaction is still usable.
+        self.assertEqual(Method.search_count([("name", "=", "GET /properties")]), 1)
