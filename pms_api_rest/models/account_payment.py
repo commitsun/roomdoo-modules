@@ -39,3 +39,24 @@ class AccountPayment(models.Model):
                     record.pms_api_transaction_type = "supplier_inbound"
             else:
                 record.pms_api_transaction_type = False
+
+    def write(self, vals):
+        res = super().write(vals)
+        # The folio decides which Neobookings order the payment belongs to
+        if "folio_ids" in vals:
+            self.env["pms.neobookings.payment.sync"]._safe_track_payments(self)
+        return res
+
+    def unlink(self):
+        syncs = (
+            self.env["pms.neobookings.payment.sync"]
+            .sudo()
+            .search([("payment_id", "in", self.ids)])
+        )
+        payments = self.browse(self.ids)
+        res = super().unlink()
+        # Neobookings must forget the payments it was told about
+        self.env["pms.neobookings.payment.sync"]._safe_track_payments(
+            payments, unlinked_syncs=syncs
+        )
+        return res

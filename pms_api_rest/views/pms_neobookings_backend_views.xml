@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_neobookings_backend_view_tree" model="ir.ui.view">
+        <field name="name">pms.neobookings.backend.tree</field>
+        <field name="model">pms.neobookings.backend</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="url" />
+                <field name="dry_run" />
+                <field name="api_user_id" />
+                <field name="pms_property_ids" widget="many2many_tags" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="pms_neobookings_backend_view_form" model="ir.ui.view">
+        <field name="name">pms.neobookings.backend.form</field>
+        <field name="model">pms.neobookings.backend</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button
+            name="action_sync_now"
+            type="object"
+            string="Send Pending Payments"
+            class="btn-primary"
+          />
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+              name="action_view_pending_syncs"
+              type="object"
+              class="oe_stat_button"
+              icon="fa-clock-o"
+            >
+                            <field
+                name="sync_pending_count"
+                widget="statinfo"
+                string="Pending"
+              />
+                        </button>
+                        <button
+              name="action_view_review_syncs"
+              type="object"
+              class="oe_stat_button"
+              icon="fa-question-circle"
+            >
+                            <field
+                name="sync_review_count"
+                widget="statinfo"
+                string="To Review"
+              />
+                        </button>
+                        <button
+              name="action_view_error_syncs"
+              type="object"
+              class="oe_stat_button"
+              icon="fa-exclamation-triangle"
+            >
+                            <field
+                name="sync_error_count"
+                widget="statinfo"
+                string="Errors"
+              />
+                        </button>
+                    </div>
+                    <widget
+            name="web_ribbon"
+            title="Archived"
+            bg_color="bg-danger"
+            attrs="{'invisible': [('active', '=', True)]}"
+          />
+                    <div class="oe_title">
+                        <h1><field name="name" /></h1>
+                    </div>
+                    <div
+            class="alert alert-warning"
+            role="alert"
+            attrs="{'invisible': [('dry_run', '=', False)]}"
+          >
+                        Simulation: payments are prepared and stored, but not sent to Neobookings.
+                    </div>
+                    <group>
+                        <group string="Connection">
+                            <field name="active" invisible="1" />
+                            <field name="url" />
+                            <field name="api_user_id" />
+                        </group>
+                        <group string="Sending">
+                            <field name="dry_run" />
+                            <field name="language" />
+                            <field name="timeout" />
+                            <field name="max_attempts" />
+                        </group>
+                    </group>
+                    <group>
+                        <field
+              name="pms_property_ids"
+              widget="many2many_tags"
+            />
+                        <field
+              name="excluded_journal_ids"
+              widget="many2many_tags"
+            />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pms_neobookings_backend_action" model="ir.actions.act_window">
+        <field name="name">Neobookings Connections</field>
+        <field name="res_model">pms.neobookings.backend</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+    id="pms_neobookings_menu"
+    name="Neobookings"
+    parent="pms.pms_configuration_menu"
+    groups="base.group_system"
+    sequence="90"
+  />
+    <menuitem
+    id="pms_neobookings_backend_menu"
+    name="Connections"
+    parent="pms_neobookings_menu"
+    action="pms_neobookings_backend_action"
+    sequence="10"
+  />
+</odoo>

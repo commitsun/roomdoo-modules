@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_neobookings_payment_sync_view_tree" model="ir.ui.view">
+        <field name="name">pms.neobookings.payment.sync.tree</field>
+        <field name="model">pms.neobookings.payment.sync</field>
+        <field name="arch" type="xml">
+            <tree
+        create="false"
+        decoration-danger="state == 'error'"
+        decoration-warning="state == 'review'"
+        decoration-info="state == 'simulated'"
+        decoration-muted="state == 'done'"
+      >
+                <header>
+                    <button
+            name="action_mark_received"
+            type="object"
+            string="Neobookings Received It"
+          />
+                    <button
+            name="action_mark_not_received"
+            type="object"
+            string="Send Again"
+          />
+                    <button
+            name="action_retry"
+            type="object"
+            string="Send Now"
+          />
+                </header>
+                <field name="payment_name" />
+                <field name="folio_id" />
+                <field name="pms_property_id" />
+                <field name="state" />
+                <field name="attempts" />
+                <field name="next_attempt_date" />
+                <field name="last_sync_date" />
+                <field name="last_error" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="pms_neobookings_payment_sync_view_form" model="ir.ui.view">
+        <field name="name">pms.neobookings.payment.sync.form</field>
+        <field name="model">pms.neobookings.payment.sync</field>
+        <field name="arch" type="xml">
+            <form create="false">
+                <header>
+                    <button
+            name="action_retry"
+            type="object"
+            string="Send Now"
+            attrs="{'invisible': [('state', 'not in', ['pending', 'error'])]}"
+          />
+                    <button
+            name="action_mark_received"
+            type="object"
+            string="Neobookings Received It"
+            class="btn-primary"
+            attrs="{'invisible': [('state', '!=', 'review')]}"
+            confirm="The request will be counted as received by Neobookings and will not be sent again. Continue?"
+          />
+                    <button
+            name="action_mark_not_received"
+            type="object"
+            string="Send Again"
+            attrs="{'invisible': [('state', '!=', 'review')]}"
+            confirm="The request will be sent again. If Neobookings already received it, the payment will be counted twice. Continue?"
+          />
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="backend_id" readonly="1" />
+                            <field name="payment_id" readonly="1" />
+                            <field name="payment_name" />
+                            <field name="folio_id" />
+                            <field name="pms_property_id" />
+                        </group>
+                        <group>
+                            <field name="attempts" />
+                            <field name="next_attempt_date" />
+                            <field name="last_sync_date" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="last_error" />
+                        <field name="sent_data" />
+                        <field
+              name="inflight_data"
+              attrs="{'invisible': [('inflight_data', '=', False)]}"
+            />
+                        <field name="last_request" />
+                        <field name="last_response" />
+                    </group>
+                    <separator string="Requests" />
+                    <field name="request_ids" nolabel="1">
+                        <tree
+              decoration-danger="neobookings_duplicate_references"
+              decoration-warning="state == 'review'"
+              decoration-muted="state == 'failed'"
+            >
+                            <field name="create_date" string="Sent On" />
+                            <field name="code" />
+                            <field name="description" />
+                            <field name="quantity" />
+                            <field name="state" />
+                            <field name="neobookings_reference" />
+                            <field name="echo_date" />
+                            <field
+                name="neobookings_duplicate_references"
+                optional="show"
+              />
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pms_neobookings_payment_sync_view_search" model="ir.ui.view">
+        <field name="name">pms.neobookings.payment.sync.search</field>
+        <field name="model">pms.neobookings.payment.sync</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="payment_name" />
+                <field name="folio_id" />
+                <field name="pms_property_id" />
+                <field
+          name="request_ids"
+          string="Request Code or Neobookings Payment"
+          filter_domain="['|', ('request_ids.code', 'ilike', self), ('request_ids.neobookings_reference', '=', self)]"
+        />
+                <filter
+          name="pending"
+          string="Pending"
+          domain="[('state', '=', 'pending')]"
+        />
+                <filter
+          name="review"
+          string="To Review"
+          domain="[('state', '=', 'review')]"
+        />
+                <filter
+          name="error"
+          string="Error"
+          domain="[('state', '=', 'error')]"
+        />
+                <filter
+          name="simulated"
+          string="Simulated"
+          domain="[('state', '=', 'simulated')]"
+        />
+                <filter
+          name="done"
+          string="Done"
+          domain="[('state', '=', 'done')]"
+        />
+                <separator />
+                <filter
+          name="duplicated"
+          string="Duplicated in Neobookings"
+          domain="[('request_ids.neobookings_duplicate_references', '!=', False)]"
+        />
+                <group expand="0" string="Group By">
+                    <filter
+            name="group_state"
+            string="Status"
+            context="{'group_by': 'state'}"
+          />
+                    <filter
+            name="group_property"
+            string="Property"
+            context="{'group_by': 'pms_property_id'}"
+          />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record
+    id="pms_neobookings_payment_sync_action"
+    model="ir.actions.act_window"
+  >
+        <field name="name">Neobookings Payments</field>
+        <field name="res_model">pms.neobookings.payment.sync</field>
+        <field name="view_mode">tree,form</field>
+        <field
+      name="context"
+    >{'search_default_pending': 1, 'search_default_review': 1, 'search_default_error': 1, 'search_default_simulated': 1}</field>
+    </record>
+
+    <menuitem
+    id="pms_neobookings_payment_sync_menu"
+    name="Payments"
+    parent="pms_neobookings_menu"
+    action="pms_neobookings_payment_sync_action"
+    sequence="20"
+  />
+</odoo>

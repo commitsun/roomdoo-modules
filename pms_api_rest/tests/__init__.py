@@ -6,12 +6,14 @@ from . import test_folio_invoiced_error_code
 from . import test_invoice_lock_display_date
 from . import test_board_service_billed_day_price
 from . import test_roomdoo_app_menu
+from . import test_public_payment_link_agency
 from . import test_ses_unaccompanied_minors
 from . import test_staff_reservation_pricelist
 from . import test_various_partner_protection
 from . import test_current_user_service
 from . import test_error_cors
 from . import test_login_second_factor
+from . import test_portal_write_guard
 from . import test_public_precheckin_empty_values
 from . import test_reservation_cancel_date
 from . import test_folio_list_reservation_price
@@ -21,3 +23,4 @@ from . import test_channel_lang
 from . import test_user_service_access
 from . import test_user_contact_email
 from . import test_api_access_hotel_users
+from . import test_neobookings_payment
