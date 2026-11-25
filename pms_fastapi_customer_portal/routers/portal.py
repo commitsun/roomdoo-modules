@@ -62,15 +62,19 @@ class CustomerPortalRouterHelper(models.AbstractModel):
         if token and "\x00" not in token:
             folio = folio.sudo().search(self._portal_folio_domain(token), limit=1)
         if not folio:
-            raise _PortalProblem(
-                build_problem(
-                    404,
-                    "/errors/portal-link-not-found",
-                    _("Link not found"),
-                    _("This link is not valid."),
-                )
-            )
+            raise self._link_not_found()
         return folio
+
+    def _link_not_found(self):
+        """The problem answered for a link that opens nothing."""
+        return _PortalProblem(
+            build_problem(
+                404,
+                "/errors/portal-link-not-found",
+                _("Link not found"),
+                _("This link is not valid."),
+            )
+        )
 
     # Property
 

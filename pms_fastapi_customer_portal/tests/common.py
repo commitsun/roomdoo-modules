@@ -130,3 +130,26 @@ class CommonTestCustomerPortalApi(FastAPITransactionCase):
     def _get(self, path):
         with self._create_test_client() as test_client:
             return test_client.get(path)
+
+    def _enable_test_ocr_supplier(self):
+        """Give the property a document scanning supplier named "test".
+
+        The suppliers are selection options added by their own modules, which
+        are not dependencies here, so one is registered for the test only."""
+        field = self.env["pms.property"]._fields["ocr_checkin_supplier"]
+        option = ("test", "Test")
+        field.selection.append(option)
+        self.addCleanup(field.selection.remove, option)
+        self.property.ocr_checkin_supplier = "test"
+
+    def _request(self, method, path, **kwargs):
+        with self._create_test_client() as test_client:
+            return test_client.request(method, path, **kwargs)
+
+    def _assert_problem(self, response, status_code, type_):
+        self.assertEqual(response.status_code, status_code, response.text)
+        self.assertEqual(response.headers["content-type"], "application/problem+json")
+        body = response.json()
+        self.assertEqual(body["type"], type_)
+        self.assertEqual(body["status"], status_code)
+        return body

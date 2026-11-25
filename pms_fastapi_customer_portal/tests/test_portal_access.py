@@ -7,7 +7,25 @@ from odoo.addons.pms_fastapi_customer_portal.models.fastapi_endpoint import (
 
 from .common import CommonTestCustomerPortalApi
 
-PORTAL_PATHS = {"/portal/{token}/folio", "/portal/{token}/property"}
+PORTAL_PATHS = {
+    "/portal/{token}/folio",
+    "/portal/{token}/property",
+    "/portal/{token}/checkin-guests",
+    "/portal/{token}/checkin-context",
+    "/portal/{token}/checkin-partners/{checkin_partner_id}",
+    "/portal/{token}/countries",
+    "/portal/{token}/country-states",
+    "/portal/{token}/id-number-categories",
+}
+# Check-in requests: method, path after the token and keyword arguments.
+CHECKIN_REQUESTS = [
+    ("GET", "checkin-guests", {}),
+    ("GET", "checkin-context", {}),
+    ("GET", "checkin-partners/{guest}", {}),
+    ("GET", "countries", {}),
+    ("GET", "country-states", {}),
+    ("GET", "id-number-categories", {}),
+]
 
 
 class TestPortalTokenAccess(CommonTestCustomerPortalApi):
@@ -113,6 +131,58 @@ class TestPortalTokenAccess(CommonTestCustomerPortalApi):
             body["totalAmount"],
             places=2,
         )
+
+
+class TestPortalCheckinTokenAccess(CommonTestCustomerPortalApi):
+    """The check-in serves confirmed folios only, the others answer like an
+    unknown token."""
+
+    def setUp(self):
+        super().setUp()
+        self.unknown = self._get("/portal/not-a-real-token/folio")
+        self.assertEqual(self.unknown.status_code, status.HTTP_404_NOT_FOUND)
+
+    def _assert_checkin_not_found(self, token, guest):
+        for method, route, kwargs in CHECKIN_REQUESTS:
+            path = f"/portal/{token}/{route.format(guest=guest.id)}"
+            with self.subTest(method=method, path=path):
+                response = self._request(method, path, **kwargs)
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+                self.assertEqual(
+                    response.headers["content-type"], "application/problem+json"
+                )
+                self.assertEqual(response.json(), self.unknown.json())
+        self.assertFalse(guest.firstname)
+
+    def test_unknown_tokens_are_not_found(self):
+        guest = self._create_folio([(self.double, 3, 2, 1, 0)]).checkin_partner_ids
+        for token in ("not-a-real-token", "%00", "%25"):
+            self._assert_checkin_not_found(token, guest)
+
+    def test_folios_that_are_not_confirmed_are_not_found(self):
+        draft = self._create_folio([(self.double, 3, 2, 1, 0)])
+        draft.write({"state": "draft"})
+        done = self._create_folio([(self.double, 3, 2, 1, 0)])
+        done.write({"state": "done"})
+        cancelled = self._create_folio([(self.single, 3, 2, 1, 0)])
+        cancelled.reservation_ids.action_cancel()
+        self.assertEqual(cancelled.state, "cancel")
+        for folio in (draft, done, cancelled):
+            with self.subTest(state=folio.state):
+                self._assert_checkin_not_found(
+                    folio.access_token, folio.reservation_ids.checkin_partner_ids
+                )
+
+    def test_confirmed_folio_is_served(self):
+        folio = self._create_folio([(self.double, 3, 2, 1, 0)])
+        guest = folio.checkin_partner_ids
+        for method, route, kwargs in CHECKIN_REQUESTS:
+            path = f"/portal/{folio.access_token}/{route.format(guest=guest.id)}"
+            with self.subTest(method=method, path=path):
+                response = self._request(method, path, **kwargs)
+                self.assertNotEqual(
+                    response.status_code, status.HTTP_404_NOT_FOUND, response.text
+                )
 
 
 class TestPortalAppBoundary(CommonTestCustomerPortalApi):
