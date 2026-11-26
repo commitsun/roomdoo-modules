@@ -17,6 +17,7 @@ from . import customer
 from . import supplier
 from . import guest
 from . import pms_folio
+from . import checkin
 from . import invoice
 from . import journal
 from . import cash_session

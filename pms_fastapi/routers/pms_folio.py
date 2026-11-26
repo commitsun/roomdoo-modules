@@ -265,7 +265,9 @@ class PmsApiFolioRouterHelper(models.AbstractModel):
     def get_or_404(self, folio_id) -> PmsFolio:
         try:
             return self.get(folio_id)
-        except MissingError as err:
+        except (MissingError, AccessError, AccessDenied) as err:
+            # A folio the user cannot access is indistinguishable from a
+            # missing one
             raise HTTPException(
                 status_code=404,
                 detail=_("folio not found"),

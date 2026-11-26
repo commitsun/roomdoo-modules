@@ -30,5 +30,6 @@
         "security/ir.model.access.csv",
         "data/res_users.xml",
         "views/account_journal_views.xml",
+        "views/pms_property_views.xml",
     ],
 }

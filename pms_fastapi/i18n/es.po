@@ -12,6 +12,14 @@ msgstr ""
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid ""
+"A guest that has left or whose reservation is cancelled cannot be modified."
+msgstr "No se puede modificar a un huésped que ya se ha marchado o cuya reserva está cancelada."
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "Access denied"
@@ -52,6 +60,21 @@ msgstr "Importe a facturar"
 #: model:ir.model.fields,field_description:pms_fastapi.field_fastapi_endpoint__app
 msgid "App"
 msgstr "Aplicación"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_birthdate
+msgid "Ask the birthdate"
+msgstr "Pedir la fecha de nacimiento"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_gender
+msgid "Ask the gender"
+msgstr "Pedir el sexo"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_document
+msgid "Ask the identity document"
+msgstr "Pedir el documento de identidad"
 
 #. module: pms_fastapi
 #: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_attachment_count
@@ -234,6 +257,20 @@ msgstr "El método de pago de destino debe ser de entrada."
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Document not readable"
+msgstr "Documento no legible"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Document scan not available"
+msgstr "Escaneo de documentos no disponible"
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
@@ -379,6 +416,30 @@ msgid "Followers (Partners)"
 msgstr "Seguidores (contactos)"
 
 #. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__form
+msgid "Form"
+msgstr "Formulario"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Guest data not valid"
+msgstr "Datos del huésped no válidos"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Guest is read-only"
+msgstr "El huésped es de solo lectura"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_checkin_partner__responsible_checkin_partner_id
+msgid "Guest of the same folio who is responsible for this one."
+msgstr "Huésped del mismo folio que es responsable de este."
+
+#. module: pms_fastapi
 #: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__has_message
 msgid "Has Message"
 msgstr "Tiene mensaje"
@@ -424,6 +485,13 @@ msgid ""
 "If the sanitized phone number is on the blacklist, the contact won't receive"
 " mass mailing sms anymore, from any list"
 msgstr "Si el número de teléfono normalizado está en la lista negra, el contacto dejará de recibir SMS de envíos masivos, de cualquier lista"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Image too large"
+msgstr "Imagen demasiado grande"
 
 #. module: pms_fastapi
 #: model:ir.model.fields,field_description:pms_fastapi.field_channel_wubook_pms_property_availability__in_house
@@ -484,6 +552,13 @@ msgstr "Id de conciliación no válido"
 #, python-format
 msgid "Invalid sale line"
 msgstr "Línea de venta no válida"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Invalid signature"
+msgstr "Firma no válida"
 
 #. module: pms_fastapi
 #. odoo-python
@@ -772,6 +847,16 @@ msgid "Number of messages with delivery error"
 msgstr "Número de mensajes con error de entrega"
 
 #. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__ocr
+msgid "OCR"
+msgstr "OCR"
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__ocr-precheckin
+msgid "OCR-Precheckin"
+msgstr "OCR-Precheckin"
+
+#. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
@@ -790,12 +875,22 @@ msgid ""
 msgstr "Se ha solicitado facturar una cantidad mayor que la pendiente en una o más líneas de venta."
 
 #. module: pms_fastapi
+#: model_terms:ir.ui.view,arch_db:pms_fastapi.pms_property_views_form_inherit_pms_fastapi
+msgid "Online check-in"
+msgstr "Check-in online"
+
+#. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "Only down-payment invoices are accepted as downpaymentLines."
 msgstr "Solo se aceptan facturas de anticipo como downpaymentLines."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_checkin_partner__origin_input_data
+msgid "Origin Input Data"
+msgstr "Origen de los datos"
 
 #. module: pms_fastapi
 #. odoo-python
@@ -884,6 +979,11 @@ msgstr "Conciliación parcial"
 #, python-format
 msgid "Partner %s does not exist."
 msgstr "El contacto %s no existe."
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_checkin_partner
+msgid "Partner Checkins"
+msgstr "Checkins del Cliente"
 
 #. module: pms_fastapi
 #: model:ir.model,name:pms_fastapi.model_res_partner_id_category
@@ -1024,6 +1124,11 @@ msgid "Pms api agency Service Helper"
 msgstr "Helper de servicio de agencias (PMS API)"
 
 #. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_api_checkin_checkin_router_helper
+msgid "Pms api check-in Service Helper"
+msgstr "Helper de servicio de check-in (PMS API)"
+
+#. module: pms_fastapi
 #: model:ir.model,name:pms_fastapi.model_pms_api_contact_contact_id_number_router_helper
 msgid "Pms api contact  id number Service Helper"
 msgstr "Helper de servicio de documentos de identidad de contacto (PMS API)"
@@ -1053,6 +1158,16 @@ msgstr "Helper de servicio de huéspedes (PMS API)"
 #: model:ir.model,name:pms_fastapi.model_pms_api_supplier_supplier_router_helper
 msgid "Pms api supplier Service Helper"
 msgstr "Helper de servicio de proveedores (PMS API)"
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__precheckin
+msgid "Precheckin"
+msgstr "Precheckin"
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_property
+msgid "Property"
+msgstr "Hotel"
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1107,6 +1222,11 @@ msgstr "Registro no encontrado"
 #, python-format
 msgid "Refund confirmation required"
 msgstr "Se requiere confirmación del abono"
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__regular_customer
+msgid "Regular Customer"
+msgstr "Cliente habitual"
 
 #. module: pms_fastapi
 #: model:ir.model.fields,help:pms_fastapi.field_channel_wubook_pms_folio__amount_to_invoice
@@ -1176,6 +1296,11 @@ msgstr "El estado de la reserva no permite confirmar salidas"
 #, python-format
 msgid "Reservation state does not allow reverting arrival"
 msgstr "El estado de la reserva no permite revertir la llegada"
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_checkin_partner__responsible_checkin_partner_id
+msgid "Responsible adult"
+msgstr "Adulto responsable"
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1314,6 +1439,27 @@ msgstr "El contacto no tiene configurado un número de identificación fiscal."
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The country is not valid."
+msgstr "El país no es válido."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The document could not be read."
+msgstr "No se ha podido leer el documento."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The document type is not valid."
+msgstr "El tipo de documento no es válido."
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/payment.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
@@ -1323,10 +1469,24 @@ msgstr "La exportación solicitó %s registros, pero el máximo permitido es %s.
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The guest data is not valid."
+msgstr "Los datos del huésped no son válidos."
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/contact_id_number.py:0
 #, python-format
 msgid "The id number %s does not belong to the contact %s"
 msgstr "El número de identificación %s no pertenece al contacto %s"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The image is too large."
+msgstr "La imagen es demasiado grande."
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1352,6 +1512,23 @@ msgid ""
 msgstr "El total de la factura supera el límite de factura simplificada configurado para este hotel."
 
 #. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_birthdate
+msgid "The online check-in asks the birthdate of the guests."
+msgstr "El check-in online pide la fecha de nacimiento de los huéspedes."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_gender
+msgid "The online check-in asks the gender of the guests."
+msgstr "El check-in online pide el sexo de los huéspedes."
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_document
+msgid ""
+"The online check-in asks the type, number and issuing country of the "
+"identity document of the guests."
+msgstr "El check-in online pide el tipo, el número y el país de expedición del documento de identidad de los huéspedes."
+
+#. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/payment.py:0
 #, python-format
@@ -1359,6 +1536,13 @@ msgid ""
 "The payment date falls within a locked fiscal period and cannot be "
 "cancelled."
 msgstr "La fecha del pago cae dentro de un periodo fiscal bloqueado y no se puede cancelar."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The property has no document scanning service."
+msgstr "El hotel no tiene servicio de escaneo de documentos."
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1384,6 +1568,27 @@ msgstr "Las líneas de venta indicadas no se pudieron agrupar en una sola factur
 #, python-format
 msgid "The record do not exist"
 msgstr "El registro no existe"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The responsible must be another guest of the same folio."
+msgstr "El responsable debe ser otro huésped del mismo folio."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The signature is not valid base64."
+msgstr "La firma no es un base64 válido."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "The state is not valid for the residence country."
+msgstr "El estado o provincia no es válido para el país de residencia."
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1420,6 +1625,34 @@ msgstr "Tipo"
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Unknown country"
+msgstr "País desconocido"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Unknown document type"
+msgstr "Tipo de documento desconocido"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Unknown responsible"
+msgstr "Responsable desconocido"
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Unknown state"
+msgstr "Estado o provincia desconocido"
+
+#. module: pms_fastapi
+#. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/payment.py:0
 #, python-format
@@ -1435,6 +1668,16 @@ msgstr "Mensajes del sitio web"
 #: model:ir.model.fields,help:pms_fastapi.field_res_partner__website_message_ids
 msgid "Website communication history"
 msgstr "Historial de comunicación del sitio web"
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__wizard
+msgid "Wizard"
+msgstr "Asistente"
+
+#. module: pms_fastapi
+#: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__wizard-precheckin
+msgid "Wizard-Precheckin"
+msgstr "Asistente-Precheckin"
 
 #. module: pms_fastapi
 #. odoo-python
@@ -1478,6 +1721,7 @@ msgstr "contacto no encontrado"
 
 #. module: pms_fastapi
 #. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
 #, python-format
 msgid "folio not found"
@@ -1489,6 +1733,13 @@ msgstr "folio no encontrado"
 #, python-format
 msgid "folioId and invoiceId are mutually exclusive."
 msgstr "folioId e invoiceId son mutuamente excluyentes."
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "guest not found"
+msgstr "huésped no encontrado"
 
 #. module: pms_fastapi
 #: model:ir.model,name:pms_fastapi.model_pms_fastapi_login_endpoint

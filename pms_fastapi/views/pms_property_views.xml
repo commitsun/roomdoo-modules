@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record id="pms_property_views_form_inherit_pms_fastapi" model="ir.ui.view">
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='property_settings']" position="inside">
+                <group string="Online check-in" name="checkin_asked_fields">
+                    <field name="checkin_ask_gender" />
+                    <field name="checkin_ask_birthdate" />
+                    <field name="checkin_ask_document" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
