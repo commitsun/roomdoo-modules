@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- The portal app runs as this user: it only may run FastAPI endpoints.
+    Every PMS read goes through sudo, scoped to the folio of the token. -->
+    <record
+        id="customer_portal_api_user"
+        model="res.users"
+        context="{'no_reset_password': True}"
+    >
+        <field name="name">Customer portal API</field>
+        <field name="login">customer_portal_api</field>
+        <field
+            name="groups_id"
+            eval="[(6, 0, [ref('fastapi.group_fastapi_endpoint_runner')])]"
+        />
+    </record>
+</odoo>
