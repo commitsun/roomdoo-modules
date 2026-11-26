@@ -17,6 +17,7 @@ from odoo.addons.pms_fastapi.schemas.checkin import (
     CheckinGuest,
     CheckinGuests,
     CheckinGuestState,
+    CheckinHotelAskedField,
     CheckinPartnerDetail,
     CheckinPartnerUpdate,
     CheckinRoom,
@@ -60,6 +61,16 @@ COUNTRY_FIELDS = {
     "nationality": "nationality_id",
     "documentCountry": "document_country_id",
     "country": "country_id",
+}
+# Property option -> guest fields that the hotel asks when the option is on.
+HOTEL_ASKED_FIELDS = {
+    "checkin_ask_gender": (CheckinHotelAskedField.gender,),
+    "checkin_ask_birthdate": (CheckinHotelAskedField.birthdate,),
+    "checkin_ask_document": (
+        CheckinHotelAskedField.documentType,
+        CheckinHotelAskedField.documentNumber,
+        CheckinHotelAskedField.documentCountry,
+    ),
 }
 
 
@@ -310,7 +321,17 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "hotelName": pms_property.name,
             "arrivalDate": folio.first_checkin or None,
             "ocrAvailable": bool(pms_property.ocr_checkin_supplier),
+            "hotelAskedFields": self._hotel_asked_fields(pms_property),
         }
+
+    @staticmethod
+    def _hotel_asked_fields(pms_property):
+        return [
+            field
+            for option, fields in HOTEL_ASKED_FIELDS.items()
+            if pms_property[option]
+            for field in fields
+        ]
 
     # Update
 

@@ -219,3 +219,75 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
         self.assertTrue(response.json()["ocrAvailable"])
         self.assertIsNone(response.json()["localization"])
+
+    def test_property_options_default_to_asking_only_the_document(self):
+        self.assertFalse(self.test_property.checkin_ask_gender)
+        self.assertFalse(self.test_property.checkin_ask_birthdate)
+        self.assertTrue(self.test_property.checkin_ask_document)
+        response = self._get(f"/folios/{self.folio.id}/checkin-context")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(
+            response.json()["hotelAskedFields"],
+            ["documentType", "documentNumber", "documentCountry"],
+        )
+
+    def test_context_hotel_asked_fields_follow_the_property_options(self):
+        cases = (
+            (
+                (True, True, True),
+                [
+                    "gender",
+                    "birthdate",
+                    "documentType",
+                    "documentNumber",
+                    "documentCountry",
+                ],
+            ),
+            ((True, False, False), ["gender"]),
+            ((False, True, False), ["birthdate"]),
+            (
+                (False, False, True),
+                ["documentType", "documentNumber", "documentCountry"],
+            ),
+            ((False, False, False), []),
+        )
+        for (gender, birthdate, document), expected in cases:
+            self.test_property.write(
+                {
+                    "checkin_ask_gender": gender,
+                    "checkin_ask_birthdate": birthdate,
+                    "checkin_ask_document": document,
+                }
+            )
+            response = self._get(f"/folios/{self.folio.id}/checkin-context")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(
+                response.json()["hotelAskedFields"],
+                expected,
+                (gender, birthdate, document),
+            )
+
+    def test_context_hotel_asked_fields_apply_to_every_localization(self):
+        self.test_property.write(
+            {"checkin_ask_gender": True, "checkin_ask_document": False}
+        )
+        for country, localization in (
+            (self.country_es, "es"),
+            (self.country_pt, "pt"),
+            (self.env["res.country"], None),
+        ):
+            self.test_property.country_id = country
+            response = self._get(f"/folios/{self.folio.id}/checkin-context")
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+            self.assertEqual(response.json()["localization"], localization)
+            self.assertEqual(response.json()["hotelAskedFields"], ["gender"])
+
+    def test_property_form_shows_the_checkin_options(self):
+        view = self.env.ref("pms.pms_property_views_form")
+        arch = self.env["pms.property"].get_view(view.id, "form")["arch"]
+        for field in (
+            "checkin_ask_gender",
+            "checkin_ask_birthdate",
+            "checkin_ask_document",
+        ):
+            self.assertIn(f'name="{field}"', arch)

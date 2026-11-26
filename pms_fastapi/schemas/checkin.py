@@ -105,6 +105,14 @@ class DocumentScanInput(PmsBaseModel):
     back: str | None = Field(None, description="Optional back side, same encoding.")
 
 
+class CheckinHotelAskedField(str, Enum):
+    gender = "gender"
+    birthdate = "birthdate"
+    documentType = "documentType"
+    documentNumber = "documentNumber"
+    documentCountry = "documentCountry"
+
+
 class CheckinContext(PmsBaseModel):
     localization: str | None = Field(
         None, description="Lowercase ISO code of the property country."
@@ -113,3 +121,8 @@ class CheckinContext(PmsBaseModel):
     arrivalDate: date | None = None
     ocrAvailable: bool
     brandName: str | None = None
+    hotelAskedFields: list[CheckinHotelAskedField] = Field(
+        default_factory=list,
+        description="Guest fields that the property chose to ask. The "
+        "localization decides which guests they apply to.",
+    )

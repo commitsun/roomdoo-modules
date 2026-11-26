@@ -65,6 +65,21 @@ msgid "App"
 msgstr ""
 
 #. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_birthdate
+msgid "Ask the birthdate"
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_gender
+msgid "Ask the gender"
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_property__checkin_ask_document
+msgid "Ask the identity document"
+msgstr ""
+
+#. module: pms_fastapi
 #: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__message_attachment_count
 msgid "Attachment Count"
 msgstr ""
@@ -858,6 +873,11 @@ msgid ""
 msgstr ""
 
 #. module: pms_fastapi
+#: model_terms:ir.ui.view,arch_db:pms_fastapi.pms_property_views_form_inherit_pms_fastapi
+msgid "Online check-in"
+msgstr ""
+
+#. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #: code:addons/pms_fastapi/routers/pms_folio.py:0
@@ -1140,6 +1160,11 @@ msgstr ""
 #. module: pms_fastapi
 #: model:ir.model.fields.selection,name:pms_fastapi.selection__pms_checkin_partner__origin_input_data__precheckin
 msgid "Precheckin"
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model,name:pms_fastapi.model_pms_property
+msgid "Property"
 msgstr ""
 
 #. module: pms_fastapi
@@ -1475,6 +1500,23 @@ msgstr ""
 msgid ""
 "The invoice total exceeds the simplified invoice limit configured for this "
 "property."
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_birthdate
+msgid "The online check-in asks the birthdate of the guests."
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_gender
+msgid "The online check-in asks the gender of the guests."
+msgstr ""
+
+#. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_property__checkin_ask_document
+msgid ""
+"The online check-in asks the type, number and issuing country of the "
+"identity document of the guests."
 msgstr ""
 
 #. module: pms_fastapi
