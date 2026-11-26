@@ -1,0 +1,165 @@
+# Security review of PRs in commitsun/roomdoo-modules (PUBLIC repo).
+# The reviewer and its reports live in the private repository commitsun/roomdoo-security-auditor.
+#
+# Why pull_request_target: it runs THIS file as it is on the base branch (16.0), so a PR
+# cannot change what runs with the credentials. The PR code is checked out as data only:
+# nothing from it is executed (no pip install, no tests, no scripts). This is only safe
+# while 16.0 is protected (PR + review); otherwise anyone with write access can change it.
+#
+# No module names: every ready PR starts the job, and auditor/scope.py decides from the
+# change itself (routes, modules depending on API/auth frameworks, security files) whether
+# a review is needed. If not, the job ends there, with no cost and nothing published.
+#
+# No stored Anthropic key: the job's GitHub OIDC token is exchanged for a short-lived
+# Anthropic token (workload identity federation). The only secret is the GitHub App key.
+#
+# Nothing about the findings may reach the log, the step summary or artifacts: on a
+# public repository they are public. The report goes to an issue in the private repo.
+name: Security review
+
+on:
+  pull_request_target:
+    # opened/reopened: PRs created as ready; ready_for_review: drafts marked ready;
+    # labeled: re-run on demand with the security-review label. Pushes to an already
+    # reviewed PR do not re-run it (cost); add the label again for that.
+    types: [opened, reopened, ready_for_review, labeled]
+    branches: ["16.0"]
+
+permissions:
+  contents: read
+  pull-requests: write   # only for the neutral link comment on the PR
+  id-token: write        # GitHub OIDC token, exchanged for a short-lived Anthropic token
+
+concurrency:
+  group: security-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Team members only, never drafts; of the label events, only security-review.
+    if: >-
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) &&
+      !github.event.pull_request.draft &&
+      (github.event.action != 'labeled' || github.event.label.name == 'security-review')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # Environment restricted to 16.0. Holds: secret AUDITOR_APP_PRIVATE_KEY; variables
+    # AUDITOR_APP_CLIENT_ID, ANTHROPIC_FEDERATION_RULE_ID, ANTHROPIC_ORGANIZATION_ID,
+    # ANTHROPIC_SERVICE_ACCOUNT_ID, ANTHROPIC_WORKSPACE_ID.
+    environment: security-review
+    steps:
+      - name: Short-lived token for the auditor repo (GitHub App)
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.AUDITOR_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUDITOR_APP_PRIVATE_KEY }}
+          owner: commitsun
+          repositories: roomdoo-security-auditor
+
+      - name: Checkout the auditor (private)
+        uses: actions/checkout@v4
+        with:
+          repository: commitsun/roomdoo-security-auditor
+          token: ${{ steps.app-token.outputs.token }}
+          path: auditor
+          persist-credentials: false
+
+      - name: Checkout the PR as data (never executed)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch the base commit
+        run: git -C target fetch -q origin ${{ github.event.pull_request.base.sha }}
+
+      - name: Does the change touch attack surface?
+        id: scope
+        run: |
+          python3 auditor/auditor/scope.py --repo target \
+            --base ${{ github.event.pull_request.base.sha }} \
+            --head ${{ github.event.pull_request.head.sha }}
+
+      - name: Dependencies to read (OCA, Odoo core) from the trusted base branch
+        if: steps.scope.outputs.relevant == 'true'
+        run: |
+          git -C target show ${{ github.event.pull_request.base.sha }}:.github/repos.yaml > repos.yaml
+          pip install -q git-aggregator pyyaml
+          git config --global user.email ci@example.com && git config --global user.name CI
+          gitaggregate -c repos.yaml > /dev/null
+          git clone -q --depth 1 -b 16.0 https://github.com/odoo/odoo deps/odoo
+
+      - name: Install Claude Code
+        if: steps.scope.outputs.relevant == 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.332   # pin; bump deliberately
+
+      - name: Review (output stays in files)
+        if: steps.scope.outputs.relevant == 'true'
+        env:
+          CLAUDE_BIN: claude
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          # outside every directory the reviewer can read
+          ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/anthropic/identity.jwt
+          CLAUDE_CODE_FEDERATION_CACHE_DIR: ${{ runner.temp }}/anthropic/cache
+        run: |
+          mkdir -p "$CLAUDE_CODE_FEDERATION_CACHE_DIR"
+          fetch_identity_token() {
+            curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+              | jq -r .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp"
+            mv "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp" "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+          }
+          fetch_identity_token
+          ( while sleep 120; do fetch_identity_token; done ) &   # GitHub OIDC tokens are short-lived
+          # Preflight: fails fast (and cheaply) if the federation rule rejects this job.
+          claude -p "Answer with the single word OK" --tools "" --max-budget-usd 0.05 --output-format json \
+            | jq -c '{is_error, result: (.result | tostring | .[0:300])}'
+          export AUDITOR_DEPS=$(ls -d "$PWD"/deps/* | paste -sd:)
+          python3 auditor/ci/review_pr.py --repo target \
+            --base ${{ github.event.pull_request.base.sha }} \
+            --head ${{ github.event.pull_request.head.sha }} \
+            --title "roomdoo-modules#${{ github.event.pull_request.number }} @ ${{ github.event.pull_request.head.sha }}" \
+            --out out
+
+      # One issue per PR in the private repo: the first run creates it, later runs
+      # (label re-added) add the new report as comments. Long reports come in parts.
+      - name: Publish the report to the private repo
+        id: publish
+        if: steps.scope.outputs.relevant == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: commitsun/roomdoo-security-auditor
+          TITLE: "Revisión PR roomdoo-modules#${{ github.event.pull_request.number }}"
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -e
+          n=$(gh issue list -R "$REPO" --label pr-review --state all --search "in:title \"$TITLE\"" \
+                --json number,title -q ".[] | select(.title == env.TITLE) | .number" | head -1)
+          for f in $(ls out/issue/part-*.md | sort -V); do
+            if [ -z "$n" ]; then
+              # owner/repo#N creates a cross-reference in the PR timeline, shown only to people with access to this repo
+              printf 'PR: commitsun/roomdoo-modules#%s (%s)\n\n' "${{ github.event.pull_request.number }}" "$PR_URL" | cat - "$f" > body.md
+              url=$(gh issue create -R "$REPO" --title "$TITLE" --label pr-review --body-file body.md)
+              n=${url##*/}
+            else
+              gh issue comment "$n" -R "$REPO" --body-file "$f" > /dev/null
+            fi
+          done
+          gh issue reopen "$n" -R "$REPO" > /dev/null 2>&1 || true
+          echo "issue_url=https://github.com/$REPO/issues/$n" >> "$GITHUB_OUTPUT"
+
+      # Public and identical whatever the result: it says a review exists and where, never what it found.
+      - name: Link the private report from the PR
+        if: steps.scope.outputs.relevant == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: security-review
+          message: |
+            🔒 Revisión de seguridad hecha sobre `${{ github.event.pull_request.head.sha }}`.
+            Informe (solo accesible para el equipo): ${{ steps.publish.outputs.issue_url }}
