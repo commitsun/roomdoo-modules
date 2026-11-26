@@ -467,6 +467,7 @@ class InvoiceDetail(PmsBaseModel):
     narration: str = ""
     amount_total_signed: CurrencyAmount = Field(0.0, alias="totalAmount")
     currency_id: CurrencySummary = Field(alias="currency")
+    folio_ids: list[FolioId] = Field(default_factory=list, alias="folios")
     folioLines: list[FolioLineDetail] = Field(default_factory=list)
     downpaymentLines: list[int] = Field(default_factory=list)
     lines: list[InvoiceLine] = Field(default_factory=list)
@@ -504,6 +505,9 @@ class InvoiceDetail(PmsBaseModel):
             data["paymentState"] = ODOO_PAYMENT_STATE_MAP.get(
                 account_move.payment_state, InvoicePaymentStateEnum.not_paid
             )
+        data["folio_ids"] = [
+            FolioId.from_pms_folio(folio) for folio in account_move.folio_ids
+        ]
         invoice_lines = account_move.invoice_line_ids.filtered(
             lambda line: line.display_type == "product"
         )
