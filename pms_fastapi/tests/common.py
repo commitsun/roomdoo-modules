@@ -418,6 +418,16 @@ class CommonTestCheckin(CommonTestPmsApi):
             url += f"/{checkin_partner.id}"
         return url
 
+    def _responsible(self, checkin_partner):
+        """Responsible adult stored for a guest, in the field that the
+        installed check-in localization uses."""
+        helper = self.env["pms_api_checkin.checkin_router.helper"].new()
+        return checkin_partner[helper._responsible_field()]
+
+    def _set_responsible(self, checkin_partner, responsible):
+        helper = self.env["pms_api_checkin.checkin_router.helper"].new()
+        checkin_partner[helper._responsible_field()] = responsible
+
     @staticmethod
     def _id_names(body):
         """Reduce the references of a body to id and name, which extension

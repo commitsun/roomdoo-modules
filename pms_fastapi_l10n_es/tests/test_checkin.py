@@ -115,6 +115,23 @@ class TestCheckinL10nEs(CommonTestCheckin):
         self.assertEqual(detail.json()["relationship"], "PM")
         self.assertEqual(detail.json()["responsibleCheckinPartnerId"], responsible.id)
 
+    def test_the_responsible_is_kept_in_the_spanish_field(self):
+        responsible, minor = self.checkin_partners
+        response = self._patch(
+            {"responsibleCheckinPartnerId": responsible.id}, checkin_partner=minor
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertEqual(minor.ses_related_checkin_partner_id, responsible)
+        # The generic field of pms_fastapi is not used in Spain.
+        self.assertFalse(minor.responsible_checkin_partner_id)
+        minor.responsible_checkin_partner_id = self.guest
+        minor.ses_related_checkin_partner_id = False
+        detail = self._get(self._base_url(checkin_partner=minor))
+        self.assertEqual(detail.status_code, status.HTTP_200_OK, detail.text)
+        self.assertNotIn("responsibleCheckinPartnerId", detail.json())
+
     def test_null_clears_relationship_and_responsible(self):
         responsible, minor = self.checkin_partners
         minor.write(

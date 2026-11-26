@@ -15,3 +15,9 @@ class PmsCheckinPartner(models.Model):
             ("precheckin", "Precheckin"),
         ],
     )
+    responsible_checkin_partner_id = fields.Many2one(
+        comodel_name="pms.checkin.partner",
+        string="Responsible adult",
+        help="Guest of the same folio who is responsible for this one.",
+        ondelete="set null",
+    )

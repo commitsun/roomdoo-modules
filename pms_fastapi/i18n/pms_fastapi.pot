@@ -438,6 +438,11 @@ msgid "Guest is read-only"
 msgstr ""
 
 #. module: pms_fastapi
+#: model:ir.model.fields,help:pms_fastapi.field_pms_checkin_partner__responsible_checkin_partner_id
+msgid "Guest of the same folio who is responsible for this one."
+msgstr ""
+
+#. module: pms_fastapi
 #: model:ir.model.fields,field_description:pms_fastapi.field_res_partner__has_message
 msgid "Has Message"
 msgstr ""
@@ -1296,6 +1301,11 @@ msgid "Reservation state does not allow reverting arrival"
 msgstr ""
 
 #. module: pms_fastapi
+#: model:ir.model.fields,field_description:pms_fastapi.field_pms_checkin_partner__responsible_checkin_partner_id
+msgid "Responsible adult"
+msgstr ""
+
+#. module: pms_fastapi
 #. odoo-python
 #: code:addons/pms_fastapi/routers/invoice.py:0
 #, python-format
@@ -1564,6 +1574,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/pms_fastapi/routers/checkin.py:0
 #, python-format
+msgid "The responsible must be another guest of the same folio."
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
 msgid "The signature is not valid base64."
 msgstr ""
 
@@ -1619,6 +1636,13 @@ msgstr ""
 #: code:addons/pms_fastapi/routers/checkin.py:0
 #, python-format
 msgid "Unknown document type"
+msgstr ""
+
+#. module: pms_fastapi
+#. odoo-python
+#: code:addons/pms_fastapi/routers/checkin.py:0
+#, python-format
+msgid "Unknown responsible"
 msgstr ""
 
 #. module: pms_fastapi

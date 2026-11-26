@@ -185,6 +185,15 @@ class TestCheckinReadEndpoints(CommonTestCheckin):
         )
         self.assertNotIn("signature", response.json())
 
+    def test_partner_detail_returns_the_responsible(self):
+        responsible, minor = self.checkin_partners
+        self._set_responsible(minor, responsible)
+        response = self._get(self._base_url(checkin_partner=minor))
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
+        self.assertEqual(
+            response.json(), {"responsibleCheckinPartnerId": responsible.id}
+        )
+
     def test_partner_of_another_folio_returns_404(self):
         other_folio = self._create_folio()
         self._create_reservation(other_folio, self.room2, adults=1)

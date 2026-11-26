@@ -54,19 +54,5 @@ msgstr ""
 #. odoo-python
 #: code:addons/pms_fastapi_l10n_es/routers/checkin.py:0
 #, python-format
-msgid "The responsible must be another guest of the same folio."
-msgstr ""
-
-#. module: pms_fastapi_l10n_es
-#. odoo-python
-#: code:addons/pms_fastapi_l10n_es/routers/checkin.py:0
-#, python-format
 msgid "Unknown relationship"
-msgstr ""
-
-#. module: pms_fastapi_l10n_es
-#. odoo-python
-#: code:addons/pms_fastapi_l10n_es/routers/checkin.py:0
-#, python-format
-msgid "Unknown responsible"
 msgstr ""

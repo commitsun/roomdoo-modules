@@ -72,6 +72,9 @@ class CheckinPartnerDetail(CheckinDocumentData):
 
     email: str | None = None
     mobile: str | None = None
+    responsibleCheckinPartnerId: int | None = Field(
+        None, description="Check-in partner of the same folio that is responsible."
+    )
 
 
 class CheckinPartnerUpdate(PmsBaseModel):
@@ -95,6 +98,9 @@ class CheckinPartnerUpdate(PmsBaseModel):
     zipCode: str | None = None
     email: str | None = None
     mobile: str | None = None
+    responsibleCheckinPartnerId: int | None = Field(
+        None, description="Check-in partner of the same folio that is responsible."
+    )
     signature: str | None = Field(
         None, description="PNG image encoded in base64, without data: prefix."
     )

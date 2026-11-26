@@ -7,6 +7,7 @@ from fastapi import status
 from PIL import Image
 
 from odoo.addons.pms.models.pms_checkin_partner import PmsCheckinPartner
+from odoo.addons.pms_fastapi.routers.checkin import PmsApiCheckinRouterHelper
 
 from .common import CommonTestCheckin
 
@@ -298,3 +299,80 @@ class TestCheckinUpdateEndpoint(CommonTestCheckin):
     def test_signature_at_the_limit_is_not_too_large(self):
         response = self._patch({"signature": "A" * 500_000})
         self._assert_problem(response, "/errors/guest-invalid")
+
+    def test_responsible_is_stored_read_back_and_cleared(self):
+        responsible, minor = self.checkin_partners
+        response = self._patch(
+            {"responsibleCheckinPartnerId": responsible.id}, checkin_partner=minor
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertEqual(self._responsible(minor), responsible)
+        # The responsible adult is left untouched.
+        self.assertFalse(self._responsible(responsible))
+        with self._create_test_client() as test_client:
+            self._login(test_client)
+            detail = test_client.get(self._base_url(checkin_partner=minor))
+        self.assertEqual(detail.status_code, status.HTTP_200_OK, detail.text)
+        self.assertEqual(detail.json()["responsibleCheckinPartnerId"], responsible.id)
+        response = self._patch(
+            {"responsibleCheckinPartnerId": None}, checkin_partner=minor
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertFalse(self._responsible(minor))
+
+    def test_responsible_may_be_a_guest_of_another_room_of_the_folio(self):
+        reservation2 = self._create_reservation(self.folio, self.room2, adults=1)
+        responsible = reservation2.checkin_partner_ids
+        response = self._patch({"responsibleCheckinPartnerId": responsible.id})
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response.text
+        )
+        self.assertEqual(self._responsible(self.guest), responsible)
+
+    def test_responsible_of_another_folio_is_422(self):
+        other_folio = self._create_folio()
+        other = self._create_reservation(other_folio, self.room2, adults=1)
+        response = self._patch(
+            {"responsibleCheckinPartnerId": other.checkin_partner_ids.id}
+        )
+        self._assert_problem(
+            response, "/errors/unknown-responsible", "responsibleCheckinPartnerId"
+        )
+        self.assertEqual(
+            response.json()["detail"],
+            "The responsible must be another guest of the same folio.",
+        )
+        self.assertFalse(self._responsible(self.guest))
+
+    def test_the_guest_cannot_be_its_own_responsible(self):
+        response = self._patch({"responsibleCheckinPartnerId": self.guest.id})
+        self._assert_problem(
+            response, "/errors/unknown-responsible", "responsibleCheckinPartnerId"
+        )
+        self.assertFalse(self._responsible(self.guest))
+
+    def test_non_numeric_responsible_is_422(self):
+        response = self._patch({"responsibleCheckinPartnerId": "abc"})
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.text
+        )
+        self.assertFalse(self._responsible(self.guest))
+
+    def test_the_responsible_has_a_generic_field_by_default(self):
+        """Without a localization of its own, the responsible adult is kept in a
+        field of pms_fastapi."""
+        helper = self.env["pms_api_checkin.checkin_router.helper"].new()
+        self.assertEqual(
+            PmsApiCheckinRouterHelper._responsible_field(helper),
+            "responsible_checkin_partner_id",
+        )
+        field = self.env["pms.checkin.partner"]._fields[
+            "responsible_checkin_partner_id"
+        ]
+        self.assertEqual(field.type, "many2one")
+        self.assertEqual(field.comodel_name, "pms.checkin.partner")
+        self.assertTrue(field.store)

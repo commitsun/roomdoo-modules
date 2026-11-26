@@ -303,7 +303,14 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             "zipCode": cp.zip or None,
             "email": cp.email or None,
             "mobile": cp.mobile or None,
+            "responsibleCheckinPartnerId": cp[self._responsible_field()].id or None,
         }
+
+    def _responsible_field(self):
+        """Check-in partner field that stores the responsible adult.
+
+        A localization that keeps it in a field of its own overrides it."""
+        return "responsible_checkin_partner_id"
 
     # Context
 
@@ -400,9 +407,30 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             )
         self._prepare_state_vals(cp, data, vals)
         self._prepare_extra_vals(folio, cp, data, vals)
+        if "responsibleCheckinPartnerId" in data:
+            responsible = self._get_responsible(
+                folio, cp, data["responsibleCheckinPartnerId"]
+            )
+            vals[self._responsible_field()] = responsible.id or False
         if "signature" in data:
             vals["signature"] = self._decode_signature(data["signature"])
         return vals
+
+    def _get_responsible(self, folio, cp, responsible_id):
+        if not responsible_id:
+            return self.env["pms.checkin.partner"]
+        responsible = folio.checkin_partner_ids.filtered(
+            lambda c: c.id == responsible_id and c != cp
+        )
+        if not responsible:
+            self._raise_problem(
+                422,
+                "/errors/unknown-responsible",
+                _("Unknown responsible"),
+                _("The responsible must be another guest of the same folio."),
+                field="responsibleCheckinPartnerId",
+            )
+        return responsible
 
     def _prepare_state_vals(self, cp, data, vals):
         country_id = vals.get("country_id", cp.country_id.id)

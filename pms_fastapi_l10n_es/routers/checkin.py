@@ -30,8 +30,6 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
         values.update(
             {
                 "documentSupportNumber": cp.support_number or None,
-                "responsibleCheckinPartnerId": cp.ses_related_checkin_partner_id.id
-                or None,
                 # Stored from the guest's own perspective, exchanged from the
                 # responsible adult's one.
                 "relationship": find_opposite_relationship(cp.ses_partners_relationship)
@@ -40,6 +38,11 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             }
         )
         return values
+
+    def _responsible_field(self):
+        # Spain keeps the responsible adult in the field of its traveller
+        # report.
+        return "ses_related_checkin_partner_id"
 
     def _context_values(self, folio):
         values = super()._context_values(folio)
@@ -78,24 +81,3 @@ class PmsApiCheckinRouterHelper(models.AbstractModel):
             vals["ses_partners_relationship"] = (
                 find_opposite_relationship(relationship) if relationship else False
             )
-        if "responsibleCheckinPartnerId" in data:
-            responsible = self._get_responsible(
-                folio, cp, data["responsibleCheckinPartnerId"]
-            )
-            vals["ses_related_checkin_partner_id"] = responsible.id or False
-
-    def _get_responsible(self, folio, cp, responsible_id):
-        if not responsible_id:
-            return self.env["pms.checkin.partner"]
-        responsible = folio.checkin_partner_ids.filtered(
-            lambda c: c.id == responsible_id and c != cp
-        )
-        if not responsible:
-            self._raise_problem(
-                422,
-                "/errors/unknown-responsible",
-                _("Unknown responsible"),
-                _("The responsible must be another guest of the same folio."),
-                field="responsibleCheckinPartnerId",
-            )
-        return responsible
