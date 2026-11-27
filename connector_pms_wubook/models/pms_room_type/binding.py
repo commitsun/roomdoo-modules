@@ -41,18 +41,10 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
     )
     default_max_avail = fields.Integer(
         string="Default Max. Availability",
-        compute="_compute_default_max_avail",
-        required=False,
-        readonly=False,
-        store=True,
+        default=-1,
         help="Maximum simultaneous availability given no availability rules. "
         "Use `-1` for using maximum simultaneous availability.",
     )
-
-    def _compute_default_max_avail(self):
-        for rec in self:
-            if rec.default_max_avail > rec.total_rooms_count:
-                rec.default_max_avail = rec.total_rooms_count or -1
 
     default_availability = fields.Integer(
         compute="_compute_default_availability",
@@ -66,10 +58,9 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
         "the total room count for the given room type.",
     )
 
-    @api.depends("default_quota", "default_max_avail")
+    @api.depends("default_quota", "default_max_avail", "total_rooms_count")
     def _compute_default_availability(self):
         for rec in self:
-
             rec.default_availability = min(
                 filter(
                     lambda x: x != -1,
@@ -142,9 +133,7 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
     def _compute_occupancy(self):
         for record in self:
             property_rooms = record.room_ids.filtered(
-                lambda r: r.pms_property_id
+                lambda r, record=record: r.pms_property_id
                 == record.backend_id.pms_property_id
             )
-            record.occupancy = min(
-                property_rooms.mapped("capacity"), default=1
-            )
+            record.occupancy = min(property_rooms.mapped("capacity"), default=1)
