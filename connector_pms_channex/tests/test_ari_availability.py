@@ -10,7 +10,7 @@ from odoo.tests import tagged
 from odoo.addons.queue_job.exception import RetryableJobError
 from odoo.addons.queue_job.tests.common import trap_jobs
 
-from ..models.common.ari import stage_ari
+from ..models.common.ari import _BUFFER_KEY, stage_ari
 from .test_bookings import ChannexBookingCase
 
 ROOM_TYPE_BINDING = "channel.channex.pms.room.type"
@@ -480,6 +480,39 @@ class TestChannexAvailabilityStaging(ChannexAvailabilityCase):
         self._commit()
         self.assertEqual(
             self._pending(), [(checkin, checkin + datetime.timedelta(days=1))]
+        )
+
+    def test_the_generic_hook_publishes_the_nights_and_their_quota(self):
+        """Another channel manager imports with every listener silenced too and
+        publishes through the generic hook, so Channex hears of its bookings."""
+        reservation = (
+            self.env["pms.reservation"]
+            .with_context(connector_no_export=True)
+            .create(
+                {
+                    "pms_property_id": self.pms_property.id,
+                    "room_type_id": self.room_type.id,
+                    "preferred_room_id": self.rooms[0].id,
+                    "checkin": self.night,
+                    "checkout": self.night + datetime.timedelta(days=2),
+                    "partner_name": "A guest",
+                    "adults": 1,
+                    "sale_channel_origin_id": self.door.id,
+                }
+            )
+        )
+        # Whatever a deferred recompute may have noted goes out now, so what
+        # is pending below is what the hook noted.
+        self._publish()
+        self.assertEqual(self._pending(), [])
+        reservation._connector_publish_availability()
+        staged = self.env.cr.precommit.data[_BUFFER_KEY]
+        self.assertIn(
+            (self.pms_property.id, None, self.room_type.id), staged["channel_caps"]
+        )
+        self._commit()
+        self.assertEqual(
+            self._pending(), [(self.night, self.night + datetime.timedelta(days=1))]
         )
 
 

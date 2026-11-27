@@ -7,8 +7,6 @@ from odoo.tools.misc import formatLang
 
 from odoo.addons.component.core import Component
 
-from ..pms_availability.listener import buffer_property_exports_for_rooms
-
 
 class ChannelWubookPmsFolioDelayedBatchImporter(Component):
     _name = "channel.wubook.pms.folio.delayed.batch.importer"
@@ -215,27 +213,11 @@ class ChannelWubookPmsFolioImporter(Component):
         selling a room the PMS no longer had. Wubook moves availability on
         its own side too, so our value has to win.
 
-        Staging goes through the same precommit buffer as the listeners,
-        so a burst of imports still collapses to one job per
-        (backend × property) pair, covering the nights they span.
+        That flag silences the listeners of every other channel manager of
+        the property as well, so the push goes through the generic hook and
+        reaches all of them, not only Wubook.
         """
-        folio = binding.odoo_id
-        dates = folio.mapped("reservation_ids.reservation_line_ids.date")
-        if not dates:
-            return
-        # A reservation can sit in a room of a different type than the one
-        # booked (cross-type relocation) and it is the ASSIGNED room that
-        # moves availability, so both sides have to be refreshed.
-        room_types = folio.mapped("reservation_ids.room_type_id") | folio.mapped(
-            "reservation_ids.reservation_line_ids.room_id.room_type_id"
-        )
-        buffer_property_exports_for_rooms(
-            self.env,
-            folio.pms_property_id,
-            room_types,
-            min(dates),
-            max(dates),
-        )
+        binding.odoo_id.reservation_ids._connector_publish_availability()
 
     def _create(self, model, values):
         """Create the Internal record"""
