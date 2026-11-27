@@ -31,11 +31,13 @@ class ChannelChannexPmsRoomTypeExporter(Component):
     def _after_export(self):
         """A room type that has just reached Channex has no availability there
         yet, and one whose rooms changed has a different one: either way, the
-        whole window of it is published again."""
+        whole window of it is published again. One that has just reached it has
+        no rate plans either."""
         if self.binding.external_id:
             stage_ari(
                 self.env,
                 "availability",
                 (self.backend_record.pms_property_id.id, self.binding.odoo_id.id),
             )
+            self.backend_record._channex_schedule_rate_plans()
         return super()._after_export()
