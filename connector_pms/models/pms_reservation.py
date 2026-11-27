@@ -19,10 +19,23 @@ class PmsReservation(models.Model):
     # pylint: disable=W8110
     @api.depends("ota_reservation_code")
     def _compute_external_reference(self):
-        super(PmsReservation, self)._compute_external_reference()
+        super()._compute_external_reference()
 
     def _get_reservation_external_reference(self):
-        reference = super(PmsReservation, self)._get_reservation_external_reference()
+        reference = super()._get_reservation_external_reference()
         if self.ota_reservation_code:
             reference = self.ota_reservation_code
         return reference
+
+    def _connector_publish_availability(self):
+        """Have every channel manager publish again the nights of these
+        reservations, whatever state they are in: the nights of a cancelled
+        one are the nights it gave back.
+
+        An import writes under ``connector_no_export``, and that silences the
+        listeners of every connector, not only the one importing. A booking one
+        channel manager brought in would never reach the others, and they would
+        go on selling the room it took. So whoever imports a booking calls this
+        once it is written, and each connector adds what it publishes.
+        """
+        return

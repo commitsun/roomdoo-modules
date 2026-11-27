@@ -71,15 +71,15 @@ class ChannelChannexPmsFolioImporter(Component):
         else:
             self._channex_price_board_services(binding)
             result = self._channex_reconfirm(binding)
-        # The import runs with exports silenced, so no listener noticed the
-        # nights it took or freed. Every reservation of the folio is published,
-        # whatever its state: the cancelled ones are the nights given back.
-        # Channex already took the booking off its availability, and sending it
-        # the number pms has is what keeps the two from drifting apart. And a
-        # booking from an OTA spends the quota of that very agency.
-        reservations = binding.odoo_id.reservation_ids
-        reservations._channex_stage_availability()
-        reservations._channex_stage_channel_caps()
+        # The import runs with exports silenced, and not only Channex's: no
+        # listener of any channel manager noticed the nights it took or freed.
+        # Every reservation of the folio is published, whatever its state: the
+        # cancelled ones are the nights given back. Channex already took the
+        # booking off its availability, and sending it the number pms has is
+        # what keeps the two from drifting apart. And a booking from an OTA
+        # spends the quota of that very agency. The other channel managers of
+        # the property have to stop selling the room it took.
+        binding.odoo_id.reservation_ids._connector_publish_availability()
         return result
 
     def _channex_price_board_services(self, binding):

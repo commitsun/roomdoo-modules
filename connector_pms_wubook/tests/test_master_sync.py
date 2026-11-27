@@ -1611,6 +1611,33 @@ class TestFolioImportAvailabilityExport(TransactionComponentCase):
             },
         )
 
+    def test_the_generic_hook_stages_the_property_export(self):
+        """Another channel manager imports under the same flag and publishes
+        through the generic hook, so Wubook hears of its bookings too."""
+        reservation = self._import_reservation()
+        self.env.cr.precommit.run()
+        with trap_jobs() as trap:
+            reservation._connector_publish_availability()
+            self.env.cr.precommit.run()
+        trap.assert_jobs_count(1)
+        trap.assert_enqueued_job(
+            self.property_avail_binding.export_record,
+            args=(self.backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
+        self.assertEqual(
+            (
+                self.property_avail_binding.wubook_pending_date_from,
+                self.property_avail_binding.wubook_pending_date_to,
+            ),
+            (self.checkin, self.checkout - timedelta(days=1)),
+        )
+
     def test_several_imports_collapse_to_one_job(self):
         bindings = [
             self._folio_binding(
