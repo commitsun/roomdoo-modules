@@ -242,10 +242,6 @@ class TestPropertyAvailabilityExport(RangeCase):
                 for index in range(2)
             ]
         )
-        # The ceiling the connector applies when no rule declares one. It is
-        # resolved once, when the binding is created, so it has to be asked
-        # for again now that the room type has rooms.
-        cls.room_type_a_binding.default_max_avail = -1
         cls.property_binding = cls.env[
             "channel.wubook.pms.property.availability"
         ].create(
@@ -318,6 +314,22 @@ class TestPropertyAvailabilityExport(RangeCase):
         self.room_type_a_binding.default_max_avail = 1
         self._stage(self.today + timedelta(days=10), self.today + timedelta(days=10))
         self.assertEqual([item["avail"] for item in self._items()], [1])
+
+    def test_a_room_added_later_is_put_on_sale(self):
+        """With no limit set, the default follows the rooms of the type: a
+        room type connected before it had all its rooms sells the ones added
+        after."""
+        self.env["pms.room"].create(
+            {
+                "name": "Ranges 102",
+                "short_name": "RG02",
+                "pms_property_id": self.pms_property.id,
+                "room_type_id": self.room_type_a.id,
+                "capacity": 2,
+            }
+        )
+        self._stage(self.today + timedelta(days=10), self.today + timedelta(days=10))
+        self.assertEqual([item["avail"] for item in self._items()], [3])
 
     def test_window_is_trimmed_to_what_wubook_accepts(self):
         self._stage(self.today + timedelta(days=725), self.today + timedelta(days=800))
