@@ -379,8 +379,16 @@ reactivated the next ones, with the groups of the profile host sends and all
 the hotels and companies. When the access ends, a cron archives the user,
 which logs the person out of both the back office and the app.</p>
 <p>The users host creates never log in any other way: not with a password, not
-with an API key and not with a sign-up link. An existing user of the
-instance with the same login is never taken over. Their entries do not count
+with an API key and not with a sign-up link. An existing internal user of
+the instance with the same login is never taken over.</p>
+<p>A person of the team may already have a portal user of their own here, with
+their team login (to use the app as a hotel does). Host takes that user over
+for the access instead of refusing it: it notes down what the portal user
+has, makes it the internal user of the access and, when the access ends,
+gives it back as it was, with its hotels, companies and its own password.
+While the access lasts, it only comes in through host. Only portal users
+whose login is in the domains of <tt class="docutils literal">roomdoo_host_sso.adoptable_domains</tt> are
+taken over. Their entries do not count
 as logins of the instance, which measure the customer’s use of it: host keeps
 its own record of who came in and until when.</p>
 <p><strong>Table of contents</strong></p>
@@ -404,6 +412,9 @@ token validator follows them.</p>
 <p>What each profile may do is in <em>Settings &gt; Users &amp; Companies &gt; Host access
 profiles</em>. To begin with there is one, <em>Full access</em> (code <tt class="docutils literal">full</tt>), the
 one host sends for everybody.</p>
+<p>The parameter <tt class="docutils literal">roomdoo_host_sso.adoptable_domains</tt> (comma separated e-mail
+domains, <tt class="docutils literal">roomdoo.com</tt> when unset) says whose portal users host may take
+over for an access. Leave it empty to never take one over.</p>
 </div>
 <div class="section" id="bug-tracker">
 <h1><a class="toc-backref" href="#toc-entry-2">Bug Tracker</a></h1>

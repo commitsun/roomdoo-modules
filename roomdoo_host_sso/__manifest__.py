@@ -4,7 +4,7 @@
     "name": "Roomdoo host SSO",
     "summary": "Let the Roomdoo team in from host, with a user of their own "
     "that is archived when their access ends",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "author": "Commitsun",
     "license": "AGPL-3",
     "website": "https://github.com/roomdoo/roomdoo-modules",
