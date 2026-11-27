@@ -63,13 +63,23 @@ class ChannelChannexPmsRoomType(models.Model):
     )
 
     def _backend_rooms(self):
-        """Rooms of this type in the property this backend serves."""
+        """Rooms of this type in the property this backend serves.
+
+        Only the active ones, whatever the context: the bindings are read
+        with the archived ones included, because a binding inherits ``active``
+        from its room type, and a room taken out of service is not a room to
+        sell.
+        """
         self.ensure_one()
-        return self.env["pms.room"].search(
-            [
-                ("room_type_id", "=", self.odoo_id.id),
-                ("pms_property_id", "=", self.backend_id.pms_property_id.id),
-            ]
+        return (
+            self.env["pms.room"]
+            .with_context(active_test=True)
+            .search(
+                [
+                    ("room_type_id", "=", self.odoo_id.id),
+                    ("pms_property_id", "=", self.backend_id.pms_property_id.id),
+                ]
+            )
         )
 
     @api.depends(

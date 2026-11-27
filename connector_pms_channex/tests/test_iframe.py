@@ -33,6 +33,13 @@ class TestChannexIframe(ChannexConnectorCase):
         base, _query = self._query(self.backend.channex_iframe_url())
         self.assertEqual(base, "https://staging.channex.io/auth/exchange")
 
+    def test_production_is_served_from_the_app_host(self):
+        """Production's API and embedded UI live on app.channex.io; the bare
+        domain is the public website and answers the API with a 404."""
+        self.backend.environment = "production"
+        self.assertEqual(self.backend.url, "https://app.channex.io/api/v1")
+        self.assertEqual(self.backend._channex_web_url(), "https://app.channex.io")
+
     def test_url_carries_the_session_and_the_scope(self):
         _base, query = self._query(self.backend.channex_iframe_url())
         external_id = self.server.store["properties"][0]["id"]
