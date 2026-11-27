@@ -42,8 +42,9 @@ Features:
   reception reveals it through an action that records each access in an audit
   log.
 * **Automation**: a cron grants codes for stays checking in within the next
-  24h, reservation changes propagate to the locks, and a cron purges old PIN
-  access logs. Vendor sync runs through ``queue_job`` with retries.
+  24h, reservation changes propagate to the locks, a cron revokes the expired
+  codes nothing revoked (e.g. stays never checked in), and a cron purges old
+  PIN access logs. Vendor sync runs through ``queue_job`` with retries.
 
 **Table of contents**
 

@@ -13,8 +13,6 @@ from odoo.osv import expression
 
 from odoo.addons.queue_job.exception import RetryableJobError
 
-_TRANSIENT_RETRY_SECONDS = 300
-
 # A vendor gateway cannot service two requests at once: two jobs programming
 # the same physical lock concurrently make the second fail with "busy". We
 # serialise per ``lock_device_id`` with a PostgreSQL transaction-level advisory
@@ -338,6 +336,18 @@ class LockCode(models.Model):
             ignore_retry=True,
         )
 
+    def _transient_retry_seconds(self, exc):
+        """Delay before the running sync job retries after ``exc``, a transient
+        vendor error. The vendor decides from the attempt that just failed (1 on
+        the first run). queue_job puts the running job's uuid on the context and
+        only stores the run in its counter once the run is over, hence ``+ 1``."""
+        job = (
+            self.env["queue.job"]
+            .sudo()
+            .search([("uuid", "=", self.env.context.get("job_uuid"))], limit=1)
+        )
+        return self.vendor_id._sync_retry_seconds(exc, job.retry + 1)
+
     def _sync_create(self):
         self.ensure_one()
         # Vendor sync jobs run under the enqueueing operator's user. ACL
@@ -351,10 +361,13 @@ class LockCode(models.Model):
             self._raise_gateway_busy()
         try:
             # Pass the reservation on the context so user-centric vendors (Salto)
-            # can name the credential after the guest. Passcode vendors ignore
-            # it. Only the create path needs it; modify/revoke don't.
+            # can name the credential after the guest, and the credential
+            # itself so vendors that resume an interrupted grant (Omnitec) can
+            # tag it. Other vendors ignore them. Only the create path needs
+            # them; modify/revoke don't.
             connector = self.vendor_id.with_context(
                 smartlock_grant_reservation=self.reservation_id,
+                smartlock_grant_code=self,
                 smartlock_local_tz=self._local_tz(),
             ).get_connector()
             grant = connector.grant_access(
@@ -363,7 +376,9 @@ class LockCode(models.Model):
                 ends_at=self._to_utc(self.date_to),
             )
         except (LockConnectionError, LockOfflineError) as exc:
-            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
+            raise RetryableJobError(
+                str(exc), seconds=self._transient_retry_seconds(exc)
+            ) from exc
         except LockError:
             self._persist_failed()
             raise
@@ -375,6 +390,10 @@ class LockCode(models.Model):
     def _sync_modify(self, date_from, date_to):
         self.ensure_one()
         self = self.sudo()
+        # A reservation moved again within seconds enqueues the revoke of this
+        # same code, which can run first: nothing is left to modify.
+        if self.cancelled:
+            return
         if not self._try_lock_gateways(self.target_ids.mapped("lock_device_id")):
             self._raise_gateway_busy()
         try:
@@ -393,7 +412,9 @@ class LockCode(models.Model):
                 pin=self.pin,
             )
         except (LockConnectionError, LockOfflineError) as exc:
-            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
+            raise RetryableJobError(
+                str(exc), seconds=self._transient_retry_seconds(exc)
+            ) from exc
         except LockError:
             self._persist_failed()
             raise
@@ -411,7 +432,9 @@ class LockCode(models.Model):
             # clearing it, so we never revoke a stranger's access.
             connector.revoke_access(grant_ref=self.vendor_grant_ref, pin=self.pin)
         except (LockConnectionError, LockOfflineError) as exc:
-            raise RetryableJobError(str(exc), seconds=_TRANSIENT_RETRY_SECONDS) from exc
+            raise RetryableJobError(
+                str(exc), seconds=self._transient_retry_seconds(exc)
+            ) from exc
         except LockError:
             self._persist_failed()
             raise
@@ -432,6 +455,62 @@ class LockCode(models.Model):
         if job:
             self.sudo().queue_job_ids |= job
         return delayed
+
+    @api.model
+    def _fail_codes_of_dead_jobs(self, jobs):
+        """Mark as failed the credentials whose create job died.
+
+        A sync job dies when queue_job gives up on it: its retries ran out on a
+        transient error, or it raised something unexpected. A credential that
+        never reached the vendor (no ``vendor_grant_ref``) would then read as
+        ``pending`` forever: the reconciliation and the cron count it as live,
+        so nothing would issue another one. Failing it lets the cron issue a new
+        credential, as it already does after a permanent vendor error.
+
+        Credentials already on the locks are left alone: marking them failed
+        would take them out of the cancellation flow that revokes them."""
+        self.sudo().with_context(active_test=False).search(
+            [
+                ("queue_job_ids", "in", jobs.ids),
+                ("vendor_grant_ref", "=", False),
+                ("cancelled", "=", False),
+                ("failed", "=", False),
+            ]
+        ).write({"failed": True})
+
+    @api.model
+    def _cron_revoke_expired_codes(self):
+        """Revoke the credentials whose window ended and that nothing revoked.
+
+        A credential is revoked when its reservation is checked out or
+        cancelled. A reservation whose guest is never checked in stays in
+        ``arrival_delayed`` for good, and a failed credential is skipped by
+        that flow, so their passcodes would stay on the locks: past their
+        window they no longer open, but they still take a slot and block their
+        PIN for anyone else.
+
+        A credential whose revoke was already enqueued, whatever came of it, is
+        left alone, so one that keeps failing is not retried on every run."""
+        codes = (
+            self.sudo()
+            .with_context(active_test=False)
+            .search(
+                [
+                    ("vendor_grant_ref", "!=", False),
+                    ("cancelled", "=", False),
+                    ("date_to", "<=", fields.Datetime.now()),
+                ]
+            )
+            .filtered(
+                lambda c: not any(
+                    job.method_name == "_sync_remove"
+                    or job.state in _SYNCING_JOB_STATES
+                    for job in c.queue_job_ids
+                )
+            )
+        )
+        for code in codes:
+            code._enqueue_sync("_sync_remove")
 
     def action_reveal_pin(self):
         """Audited PIN reveal for non-admin operators. The ``pin`` field has

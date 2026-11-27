@@ -433,6 +433,11 @@ msgid "Property Room"
 msgstr ""
 
 #. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_queue_job
+msgid "Queue Job"
+msgstr ""
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__queue_job_ids
 msgid ""
 "Queue jobs that have synchronised this credential with the vendor. Useful to"
@@ -570,6 +575,12 @@ msgstr ""
 #: model:ir.actions.server,name:pms_smartlock_base.cron_purge_access_log_ir_actions_server
 #: model:ir.cron,cron_name:pms_smartlock_base.cron_purge_access_log
 msgid "Smartlocks: Purge old PIN access logs"
+msgstr ""
+
+#. module: pms_smartlock_base
+#: model:ir.actions.server,name:pms_smartlock_base.cron_revoke_expired_codes_ir_actions_server
+#: model:ir.cron,cron_name:pms_smartlock_base.cron_revoke_expired_codes
+msgid "Smartlocks: Revoke expired lock codes"
 msgstr ""
 
 #. module: pms_smartlock_base

@@ -474,6 +474,11 @@ msgid "Property Room"
 msgstr "Habitación"
 
 #. module: pms_smartlock_base
+#: model:ir.model,name:pms_smartlock_base.model_queue_job
+msgid "Queue Job"
+msgstr "Cola de trabajos"
+
+#. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__queue_job_ids
 msgid ""
 "Queue jobs that have synchronised this credential with the vendor. Useful to "
@@ -626,6 +631,12 @@ msgstr "Cerraduras inteligentes: Generar códigos (24h)"
 #: model:ir.cron,cron_name:pms_smartlock_base.cron_purge_access_log
 msgid "Smartlocks: Purge old PIN access logs"
 msgstr "Cerraduras inteligentes: Purgar registros antiguos de accesos al PIN"
+
+#. module: pms_smartlock_base
+#: model:ir.actions.server,name:pms_smartlock_base.cron_revoke_expired_codes_ir_actions_server
+#: model:ir.cron,cron_name:pms_smartlock_base.cron_revoke_expired_codes
+msgid "Smartlocks: Revoke expired lock codes"
+msgstr "Cerraduras inteligentes: Revocar códigos caducados"
 
 #. module: pms_smartlock_base
 #: model:ir.model.fields,help:pms_smartlock_base.field_lock_code__target_ids

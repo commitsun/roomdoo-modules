@@ -9,3 +9,5 @@ from . import test_should_have_codes
 from . import test_sync_reconcile
 from . import test_target_name_get
 from . import test_triggers
+from . import test_dead_job
+from . import test_revoke_expired

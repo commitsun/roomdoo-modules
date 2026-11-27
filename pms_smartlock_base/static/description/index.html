@@ -388,8 +388,9 @@ garage, pool…) and assign them to the rooms that grant them to their guests.</
 reception reveals it through an action that records each access in an audit
 log.</li>
 <li><strong>Automation</strong>: a cron grants codes for stays checking in within the next
-24h, reservation changes propagate to the locks, and a cron purges old PIN
-access logs. Vendor sync runs through <tt class="docutils literal">queue_job</tt> with retries.</li>
+24h, reservation changes propagate to the locks, a cron revokes the expired
+codes nothing revoked (e.g. stays never checked in), and a cron purges old
+PIN access logs. Vendor sync runs through <tt class="docutils literal">queue_job</tt> with retries.</li>
 </ul>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
