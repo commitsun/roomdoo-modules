@@ -4,7 +4,7 @@
 from odoo.addons.component.core import Component
 from odoo.addons.connector.components.mapper import mapping, only_create
 
-from ..booking_revision.booking_revision import _channex_nights
+from ..booking_revision.booking_revision import _channex_guests, _channex_nights
 
 
 class ChannelChannexPmsReservationMapperImport(Component):
@@ -52,13 +52,37 @@ class ChannelChannexPmsReservationMapperImport(Component):
 
     @mapping
     def occupancy(self, record):
-        """Infants are left out: Channex counts them apart from children
-        precisely because they do not take a place, and pms has no third
-        number to put them in."""
-        occupancy = record.get("occupancy") or {}
+        adults, children = _channex_guests(record)
         return {
-            "adults": occupancy.get("adults") or 1,
-            "children": occupancy.get("children") or 0,
+            "adults": adults,
+            "children": children,
+            # As the channel declares them. Whether a channel counts the
+            # infants left out above among them is not documented, so they are
+            # kept as they come.
+            "children_ages": (record.get("occupancy") or {}).get("ages") or False,
+        }
+
+    @mapping
+    def rate_plan(self, record):
+        """The pricelist and the board service the room was sold under.
+
+        Stated, and never left to pms: on its own it gives the reservation the
+        default board service of its pricelist, and charges it on top of a
+        price that already includes the one sold. Room only is no board service
+        at all.
+
+        Only a cancellation gets here without a rate plan of ours, and then it
+        is pms that says, for a stay that is not happening.
+        """
+        rate_plan = self._channex_rate_plan(record)
+        if not rate_plan:
+            return {}
+        board_service = rate_plan.board_service_id
+        if board_service == board_service._room_only_board_service():
+            board_service = board_service.browse()
+        return {
+            "pricelist_id": rate_plan.pricelist_id.id,
+            "board_service_id": board_service.id,
         }
 
     @mapping
@@ -83,26 +107,44 @@ class ChannelChannexPmsReservationMapperImport(Component):
     def reservation_line_ids(self, record):
         """One line per night of the stay, priced as the OTA sold it.
 
+        The OTA sold the room and its board service together, at one price a
+        night, and pms keeps the two apart: the board service on lines of its
+        own, at what the rate plan published for it, and the room on these, at
+        the rest. Together they come to what the OTA sold, to the cent.
+
         For a booking coming in or being modified the nights and the breakdown
-        are known to agree: a message whose breakdown does not cover its own
-        stay exactly is reported on the revision and never reaches here. Nothing
-        is derived, defaulted or completed.
+        are known to agree, and every night to pay for its board service: a
+        message where they do not is reported on the revision and never reaches
+        here. Nothing is defaulted or completed.
 
         A cancellation is the exception, and only because nothing is allowed to
-        hold one up. A night it leaves unpriced still gets its line, with the
-        date and no more, exactly as pms fills one in, and pms prices it from
-        the pricelist. It is a price nobody will ever be charged: the stay is
-        not happening.
+        hold one up. A night it leaves unpriced, or priced below its board
+        service, still gets its line, with the date and no more, exactly as pms
+        fills one in, and pms prices it from the pricelist. It is a price
+        nobody will ever be charged: the stay is not happening.
 
         The line has to be there even so. pms works the nights of a reservation
         out from the stay only as long as nothing states them, and stating some
         of them leaves the rest uncomputed and the reservation refused.
         """
         days = record.get("days") or {}
+        rate_plan = self._channex_rate_plan(record)
+        adults, children = _channex_guests(record)
         lines = []
         for night in _channex_nights(record):
             line = {"date": night}
             if night in days:
-                line["price"] = float(days[night])
+                price = float(days[night])
+                if rate_plan:
+                    price = rate_plan._channex_room_price(
+                        night, price, adults, children
+                    )
+                if price > 0:
+                    line["price"] = price
             lines.append((0, 0, line))
         return {"reservation_line_ids": lines}
+
+    def _channex_rate_plan(self, record):
+        return self.env["channel.channex.rate.plan"]._channex_booked(
+            self.backend_record, record
+        )
