@@ -69,7 +69,6 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
     @api.depends("default_quota", "default_max_avail")
     def _compute_default_availability(self):
         for rec in self:
-
             rec.default_availability = min(
                 filter(
                     lambda x: x != -1,
@@ -142,9 +141,7 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
     def _compute_occupancy(self):
         for record in self:
             property_rooms = record.room_ids.filtered(
-                lambda r: r.pms_property_id
+                lambda r, record=record: r.pms_property_id
                 == record.backend_id.pms_property_id
             )
-            record.occupancy = min(
-                property_rooms.mapped("capacity"), default=1
-            )
+            record.occupancy = min(property_rooms.mapped("capacity"), default=1)
