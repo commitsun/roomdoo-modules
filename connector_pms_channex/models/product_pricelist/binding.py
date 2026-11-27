@@ -37,5 +37,6 @@ class ChannelChannexProductPricelist(models.Model):
         down there."""
         backends = self.backend_id
         result = super().unlink()
-        backends._channex_schedule_rate_plans()
+        if not self.env.context.get("connector_no_export"):
+            backends._channex_schedule_rate_plans()
         return result
