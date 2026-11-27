@@ -149,6 +149,11 @@ class TestHostLink(TransactionCase):
         self.assertEqual(users.search_count([("login", "=", TECHNICAL_LOGIN)]), 1)
         self.assertTrue(first.has_group("roomdoo_host_link.group_host_link"))
 
+    def test_the_technical_user_can_read_jobs_and_channel_connectors(self):
+        technical = self.link._ensure_technical_user()
+        self.assertTrue(technical.has_group("queue_job.group_queue_job_manager"))
+        self.env["queue.job"].with_user(technical).check_access_rights("read")
+
     def test_the_technical_user_may_switch_flags_others_may_not(self):
         technical = self.link._ensure_technical_user()
         flag = (

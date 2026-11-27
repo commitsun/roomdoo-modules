@@ -25,6 +25,8 @@ TECHNICAL_GROUPS = (
     "pms.group_pms_manager",
     "account.group_account_readonly",
     "roomdoo_host_link.group_host_link",
+    # Failed jobs and the channel connectors (implied) are part of diagnosing.
+    "queue_job.group_queue_job_manager",
 )
 WATCHED_MODULES = (
     "pms",
