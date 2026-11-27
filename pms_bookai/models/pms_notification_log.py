@@ -674,6 +674,8 @@ class PmsNotificationLog(models.Model):
                         "external_payload": json.dumps(response, ensure_ascii=False),
                     }
                 )
+                # BookAI now has the folio: keep its stay status up to date.
+                log.bookai_origin_folio_id._bookai_mark_known()
 
             except Exception as e:
                 _logger.exception("BookAI WhatsApp failed for log %s", log.id)

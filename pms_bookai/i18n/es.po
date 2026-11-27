@@ -955,3 +955,37 @@ msgstr "{{ object.partner_id.mobile o object.mobile }}"
 #: model_terms:ir.ui.view,arch_db:pms_bookai.view_pms_notification_template_form_inherit_bookai
 msgid "{{ object.partner_id.name or object.partner_name }}"
 msgstr "{{ object.partner_id.name o object.partner_name }}"
+
+#. module: pms_bookai
+#: model:ir.actions.server,name:pms_bookai.ir_cron_bookai_push_folios_ir_actions_server
+#: model:ir.cron,cron_name:pms_bookai.ir_cron_bookai_push_folios
+msgid "BooKAI: Push folio status"
+msgstr "BooKAI: enviar el estado de los folios"
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_folio__bookai_push_pending
+msgid "BookAI Push Pending"
+msgstr "Pendiente de enviar a BookAI"
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_folio__bookai_known
+msgid ""
+"BookAI received this folio with a WhatsApp template, so it keeps its stay "
+"status, dates and pending amount up to date."
+msgstr ""
+"BookAI recibió este folio con una plantilla de WhatsApp, así que mantiene al "
+"día el estado de la estancia, las fechas y el importe pendiente."
+
+#. module: pms_bookai
+#: model:ir.model.fields,field_description:pms_bookai.field_pms_folio__bookai_known
+msgid "Known by BookAI"
+msgstr "Conocido por BookAI"
+
+#. module: pms_bookai
+#: model:ir.model.fields,help:pms_bookai.field_pms_folio__bookai_push_pending
+msgid ""
+"The stay status, the dates or the pending amount changed since they were "
+"last sent to BookAI."
+msgstr ""
+"El estado de la estancia, las fechas o el importe pendiente han cambiado "
+"desde el último envío a BookAI."

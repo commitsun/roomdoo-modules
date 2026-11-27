@@ -8,6 +8,10 @@ WhatsApp notifications via BookAI API for Property Management System.
 - Configurable API credentials and endpoints
 - Automatic parameter extraction from reservations, folios, payments, and invoices
 - Support for multiple languages in WhatsApp templates
+- Keeps BookAI up to date with the stay status, dates and pending amount of
+  the folios it received with a template (cron "BooKAI: Push folio status")
+- Neutralized copies of a database drop the BookAI endpoint, token and
+  signing key, so they never reach production BookAI
 - Complete error handling and logging
 
 ## Configuration
@@ -55,4 +59,7 @@ The module extends:
 - `pms.notification.template` - Adds WhatsApp template configuration
 - `pms.notification.log` - Adds WhatsApp sending capability
 - `pms.property` - Adds external hotel code
+- `pms.folio` - Pushes its stay status to BookAI (`PATCH /api/v1/folios/{code}`):
+  `onboard` if a reservation is in house, else `confirm` if one is to arrive,
+  else `draft` (quotation), else `done` (checked out); `cancel` when all are
 - `res.partner` - Adds WhatsApp phone/country helpers

@@ -3,7 +3,7 @@
     "summary": """
         WhatsApp notifications via BookAI API for PMS
     """,
-    "version": "16.0.5.11.0",
+    "version": "16.0.5.12.0",
     "category": "PMS Management",
     "author": "Commitsun",
     "website": "https://github.com/commitsun/roomdoo-modules",
@@ -43,6 +43,7 @@
         "data/pms_notification_template_bookai_whatsapp.xml",
         "data/pms_property_notification_rules_bookai_whatsapp.xml",
     ],
+    "pre_init_hook": "pre_init_hook",
     "installable": True,
     "application": True,
     "auto_install": False,
