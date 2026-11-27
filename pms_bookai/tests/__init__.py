@@ -13,3 +13,4 @@ from . import test_bookai_tool
 from . import test_bookai_webhook_mixin
 from . import test_bookai_staff_secrets
 from . import test_bookai_neutralize
+from . import test_bookai_folio_push
