@@ -42,6 +42,15 @@ Changes are not sent one by one. They are gathered for a few seconds and sent
 together, in one call per property, which is how Channex wants to be told and
 what keeps the property within its limit of calls.
 
+What an agency has set aside -- the inventory declared for it, or for the sale
+channel it belongs to -- is published as availability rules on the Channex
+channels mapped to it, and the OTA sells the lowest of the rule and the room
+type's availability. A rule is only made where the agency is capped lower than
+the property as a whole; elsewhere the availability of the room type already
+says it. What is left of a quota is what gets published, so a sale through the
+agency changes the rule of that night. Rules the hotel makes by hand on Channex
+are never touched: ours carry a marker at the end of their title.
+
 *Publish all availability*, on the backend, sends every room type for every
 night Channex publishes. Channex calls it a full sync: it is meant for setting a
 property going or putting it right, and allowed once a day at most, so it is
