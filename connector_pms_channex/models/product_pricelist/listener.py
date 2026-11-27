@@ -27,3 +27,6 @@ class ChannelChannexProductPricelistListener(Component):
         if _RATE_PLAN_FIELDS & set(fields or ()):
             # As superuser: anyone editing a pricelist can get here.
             record.sudo()._channex_backends()._channex_schedule_rate_plans()
+        if "availability_plan_id" in (fields or ()):
+            # Sold under another plan, it has its restrictions.
+            record._channex_stage_restrictions()
