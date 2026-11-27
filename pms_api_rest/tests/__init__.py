@@ -1,3 +1,4 @@
+from . import test_availability_plan_inventory_bridge
 from . import test_availability_plan_service
 from . import test_checkin_partner_residence_state
 from . import test_external_folio_guest_name
