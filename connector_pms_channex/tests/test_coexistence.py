@@ -13,10 +13,13 @@ why no third, fake connector is needed: Channex overrides ``connect.candidates``
 and inherits the generic ``connect.hooks``, and Wubook does the opposite.
 """
 
+import datetime
+
 from odoo.tests.common import tagged
 from odoo.tools import mute_logger
 
 from .common import ChannexConnectorCase
+from .test_ari_availability import ChannexAvailabilityCase
 
 WUBOOK_INSTALLED = True
 try:
@@ -28,6 +31,35 @@ except ImportError:  # pragma: no cover
 
 CHANNEX_ROOM_TYPE_BINDING = "channel.channex.pms.room.type"
 WUBOOK_ROOM_TYPE_BINDING = "channel.wubook.pms.room.type"
+WUBOOK_PROPERTY_AVAILABILITY_BINDING = "channel.wubook.pms.property.availability"
+
+
+def _make_wubook_backend(env, pms_property, name):
+    backend_type = env["channel.wubook.backend.type"].create(
+        {
+            "name": f"BT {name}",
+            "model_type_id": env.ref(
+                "connector_pms_wubook.model_channel_wubook_backend_type"
+            ).id,
+            "direct_channel_type_id": env.ref(
+                "connector_pms_wubook.main_pms_sale_channel_wubook"
+            ).id,
+        }
+    )
+    payment_method_line = env["account.payment.method.line"].search([], limit=1)
+    return env["channel.wubook.backend"].create(
+        {
+            "name": name,
+            "pms_property_id": pms_property.id,
+            "backend_type_id": backend_type.parent_id.id,
+            "username": "X",
+            "password": "X",
+            "property_code": "X",
+            "pkey": "X",
+            "pricelist_external_id": 1,
+            "wubook_payment_method_line_id": payment_method_line.id,
+        }
+    )
 
 
 @tagged("post_install", "-at_install")
@@ -53,31 +85,7 @@ class TestTwoChannelManagers(ChannexConnectorCase):
 
     @classmethod
     def _make_wubook_backend(cls, pms_property, name):
-        backend_type = cls.env["channel.wubook.backend.type"].create(
-            {
-                "name": f"BT {name}",
-                "model_type_id": cls.env.ref(
-                    "connector_pms_wubook.model_channel_wubook_backend_type"
-                ).id,
-                "direct_channel_type_id": cls.env.ref(
-                    "connector_pms_wubook.main_pms_sale_channel_wubook"
-                ).id,
-            }
-        )
-        payment_method_line = cls.env["account.payment.method.line"].search([], limit=1)
-        return cls.env["channel.wubook.backend"].create(
-            {
-                "name": name,
-                "pms_property_id": pms_property.id,
-                "backend_type_id": backend_type.parent_id.id,
-                "username": "X",
-                "password": "X",
-                "property_code": "X",
-                "pkey": "X",
-                "pricelist_external_id": 1,
-                "wubook_payment_method_line_id": payment_method_line.id,
-            }
-        )
+        return _make_wubook_backend(cls.env, pms_property, name)
 
     def setUp(self):
         super().setUp()
@@ -244,4 +252,113 @@ class TestTwoChannelManagers(ChannexConnectorCase):
             self.env[WUBOOK_ROOM_TYPE_BINDING].search(
                 [("odoo_id", "=", self.room_type.id)]
             )
+        )
+
+
+@tagged("post_install", "-at_install")
+class TestAvailabilityAcrossChannelManagers(ChannexAvailabilityCase):
+    """A booking one channel manager brings in takes the room off the others.
+
+    Each import writes with every listener silenced, those of the other
+    connector included, so this only holds if the importer publishes on every
+    channel manager of the property and not only on its own.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        if not WUBOOK_INSTALLED:
+            return
+        cls.wubook_backend = _make_wubook_backend(
+            cls.env, cls.pms_property, "Wubook Across"
+        )
+        quiet = cls.env(context=dict(cls.env.context, connector_no_export=True))
+        quiet[WUBOOK_ROOM_TYPE_BINDING].create(
+            {
+                "odoo_id": cls.room_type.id,
+                "backend_id": cls.wubook_backend.id,
+                "external_id": 4242,
+            }
+        )
+        cls.wubook_availability = quiet[WUBOOK_PROPERTY_AVAILABILITY_BINDING].create(
+            {
+                "odoo_id": cls.pms_property.id,
+                "backend_id": cls.wubook_backend.id,
+                "external_id": cls.pms_property.id,
+            }
+        )
+
+    def setUp(self):
+        if not WUBOOK_INSTALLED:
+            self.skipTest("connector_pms_wubook is not installed")
+        super().setUp()
+
+    def test_a_booking_from_channex_reaches_wubook(self):
+        checkin = self.first + datetime.timedelta(days=20)
+        checkout = checkin + datetime.timedelta(days=2)
+        self._seed_booking(
+            arrival_date=str(checkin),
+            departure_date=str(checkout),
+            rooms=[
+                self._room(
+                    checkin_date=str(checkin),
+                    checkout_date=str(checkout),
+                    days={
+                        str(checkin): "76.50",
+                        str(checkin + datetime.timedelta(days=1)): "76.50",
+                    },
+                )
+            ],
+        )
+        self._import()
+        trap = self._commit()
+        trap.assert_enqueued_job(
+            self.wubook_availability.export_record,
+            args=(self.wubook_backend, self.pms_property),
+            properties={
+                "identity_key": (
+                    f"wubook_export_property_avail:{self.wubook_backend.id}"
+                    f":{self.pms_property.id}"
+                )
+            },
+        )
+        self.assertEqual(
+            (
+                self.wubook_availability.wubook_pending_date_from,
+                self.wubook_availability.wubook_pending_date_to,
+            ),
+            (checkin, checkin + datetime.timedelta(days=1)),
+        )
+
+    def test_a_booking_from_wubook_reaches_channex(self):
+        quiet = self.env(context=dict(self.env.context, connector_no_export=True))
+        reservation = quiet["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property.id,
+                "room_type_id": self.room_type.id,
+                "preferred_room_id": self.rooms[0].id,
+                "checkin": self.night,
+                "checkout": self.night + datetime.timedelta(days=2),
+                "partner_name": "A guest",
+                "adults": 1,
+                "sale_channel_origin_id": self.door.id,
+            }
+        )
+        # Whatever a deferred recompute may have noted goes out now, so what
+        # is pending below is what the import noted.
+        self._publish()
+        self.assertEqual(self._pending(), [])
+        folio_binding = quiet["channel.wubook.pms.folio"].create(
+            {
+                "odoo_id": reservation.folio_id.id,
+                "backend_id": self.wubook_backend.id,
+                "external_id": 987654,
+            }
+        )
+        with self.wubook_backend.work_on("channel.wubook.pms.folio") as work:
+            importer = work.component_by_name("channel.wubook.pms.folio.importer")
+            importer._after_import(folio_binding)
+        self._commit()
+        self.assertEqual(
+            self._pending(), [(self.night, self.night + datetime.timedelta(days=1))]
         )

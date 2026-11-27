@@ -16,6 +16,16 @@ QUOTA_FIELDS = {"agency_id", "room_type_id"}
 class PmsReservation(models.Model):
     _inherit = "pms.reservation"
 
+    def _connector_publish_availability(self):
+        """Publish again the availability these nights move, and the quota of
+        the agencies they spend. Whoever imported them -- Channex itself, or
+        another channel manager of the property -- did it with every listener
+        silenced, so none of them noticed."""
+        res = super()._connector_publish_availability()
+        self._channex_stage_availability()
+        self._channex_stage_channel_caps()
+        return res
+
     def _channex_stage_availability(self):
         """Publish again the availability the nights of these reservations
         move, whatever state they are in."""

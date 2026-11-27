@@ -4,7 +4,7 @@
 {
     "name": "PMS Connector",
     "summary": "Channel PMS connector Base",
-    "version": "16.0.2.2.0",
+    "version": "16.0.2.2.1",
     "license": "AGPL-3",
     "development_status": "Alpha",
     "category": "Connector",
