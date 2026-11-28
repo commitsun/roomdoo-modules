@@ -220,7 +220,9 @@ class ChannelChildMapperImport(AbstractComponent):
                     payload, endpoint = pms_property.get_payload_rules(
                         rules=items_to_upload, client=client
                     )
-            if payload:
+            # A client without an endpoint for this data does not receive it.
+            # Posting to an empty URL raises and would fail the whole export.
+            if payload and endpoint:
                 _logger.info("Exporting to PMS API client %s", client.login)
                 try:
                     response = pms_property.pms_api_push_payload(
