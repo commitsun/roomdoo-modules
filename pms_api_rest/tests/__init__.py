@@ -24,3 +24,4 @@ from . import test_user_service_access
 from . import test_user_contact_email
 from . import test_api_access_hotel_users
 from . import test_neobookings_payment
+from . import test_api_client_push

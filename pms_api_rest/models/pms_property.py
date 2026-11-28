@@ -11,6 +11,13 @@ from odoo.tools.translate import _
 
 _logger = logging.getLogger(__name__)
 
+# API client field holding the endpoint of each push call type
+PMS_API_ENDPOINT_FIELDS = {
+    "availability": "url_endpoint_availability",
+    "prices": "url_endpoint_prices",
+    "restrictions": "url_endpoint_rules",
+}
+
 
 class PmsProperty(models.Model):
     _inherit = "pms.property"
@@ -650,7 +657,7 @@ class PmsProperty(models.Model):
         return prices_data
 
     @api.model
-    def pms_api_push_batch(
+    def pms_api_push_batch(  # noqa: C901
         self,
         call_type,
         date_from=lambda: datetime.datetime.today().date(),
@@ -663,6 +670,12 @@ class PmsProperty(models.Model):
             clients = client
         else:
             clients = self.env["res.users"].search([("pms_api_client", "=", True)])
+        # A client without an endpoint for this call type does not receive it
+        endpoint_field = PMS_API_ENDPOINT_FIELDS.get(call_type)
+        if endpoint_field:
+            clients = clients.filtered(endpoint_field)
+            if not clients:
+                return
         room_type_ids = []
         endpoint = ""
         response = None
@@ -856,7 +869,11 @@ class PmsProperty(models.Model):
 
     @api.model
     def pms_cron_rule_push(self):
-        api_clients = self.env["res.users"].search([("pms_api_client", "=", True)])
+        api_clients = (
+            self.env["res.users"]
+            .search([("pms_api_client", "=", True)])
+            .filtered("url_endpoint_rules")
+        )
         if not api_clients:
             return
         allowed_property_ids = api_clients.mapped("pms_property_ids").ids
@@ -893,16 +910,25 @@ class PmsProperty(models.Model):
                 )
                 if not payload:
                     continue
-                response = pms_property.pms_api_push_payload(
-                    payload=payload, endpoint=endpoint, client=client
-                )
+                try:
+                    response = pms_property.pms_api_push_payload(
+                        payload=payload, endpoint=endpoint, client=client
+                    )
+                    response_str = str(response)
+                    status = "success" if response.ok else "error"
+                except requests.exceptions.RequestException as e:
+                    # Log it and go on: one failing client must not stop the
+                    # push to the other clients and properties
+                    _logger.error("PMS API rule push error to %s: %s", endpoint, e)
+                    response_str = str(e)
+                    status = "error"
                 self.env["pms.api.log"].sudo().create(
                     {
                         "pms_property_id": pms_property.id,
                         "client_id": client.id,
                         "request": payload,
-                        "response": str(response),
-                        "status": "success" if response.ok else "error",
+                        "response": response_str,
+                        "status": status,
                         "request_date": fields.Datetime.now(),
                         "method": "PUSH",
                         "endpoint": endpoint,
